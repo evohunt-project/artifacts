@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The reproduction confirms that free5gc UDR bypasses all authentication checks when OAuth2Required is false (the default value). Source code analysis demonstrates that the AuthorizationCheck function returns nil immediately when OAuth2Required==false, and all API endpoints use this check via router middleware, making the entire service vulnerable to unauthenticated access.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the verification script should confirm through source code analysis that: (1) OAuth2Required defaults to false, (2) AuthorizationCheck bypasses authentication when false, (3) all endpoints use this check, demonstrating that an attacker can access any endpoint without credentials.",
+  "actual_observed_result": "The verification script successfully analyzed the source code and confirmed all vulnerability components: OAuth2Required bool field defaults to false, AuthorizationCheck returns nil immediately when OAuth2Required is false, oauth2 defaults to false in NRF registration, router applies RouterAuthorizationCheck to all endpoints, and the middleware invokes AuthorizationCheck. This proves that all authentication is bypassed by default.",
+  "verification_method": "Source code analysis and grep-based verification that checks: (1) OAuth2Required field declaration in context.go, (2) authentication bypass logic in AuthorizationCheck function, (3) oauth2 default false setting in nrf_service.go, (4) router middleware usage in server.go, and (5) AuthorizationCheck invocation in router_auth_check.go. Each check passes if the vulnerable code pattern is found.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "OAuth2Required bool field declaration found in internal/context/context.go:72",
+    "Authentication bypass logic found: AuthorizationCheck returns nil when !c.OAuth2Required",
+    "oauth2 defaults to false in internal/sbi/consumer/nrf_service.go:113 before checking NRF CustomInfo",
+    "Router applies RouterAuthorizationCheck middleware to all endpoint groups in internal/sbi/server.go:99-118",
+    "Router authorization check invokes AuthorizationCheck in internal/util/router_auth_check.go:25",
+    "All checks passed confirming the authentication bypass vulnerability exists and affects all endpoints"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh mounts the target repository from session_dir/repo into the container at /target-repo for static analysis",
+    "pinned_commit_or_ref": "N/A - static analysis performed on current repo snapshot",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/helper.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

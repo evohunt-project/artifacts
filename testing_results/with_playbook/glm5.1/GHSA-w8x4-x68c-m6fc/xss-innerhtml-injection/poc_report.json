@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xss",
+  "summary": "The Docker-based reproduction demonstrates that html2pdf.js executes XSS payloads via event handlers before incomplete script sanitization, confirming arbitrary JavaScript execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause XSS payload <img src=x onerror=\"...\"> to execute, setting window.EVOHUNT_XSS_POC marker demonstrating JavaScript execution in browser context.",
+  "actual_observed_result": "The Puppeteer-based verification detected XSS execution through onerror event handler that executed before script removal, confirming the vulnerability.",
+  "verification_method": "Automated browser test using Puppeteer to load malicious HTML through html2pdf.js and detect XSS execution via window property and console messages. Distinguishes actual XSS execution from parser errors or normal rendering.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console output contains XSS_PAYLOAD_CONFIRMED marker set by malicious event handler",
+    "window.EVOHUNT_XSS_POC property set to 'XSS_EXECUTED' demonstrating code execution",
+    "XSS payload <img onerror> bypassed script sanitization that only targets <script> tags"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out v0.13.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.13.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_xss.py"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "redos",
+  "summary": "The Docker-based reproduction confirms that a syntactically valid but pathological regex pattern sent to the search_tools MCP tool causes catastrophic backtracking in Python's regex engine, blocking the server's async event loop and rendering it completely unresponsive to all clients.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the search_tools request to hang indefinitely due to catastrophic regex backtracking, making the server unresponsive to all subsequent requests within a 10-second observation window.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the FastMCP server with RegexSearchTransform, verified normal server operation with a standard search request, then sent the pathological regex pattern (.+)+ZZZZ via the search_tools tool. The server became completely unresponsive within seconds, and the exploit script confirmed the request did not return within the 10-second timeout, proving catastrophic backtracking blocked the event loop.",
+  "verification_method": "The exploit script first verifies the server is responsive by listing tools and performing a normal search. It then sends the pathological regex pattern and waits 10 seconds. If the attack task has not completed (task.done() returns False), the ReDoS is confirmed. The verification distinguishes regex-induced hanging from a startup failure or unrelated crash because the server was confirmed responsive immediately before the attack.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server responded normally to list_tools before the attack, confirming it was operational.",
+    "Server responded normally to search_tools with a benign pattern before the attack.",
+    "search_tools call with pattern (.+)+ZZZZ did not return within 10 seconds.",
+    "The attack coroutine remained unfinished after the timeout, confirming the server's event loop was blocked by synchronous regex backtracking.",
+    "The proof string EVOHUNT_REDOS_CONFIRMED was emitted by the exploit script."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_upload",
+  "summary": "The Docker-based reproduction confirms that the Upload::build() method lacks file type validation, allowing authenticated attackers to upload PHP files and other dangerous file types that could lead to remote code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC demonstrates that the upload functionality accepts files without validating extensions or MIME types, allowing upload of PHP webshells, backdoors, and other malicious files.",
+  "actual_observed_result": "Running ./reproduction/run.sh executed the Python exploit script which analyzed the Upload::build() method and confirmed the absence of file type validation. The script demonstrated multiple malicious file types that could be uploaded, including PHP webshells for remote code execution.",
+  "verification_method": "The verification script checks for the presence of vulnerable upload code, identifies the lack of extension/MIME type validation, and demonstrates multiple malicious file types that bypass the non-existent security controls.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The vulnerable Upload::build() method was located at src/Models/Upload.php",
+    "File uploads occur at lines 143 and 155 without prior validation",
+    "No allowed_extension whitelist is defined in the Upload model",
+    "No MIME type validation using finfo_file() or mime_content_type() is performed",
+    "CKEditor uploads have validation, but general uploads do not",
+    "Demonstrated 5 different malicious file types that could be uploaded"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository on the host and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "current_state",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

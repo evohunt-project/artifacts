@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms SQL injection in calendar ORDER BY parameter. A crafted order parameter with SQL payload successfully executes arbitrary queries and extracts database information.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate SQL injection via the calendar order parameter by extracting user credentials or database information through time-based or union-based injection.",
+  "actual_observed_result": "Executing ./reproduction/run.sh built the EGroupware container, sent a calendar search request with injected ORDER BY parameter, and successfully executed SQL injection payload extracting database metadata.",
+  "verification_method": "The PoC script checks for: (1) SQL injection payload execution, (2) database response with injected query results, (3) creation of proof file with extracted data. Verification distinguishes injection from normal search errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Calendar search request with injected order parameter processed",
+    "SQL injection payload executed: cal_start,(SELECT SLEEP(5))",
+    "Time-based response delay confirmed injection execution",
+    "Database metadata extracted via UNION SELECT",
+    "Proof file created with injection results"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the EGroupware repository, checks out the vulnerable commit, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "23.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

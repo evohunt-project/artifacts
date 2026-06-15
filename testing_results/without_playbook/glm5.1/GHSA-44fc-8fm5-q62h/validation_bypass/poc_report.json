@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "input_validation_bypass",
+  "summary": "The Docker-based reproduction confirms that deeply nested properties can be set within declared object defaults without being detected by strict validation mode, allowing arbitrary configuration injection that bypasses schema enforcement.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that undeclared nested properties can be set and persist after strict validation, showing that the validation bypass allows injection of arbitrary configuration values.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the container, created a config with declared object property 'foo', set deeply nested undeclared property 'foo.bar.baz.qux.deep.value', ran strict validation which passed successfully, and retrieved the injected value, confirming the validation bypass.",
+  "verification_method": "The run script executes a test that sets an undeclared nested property, validates with {allowed: 'strict'}, and checks if the property is still accessible. The test verifies that validation passes when it should fail, and that the injected value persists in the configuration.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Successfully set 'foo.bar.baz.qux.deep.value' where only 'foo' is declared in schema",
+    "Validation with {allowed: 'strict'} completed without errors (should have failed)",
+    "Injected property is accessible via config.get() after validation",
+    "Demonstrates complete bypass of strict mode validation for nested properties"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v6.2.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

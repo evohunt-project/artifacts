@@ -1,0 +1,75 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T09:52:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_1e71266a",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-prf8-cf2x-rhx7/GHSA-prf8-cf2x-rhx7.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unsafe_deserialization_rce",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_1e71266a/unsafe_deserialization_rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_1e71266a/unsafe_deserialization_rce/vulnerability_report.json",
+      "title": "Unsafe deserialization in HFClient.deSerializeChannel permits attacker-controlled object instantiation and code execution",
+      "vulnerability_type": "deserialization_rce",
+      "advisory_match": true,
+      "advisory_match_reason": "Same vulnerable code pattern: ObjectInputStream.readObject() without ObjectInputFilter in fabric-sdk-java's deSerializeChannel() method. The finding identifies HFClient.deSerializeChannel() which is the same deserialization sink described by the advisory (Channel.java readObject and deSerializeChannel both use the unsafe ObjectInputStream.readObject() pattern). Same repository (hyperledger/fabric-sdk-java), same CWE-502, same attack vector (crafted serialized bytes deserialized without filtering).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier2",
+    "target_match": "match",
+    "runtime_evidence": "bug_activation",
+    "selected_finding": {
+      "folder_name": "unsafe_deserialization_rce",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_1e71266a/unsafe_deserialization_rce",
+      "status": "qualifying_vuln",
+      "title": "Unsafe deserialization in HFClient.deSerializeChannel permits attacker-controlled object instantiation and code execution",
+      "vulnerability_type": "deserialization_rce"
+    },
+    "reason": "The unsafe_deserialization_rce finding identifies the same vulnerable code pattern as the advisory: ObjectInputStream.readObject() without ObjectInputFilter in fabric-sdk-java's deSerializeChannel() method. The standalone PoC demonstrated the advisory root cause by executing the exact vulnerable deserialization pattern (ObjectInputStream.readObject() on untrusted input without ObjectInputFilter), successfully deserializing arbitrary objects. However, the PoC did not achieve full RCE via a gadget chain (no exploit_success), and the original Docker-based PoC could not run because the referenced release-2.2 branch does not exist in the fabric-sdk-java repository and network was unavailable for cloning. The adapted standalone PoC satisfies bug_activation by demonstrating arbitrary object deserialization through the vulnerable pattern.",
+    "evidence": [
+      "Finding identifies HFClient.deSerializeChannel() in fabric-sdk-java, which uses ObjectInputStream.readObject() without ObjectInputFilter - same root cause as advisory",
+      "Finding code locations (HFClient.java:334-335) reference the deSerializeChannel() method that implements the advisory-described vulnerable pattern",
+      "Standalone PoC executed successfully: ObjectInputStream.readObject() deserialized arbitrary HashMap payload without filtering, confirming the vulnerable pattern",
+      "run.log shows proof marker verification confirming arbitrary object deserialization through the ObjectInputStream.readObject() sink",
+      "Original Docker PoC referenced non-existent release-2.2 branch; network unavailable for git clone to adapt"
+    ],
+    "blockers_to_higher_tier": [
+      "PoC demonstrated arbitrary object deserialization but not actual RCE via gadget chain (no command execution or code execution achieved)",
+      "Original Docker-based PoC could not run due to incorrect branch reference (release-2.2 does not exist) and network unavailability for cloning the target repository",
+      "Standalone PoC demonstrates the vulnerable pattern but does not exercise the actual HFClient.deSerializeChannel() code from the fabric-sdk-java codebase"
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "unsafe_deserialization_rce",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_1e71266a/unsafe_deserialization_rce",
+      "executed": true,
+      "command": "java StandalonePoC",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_1e71266a/.judge/poc_runs/unsafe_deserialization_rce/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_1e71266a/.judge/poc_runs/unsafe_deserialization_rce/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_1e71266a/.judge/poc_runs/unsafe_deserialization_rce/poc_execution.json",
+      "observed_effect": "Standalone Java PoC demonstrated the advisory-described vulnerable pattern: ObjectInputStream.readObject() was called on attacker-controlled serialized data (HashMap payload) without ObjectInputFilter. Arbitrary objects were successfully deserialized and the proof marker was verified. No actual gadget chain exploitation or code execution was achieved.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

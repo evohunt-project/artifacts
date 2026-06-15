@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "Docker-based reproduction confirms ZipSlip vulnerability in 7z archive extraction. The malicious archive with path traversal filename '../../tmp/marker_location/zipslip_successful.txt' successfully writes a marker file outside the intended temporary directory boundary.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should create a marker file at /tmp/marker_location/zipslip_successful.txt outside the temporary extraction directory, demonstrating arbitrary file write capability.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully created the marker file at /tmp/marker_location/zipslip_successful.txt with content confirming the path traversal. The scanner processed the malicious 7z archive and the extraction routine wrote the file to the traversed location outside the temp directory boundary.",
+  "verification_method": "The run.sh script checks for the existence of /tmp/marker_location/zipslip_successful.txt after the scan completes. This file is created by the path traversal payload and its presence confirms the vulnerability. The verification distinguishes real path traversal from normal extraction within temp directory boundaries.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Marker file created at /tmp/marker_location/zipslip_successful.txt",
+    "File content: 'ZipSlip path traversal successful!\\nThis file was written outside the temp directory.\\n'",
+    "Malicious 7z archive created with path traversal filename '../../tmp/marker_location/zipslip_successful.txt'",
+    "Scanner executed scan_7z_bytes() on the malicious archive",
+    "Extraction routine failed to validate member filename, allowing write outside temp directory"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.0.9 or main branch",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_7z.py",
+      "reproduction/verify_path_traversal.py"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "Docker-based PoC confirms that OAuth callback endpoints can be accessed without authentication when N8N_SKIP_AUTH_ON_OAUTH_CALLBACK=true is configured, enabling credential hijacking.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate that OAuth callback endpoints (/oauth2/callback, /oauth1/callback) accept requests without authentication or valid session tokens.",
+  "actual_observed_result": "Successfully configured n8n with N8N_SKIP_AUTH_ON_OAUTH_CALLBACK=true. The test script showed that OAuth callback endpoints can be accessed without providing any authentication credentials (no session cookie, no bearer token). The endpoints returned valid responses instead of 401 Unauthorized errors.",
+  "verification_method": "The run.sh script starts n8n with the vulnerable configuration, then test_oauth_callback.sh sends HTTP requests to OAuth callback endpoints without any authentication headers or cookies. The verify.sh script checks that the endpoints return responses other than 401/403, confirming authentication bypass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "n8n started with N8N_SKIP_AUTH_ON_OAUTH_CALLBACK=true environment variable",
+    "OAuth callback endpoint accepted request without Authorization header",
+    "OAuth callback endpoint accepted request without session cookie",
+    "Endpoint did not return 401 Unauthorized or 403 Forbidden",
+    "Authentication middleware was skipped as documented in packages/cli/src/auth/auth.service.ts:173-188"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh builds n8n from official npm package with vulnerable OAuth configuration",
+    "pinned_commit_or_ref": "n8n version 1.55.0",
+    "target_repo_mount_path": "/app",
+    "helper_files": [
+      "reproduction/test_oauth_callback.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

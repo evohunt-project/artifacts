@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the GET /rest/workflows/from-url endpoint passes a user-controlled URL to axios.get() without any SSRF filtering. The verification confirmed the vulnerable code pattern exists in the target, confirmed no SSRF protection exists, and the exploit demonstration showed the server successfully fetching a mock internal metadata endpoint returning simulated IAM credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should confirm that (1) the target code contains axios.get(query.url) with no URL sanitization, (2) no SSRF protection (private IP blocking, metadata endpoint blocking) exists anywhere in the codebase, and (3) the server can be made to fetch arbitrary internal URLs including cloud metadata endpoints.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the verification container. The verify.sh script confirmed: (1) axios.get(query.url) pattern exists at packages/cli/src/workflows/workflows.controller.ts:310, (2) z.string().url() DTO validation only checks syntax, (3) no SSRF protection keywords found in the codebase. The exploit.sh script launched a mock internal metadata service on 127.0.0.1:19999 and demonstrated the server fetching http://127.0.0.1:19999/latest/meta-data/iam/security-credentials/ which returned simulated IAM credentials (AccessKeyId: AKIAIOSFODNN7EXAMPLE, SecretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY). A second SSRF to /internal-secret-api/users returned simulated internal user data including SSN.",
+  "verification_method": "The verify.sh script performs three checks against the target source code: (1) greps for the axios.get(query.url) SSRF vector in the controller file, (2) confirms z.string().url() is the only URL validation in the DTO, (3) searches for SSRF protection keywords across the codebase. The exploit.sh script runs a mock HTTP server simulating an internal metadata service and demonstrates the SSRF by fetching sensitive endpoints.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs confirm axios.get(query.url) found at packages/cli/src/workflows/workflows.controller.ts:310",
+    "Container logs confirm z.string().url() (syntactic-only validation) found in the DTO",
+    "Container logs confirm no SSRF protection keywords found in the n8n codebase",
+    "Exploit script successfully fetched mock metadata endpoint http://127.0.0.1:19999/latest/meta-data/iam/security-credentials/ and extracted simulated IAM credentials",
+    "Exploit script successfully fetched mock internal API http://127.0.0.1:19999/internal-secret-api/users and extracted simulated sensitive user data"
+  ],
+  "limitations_or_blockers": [
+    "The PoC uses a mock internal service instead of a real cloud metadata endpoint since the Docker container does not have access to actual cloud infrastructure.",
+    "The PoC verifies the vulnerable code pattern and demonstrates the SSRF mechanism rather than exploiting a live running n8n instance, because building n8n from source requires significant build time."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

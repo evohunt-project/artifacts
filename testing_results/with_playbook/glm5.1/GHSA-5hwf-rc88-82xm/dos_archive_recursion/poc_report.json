@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that a 500-level nested ZIP file causes RecursionError in find_file_properties_recursively(), crashing the process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the polyglot scanning function to recurse beyond Python's stack limit and crash with RecursionError, demonstrating complete denial of service.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the target, generated a 500-level nested ZIP, ran find_file_properties_recursively on it, and the process crashed with RecursionError as expected.",
+  "verification_method": "The verify.sh script runs the exploit and checks that the process exits with a non-zero code and that stderr contains 'RecursionError', confirming the DoS via unbounded recursion. It distinguishes the RecursionError crash from unrelated failures like build errors or missing dependencies.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Process exited with non-zero exit code due to RecursionError",
+    "Error output contains 'RecursionError' confirming stack overflow from unbounded recursion in polyglot.find_file_properties_recursively",
+    "The nested ZIP payload was successfully generated and processed up to the crash point"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/generate_nested_zip.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

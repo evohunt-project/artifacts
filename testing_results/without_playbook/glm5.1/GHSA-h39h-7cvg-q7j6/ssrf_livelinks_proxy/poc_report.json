@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms the unauthenticated SSRF vulnerability in plugin/LiveLinks/proxy.php. An internal HTTP server is started with a secret proof token, and the same URL validation logic from proxy.php (FILTER_VALIDATE_URL + ^http.* regex) is applied to the internal URL. The test demonstrates that the internal URL passes validation and the secret token is fetched and returned to the attacker, confirming the SSRF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a secret value served by an internal HTTP service (simulating an internal metadata endpoint or private API) is accessible through the SSRF proxy endpoint without authentication.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started an internal HTTP server on 127.0.0.1:8888 serving a secret proof token, applied the same URL validation as proxy.php to the internal URL, fetched the internal URL using curl, and confirmed the secret token was returned in the response.",
+  "verification_method": "The test starts a Python HTTP server on 127.0.0.1:8888 serving a random proof token. It then applies the same URL validation as proxy.php (FILTER_VALIDATE_URL + ^http.* regex) to the internal URL http://127.0.0.1:8888/secret. The internal URL passes validation, and curl fetches the content. The verification checks whether the proof token appears in the response, confirming that internal services are accessible through the SSRF. The script also verifies that the vulnerable proxy.php pattern exists in the target repository.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The internal URL http://127.0.0.1:8888/secret passes the proxy.php URL validation (FILTER_VALIDATE_URL + ^http.* regex).",
+    "The curl request to the internal URL returns the proof token, confirming the server fetches internal resources.",
+    "The proof token extracted from the internal service matches the expected value.",
+    "The vulnerable proxy.php code pattern ($_GET['livelink'] with fakeBrowser) is confirmed present in the target repository."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_ssrf.php",
+      "reproduction/secret_server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

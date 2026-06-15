@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor",
+  "summary": "Docker-based PoC confirms that user with limited scope can update share path to point to victim's sensitive files without authorization validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Attacker user should be able to update share path from /attacker_files/readme.txt to /victim_files/secrets.txt despite lacking access to victim directory.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully demonstrated the attack: attacker created share in authorized scope, then updated it to point outside scope, and accessed victim's secret file through the share.",
+  "verification_method": "verify.sh checks that share path update succeeded and that attacker could access victim files through the repointed share, confirming missing scope validation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Attacker successfully created share in /attacker_files scope",
+    "Share path updated to /victim_files/secrets.txt without authorization error",
+    "Attacker accessed victim's secret content through repointed share",
+    "No scope validation prevented path update to unauthorized directory"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out HEAD, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup_users.sh",
+      "reproduction/test_users.json"
+    ]
+  }
+}

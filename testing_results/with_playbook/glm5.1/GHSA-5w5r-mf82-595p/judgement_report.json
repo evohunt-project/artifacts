@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T03:57:07.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4bff3e54",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-5w5r-mf82-595p/GHSA-5w5r-mf82-595p.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "double_far_bounds_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4bff3e54/double_far_bounds_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4bff3e54/double_far_bounds_bypass/vulnerability_report.json",
+      "title": "Missing bounds check in double-far pointer resolution allows arbitrary memory access",
+      "vulnerability_type": "out_of_bounds_memory_access",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a separate double-far pointer bounds-check bypass in capnp/src/private/layout.rs::follow_fars(); the advisory root cause is safe exposure of constant::Reader and Raw/StructSchema construction paths that rely on get_root_unchecked.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or root cause. The advisory concerns safe Rust APIs constant::Reader::get and StructSchema/RawStructSchema construction reaching get_root_unchecked with unvalidated words or encoded schema data. The only final qualifying finding concerns an unrelated missing bounds_check for the second pointer in double-far pointer resolution.",
+    "evidence": [
+      "Advisory GHSA-5w5r-mf82-595p describes UB in constant::Reader::get and StructSchema::new caused by unchecked construction over arbitrary words or schemas through PointerReader::get_root_unchecked.",
+      "Advisory fix 7b981f4c75a975c80444cd38729bcdf12bf3eabf makes constant::Reader fields pub(crate) and adds an unsafe constructor for raw word-backed constants.",
+      "Advisory fix e3aeec213e6d1b30a182bf61682a370f20d8a02c changes generated RawStructSchema construction to unsafe RawStructSchema::new calls.",
+      "double_far_bounds_bypass/vulnerability_report.json identifies capnp/src/private/layout.rs:536-541 and 571-577, specifically missing validation of far_position_in_segment for the second pointer in double-far follow_fars()/zero_object() handling.",
+      ".judge/input_manifest.json lists double_far_bounds_bypass as the only final qualifying_vuln finding."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4bff3e54/double_far_bounds_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4bff3e54/double_far_bounds_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4bff3e54/double_far_bounds_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the Gogs mirror settings endpoint allows changing the mirror address to an internal URL without local-address validation. After updating the address and triggering a mirror sync, the Gogs server initiates a TCP connection to the internal canary HTTP server, proving the SSRF bypass.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the Gogs server to make an HTTP connection to the internal canary listener at 127.0.0.1:8888 after the mirror address is changed via the settings endpoint and mirror sync is triggered.",
+  "actual_observed_result": "The Gogs server was built from source, started with SQLite, and a mirror repository was created via migration with a valid external URL. The mirror address was then changed via the settings endpoint to http://127.0.0.1:8888/ssrf-proof-endpoint without any validation error. Triggering mirror sync caused the Gogs server to connect to the internal canary, which logged the incoming connection.",
+  "verification_method": "An internal HTTP canary server listens on 127.0.0.1:8888 and logs all incoming connections to a file. After the exploit sequence completes, the verification script checks whether the canary log contains a connection record. This distinguishes genuine SSRF (server-initiated connection to internal address) from unrelated behavior such as startup failures or normal HTTP traffic.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The internal canary HTTP server received a GET request from the Gogs server process after the mirror address was changed to an internal URL.",
+    "The migration endpoint correctly validates external URLs with netutil.IsBlockedLocalHostname, but the settings endpoint bypasses this check.",
+    "The mirror sync mechanism (git.IsURLAccessible and git remote update) initiated a connection to the attacker-specified internal address."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction builds Gogs from source which may take several minutes depending on network and CPU speed.",
+    "The initial mirror clone from the external URL (github.com/git/git.git) requires internet access."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

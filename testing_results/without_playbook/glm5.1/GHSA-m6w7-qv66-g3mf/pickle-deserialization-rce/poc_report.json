@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The reproduction confirms that BentoML's runner application deserializes untrusted pickle payloads from HTTP request bodies, enabling remote code execution. When the args-number header is set to a value != 1, the raw request body is passed directly to pickle.loads() without validation, allowing an attacker to execute arbitrary Python code.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start a vulnerable service, send a malicious pickle payload via HTTP POST, and trigger the proof-of-concept command execution inside the service process, demonstrating arbitrary code execution.",
+  "actual_observed_result": "The reproduction successfully started a vulnerable service on localhost:3000, sent a crafted pickle payload with args-number=2 header, triggered pickle.loads() on the malicious payload, and executed the proof command 'echo EVOHUNT_POC_SUCCESS_Pickle_RCE_Triggered'. The service output confirmed the command execution: 'EVOHUNT_POC_SUCCESS_Pickle_RCE_Triggered' was printed, validating the RCE vulnerability.",
+  "verification_method": "The exploit script creates a malicious pickle payload using __reduce__ to execute a unique proof string 'EVOHUNT_POC_SUCCESS_Pickle_RCE_Triggered'. The proof string appears in the service output, confirming successful code execution. The unique proof string format distinguishes this exploit from parser errors or unrelated failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Service started successfully on localhost:3000",
+    "HTTP POST request with args-number=2 header triggered the vulnerable pickle.loads() code path",
+    "Malicious pickle payload (85 bytes) was deserialized, executing the __reduce__ method",
+    "Proof command 'echo EVOHUNT_POC_SUCCESS_Pickle_RCE_Triggered' was executed in the service context",
+    "Service output contained the proof string 'EVOHUNT_POC_SUCCESS_Pickle_RCE_Triggered', confirming code execution",
+    "HTTP response returned 200 OK, indicating successful request processing",
+    "No authentication or authorization prevented the exploit, confirming the network attack vector"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh creates a minimal vulnerable service in a temporary directory that simulates the vulnerable code path in BentoML's runner_app.py. No external repository clone is required for this self-contained demonstration.",
+    "pinned_commit_or_ref": "Demonstrates vulnerability pattern in BentoML runner_app.py:301",
+    "target_repo_mount_path": "N/A - self-contained demonstration",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/vulnerable_service.py",
+      "reproduction/Dockerfile"
+    ]
+  }
+}

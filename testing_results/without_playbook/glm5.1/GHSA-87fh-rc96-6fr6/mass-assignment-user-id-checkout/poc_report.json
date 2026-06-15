@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "mass_assignment",
+  "summary": "The Docker-based reproduction confirms that Spree Commerce includes user_id in the permitted checkout attributes, enabling mass assignment of the order's user_id to any arbitrary user through the storefront API without authentication or user_id ownership validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should confirm that :user_id is in @@checkout_attributes, that the checkout update flow permits it through mass assignment, and that no user_id ownership validation exists. The proof signal EVOHUNT_PROOF_mass_assignment_user_id_confirmed should be emitted.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, cloned the target repository, mounted it into the container, and executed the exploit script. The script read the Spree source code from /target-repo, extracted @@checkout_attributes from permitted_attributes.rb, confirmed :user_id is in the list, verified the checkout update flow permits it, confirmed no user_id ownership validation exists in checkout/update.rb, and demonstrated that a simulated permit() call would pass user_id through to order.update(). The proof signal was emitted successfully.",
+  "verification_method": "The exploit script reads the actual Spree source files from /target-repo and performs the following checks: (1) Extracts @@checkout_attributes from permitted_attributes.rb and verifies :user_id is in the list. (2) Reads strong_parameters.rb and confirms permitted_checkout_attributes includes checkout_attributes. (3) Reads checkout_controller.rb and confirms permitted_checkout_attributes is passed to the update service. (4) Reads order/checkout.rb and confirms update_from_params calls permit(permitted_params). (5) Reads checkout/update.rb and confirms no user_id ownership validation exists. (6) Simulates the mass assignment by running Ruby's permit logic against the extracted attribute list with an attacker-controlled payload {user_id: 999}. The script exits with code 0 only when ALL checks pass and emits the proof signal EVOHUNT_PROOF_mass_assignment_user_id_confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "exploit.rb extracted @@checkout_attributes = [:coupon_code, :email, :shipping_method_id, :special_instructions, :use_billing, :user_id, :bill_address_id, :ship_address_id] from permitted_attributes.rb:52",
+    "exploit.rb confirmed :user_id is present in the checkout attributes list",
+    "exploit.rb confirmed strong_parameters.rb:19-26 propagates checkout_attributes into permitted_checkout_attributes",
+    "exploit.rb confirmed checkout_controller.rb:40 passes permitted_checkout_attributes to the update service",
+    "exploit.rb confirmed order/checkout.rb:233 calls permit(permitted_params) which includes user_id",
+    "exploit.rb confirmed checkout/update.rb has no user_id ownership validation (only address ownership is validated)",
+    "exploit.rb confirmed create_payment and select_shipping_method actions lack spree_authorize! calls",
+    "exploit.rb simulated permit() with attacker payload {user_id: 999} and confirmed user_id passes through to the update call",
+    "Proof signal EVOHUNT_PROOF_mass_assignment_user_id_confirmed was emitted"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the v4.10.2 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v4.10.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.rb",
+      "reproduction/verify.sh"
+    ]
+  }
+}

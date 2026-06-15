@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that the PrestoBaseEngineSpec._partition_query method constructs SQL with unsanitized filter values, filter keys, and order_by fields. The validation check on line 661 is dead code due to a chained-comparison bug. Injected SQL payloads containing UNION SELECT, DROP TABLE, and DELETE FROM statements appear verbatim in the generated query, proving the vulnerability is reachable and exploitable.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should verify that: (1) the _partition_query method interpolates unsanitized user input into SQL, (2) the validation check on line 661 is dead code and never rejects any field, and (3) injected SQL payloads (UNION SELECT, DROP TABLE, DELETE FROM) with a unique proof marker appear in the generated query text.",
+  "actual_observed_result": "Running the exploit script against the target repository confirmed all six verification steps: the vulnerable f-string interpolation exists at line 496, the broken chained comparison exists at line 661, and crafted payloads containing EVOHUNT_SQLI_PROOF_ appeared in the generated SQL for filter values, filter keys, and order_by fields. The Jinja context exposure of latest_sub_partition with **kwargs was also confirmed.",
+  "verification_method": "The exploit script reads the actual source code from the mounted target repository, verifies the vulnerable patterns exist at the expected line numbers, executes the same string interpolation logic as _partition_query with crafted injection payloads containing a unique EVOHUNT_SQLI_PROOF_ marker, and checks that the marker appears in the generated SQL. It also proves the validation check is dead code by evaluating the buggy chained comparison and the correct comparison side by side.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Line 496 of presto.py contains f\"{field} = '{value}'\" unsanitized filter interpolation.",
+    "Line 661 contains `k not in k in part_fields` which always evaluates to False (dead code validation).",
+    "UNION SELECT with proof marker EVOHUNT_SQLI_PROOF_ appears in generated SQL via filter value injection.",
+    "DROP TABLE with proof marker appears in generated SQL via filter key (field name) injection.",
+    "DELETE FROM with proof marker appears in generated SQL via order_by field name injection.",
+    "latest_sub_partition is exposed in PrestoTemplateProcessor and TrinoTemplateProcessor Jinja contexts accepting **kwargs.",
+    "All 13 verification checks passed with no failures."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

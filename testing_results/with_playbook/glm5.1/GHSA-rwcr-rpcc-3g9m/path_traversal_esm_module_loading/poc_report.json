@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "path_traversal",
+  "summary": "The reproduction bundle sets up an Elixir application using the vulnerable elixir-nodejs library with a constrained module path, places a proof .mjs file outside that directory, and demonstrates that NodeJS.call with a '../' traversal module path loads and executes the outside file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the Elixir test application to call NodeJS.call with a '../outside/traversal_proof.mjs' module path. The Node.js server.js should resolve this via path.join(nodePath, '../outside/traversal_proof.mjs') to a path outside the configured directory, load the file via import(), execute its proof function, and return the proof string to Elixir.",
+  "actual_observed_result": "PoC was not executed in this session.",
+  "verification_method": "The verify.sh script creates a proof .mjs module outside the configured module directory that exports a function returning the unique string PATH_TRAVERSAL_PROOF_evhunt_7a3b9c. The Elixir exploit code calls NodeJS.call with the traversal path and checks that the returned value exactly matches this proof string. A baseline test first confirms that a safe module inside the intended directory loads correctly. Success is confirmed only when the traversed module returns the expected proof string, ruling out false positives from error paths or startup failures.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The PoC requires Docker with internet access to fetch Elixir dependencies (jason, poolboy, ssl_verify_fun) from hex.pm during container runtime.",
+    "Building the Elixir project inside the container may take several minutes on first run."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.1.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

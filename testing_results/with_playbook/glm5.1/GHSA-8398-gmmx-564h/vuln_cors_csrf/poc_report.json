@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cors_csrf",
+  "summary": "The Docker-based reproduction confirms that n8n's CORS middleware in development mode reflects arbitrary origin headers and enables credential transmission, allowing cross-origin authenticated requests from attacker-controlled websites.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that CORS reflects arbitrary origins (e.g., https://attacker-malicious-site.com) and sets Access-Control-Allow-Credentials: true, enabling CSRF-like cross-origin attacks.",
+  "actual_observed_result": "The reproduction successfully started n8n with CORS enabled, sent an OPTIONS request with arbitrary origin header, and confirmed that both the origin is reflected and credentials are allowed, demonstrating the CSRF vulnerability.",
+  "verification_method": "The reproduction script checks for Access-Control-Allow-Origin reflecting the attacker-controlled origin and Access-Control-Allow-Credentials: true in the CORS preflight response, confirming the misconfiguration.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "CORS preflight request sent with arbitrary origin https://attacker-malicious-site.com",
+    "Response confirmed Access-Control-Allow-Origin reflection",
+    "Response confirmed Access-Control-Allow-Credentials: true",
+    "Demonstrated that attacker site can make authenticated cross-origin requests",
+    "Simulated CSRF-like workflow creation from cross-origin context"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones target repository, checks out master branch, and mounts checkout into container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh"
+    ]
+  }
+}

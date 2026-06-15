@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that when OAuth2Required is false (controlled by NRF), UDM accepts unauthenticated requests to all endpoints without token validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that unauthenticated HTTP requests to UDM endpoints succeed when OAuth2 is disabled via NRF configuration.",
+  "actual_observed_result": "Running ./reproduction/run.sh started mock NRF returning oauth2=false, built UDM service, and unauthenticated requests to /nudm-sdm/v2/test/am-data succeeded with HTTP 200.",
+  "verification_method": "The verify.sh script sends unauthenticated requests and checks for HTTP 200 response, confirming complete authentication bypass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Mock NRF returned customInfo with oauth2=false",
+    "UDM started with OAuth2Required=false",
+    "Unauthenticated GET request to /nudm-sdm/v2/test/am-data returned HTTP 200",
+    "No OAuth2 token required for any endpoint access"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the free5gc/udm repository from GitHub, checks out v3.2.10 tag, and builds the UDM service.",
+    "pinned_commit_or_ref": "v3.2.10",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/mock-nrf.sh",
+      "reproduction/udmcfg.yaml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

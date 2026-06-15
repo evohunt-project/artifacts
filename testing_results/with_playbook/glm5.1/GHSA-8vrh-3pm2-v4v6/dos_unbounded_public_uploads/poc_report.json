@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that FileBrowser Quantum allows unbounded file uploads through public shares, enabling disk exhaustion attacks that can deny service to legitimate users.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should successfully upload large files via a public share without authentication, exhaust available disk space, and potentially render the service unavailable or degraded.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the FileBrowser service, created a public share with upload permissions, and successfully uploaded multiple large files (200MB each) without authentication, demonstrating disk exhaustion capability.",
+  "verification_method": "The run script creates a public share, uploads multiple large files via the public API, and monitors disk usage to confirm exhaustion. The verification checks for successful uploads, disk space consumption, and potential service degradation or denial.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Multiple large files (200MB each) were successfully uploaded via public share without authentication.",
+    "Disk usage monitoring confirmed progressive disk space exhaustion.",
+    "The exploit demonstrated ability to consume storage resources without any rate limiting or quota enforcement."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository and builds FileBrowser from source, then runs the exploit against the live service.",
+    "pinned_commit_or_ref": "latest",
+    "target_repo_mount_path": "/tmp/filebrowser-quantum",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/README.md"
+    ]
+  }
+}

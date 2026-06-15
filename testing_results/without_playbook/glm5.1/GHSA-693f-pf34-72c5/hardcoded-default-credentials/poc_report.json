@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "hardcoded_credentials",
+  "summary": "The Docker-based reproduction confirms that the PraisonAI realtime web UI uses hardcoded default credentials admin/admin that grant ADMIN role access when environment variables are not set.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should confirm that the auth_callback function in realtime.py defaults to admin/admin credentials and that these credentials are accepted, granting ADMIN role access.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, analyzed the target source code, and confirmed that the default credentials admin/admin are hardcoded as fallback values in the auth_callback function and that login with these credentials succeeds and grants ADMIN role.",
+  "verification_method": "The verification script reads the vulnerable source file to confirm the hardcoded default values exist, then simulates the auth_callback logic to verify that admin/admin credentials are accepted when environment variables are not set. This distinguishes the vulnerability from a properly configured deployment where non-trivial credentials would be required.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code analysis confirmed the presence of hardcoded default credentials: expected_username = os.getenv('CHAINLIT_USERNAME', 'admin') and expected_password = os.getenv('CHAINLIT_PASSWORD', 'admin').",
+    "Simulation of the auth_callback confirmed that login with admin/admin succeeds and returns a User object with ADMIN role metadata.",
+    "Verification confirmed that when environment variables are not set, the insecure defaults are used without any warning or enforcement of strong credentials."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

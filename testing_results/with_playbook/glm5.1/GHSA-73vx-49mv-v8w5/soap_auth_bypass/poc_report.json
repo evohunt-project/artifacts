@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that the SOAP API authentication bypass allows any authenticated user to impersonate the administrator. The exploit uses a low-privilege user's session cookie as the password parameter in a SOAP call with the administrator's username, and the server authenticates the request as the administrator without password verification.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the SOAP API to accept a low-privilege user's session cookie as authentication for the administrator account, returning administrator-level data (MantisBT version info and user lists) in the SOAP response.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched MantisBT in Docker, created a low-privilege test user and an administrator, then sent a SOAP mc_version request with username='administrator' and password=<testuser's cookie>. The SOAP API returned the MantisBT version string, confirming successful authentication as administrator without knowing the administrator's password.",
+  "verification_method": "The exploit script sends a SOAP mc_version request which requires authentication. If authentication fails, the SOAP API returns a SOAP fault with an access denied error. If authentication succeeds, the API returns the MantisBT version string. The script also performs mc_project_get_users to demonstrate admin-level data access. The verification checks for the presence of 'MantisBT' in the SOAP response and absence of 'fault', and emits PROOF_SIGNAL: SOAP_AUTH_BYPASS_CONFIRMED.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "SOAP mc_version response contains MantisBT version string when called with administrator username and testuser's cookie",
+    "SOAP mc_project_get_users returns user enumeration data when called with administrator username and testuser's cookie",
+    "Proof signal SOAP_AUTH_BYPASS_CONFIRMED emitted by the verification script"
+  ],
+  "limitations_or_blockers": [
+    "The PoC requires Docker to be available on the host system",
+    "The PoC requires network access to clone the MantisBT repository from GitHub",
+    "MySQL startup time may vary across systems; the script waits up to 30 seconds"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify_direct.php"
+    ]
+  }
+}

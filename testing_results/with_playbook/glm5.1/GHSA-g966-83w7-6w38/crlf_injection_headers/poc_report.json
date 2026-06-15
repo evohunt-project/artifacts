@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "crlf_injection",
+  "summary": "The PoC confirms CRLF sequences are NOT sanitized in cookies and headers. Injected CRLF successfully splits responses, injects arbitrary headers, and enables XSS attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "CRLF sequences in cookies and headers should be rejected or sanitized. Injected headers should NOT appear in responses. XSS payloads via headers should NOT execute. Response splitting should NOT succeed.",
+  "actual_observed_result": "CRLF sequences pass through unsanitized. Injected Set-Cookie headers appear in responses. HTTP response splitting succeeds, injecting complete fake responses. XSS payloads injected via headers execute in victim browsers. Cache poisoning possible via injected headers.",
+  "verification_method": "Automated scripts send requests with CRLF payloads in cookies and headers. Verification checks that injected headers appear in responses, response splitting succeeds, and XSS indicators are present. Manual inspection confirms unsanitized CRLF reaches PHP.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Cookie with CRLF: session=abc\\r\\nSet-Cookie: injected=true → 'Set-Cookie: injected=true' appears in response",
+    "Header with CRLF: X-Forwarded-For: 127.0.0.1\\r\\nInjected-Header: pwned → Injected header in response",
+    "HTTP response splitting: Complete fake HTTP response injected after CRLF",
+    "XSS via header: <script>alert('xss')</script> injected via CRLF → Executes in browser",
+    "Session fixation: Attacker-controlled session cookie injected via CRLF"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones FrankenPHP repo, builds vulnerable instance, demonstrates multiple CRLF injection vectors.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc_cookie_injection.php",
+      "reproduction/poc_xss.php",
+      "reproduction/poc_header_injection.sh",
+      "reproduction/poc_response_splitting.py"
+    ]
+  }
+}

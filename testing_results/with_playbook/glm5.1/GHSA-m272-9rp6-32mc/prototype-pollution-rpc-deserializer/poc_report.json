@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution",
+  "summary": "The Docker-based reproduction confirms that sending a crafted RPC request with a meta array containing __proto__ path segments causes Object.prototype pollution in the oRPC server process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After the exploit request, Object.prototype should have a new 'polluted' property set to undefined, meaning every object in the process inherits this property. The verification checks Object.prototype.hasOwnProperty('polluted') before and after the request.",
+  "actual_observed_result": "Running ./reproduction/run.sh installed the vulnerable @orpc/server@1.13.5 and @orpc/client@1.13.5 packages, started a minimal oRPC handler, sent a crafted GET request with meta=[[3,'__proto__','polluted']], and confirmed that Object.prototype.polluted was set to undefined after the request, while it was absent before.",
+  "verification_method": "The exploit script checks Object.prototype.hasOwnProperty('polluted') before and after sending the crafted request. Before the request, the property must not exist (return false). After the request, the property must exist (return true). The script also verifies that the property value is undefined (matching the UNDEFINED meta type). A distinguishable proof string [EVOHUNT_PP_CONFIRMED] is printed only when both conditions are met.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Object.prototype.hasOwnProperty('polluted') returned false before the exploit request.",
+    "Object.prototype.hasOwnProperty('polluted') returned true after the exploit request.",
+    "The property value Object.prototype.polluted is undefined as expected from the UNDEFINED (type 3) meta deserialization.",
+    "The proof string [EVOHUNT_PP_CONFIRMED] was emitted, confirming end-to-end prototype pollution."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.13.5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

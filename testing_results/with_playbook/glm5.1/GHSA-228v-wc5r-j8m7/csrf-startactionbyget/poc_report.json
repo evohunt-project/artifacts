@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "csrf",
+  "summary": "The Docker-based reproduction confirms that OliveTin's StartActionByGet endpoint allows actions to be triggered via GET requests without CSRF protection, enabling cross-site request forgery attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the CSRF attack page should trigger action execution through automatic GET requests sent by the browser, creating proof files demonstrating successful CSRF attack.",
+  "actual_observed_result": "Executing ./reproduction/run.sh built and launched OliveTin service, triggered StartActionByGet endpoint via simulated browser GET request, and successfully created proof file (/tmp/csrf_proof.txt) demonstrating action execution.",
+  "verification_method": "The run script executes a GET request to StartActionByGet endpoint and checks for proof file creation (/tmp/csrf_proof.txt). The proof file contains timestamped output confirming the action was executed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show action execution triggered by GET request",
+    "Proof file /tmp/csrf_proof.txt created with timestamped content",
+    "Service processed GET request without CSRF token validation",
+    "Action executed with default arguments via GET method",
+    "No SameSite cookie attribute preventing cross-origin requests"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones OliveTin repository from GitHub, creates vulnerable config with test actions, builds container, and starts service on port 1337",
+    "pinned_commit_or_ref": "latest",
+    "target_repo_mount_path": "/app",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/csrf_attack.html"
+    ]
+  }
+}

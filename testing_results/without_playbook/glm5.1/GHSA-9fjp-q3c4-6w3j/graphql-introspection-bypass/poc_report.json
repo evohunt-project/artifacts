@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "access_control_bypass",
+  "summary": "The Docker-based reproduction confirms that the __type GraphQL introspection field bypasses the IntrospectionControlPlugin which only checks for the '__schema' substring. When graphQLPublicIntrospection is disabled, __schema queries are correctly blocked with a 403 error, but __type queries return complete type information including field names and types.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A __schema introspection query should be blocked with 'Introspection is not allowed' (403), while a __type query using the same unauthenticated credentials should return full type information including field names, demonstrating the incomplete introspection detection.",
+  "actual_observed_result": "The __schema query was blocked with a GraphQLError containing 'Introspection is not allowed'. The __type query returned a successful response containing the type name, field names, and nested type information, confirming the access control bypass.",
+  "verification_method": "The verification script sends two queries to the GraphQL endpoint: one using __schema and one using __type. It verifies that the __schema response contains the 'Introspection is not allowed' error string while the __type response contains '\"fields\"' indicating successful data retrieval. The distinct responses for equivalent introspection operations confirm the incomplete check.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The __schema query response contains 'Introspection is not allowed' confirming the security control is active for that field.",
+    "The __type query response contains field names and type information from the GraphQL schema, confirming the bypass.",
+    "Both queries were sent with identical headers (X-Parse-Application-Id only, no session token or master key), demonstrating unauthenticated exploitation."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.54",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/start_server.js"
+    ]
+  }
+}

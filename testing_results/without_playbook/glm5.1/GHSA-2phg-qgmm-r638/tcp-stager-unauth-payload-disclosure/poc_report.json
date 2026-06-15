@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_information_disclosure",
+  "summary": "The Docker-based reproduction confirms that the Sliver TCP stager listener serves the full staged implant payload to any unauthenticated TCP connection. A client connects to the stager port and immediately receives the entire payload without any handshake, nonce, or credential exchange.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Connecting to the TCP stager port should result in the complete staged payload being written to the socket and the connection closed, with no authentication or access validation performed at any point.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the Sliver repository, confirmed the vulnerable handleConnection function in server/c2/tcp-stager.go, built the exploit binary, and demonstrated that a plain TCP connection receives the full staged payload with zero authentication.",
+  "verification_method": "The exploit starts a TCP listener that replicates the exact vulnerable pattern from server/c2/tcp-stager.go (accept connection, write payload, close). An unauthenticated client connects and reads the payload. The verify.sh script also confirms the vulnerable code exists in the mounted target repository at /target-repo/server/c2/tcp-stager.go by grepping for handleConnection and conn.Write(data).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The target repo's server/c2/tcp-stager.go contains handleConnection which calls conn.Write(data) without any authentication check.",
+    "The exploit binary demonstrated that a plain TCP connection to the stager port receives the full payload.",
+    "No nonce, handshake, or credential exchange was required to retrieve the payload.",
+    "The HTTP stager in server/c2/http.go uses nonce-based access control, confirming that the TCP stager's lack of any control is an oversight."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Sliver repository from GitHub on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

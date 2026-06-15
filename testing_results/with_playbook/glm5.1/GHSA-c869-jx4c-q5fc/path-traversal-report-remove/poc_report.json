@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can delete arbitrary files on the FUXA server via path traversal in POST /api/reportRemoveFile. The exploit creates a sentinel file, sends a crafted JSON payload with a traversal path in fileName, and verifies the sentinel file was deleted.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the path traversal payload to escape the reports directory and delete a file at an arbitrary path on the server filesystem.",
+  "actual_observed_result": "Running ./reproduction/run.sh started the FUXA server, created a sentinel file at /tmp/evohunt-pt-test/sentinel.txt, sent POST /api/reportRemoveFile with fileName=../../../tmp/evohunt-pt-test/sentinel.txt, and confirmed the sentinel file was deleted (HTTP 200 response, file no longer exists).",
+  "verification_method": "The exploit creates a known sentinel file before sending the request, then checks whether the file still exists after the request completes. If the file is gone, the path traversal was successful. The verification distinguishes real file deletion from a generic error response by checking filesystem state.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "POST /api/reportRemoveFile with fileName=../../../tmp/evohunt-pt-test/sentinel.txt returned HTTP 200.",
+    "The sentinel file at /tmp/evohunt-pt-test/sentinel.txt was deleted, confirming the path traversal escaped the reports directory.",
+    "No authentication token was required because secureEnabled defaults to false."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh downloads the target repository archive from GitHub, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b873cdf32a63bcfaa6de8b724781f63c6f977c69",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

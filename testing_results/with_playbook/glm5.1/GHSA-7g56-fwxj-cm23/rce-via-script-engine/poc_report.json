@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The FUXA script engine executes arbitrary operating system commands through the unauthenticated /api/runscript endpoint in the default configuration. The exploit sends a POST request with script.test=true and code containing require('child_process').execSync() via Module._compile, achieving command execution without any authentication token.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a crafted POST request to /api/runscript with test mode enabled and code containing require('child_process').execSync('echo <proof_string>') should execute the echo command server-side and return the proof string in the HTTP response body, confirming arbitrary code execution.",
+  "actual_observed_result": "Running the exploit locally against the FUXA v1.2.7 server: POST /api/runscript without any x-access-token header returned HTTP 200 with the proof string in the response body: \"EVOHUNT_RCE_PROOF_<timestamp>\\n\". This confirms that Module._compile at msm.js:143 executed require('child_process').execSync() and returned the command output. No authentication was required. The Docker-based reproduction bundle was not executed due to infrastructure constraints (Docker image pull timeout), but the identical exploit code path was verified through direct local execution.",
+  "verification_method": "The verify script sends the exploit request with a unique proof string (EVOHUNT_RCE_PROOF_<timestamp>), executes 'echo <proof_string>' via child_process.execSync through the script engine, and checks that the proof string appears in the HTTP response body. This distinguishes genuine command execution from error messages, startup failures, or unrelated responses.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "POST /api/runscript returned HTTP 200 with response body containing the proof string, confirming server-side code execution via Module._compile.",
+    "No x-access-token header was provided in the request, confirming the endpoint is accessible without credentials (verifyToken auto-generated a guest token and never blocked the request).",
+    "The response contained the output of the injected echo command, confirming execution in the Node.js server process context."
+  ],
+  "limitations_or_blockers": [
+    "The Docker-based reproduction bundle (./reproduction/run.sh) was not executed due to Docker base image pull timeout in the test environment. The identical exploit was verified through local execution of the FUXA server."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the FUXA repository from GitHub, checks out the pinned vulnerable tag v1.2.7, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "bbd738d21d7192d5eaaf58577de68eced4a609eb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

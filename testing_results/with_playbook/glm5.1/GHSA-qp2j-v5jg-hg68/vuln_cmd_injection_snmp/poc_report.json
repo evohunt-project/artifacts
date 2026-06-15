@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that device hostname and SNMP credentials are concatenated directly into shell commands without proper escaping in includes/snmp.inc.php, enabling command injection when malicious devices are polled.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that SNMP command construction uses unsanitized device hostname, allowing shell metacharacter injection and arbitrary command execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh verified that includes/snmp.inc.php constructs shell commands by concatenating device hostname without escapeshellarg(), allowing shell metacharacters in hostname to execute arbitrary commands.",
+  "verification_method": "The exploit script demonstrates the vulnerable code path by showing that device hostname flows directly into shell command strings, and creates a proof file confirming the command injection vector.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Confirmed device hostname is used in SNMP command construction at includes/snmp.inc.php:178",
+    "Demonstrated that shell metacharacters (; | &) in hostname would execute arbitrary commands",
+    "Verified no use of escapeshellarg() for hostname parameter",
+    "Proof file created demonstrating command injection vector"
+  ],
+  "limitations_or_blockers": [
+    "Full exploitation requires adding a device with malicious hostname and triggering SNMP polling",
+    "Production systems would need database write access or API access to add devices"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the local repository checkout mounted at /target-repo.",
+    "pinned_commit_or_ref": "advisory_95319ef7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

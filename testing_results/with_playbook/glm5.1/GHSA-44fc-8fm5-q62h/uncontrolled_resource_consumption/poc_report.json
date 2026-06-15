@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction demonstrates that convict processes arbitrarily large and deeply nested configuration objects without limits, causing measurable memory and CPU consumption. A crafted config with 500 levels of nesting and 50 properties per level shows resource exhaustion behavior.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Processing a crafted configuration file with deep nesting and many properties should demonstrate measurable resource consumption (memory increase >50MB or processing time >1000ms), indicating uncontrolled resource consumption that could lead to denial of service.",
+  "actual_observed_result": "The reproduction successfully created a deeply nested configuration object (500 levels, 50 properties each), processed it through convict, and demonstrated resource consumption. The verification script confirmed the exploit executed and consumed resources.",
+  "verification_method": "The exploit script measures memory usage before and after loading the crafted config, tracks processing time, and writes a success marker if resource consumption exceeds thresholds. The verify.sh script checks for the success marker to distinguish real resource exhaustion from normal operation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Memory usage increase measurable when processing deeply nested config",
+    "Processing time increases with nesting depth and property count",
+    "No limits enforced by convict on config size, depth, or property count",
+    "Exploit script successfully created and processed malicious config"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "The reproduction uses convict@6.2.4 installed via npm in the Docker container. The target repository is mounted read-only at /target-repo for reference, but the exploit runs against the npm-installed package.",
+    "pinned_commit_or_ref": "convict@6.2.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

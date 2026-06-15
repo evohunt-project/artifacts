@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution",
+  "summary": "The Docker-based reproduction confirms that a crafted TCP message containing a constructor.prototype payload passes through the NestJS JSON.parse deserialization path without sanitization. A common deep-merge handler pattern results in Object.prototype pollution, verified by an empty object inheriting the injected property.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted TCP message to reach the handler, trigger a deep merge with the constructor.prototype payload, and pollute Object.prototype such that an empty object inherits the 'polluted' property with value 'yes'.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started the NestJS TCP microservice, sent the prototype pollution payload via a TCP connection, and verified that Object.prototype was polluted. The check handler returned {\"polluted\":\"yes\",\"isPolluted\":true}, confirming that an empty object inherited the injected property from the polluted Object.prototype.",
+  "verification_method": "The exploit sends a check message after the pollution payload. The handler creates an empty object ({}) and checks whether it inherits a 'polluted' property with value 'yes' from Object.prototype. The verification signal is the string PROTOTYPE_POLLUTED in the exploit output, which is emitted only when the check handler confirms Object.prototype was modified.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The app log shows the handler received data keys including 'constructor', confirming the crafted payload reached the handler.",
+    "The check handler log shows 'isPolluted=true, polluted=yes', confirming Object.prototype was polluted.",
+    "The exploit output includes [RESULT] PROTOTYPE_POLLUTED, the expected verification signal.",
+    "The response JSON {\"response\":{\"polluted\":\"yes\",\"isPolluted\":true}} confirms the prototype chain of empty objects was modified."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "bcb4747f7598a9d2655c8184a6d729ebefa07fbd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/app.ts",
+      "reproduction/exploit.ts",
+      "reproduction/verify.sh",
+      "reproduction/wait-for-port.js",
+      "reproduction/tsconfig.json"
+    ]
+  }
+}

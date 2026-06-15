@@ -1,0 +1,30 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "The SSRF vulnerability in the Http class allows arbitrary URL fetching without validation. While the PoC was not executed in a live environment, the vulnerability is evident from code analysis showing unrestricted URL acceptance, unlimited redirect following, and lack of private IP filtering.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "If executed in a cloud environment, the PoC would demonstrate accessing cloud metadata endpoints (e.g., http://169.254.169.254/latest/meta-data/) to retrieve AWS credentials, or scanning internal networks through redirect chains.",
+  "actual_observed_result": "PoC not attempted. Code analysis confirms the vulnerability: Core/Http.php accepts any URL without protocol validation, enables CURLOPT_FOLLOWLOCATION for unlimited redirects, and lacks DNS rebinding protection. These conditions enable SSRF attacks to internal services and cloud metadata.",
+  "verification_method": "The vulnerability is verified through static code analysis. Manual testing would require triggering an HTTP request from the application to a controlled URL that redirects to internal endpoints or cloud metadata services.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Code analysis shows CURLOPT_FOLLOWLOCATION enabled without limit (Core/Http.php:38)",
+    "No CURLOPT_PROTOCOLS restriction to prevent file://, gopher://, dict:// protocols",
+    "No validation against private IP ranges or localhost",
+    "OpenAI integration passes untrusted URLs from API responses to file_get_contents() (Core/Lib/OpenAi.php:335-336)"
+  ],
+  "limitations_or_blockers": [
+    "PoC requires triggering an HTTP request from within the application context",
+    "Cloud metadata access only possible in AWS/GCP/Azure deployments",
+    "Full demonstration requires specific application configuration to expose HTTP client usage"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "Code analysis only - no live reproduction attempted",
+    "pinned_commit_or_ref": "main (latest development version)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

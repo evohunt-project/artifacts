@@ -1,0 +1,73 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T16:50:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7676c922",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-gv8f-wpm2-m5wr/GHSA-gv8f-wpm2-m5wr.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "hardcoded-jwt-secret",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7676c922/hardcoded-jwt-secret",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7676c922/hardcoded-jwt-secret/vulnerability_report.json",
+      "title": "Hardcoded default JWT secret enables unauthenticated full API access",
+      "vulnerability_type": "authentication_bypass",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the exact same vulnerable code as the advisory: the hardcoded default JWT secret 'claude-ui-dev-secret-change-in-production' in server/middleware/auth.js:6. This is the first vulnerability in the advisory's three-vulnerability chain (CWE-1188: Insecure Default JWT Secret) that enables unauthenticated RCE via WebSocket shell injection.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier3",
+    "target_match": "match",
+    "runtime_evidence": "failed_or_none",
+    "selected_finding": {
+      "folder_name": "hardcoded-jwt-secret",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7676c922/hardcoded-jwt-secret",
+      "status": "qualifying_vuln",
+      "title": "Hardcoded default JWT secret enables unauthenticated full API access",
+      "vulnerability_type": "authentication_bypass"
+    },
+    "reason": "The hardcoded-jwt-secret finding matches the advisory root cause (CWE-1188: Insecure Default JWT Secret in server/middleware/auth.js:6). The advisory describes a three-vulnerability chain: (1) hardcoded JWT secret, (2) WebSocket auth bypass, and (3) OS command injection in WebSocket shell handler. While the finding focuses on the authentication bypass impact rather than the full RCE chain, it identifies the exact vulnerable code and root cause described in the advisory. Docker network timeout prevented fresh PoC execution during judging, but the existing poc_report.json confirms the vulnerability was previously reproduced successfully.",
+    "evidence": [
+      "server/middleware/auth.js:6 declares const JWT_SECRET = process.env.JWT_SECRET || 'claude-ui-dev-secret-change-in-production'; — the exact hardcoded secret cited in the advisory",
+      "The .env.example does not include JWT_SECRET, matching the advisory's claim that operators are not guided to override the default",
+      "The poc_report.json shows successful reproduction: forged JWT with the hardcoded secret was accepted by GET /api/auth/user",
+      "The finding's code location server/middleware/auth.js:6 matches the advisory's vulnerable file and line number"
+    ],
+    "blockers_to_higher_tier": [
+      "Docker network timeout prevented building and running the PoC during judging (failed to fetch node:20-bookworm base image from docker.io)",
+      "Cannot obtain fresh runtime evidence satisfying exploit_success_predicate or bug_activation_predicate from the judge-controlled PoC execution"
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "hardcoded-jwt-secret",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7676c922/hardcoded-jwt-secret",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7676c922/.judge/poc_runs/hardcoded-jwt-secret/reproduction",
+      "exit_code": 1,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7676c922/.judge/poc_runs/hardcoded-jwt-secret/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7676c922/.judge/poc_runs/hardcoded-jwt-secret/poc_execution.json",
+      "observed_effect": "Docker build failed with network timeout: 'failed to fetch anonymous token' from auth.docker.io when pulling node:20-bookworm base image. The PoC could not be executed due to Docker Hub connectivity issues.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    }
+  ],
+  "open_world_findings": []
+}

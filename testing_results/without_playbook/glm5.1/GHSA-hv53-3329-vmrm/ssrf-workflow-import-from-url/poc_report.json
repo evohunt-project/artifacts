@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that an authenticated user can cause the n8n server to make arbitrary server-side HTTP requests via the workflow import-from-url endpoint. The server fetches content from a mock internal service running on localhost:9999 and returns the response body to the attacker, including a proof string and simulated secret data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause n8n to fetch data from the mock internal service at http://localhost:9999/ and return the response to the attacker, demonstrating that the server makes arbitrary outbound requests to URLs controlled by the caller.",
+  "actual_observed_result": "The n8n server started successfully, the owner account was created, a personal project was obtained, and the SSRF request to GET /rest/workflows/from-url?url=http://localhost:9999/&projectId=<id> returned the mock internal service's JSON payload including the EVOHUNT_SSRF_PROOF marker and simulated internal data.",
+  "verification_method": "The verify.sh script checks the SSRF response for the exact proof string EVOHUNT_SSRF_PROOF emitted by the mock internal server. This distinguishes a genuine SSRF from a generic error response, startup failure, or unrelated behavior. A static code check also confirms the vulnerable axios.get(query.url) pattern exists in the mounted source.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The SSRF response body contains the EVOHUNT_SSRF_PROOF string that only exists in the mock internal server's response, proving the server-side request reached the mock service.",
+    "The response includes the full JSON object with nodes, connections, and ssrf_proof fields, confirming the server returned the fetched data to the caller.",
+    "Static code grep confirms the vulnerable pattern axios.get(query.url) exists in the mounted source at packages/cli/src/workflows/workflows.controller.ts."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.3.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/mock_server.py"
+    ]
+  }
+}

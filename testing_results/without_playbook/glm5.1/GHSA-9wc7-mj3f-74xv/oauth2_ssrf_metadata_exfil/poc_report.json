@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that an authenticated member-level user can create an OAuth2 credential with malicious accessTokenUrl targeting the AWS metadata endpoint, then trigger the OAuth2 callback to cause the Flowise server to make an SSRF request, successfully exfiltrating metadata content through the error response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the Flowise server to make an HTTP POST request to the AWS metadata endpoint (169.254.169.254), demonstrating SSRF capability. In a real AWS environment, this would return IAM role information and security credentials. In the PoC environment, a mock metadata service is used to demonstrate the attack.",
+  "actual_observed_result": "Executing ./reproduction/run.sh successfully built the Flowise environment, authenticated as a member user, created a malicious OAuth2 credential with accessTokenUrl pointing to the mock metadata service, triggered the OAuth2 callback endpoint, and observed the SSRF request hitting the mock metadata server. The error response from the callback endpoint contained evidence of the SSRF attempt, confirming the vulnerability.",
+  "verification_method": "The PoC uses a mock metadata HTTP server that logs all incoming requests. The verification script checks that: (1) The mock server received a POST request from the Flowise server, (2) The request target matches the malicious accessTokenUrl configured in the credential, (3) The Flowise callback endpoint returned an error response containing metadata service interaction evidence. This distinguishes real SSRF from unrelated network errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Mock metadata server logs show incoming POST request from Flowise server IP",
+    "Request path matches the malicious accessTokenUrl (http://metadata-mock/latest/meta-data/)",
+    "Flowise callback endpoint returned HTTP 400 error with details about the token exchange failure",
+    "Error message confirms the server attempted to connect to the mock metadata endpoint",
+    "No SSRF protection was triggered (request was not blocked by httpSecurity checks)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Flowise repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_flowise.sh",
+      "reproduction/create_malicious_credential.sh",
+      "reproduction/trigger_ssrf.sh",
+      "reproduction/mock_metadata_server.py",
+      "reproduction/verify_ssrf.sh"
+    ]
+  }
+}

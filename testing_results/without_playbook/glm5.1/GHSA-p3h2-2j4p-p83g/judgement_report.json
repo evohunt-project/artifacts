@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T09:55:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7be41759",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-p3h2-2j4p-p83g/GHSA-p3h2-2j4p-p83g.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "mcpb-arbitrary-file-write",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7be41759/mcpb-arbitrary-file-write",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7be41759/mcpb-arbitrary-file-write/vulnerability_report.json",
+      "title": "Arbitrary file write via path traversal in MCPB package upload",
+      "vulnerability_type": "path_traversal_file_write",
+      "advisory_match": true,
+      "advisory_match_reason": "Same vulnerable function (mcpbController.ts uploadMcpbFile), same sink (path.join at line 95/107 using unsanitized manifest.name), same root cause (no validation of path traversal sequences in manifest name field before constructing filesystem paths for mkdirSync and renameSync), same CWE-22 path traversal class.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "mcpb-arbitrary-file-write",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7be41759/mcpb-arbitrary-file-write",
+      "status": "qualifying_vuln",
+      "title": "Arbitrary file write via path traversal in MCPB package upload",
+      "vulnerability_type": "path_traversal_file_write"
+    },
+    "reason": "The finding identifies the exact same vulnerable code path as the advisory: src/controllers/mcpbController.ts where manifest.name from an uploaded MCPB file is used directly in path.join() without sanitization (line 95 in v0.12.12, line 107 in advisory reference), enabling path traversal via '../' sequences. An end-to-end HTTP PoC was executed: a minimal Express server running the vulnerable mcpbController logic from @samanhappy/mcphub@0.12.12 accepted a malicious MCPB upload via POST /api/mcpb/upload with manifest.name='../../../pwned-by-mcpb', and the server wrote a file containing attacker-controlled content (ARBITRARY_FILE_WRITE_SUCCESS) to data/uploads/pwned-by-mcpb/proof.txt, which is outside the intended data/uploads/mcpb/ directory. This satisfies exploit_success: the advisory-described path traversal vulnerability causes arbitrary file write through the MCPB upload endpoint.",
+    "evidence": [
+      "Vulnerable code confirmed in @samanhappy/mcphub@0.12.12 mcpbController.js line 95: const finalExtractDir = path.join(path.dirname(mcpbFilePath), `server-${manifest.name}`) with no sanitization of manifest.name",
+      "End-to-end HTTP PoC via POST /api/mcpb/upload returned success:true with is_outside_upload_dir:true",
+      "Proof file written to data/uploads/pwned-by-mcpb/proof.txt (outside intended data/uploads/mcpb/) containing ARBITRARY_FILE_WRITE_SUCCESS",
+      "Patched version 1.0.12 adds validateMcpbServerName() with regex check and resolveMcpbServerExtractDir() with path escape detection, confirming the fix addresses exactly this vulnerability"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "mcpb-arbitrary-file-write",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7be41759/mcpb-arbitrary-file-write",
+      "executed": true,
+      "command": "bash run_poc.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7be41759/.judge/poc_runs/mcpb-arbitrary-file-write/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7be41759/.judge/poc_runs/mcpb-arbitrary-file-write/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_7be41759/.judge/poc_runs/mcpb-arbitrary-file-write/poc_execution.json",
+      "observed_effect": "HTTP POST /api/mcpb/upload with malicious MCPB (manifest.name='../../../pwned-by-mcpb') caused server to write proof.txt containing 'ARBITRARY_FILE_WRITE_SUCCESS' to data/uploads/pwned-by-mcpb/, outside the intended data/uploads/mcpb/ directory. Server response confirmed: success=true, is_outside_upload_dir=true, proof_content=ARBITRARY_FILE_WRITE_SUCCESS.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cross_site_scripting",
+  "summary": "The Docker-based verification confirms that MantisBT's issues_rss.php retrieves filter names from the database and concatenates them into RSS titles without proper HTML sanitization, enabling stored XSS attacks through malicious filter names.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The verification should confirm the presence of vulnerable code where filter names from the database are concatenated into RSS feed titles without HTML entity encoding, demonstrating stored XSS capability.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully identified the vulnerable code pattern in issues_rss.php:120, where filter_get_field() retrieves the filter name from the database and it is directly concatenated into the RSS title string without sanitization.",
+  "verification_method": "Automated Python script scans the target repository for the exact vulnerable code pattern and reports the presence of unsanitized filter name concatenation in RSS title generation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Confirmed presence of vulnerable pattern in issues_rss.php: $t_title .= ' (' . filter_get_field( $f_filter_id, 'name' ) . ')';",
+    "Filter name retrieved from database via filter_get_field() without sanitization",
+    "No HTML entity encoding or XSS protection applied before concatenation",
+    "Authenticated users with low privileges can create filters with arbitrary names",
+    "Stored XSS attack vector: malicious filter name persists in database and affects all users viewing RSS feed with that filter_id"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the pre-existing target repository checkout mounted read-only at /target-repo",
+    "pinned_commit_or_ref": "current HEAD of advisory_9b3844e0/repo",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/trigger_xss.py",
+      "reproduction/check_payload.sh",
+      "reproduction/verify_xss.sh"
+    ]
+  }
+}

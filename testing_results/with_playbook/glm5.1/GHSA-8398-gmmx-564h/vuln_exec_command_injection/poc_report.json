@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection_rce",
+  "summary": "The Docker-based reproduction confirms that the ExecuteCommand workflow node executes arbitrary shell commands without validation. The PoC creates a workflow with an ExecuteCommand node containing an arbitrary command, activates the workflow, and executes it to demonstrate successful command injection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause n8n to execute the command 'echo EVOHUNT_POC_COMMAND_INJECTION_SUCCESSFUL > /tmp/poc_output.txt' via the ExecuteCommand node, creating a proof file demonstrating arbitrary command execution.",
+  "actual_observed_result": "The reproduction successfully built n8n from source, created a workflow with ExecuteCommand node, activated it, and executed the workflow. The command was executed and created /tmp/poc_output.txt with the expected proof string, confirming arbitrary command execution without validation.",
+  "verification_method": "The reproduction script checks for the existence of /tmp/poc_output.txt and verifies it contains the expected proof string 'EVOHUNT_POC_COMMAND_INJECTION_SUCCESSFUL'. This distinguishes successful command execution from workflow execution failures or startup errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Workflow with ExecuteCommand node successfully created via REST API",
+    "Workflow activation succeeded without validation errors",
+    "Manual workflow execution triggered the command",
+    "Proof file /tmp/poc_output.txt created with expected content",
+    "Command executed with full shell access on the host system"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh"
+    ]
+  }
+}

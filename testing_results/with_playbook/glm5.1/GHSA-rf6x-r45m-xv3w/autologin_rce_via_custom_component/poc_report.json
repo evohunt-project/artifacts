@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass_rce",
+  "summary": "The Docker-based reproduction confirms that the default auto-login configuration exposes an unauthenticated endpoint that returns a superuser JWT, which can then be used to execute arbitrary Python code via the custom_component endpoint's unsandboxed exec() call.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the attacker's Python code to execute on the server, creating a proof file at /tmp/EVOHUNT_RCE_PROOF_* containing a unique proof marker, confirming arbitrary code execution without authentication.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository, built the Langflow server, obtained a superuser JWT via the unauthenticated auto_login endpoint, submitted arbitrary Python code to the custom_component endpoint, and verified that the proof file was created on the server filesystem.",
+  "verification_method": "The exploit script creates a proof file at /tmp/EVOHUNT_RCE_PROOF_* with a unique marker. After the custom_component endpoint executes the code, the script checks whether the file exists and contains the expected marker. The presence of this file confirms that arbitrary code execution occurred in the server process.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The GET /api/v1/auto_login endpoint returned HTTP 200 with a valid superuser JWT without requiring any credentials.",
+    "The POST /api/v1/custom_component endpoint accepted arbitrary Python code and executed it via exec().",
+    "A proof file was created on the server filesystem at /tmp/EVOHUNT_RCE_PROOF_* containing the expected marker, confirming code execution."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor_missing_authorization",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can access another user's cart by submitting the cart number to the get-cart endpoint. The exploit script creates a test cart for a victim user, then makes an unauthenticated request with that cart number and receives the full cart data including email, addresses, line items, and pricing.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that an anonymous HTTP request to the cart get-cart endpoint with a known cart number returns the full cart data of another user, including personally identifiable information (email, addresses) and order details, without any authentication or authorization check.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Craft CMS + Commerce environment, created a test product and a cart for a victim user, then demonstrated that an anonymous curl request to the get-cart endpoint with the victim's cart number returned the complete cart JSON including the victim's email address, line items, and shipping address.",
+  "verification_method": "The verify script creates a cart for a test user, captures the cart number, then sends an unauthenticated HTTP POST request to the get-cart endpoint with that cart number. The script checks the response JSON for the presence of the victim's email address and line item data, which should not be accessible to an unauthenticated user. A successful verification prints the EVOHUNT_PROOF signal confirming the IDOR.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The anonymous HTTP response contained the full cart JSON with the victim user's email address.",
+    "The response included line item details (product name, quantity, price) from the victim's cart.",
+    "No authentication token or session cookie was required to access the cart data.",
+    "The cart number was the only parameter needed to access another user's cart."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "develop",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup-craft.sh",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

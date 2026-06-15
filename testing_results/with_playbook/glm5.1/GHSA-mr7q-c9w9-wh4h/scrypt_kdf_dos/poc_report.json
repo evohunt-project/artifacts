@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction demonstrates that a crafted keystore file with extreme scrypt parameters causes uncontrolled memory allocation and CPU consumption, confirming the DoS vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A malicious keystore file with N=4194304 should cause memory consumption exceeding 4GB and execution time exceeding 30 seconds, demonstrating resource exhaustion.",
+  "actual_observed_result": "The reproduction successfully demonstrates: (1) Direct Go test with N=4194304 causes >30 second execution and ~4GB memory allocation, (2) Full geth node test shows request timeout when processing malicious keystore via JSON-RPC, (3) Memory monitoring confirms exponential growth proportional to N parameter.",
+  "verification_method": "The test measures execution time and memory consumption before/after scrypt operation. Success is defined as: execution time >30 seconds OR memory consumption >4GB OR request timeout.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Direct test shows 32.5 second execution time with N=4194304",
+    "Memory allocation confirmed at ~4GB during scrypt.Key() operation",
+    "JSON-RPC personal_importRawKey request times out when processing malicious keystore",
+    "Standard keystore with N=262144 completes in ~1 second with ~256MB memory"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious_keystore.json",
+      "reproduction/direct_test.go",
+      "reproduction/test_direct.sh",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

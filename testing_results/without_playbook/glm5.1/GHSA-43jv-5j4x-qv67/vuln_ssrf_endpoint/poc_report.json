@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The PoC successfully demonstrates SSRF by using attacker-controlled request headers in URL template rendering to access internal metadata services and exfiltrate data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that an attacker can use malicious request headers to make Heimdall fetch data from internal services or cloud metadata endpoints, and that the response data can be exfiltrated via contextualizer outputs.",
+  "actual_observed_result": "The PoC successfully exploited the URL template injection to make Heimdall request data from a mock internal metadata service. The internal server received the request from Heimdall, and the response data was accessible in the contextualizer output, confirming successful SSRF.",
+  "verification_method": "The PoC verifies success by checking that the mock internal server received a request from Heimdall, that Heimdall logs show the SSRF URL, and that response data from the internal service is present in the contextualizer output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Internal metadata server received HTTP request from Heimdall",
+    "Heimdall logs show URL: http://169.254.169.254/latest/meta-data/ (SSRF target)",
+    "Response from internal server captured in contextualizer output",
+    "Request header X-Target-Host successfully used to control target URL",
+    "Data exfiltration path confirmed via Outputs"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Heimdall repository on the host, checks out the vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/internal_server.py",
+      "reproduction/verify.sh",
+      "reproduction/config.yaml"
+    ]
+  }
+}

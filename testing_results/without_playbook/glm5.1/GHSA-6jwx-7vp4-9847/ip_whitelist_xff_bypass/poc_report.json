@@ -1,0 +1,33 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "access_control_bypass",
+  "summary": "The Docker-based reproduction bundle starts Traefik v1.7.34 with a frontend IP whitelist (sourceRange: 1.2.3.4, useXForwardedFor: true) and a local backend. It then sends two requests: one without X-Forwarded-For (expected 403) and one with X-Forwarded-For: 1.2.3.4 (expected 200, demonstrating the bypass).",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The request without a spoofed X-Forwarded-For header should receive HTTP 403 Forbidden (correctly blocked by the IP whitelist). The request with X-Forwarded-For: 1.2.3.4 (a whitelisted IP) should receive HTTP 200 OK (incorrectly allowed through, demonstrating the whitelist bypass).",
+  "actual_observed_result": "PoC bundle generated but not executed during this session.",
+  "verification_method": "The verify.sh script compares HTTP status codes: status1 (no header) must be 403 and status2 (spoofed header) must be 200. If both conditions hold, the bypass is confirmed and the script exits 0. If either condition fails, the script exits 1 with diagnostic output.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "HTTP 403 response for request without X-Forwarded-For header (expected: whitelist blocks the request from non-whitelisted IP).",
+    "HTTP 200 response for request with X-Forwarded-For: 1.2.3.4 header (expected: whitelist incorrectly authorizes the request due to spoofed header value).",
+    "Exit code 0 from verify.sh confirming the bypass was reproduced."
+  ],
+  "limitations_or_blockers": [
+    "Requires Docker to be available on the host machine.",
+    "Requires network access to download the Traefik v1.7.34 binary during image build."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (traefik/traefik) on the host, checks out the v1.7.34 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.7.34",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/backend.py",
+      "reproduction/traefik.toml",
+      "reproduction/rules.toml"
+    ]
+  }
+}

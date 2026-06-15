@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that calling pkcs7.Parse() with deeply nested BER data triggers the uncontrolled recursion in readObject(), causing a Go runtime stack overflow panic that crashes the process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Calling pkcs7.Parse() with deeply nested BER data should cause readObject() to recurse uncontrollably, exceeding the goroutine stack limit and triggering a runtime panic that terminates the process.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, compiled the exploit against the target library at /target-repo, and executed the exploit. The deeply nested BER data triggered uncontrolled recursion in readObject(), causing the Go runtime to panic with a stack overflow. The process exited with a non-zero code indicating the crash.",
+  "verification_method": "The verify.sh helper runs the exploit inside the container with a timeout, captures stdout and stderr, and checks the exit code: 2 indicates a Go panic (stack overflow), 139 indicates SIGSEGV, 137 indicates killed (OOM), and 124 indicates timeout. It also checks stderr for stack overflow evidence strings. Success is determined by confirming the process crashed due to stack exhaustion from the recursive readObject() calls.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Process exited with a crash code (panic or signal) rather than completing normally",
+    "Stderr output contains stack overflow or runtime panic evidence from the Go runtime",
+    "The crash occurs specifically when parsing the deeply nested BER data through pkcs7.Parse() -> ber2der() -> readObject()",
+    "The container isolation ensures the crash is reliably detected by the host-side verification"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "a4bf8f627acc68ca11d93463596f48a8d1c37c95",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

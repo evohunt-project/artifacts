@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b533971a",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-xv3r-vr59-95rg/GHSA-xv3r-vr59-95rg.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "csrf_backup_sql_injection",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b533971a/csrf_backup_sql_injection",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b533971a/csrf_backup_sql_injection/vulnerability_report.json",
+      "title": "CSRF-exempt backup restore endpoint allows unauthenticated cross-origin arbitrary SQL execution",
+      "vulnerability_type": "csrf_sql_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding concerns the backup restore endpoint executing attacker-supplied SQL from an uploaded archive with CSRF protection bypass. The advisory instead describes Zip Slip in `Theme::upload`, where ZIP entry names are extracted without validation and can escape the temporary directory to write arbitrary files. Same application, but different controller, root cause, and exploit primitive.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "example",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b533971a/example",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b533971a/example/vulnerability_report.json",
+      "title": "Unsafe deserialization in import endpoint permits attacker-controlled code execution",
+      "vulnerability_type": "deserialization_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is about `Theme::upload` calling `ZipArchive::extractTo()` on user-supplied ZIP content without validating entry names, causing Zip Slip. This finding is an unrelated deserialization RCE pattern and does not identify the theme upload extraction path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or root cause. GHSA-xv3r-vr59-95rg is specifically about `modules/Theme/Controllers/Theme.php` extracting theme ZIP archives with `ZipArchive::extractTo()` and failing to validate entry names, allowing Zip Slip and arbitrary file write/RCE. The session findings instead cover CSRF-driven arbitrary SQL execution in backup restore and an unrelated deserialization example. Neither finding targets `Theme::upload` or ZIP entry traversal during theme extraction.",
+    "evidence": [
+      "The advisory names `modules/Theme/Controllers/Theme.php:13-56` and explains that theme upload calls `ZipArchive::extractTo()` with no entry-name validation.",
+      "The `csrf_backup_sql_injection` finding instead targets `POST /backend/backup/restore`, where uploaded backup content causes SQL execution with CSRF exposure; this is a different endpoint and exploit primitive from theme Zip Slip.",
+      "The `example` finding is unrelated to the theme upload controller and does not involve ZIP entry traversal."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b533971a/csrf_backup_sql_injection",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b533971a/csrf_backup_sql_injection/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b533971a/csrf_backup_sql_injection/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b533971a/example",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b533971a/example/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b533971a/example/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

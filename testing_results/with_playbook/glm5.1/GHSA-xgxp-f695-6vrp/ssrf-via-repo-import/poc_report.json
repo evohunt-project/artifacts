@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that Soft Serve's repo import function connects to an internal network address (127.0.0.1) via git.Clone() without SSRF validation. The server successfully imports a repository served by a local git daemon, proving the connection to the private IP address.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The Soft Serve server should connect to the internal address 127.0.0.1 when processing the repo import command, bypassing the SSRF protection that blocks similar connections in the webhook subsystem.",
+  "actual_observed_result": "Running ./reproduction/run.sh built Soft Serve, started a git daemon on 127.0.0.1:9419 serving a test repo, started the Soft Serve server, and successfully imported a repository from git://127.0.0.1:9419/test-repo. The imported repository appeared in the server's repo list, confirming the server connected to the internal address.",
+  "verification_method": "After triggering the import via SSH, the script lists repositories on the Soft Serve server and checks for the presence of the imported repo name. The proof string EVOHUNT_SSRF_CONFIRMED is printed if the import succeeds, confirming the server connected to 127.0.0.1.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Soft Serve server started and accepted SSH connections with the admin key.",
+    "Git daemon served a test repository on 127.0.0.1:9419.",
+    "SSH command 'repo import ssrf-test git://127.0.0.1:9419/test-repo' completed without SSRF validation error.",
+    "The imported repository 'ssrf-test' appeared in 'repo list' output, confirming the server connected to the internal address.",
+    "Contrast: creating a webhook to http://127.0.0.1:8888 is blocked by ssrf.ValidateURL(), proving the SSRF protection gap."
+  ],
+  "limitations_or_blockers": [
+    "The import operation runs as a background goroutine and may take several seconds to complete. The verification script waits up to 30 seconds for the import to finish."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

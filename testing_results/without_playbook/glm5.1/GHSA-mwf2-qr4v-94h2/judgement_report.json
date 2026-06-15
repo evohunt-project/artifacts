@@ -1,0 +1,118 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-02/GHSA-mwf2-qr4v-94h2/GHSA-mwf2-qr4v-94h2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "sqli-stored-column-expression",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/sqli-stored-column-expression",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/sqli-stored-column-expression/vulnerability_report.json",
+      "title": "Stored SQL injection via unsanitized column expression in dataset API",
+      "vulnerability_type": "sql_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes missing SQL sanitization on column expressions passed to literal_column() in the Dataset API. The advisory describes bypassing the read-only verification check on PostgreSQL connections in SQLLab. While both involve SQL in Superset, the root causes differ: this is a missing sanitize_clause() call on stored column expressions, whereas the advisory is about the read-only connection check failing to detect DML in crafted SQL statements. Different vulnerable function, different code path, different root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "H",
+          "SI": "H",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "sqli-stored-fetch-values-predicate",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/sqli-stored-fetch-values-predicate",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/sqli-stored-fetch-values-predicate/vulnerability_report.json",
+      "title": "Stored SQL injection via unsanitized fetch_values_predicate in dataset API",
+      "vulnerability_type": "sql_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes missing SQL sanitization on fetch_values_predicate passed to sqlalchemy.sql.text() in the Dataset API. The advisory describes bypassing the read-only verification check on PostgreSQL connections in SQLLab. Different root cause: this is unsanitized stored predicates bypassing sanitize_clause(), while the advisory is about the read-only connection verification failing to detect DML in specially crafted SQL. Different vulnerable function (get_fetch_values_predicate vs read-only check), different code path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "H",
+          "SI": "H",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "ssrf-database-test-connection",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/ssrf-database-test-connection",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/ssrf-database-test-connection/vulnerability_report.json",
+      "title": "SSRF via database test connection endpoint with no private IP filtering",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes SSRF via the test_connection endpoint due to missing private IP filtering. The advisory describes a read-only bypass on PostgreSQL connections in SQLLab. Completely different vulnerability class (SSRF vs incorrect authorization/read-only bypass), different endpoint (test_connection vs SQLLab query execution), and different root cause (missing network restrictions vs insufficient DML detection in read-only checks).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The advisory (GHSA-mwf2-qr4v-94h2) describes a read-only bypass on PostgreSQL connections in Apache Superset SQLLab, where the read-only verification check fails to detect DML in specially crafted SQL statements (CWE-863). None of the three qualifying findings identify this vulnerable code or root cause. The findings describe: (1) SQL injection via unsanitized column expressions in the Dataset API, (2) SQL injection via unsanitized fetch_values_predicate in the Dataset API, and (3) SSRF via the test_connection endpoint. Each targets a different vulnerable function, code path, and root cause than the advisory-described read-only verification bypass.",
+    "evidence": [
+      "Advisory root cause: read-only verification check on PostgreSQL connections in SQLLab fails to detect DML in specially crafted SQL (CWE-863 Incorrect Authorization)",
+      "sqli-stored-column-expression: missing sanitize_clause() on literal_column() at models.py:908 - different root cause (SQL injection via stored column expressions vs read-only bypass on PostgreSQL connections)",
+      "sqli-stored-fetch-values-predicate: missing sanitize_clause() on self.text() at models.py:1387 - different root cause (SQL injection via stored predicates vs read-only bypass on PostgreSQL connections)",
+      "ssrf-database-test-connection: missing private IP filtering in test_connection at databases/api.py:1237 - different vulnerability class and root cause"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/sqli-stored-column-expression",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/sqli-stored-column-expression/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/sqli-stored-column-expression/poc_report.json",
+      "poc_report_status": "not_attempted"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/sqli-stored-fetch-values-predicate",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/sqli-stored-fetch-values-predicate/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/sqli-stored-fetch-values-predicate/poc_report.json",
+      "poc_report_status": "not_attempted"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/ssrf-database-test-connection",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/ssrf-database-test-connection/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_150944cf/ssrf-database-test-connection/poc_report.json",
+      "poc_report_status": "not_attempted"
+    }
+  ]
+}

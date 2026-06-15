@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "rce",
+  "summary": "The Docker-based reproduction confirms that the default FUXA configuration (secureEnabled=false) allows an unauthenticated attacker to execute arbitrary OS commands on the server by sending a POST request to /api/runscript with attacker-controlled JavaScript code in the script.code field.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted script payload to reach Module._compile(), execute the OS command 'id', write the command output to /tmp/EVOHUNT_RCE_POC, and return the result in the HTTP response body.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned FUXA v1.2.9, built the Docker image, started the FUXA server, sent the exploit POST request to /api/runscript without authentication, and the server executed the attacker-controlled OS command. The proof file /tmp/EVOHUNT_RCE_POC was created containing the output of the 'id' command, confirming code execution.",
+  "verification_method": "The verify.sh script checks for the existence of /tmp/EVOHUNT_RCE_POC inside the container after the exploit runs. The proof file is created only if the attacker code is actually compiled and executed by the Node.js Module._compile() engine. The file contains the output of 'id' which includes the OS user and group information, proving real command execution rather than a startup artifact.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit POST to /api/runscript returned a successful HTTP response, confirming the script was accepted and executed.",
+    "The proof file /tmp/EVOHUNT_RCE_POC was created inside the container, containing the output of the 'id' command.",
+    "No authentication token was provided in the request, confirming the exploit works without credentials."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag v1.2.9, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.2.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

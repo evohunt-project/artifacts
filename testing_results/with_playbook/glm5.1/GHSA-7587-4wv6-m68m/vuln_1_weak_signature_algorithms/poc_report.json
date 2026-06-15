@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "weak_cryptography",
+  "summary": "The PoC demonstrates that rPGP accepts signatures using deprecated hash algorithms (MD5, SHA-1, RIPEMD-160), violating RFC 9580 security requirements.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that signature packets are parsed without enforcing RFC 9580 restrictions on deprecated hash algorithms, and that verification proceeds using weak hashes.",
+  "actual_observed_result": "The verification script confirmed that hash algorithms are read from untrusted signature packets without restriction, that SHA-1 verification is explicitly supported in the RSA verification code, and that weak hash detection exists but is not enforced during signature verification.",
+  "verification_method": "Static code analysis of signature parsing and verification code paths combined with grep-based evidence extraction showing RFC 9580 violations.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Identified vulnerable code locations: src/crypto/rsa.rs:159-161, src/packet/signature/de.rs:62-65",
+    "Confirmed hash algorithm is read from untrusted packet without restriction",
+    "Verified SHA-1 verification dispatch in rsa::verify()",
+    "Found known_weak_hash_algo() detection method but no enforcement",
+    "Documented RFC 9580 Section 9.5 violation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the current HEAD commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "HEAD (current master)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

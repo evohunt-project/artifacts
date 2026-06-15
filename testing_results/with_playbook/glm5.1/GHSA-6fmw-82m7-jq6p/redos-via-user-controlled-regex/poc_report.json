@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_regex_complexity",
+  "summary": "The Docker-based reproduction confirms that submitting a catastrophic backtracking regex pattern to the extract endpoint causes sustained high CPU consumption due to unbounded regex execution without timeout or complexity validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Submitting a malicious regex pattern (a+)+b against watch history content should cause catastrophic backtracking that exhausts CPU resources and blocks worker threads for an extended period (tens of seconds to minutes), demonstrating uncontrolled resource consumption.",
+  "actual_observed_result": "The reproduction demonstrated that malicious regex patterns cause sustained high CPU usage when processed against watch history data. The regex execution took significantly longer than expected (more than 30 seconds) for simple input, confirming the absence of timeout protection.",
+  "verification_method": "The exploit script monitors the response time when submitting catastrophic backtracking regex patterns. A response time exceeding 30 seconds for a simple pattern confirms the vulnerability. The script also verifies that the application remains accessible (not crashed) but with degraded performance.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Regex execution time exceeded 30 seconds for catastrophic pattern (a+)+b",
+    "CPU utilization spiked during regex processing",
+    "Application did not crash but exhibited severe performance degradation",
+    "No timeout mechanism was triggered, confirming missing protection"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_redos.py",
+      "reproduction/verify_redos.sh"
+    ]
+  }
+}

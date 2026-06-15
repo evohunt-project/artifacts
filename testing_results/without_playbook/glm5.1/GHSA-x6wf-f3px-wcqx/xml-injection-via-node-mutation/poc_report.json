@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xml_injection_via_mutation",
+  "summary": "The Docker-based reproduction confirms that ProcessingInstruction and Comment data containing serialization terminators (?> and -->) are emitted verbatim by XMLSerializer, breaking node boundaries and allowing injection of arbitrary XML elements that are parsed as real document content upon re-parsing. The CDATA fix (GHSA-wh4c-j3r5-mjhp) did not extend the same splitting/validation protection to PI or Comment nodes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate three injection scenarios: (1) PI data containing ?> breaks the PI boundary and injects an additional ProcessingInstruction into the re-parsed document, (2) Comment data containing --> breaks the comment boundary and injects an arbitrary XML element into the re-parsed document, and (3) PI injection succeeds even when requireWellFormed=true because the serializer performs no PI data validation.",
+  "actual_observed_result": "All three tests passed: PI mutation injected an attacker-controlled ProcessingInstruction confirmed by the proof string 'EVOHUNT_PI_INJECTION_CONFIRMED' in the re-parsed document. Comment mutation injected an attacker-controlled element confirmed by the tag name 'EVOHUNT_COMMENT_INJECTION_CONFIRMED' in the re-parsed document. PI injection also succeeded with requireWellFormed=true, confirmed by 'EVOHUNT_PI_INJECTION_CONFIRMED_RWF'.",
+  "verification_method": "The exploit script creates PI and Comment nodes with data containing serialization terminators, serializes the document, re-parses the serialized output, and searches for proof strings and injected element names in the re-parsed DOM. This distinguishes real injection from generic parsing errors or unrelated crashes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Test 1: Serialized PI output '...href=\"style.css\"?><?inject EVOHUNT_PI_INJECTION_CONFIRMED ?>?>...' shows broken PI boundary with injected PI.",
+    "Test 2: Serialized Comment output '...<!--original--><EVOHUNT_COMMENT_INJECTION_CONFIRMED/><!--restored-->...' shows broken comment boundary with injected element.",
+    "Test 3: Serialized PI output with requireWellFormed=true shows same boundary breakage, confirming no PI data validation exists in the serializer."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the 0.9.9 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0.9.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

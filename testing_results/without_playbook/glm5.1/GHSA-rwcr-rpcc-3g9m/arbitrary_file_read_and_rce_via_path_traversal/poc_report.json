@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_rce",
+  "summary": "The Docker-based reproduction confirms that the elixir-nodejs library allows path traversal outside the intended NODE_PATH boundary, enabling arbitrary file access and code execution through malicious module loading.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate: (1) Path traversal to access files outside the module directory using ../../../ sequences, (2) Arbitrary code execution by loading a malicious JavaScript module from an attacker-controlled location, (3) Execution of system commands with the privileges of the Node.js process.",
+  "actual_observed_result": "The reproduction successfully demonstrated that: (1) Path traversal sequences like ../../../etc/passwd reach files outside the NODE_PATH boundary, (2) A malicious module placed at /tmp-exploit/pwned.js could be loaded via path traversal, (3) The malicious module executed arbitrary system commands (whoami, id), confirming full RCE capability. The error messages when attempting to load non-JS files as modules revealed that the file system paths were successfully traversed and accessed.",
+  "verification_method": "The verification script creates a malicious JavaScript module that wraps Node.js child_process.execSync to execute shell commands. It then uses path traversal (../../../tmp-exploit/pwned) to load and execute this module via the vulnerable NodeJS.call() API. Success is confirmed by: (1) Receiving output from whoami and id commands, (2) Error messages revealing file access outside boundaries, (3) Ability to read environment variables through the legitimate but dangerous getEnv() function exposed by test modules.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Path traversal to /etc/passwd confirmed through error messages showing the file was accessed",
+    "Malicious module at /tmp-exploit/pwned.js successfully loaded via ../../../tmp-exploit/pwned path traversal",
+    "Arbitrary command execution confirmed: whoami command returned user identity",
+    "Arbitrary command execution confirmed: id command returned user/group IDs",
+    "Information disclosure confirmed: environment variables exposed via getEnv() function",
+    "No validation of module path parameter observed at any layer of the application stack"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the vulnerable v3.1.3 tag, and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.1.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

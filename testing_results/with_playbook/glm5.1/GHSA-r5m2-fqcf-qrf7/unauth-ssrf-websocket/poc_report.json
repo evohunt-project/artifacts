@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated WebSocket client can trigger outbound HTTP requests from the FUXA server to arbitrary URLs via the DEVICE_WEBAPI_REQUEST event. The server returns the response content to the client, confirming SSRF with data exfiltration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Connecting to FUXA via an unauthenticated Socket.IO connection and emitting a DEVICE_WEBAPI_REQUEST event with an internal URL should cause the server to make an HTTP request to that URL and return the response. The reproduction targets the server's own /api/settings endpoint to prove the SSRF works.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the FUXA server, connected via unauthenticated Socket.IO WebSocket, sent a DEVICE_WEBAPI_REQUEST targeting http://127.0.0.1:1881/api/settings, and received the server's configuration data in the response, confirming the SSRF allows reading internal service responses.",
+  "verification_method": "The verify.sh script uses a Python Socket.IO client to connect without authentication, sends a DEVICE_WEBAPI_REQUEST targeting the server's own /api/settings endpoint, and checks the response for known settings fields (uiPort, language). This distinguishes genuine SSRF from a connection error or empty response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated Socket.IO connection was established successfully (no token or credentials required).",
+    "The DEVICE_WEBAPI_REQUEST event triggered an outbound HTTP request from the server.",
+    "The server returned the /api/settings response content through the WebSocket, confirming data exfiltration via SSRF."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the v1.2.7 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.2.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/ssrf_exploit.py"
+    ]
+  }
+}

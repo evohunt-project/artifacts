@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the elFinder PHP connector accepts an unsanitized bg parameter in the resize rotate command, which is interpolated into an ImageMagick convert shell command via sprintf. Sending bg=$(touch /tmp/evohunt_proof_cda0977f) with mode=rotate against a JPEG file causes shell command substitution inside double quotes, executing the attacker-controlled command on the server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted bg parameter value to reach the ImageMagick convert command via proc_open, where $(...) inside double quotes triggers shell command substitution, creating the proof marker file /tmp/evohunt_proof_cda0977f inside the container.",
+  "actual_observed_result": "Running the exploit sent cmd=resize with mode=rotate&bg=$(touch /tmp/evohunt_proof_cda0977f) to the connector. The connector returned a successful changed response with updated file metadata. The proof file /tmp/evohunt_proof_cda0977f was created inside the container, confirming that the shell command inside $(...) was executed by the ImageMagick convert process.",
+  "verification_method": "The exploit triggers the resize rotate command with a bg value containing $(touch /tmp/evohunt_proof_cda0977f). After the HTTP request completes, the verification script checks for the existence of /tmp/evohunt_proof_cda0977f. The presence of this file unambiguously confirms that the injected shell command was executed by the server, as no other code path would create this file.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The resize rotate command returned a successful JSON response with changed file metadata, confirming the vulnerable code path was reached.",
+    "The proof file /tmp/evohunt_proof_cda0977f was created inside the container, confirming shell command execution.",
+    "The proof file was owned by www-data (the Apache user), confirming the command ran in the web server process context."
+  ],
+  "limitations_or_blockers": [
+    "The vulnerability requires that elFinder is configured to use ImageMagick CLI (convert) as the image library. This is the default when neither the PHP Imagick extension nor the GD extension is available, or when imgLib is explicitly set to 'convert'.",
+    "For PNG and GIF images, the imgRotate function overrides the bgcolor parameter to transparent, bypassing user input. The exploit must target JPEG images to reach the vulnerable code path in rotate mode.",
+    "The vulnerability requires that the resize command is not disabled in the volume configuration."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2.1.67",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/connector.php",
+      "reproduction/create_test_image.php",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

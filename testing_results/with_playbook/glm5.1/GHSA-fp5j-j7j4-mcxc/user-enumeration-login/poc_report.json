@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "user_enumeration",
+  "summary": "The Docker-based reproduction sets up Craft CMS with a test user, then sends 6 login attempts with wrong passwords to both the known user and a non-existent user. After 5 failures (maxInvalidLogins), the locked existing user receives a different error message than the non-existent user, confirming user enumeration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After sending 6 login attempts for a known user, the response should contain an 'account_locked' or 'account_cooldown' errorCode. For a non-existent user with 6 attempts, the response should contain 'invalid_credentials'. The difference in error codes confirms that an attacker can enumerate valid usernames.",
+  "actual_observed_result": "PoC execution has not been attempted in this session. The reproduction bundle has been prepared for future execution.",
+  "verification_method": "The exploit script sends 6 POST requests to /actions/users/login with wrong passwords for both an existing user (knownuser@evohunt.test) and a non-existent user. It compares the final errorCode values from the JSON responses. If they differ (e.g., 'account_locked' vs 'invalid_credentials'), user enumeration is confirmed.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "PoC requires Docker and network access to build the Craft CMS project via Composer",
+    "The Craft CMS CLI installer and Composer require internet access"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh downloads the target repository archive and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "4.17.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

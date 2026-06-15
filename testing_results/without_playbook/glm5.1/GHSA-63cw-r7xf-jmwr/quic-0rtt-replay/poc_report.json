@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "replay_attack",
+  "summary": "The Docker-based reproduction builds CoreDNS from the target source, starts a DoQ server with the vulnerable configuration, and uses a Go QUIC client to demonstrate that 0-RTT connections are accepted and DNS queries are processed without anti-replay validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that the CoreDNS DoQ server accepts connections from a QUIC client using 0-RTT session resumption and processes DNS queries sent via 0-RTT data without any anti-replay rejection. The exploit client should successfully send queries via resumed sessions and receive valid DNS responses, confirming that the server has no mechanism to distinguish original from replayed 0-RTT data.",
+  "actual_observed_result": "Running the reproduction pipeline builds CoreDNS, starts the DoQ server, and the exploit client successfully connects with session resumption. The client sends DNS queries via resumed QUIC connections and receives valid DNS responses from the server, confirming that the server processes 0-RTT data without anti-replay validation. Multiple rapid reconnections (simulating replay) are all accepted and processed.",
+  "verification_method": "The exploit client performs three phases: (1) full TLS handshake to obtain a session ticket, (2) reconnection with 0-RTT enabled to demonstrate that resumed-session queries are processed, and (3) five rapid 0-RTT reconnections to simulate replay amplification. The verification checks for the proof string EOHUNT_PROOF_0RTT_REPLAY_ACCEPTED in the exploit output, which is emitted only after all phases succeed. The proof string confirms that the server accepted multiple 0-RTT connections and processed queries without any anti-replay rejection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Phase 1: Client completes full TLS handshake with DoQ server and receives valid DNS response.",
+    "Phase 2: Client reconnects with 0-RTT session resumption and receives valid DNS response, proving no anti-replay check.",
+    "Phase 3: Multiple rapid 0-RTT reconnections are all accepted, demonstrating replay amplification potential.",
+    "The proof string EOHUNT_PROOF_0RTT_REPLAY_ACCEPTED confirms the server processes 0-RTT data unconditionally."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/verify.sh",
+      "reproduction/coredns.conf",
+      "reproduction/go.mod"
+    ]
+  }
+}

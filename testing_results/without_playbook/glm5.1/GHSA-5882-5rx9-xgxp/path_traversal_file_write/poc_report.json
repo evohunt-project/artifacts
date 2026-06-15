@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_file_write",
+  "summary": "The Docker-based reproduction confirms that the output_path parameter allows writing to arbitrary filesystem locations outside expected directories.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an attacker can write arbitrary content to any filesystem location the process has permissions, including locations outside the expected output directory.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the target service, submitted a POST /screenshot request with output_path='/tmp/poc_write_test.txt', and verified that the file was created at that exact location, confirming the path traversal vulnerability.",
+  "verification_method": "The run script executes the exploit and checks if the file /tmp/poc_write_test.txt exists and contains expected content. This distinguishes successful file write from permission errors or output_path parameter being ignored.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File /tmp/poc_write_test.txt was created at the attacker-specified absolute path",
+    "The file contains screenshot data from the target URL",
+    "No validation was applied to prevent writing outside a sandbox directory",
+    "The service processed the request successfully despite the malicious output_path"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

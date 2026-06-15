@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_pagination_bypass",
+  "summary": "The Docker-based reproduction confirms that GraphQL types named without the 'Connection' suffix bypass pagination enforcement in the resource-limitations plugin, enabling unbounded queries and DoS.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a deeply nested query on 'User' type (not 'UserConnection') proceeds without pagination limits, causing unbounded resolver execution and large result sets.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, executed the unbounded query on User type, and confirmed that pagination checks were bypassed due to type.name.endsWith('Connection') heuristic failing, allowing 100 users with 1000 posts each with 500 comments each.",
+  "verification_method": "The exploit script checks: (1) type name is 'User' (not 'UserConnection'), (2) query executes without validation errors, (3) unbounded result sets are returned (users>10, posts>10, comments>10). This confirms pagination bypass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Query type 'User' bypassed type.name.endsWith('Connection') check",
+    "No validation errors despite nodeCostLimit=100",
+    "Result returned unbounded data: 100 users, 1000 posts per user, 500 comments per post",
+    "Resolvers executed without pagination enforcement",
+    "Pagination bypass enables DoS through unbounded resource consumption"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and builds the Docker image.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js"
+    ]
+  }
+}

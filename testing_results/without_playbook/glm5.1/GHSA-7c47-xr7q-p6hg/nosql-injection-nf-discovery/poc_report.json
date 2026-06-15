@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "nosql_injection",
+  "summary": "The Docker-based reproduction confirms that NoSQL injection in the NRF discovery endpoint allows unauthorized extraction of NF profile data by injecting MongoDB operators into HTTP query parameters.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The injected MongoDB query should return NF profiles that should be filtered out by normal query logic, demonstrating unauthorized data access through NoSQL injection. Specifically, injecting $ne operator should bypass type validation and return all NF instances except the specified type.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully demonstrated NoSQL injection by injecting {\"$ne\": \"AMF\"} into the target-nf-type query parameter, which bypassed the NF type validation and caused the NRF to return NF profiles that should have been filtered by the whitelist check. The attack successfully extracted NF instance data without proper authorization.",
+  "verification_method": "The reproduction script: (1) Starts a MongoDB instance and NRF service; (2) Registers test NF instances of different types; (3) Executes a normal discovery query to establish baseline behavior; (4) Executes an injected query with $ne operator; (5) Compares results to verify that injection returned unauthorized data. The verification distinguishes successful injection from normal query behavior and configuration errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Normal query for target-nf-type=AMF returned only AMF instances as expected",
+    "Injected query with target-nf-type[$ne]=AMF returned all NF instances except AMF, bypassing the type whitelist validation",
+    "Database query logs show the injected MongoDB operator {\"$ne\": \"AMF\"} was passed directly to the MongoDB query engine",
+    "The attack extracted NF profile data including nfInstanceId, nfType, nfStatus, and service endpoints without proper authorization"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "free5gc/nrf:main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_db.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

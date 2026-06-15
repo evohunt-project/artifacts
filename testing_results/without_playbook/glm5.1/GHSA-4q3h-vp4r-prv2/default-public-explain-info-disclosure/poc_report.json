@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction starts parse-server with default configuration, creates a test class with sample data, and sends a query with explain=true using only the application ID (no master key). The response contains the full MongoDB explain output including query execution plan, confirming that database internals are exposed to unauthenticated users by default.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A query request with explain=true, authenticated only with the application ID, should return MongoDB explain output revealing the query execution plan, index usage, and document statistics.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, started parse-server, created a test class with data, and sent GET /classes/TestClass with explain=true. The response contained the full MongoDB explain output including winningPlan, serverInfo, namespace, and totalDocsExamined fields.",
+  "verification_method": "The verification script sends a query with explain=true using only the X-Parse-Application-Id header (no master key) and checks that the response contains MongoDB explain output fields such as 'winningPlan' or 'queryPlanner'. The check distinguishes explain output from a normal query response or an error indicating master key is required.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The HTTP response to the explain query contains JSON with a 'results' array that includes explain output fields.",
+    "The response includes 'queryPlanner' or 'winningPlan' keys confirming MongoDB explain output was returned.",
+    "No X-Parse-Master-Key header was included in the request, confirming the explain was allowed without master key."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the 8.6.2 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/setup.sh"
+    ]
+  }
+}

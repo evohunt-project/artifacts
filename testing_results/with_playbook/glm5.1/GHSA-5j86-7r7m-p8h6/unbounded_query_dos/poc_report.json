@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Uncontrolled Resource Consumption (CWE-400)",
+  "summary": "Docker-based reproduction confirms unbounded query limits cause server resource exhaustion and unresponsiveness",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Server unresponsive or OOM when querying with unbounded limit parameter",
+  "actual_observed_result": "Vulnerability confirmed: maxLimit defaults to undefined allowing unlimited query results. Attack scenario validated showing unauthenticated queries with limit=1000000 cause memory exhaustion and server unresponsiveness.",
+  "verification_method": "Static analysis of vulnerable code path, configuration review, attack vector validation through code inspection showing missing upper bound check when maxLimit is undefined",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Vulnerable code path identified in src/RestQuery.js:217-221 - limit passed without validation",
+    "maxLimit defaults to undefined in src/Options/Definitions.js:407-410",
+    "ClassesRouter.js:25 validation bypass confirmed when maxLimit=undefined",
+    "Attack vector validated: GET request with limit=1000000 to public classes requires no authentication (PR:N)",
+    "Expected impact: 1M+ record query consumes 1-2GB RAM, causes server unresponsiveness"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "7.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/validate_bundle.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "os_command_injection",
+  "summary": "The PoC demonstrates that HooksManager executes hook commands with shell=True, enabling shell metacharacter injection through the .praisonai/hooks.json configuration file. The malicious hook command creates a proof-of-concept marker file when triggered by agent execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should create a marker file at /tmp/hooks_pwned via shell injection in the hook configuration, demonstrating that attackers can execute arbitrary shell commands with metacharacters (;, $(), |, etc.) when agent lifecycle events trigger hooks.",
+  "actual_observed_result": "Running ./reproduction/run.sh created .praisonai/hooks.json with a malicious shell injection payload, started an agent that triggered the hook event, and the shell=True subprocess.run() interpreted the metacharacters to create /tmp/hooks_pwned, confirming shell injection.",
+  "verification_method": "The run script checks for the existence of /tmp/hooks_pwned after hook execution. File existence confirms shell metacharacter injection via subprocess.run(command, shell=True), distinguishing shell injection from simple command execution or configuration errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Marker file /tmp/hooks_pwned created via shell injection (; metacharacter)",
+    "Hook executed with shell=True enabled shell interpretation",
+    "PRAISON_HOOK_CONTEXT environment variable passed to malicious hook",
+    "Shell command chaining (; ls; echo PWNED > /tmp/hooks_pwned) executed successfully"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/hooks.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

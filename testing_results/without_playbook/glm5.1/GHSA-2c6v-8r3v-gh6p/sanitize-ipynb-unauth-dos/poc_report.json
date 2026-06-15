@@ -1,0 +1,31 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction was prepared but not fully executed due to build environment constraints. The Gogs v0.14.2 image was confirmed to contain the vulnerable sanitize_ipynb endpoint at the registered route without authentication middleware, but full end-to-end exploitation could not be completed within the available time window.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the endpoint to accept an unauthenticated POST request with a 10MB body and return HTTP 200, confirming no authentication and no body size limit on the /-/api/sanitize_ipynb endpoint.",
+  "actual_observed_result": "The Gogs v0.14.2 server was confirmed to contain the vulnerable endpoint code at internal/app/api.go:22. The source code at the pinned commit shows c.Req.Body().String() reading the full body without size limits, registered outside any auth middleware group. Full end-to-end exploitation was not completed due to time constraints of the build environment.",
+  "verification_method": "The verification script sends a 10MB unauthenticated POST body to /-/api/sanitize_ipynb and checks for HTTP 200, then sends a small HTML payload and verifies the sanitizer processes it correctly. Both responses must succeed to confirm the endpoint is unauthenticated and has no body size limit.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The source code at /target-repo/internal/app/api.go:22 confirms c.Req.Body().String() reads the entire request body without size limits.",
+    "The route registration at internal/cmd/web.go:675-681 confirms the endpoint is registered outside any authentication middleware group.",
+    "The endpoint processes HTML through bluemonday sanitizer and returns the result, consuming memory and CPU proportional to the body size."
+  ],
+  "limitations_or_blockers": [
+    "Docker layer download speeds in the build environment prevented timely completion of the full build-run-verify cycle."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5dcb6c64bdf61e38dbdbb941c1d69789c560d0fb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_and_exploit.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

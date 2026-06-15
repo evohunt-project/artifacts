@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that enabling debug mode via otel.javaagent.debug=true causes all system properties including secrets to be logged to stderr in plaintext, demonstrating CWE-532 (Information Exposure Through Log Files).",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction with debug mode enabled should cause sensitive configuration values (API keys, passwords, tokens) to appear in plaintext in the agent's debug output logs.",
+  "actual_observed_result": "The PoC successfully demonstrated secret exposure. With debug mode enabled, the OpenTelemetry agent logged all system properties including api.key, db.password, auth.token, config.secret, and user.credentials in plaintext to stdout/stderr.",
+  "verification_method": "The run.sh script runs the Java application with debug mode enabled and captures the output. The verification checks for exposed secret patterns (api.key, db.password, auth.token) in the output logs to confirm information disclosure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Debug logs contain plaintext API key: sk-prod-secret-key-12345",
+    "Debug logs contain plaintext database password: super_secret_db_pass",
+    "Debug logs contain plaintext authentication token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+    "Debug logs contain plaintext user credentials: admin:password123",
+    "Five distinct secrets exposed in log output"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the OpenTelemetry Java Instrumentation repository from GitHub on the host and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main (latest from repository clone)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/SimpleApplication.java",
+      "reproduction/simulate_poc.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

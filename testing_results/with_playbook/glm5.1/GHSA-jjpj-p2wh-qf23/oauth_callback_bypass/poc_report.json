@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that the OAuth callback endpoints accept unauthenticated requests by default and that the CSRF state ownership check is bypassed when userId is undefined.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The OAuth callback endpoints should accept requests without authentication cookies, and the CSRF state ownership check should pass when both the state userId and req.user?.id are undefined.",
+  "actual_observed_result": "The reproduction starts n8n with default configuration and tests the OAuth callback endpoints. The endpoints accept GET requests without any authentication cookie, returning non-401 responses (proving auth is skipped). A crafted CSRF state without userId passes the ownership check in decodeCsrfState.",
+  "verification_method": "The exploit sends unauthenticated requests to the OAuth callback endpoints and verifies that they are not rejected with HTTP 401. It also crafts a CSRF state with userId omitted and verifies the request is processed past the auth check (failing at credential lookup rather than auth rejection). The verification script checks the proof file for the bypass confirmation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The OAuth callback endpoints accepted unauthenticated GET requests (not rejected with 401).",
+    "The N8N_SKIP_AUTH_ON_OAUTH_CALLBACK defaults to 'true' as confirmed by the code at abstract-oauth.controller.ts:37-41.",
+    "A CSRF state without userId passed the ownership check at abstract-oauth.controller.ts:185 (undefined !== undefined = false).",
+    "The request failed at credential lookup, not at authentication, confirming auth bypass."
+  ],
+  "limitations_or_blockers": [
+    "The full cross-user credential theft requires an actual OAuth provider and a victim user. The reproduction demonstrates the auth bypass mechanism (the precondition for exploitation) rather than end-to-end credential theft.",
+    "The CSRF state with a non-existent credential ID causes a lookup failure, but the fact that the request reached the lookup step proves the auth bypass."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

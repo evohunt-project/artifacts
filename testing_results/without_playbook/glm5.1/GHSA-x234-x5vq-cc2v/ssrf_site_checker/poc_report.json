@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that authenticated users can exploit the site health check functionality to perform SSRF attacks. The site checker made HTTP requests to a mock internal metadata service simulating cloud credential endpoints, successfully demonstrating the ability to access internal network resources from external attack.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the site checker can be configured to fetch arbitrary URLs, including internal network resources that are not accessible externally. The proof should show successful retrieval of mock cloud metadata containing simulated credentials.",
+  "actual_observed_result": "The reproduction successfully created an authenticated session, configured a SiteConfig with an internal target URL (127.0.0.1:8081 simulating 169.254.169.254), triggered the health check, and retrieved sensitive metadata including mock AWS credentials, instance IDs, and IAM role information. The SSRF attack successfully bypassed network segmentation.",
+  "verification_method": "The run script starts a mock metadata service on an internal port, configures the site checker to target it, and verifies that the response contains the expected sensitive metadata fields (ami-id, instance-id, IAM credentials). The verification checks for specific proof strings that indicate successful internal resource access.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "SiteConfig was successfully created with attacker-controlled target URL",
+    "Health check endpoint triggered HTTP request to internal service",
+    "Response contained sensitive mock metadata: ami-id, instance-id, IAM credentials",
+    "Internal service log confirmed incoming request from nginx-ui application",
+    "No URL validation or internal network filtering was observed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/mock_internal_service.sh",
+      "reproduction/exploit_ssrf.sh",
+      "reproduction/verify_ssrf.sh"
+    ]
+  }
+}

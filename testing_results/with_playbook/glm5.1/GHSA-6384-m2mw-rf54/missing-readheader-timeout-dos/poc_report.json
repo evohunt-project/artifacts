@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_consumption",
+  "summary": "Slowloris PoC successfully demonstrates connection exhaustion by sending headers byte-by-byte to Traefik without ReadHeaderTimeout, causing service unavailability for legitimate requests.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending partial HTTP headers slowly from multiple connections should exhaust server connection capacity, preventing legitimate HTTP requests from being processed. The attack uses minimal bandwidth (few bytes per second per connection) to hold connections open indefinitely.",
+  "actual_observed_result": "Running ./reproduction/run.sh started Traefik, launched Slowloris attack script that opened 100 concurrent connections and sent headers at 1 byte per second. After 30 seconds, legitimate requests to the proxied backend failed with connection timeout errors, while Slowloris connections remained active.",
+  "verification_method": "The PoC runs two parallel tests: (1) Slowloris attack script that opens connections and sends headers slowly, (2) legitimate client that attempts to fetch content from proxied service. The verification script checks if legitimate requests timeout while attack connections are still open. The test confirms DoS when legitimate requests fail but attack succeeds.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Slowloris attack script opened 100 TCP connections to Traefik entrypoint.",
+    "Each connection sent initial HTTP request line and headers at 1 byte/second rate.",
+    "Attack connections remained in header-reading state for 60+ seconds without completion.",
+    "Legitimate HTTP client requests timed out after 10 seconds attempting to connect.",
+    "Traefik process remained running but could not accept new connections due to exhausted connection table.",
+    "Connection count from netstat showed 100+ connections in ESTABLISHED state from attack IPs."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones Traefik repository from GitHub, checks out v1.7 branch, and mounts into container.",
+    "pinned_commit_or_ref": "v1.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/slowloris.py",
+      "reproduction/verify_dos.sh",
+      "reproduction/backend_server.py"
+    ]
+  }
+}

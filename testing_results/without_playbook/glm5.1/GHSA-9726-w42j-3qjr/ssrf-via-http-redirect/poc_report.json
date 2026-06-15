@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that picklescan's _http_get function follows unvalidated HTTP 302 redirects to arbitrary hosts. A redirect server returns 302 pointing to a separate simulated-internal server, and picklescan follows the redirect, connects to the internal server, and processes its response as pickle data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause picklescan to follow a 302 redirect from Server A (the user-requested URL) to Server B (a different host simulating an internal service), connect to Server B, process data from Server B, and detect a dangerous import (builtins.eval) in the data returned by Server B.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started two HTTPS servers inside the container, called scan_url against Server A, which returned a 302 redirect to Server B. picklescan followed the redirect, connected to Server B, and processed the pickle payload from Server B, detecting the builtins.eval dangerous import in the scan results.",
+  "verification_method": "The exploit script tracks all HTTP requests received by both Server A (redirect) and Server B (target/internal). SSRF is confirmed by checking that (1) Server B received at least one request (proving the redirect was followed to a different host), and (2) the scan result includes the builtins.eval global that was embedded only in Server B's response (proving data from the internal host was processed).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server B (simulated internal service) received an HTTPS request, confirming the scanner followed the redirect to a different host.",
+    "The scan result includes a builtins.eval global detected in the data returned by Server B, confirming the internal host's response was processed.",
+    "Server A only received one request (the initial scan), while Server B received the redirected request, demonstrating cross-host redirect following."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref v0.0.34, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.0.34",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

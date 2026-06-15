@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can make the Gotenberg server send HTTP GET requests to arbitrary internal URLs via the downloadFrom multipart form field, demonstrating server-side request forgery with no URL filtering by default.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The Gotenberg server should make an outbound HTTP GET request to a target URL specified in the downloadFrom form field, proving that the server can be used as an SSRF proxy to reach internal services that are not directly accessible to the attacker.",
+  "actual_observed_result": "Running the reproduction builds Gotenberg from source, starts it alongside a target HTTP server on an isolated Docker network, and sends a multipart form request with downloadFrom pointing to the target. The target server receives and logs the incoming request from the Gotenberg container, confirming that the server performed a server-side HTTP fetch to the attacker-specified URL.",
+  "verification_method": "The target HTTP server writes a proof file (/tmp/ssrf_proof.txt) recording every incoming request including the client address and requested path. The verify.sh script checks for the proof file after sending the exploit request. The proof file confirms that Gotenberg (not the test runner) initiated the connection to the target. A secondary check inspects Gotenberg error response messages for the fetched URL string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The target HTTP server log file contains an entry showing a GET request from the Gotenberg container to /ssrf-test-path, confirming the server-side request was made.",
+    "Gotenberg error response includes the target URL in the error message body, confirming the downloadFrom feature attempted to fetch from the attacker-specified internal URL.",
+    "No URL allow-list or deny-list configuration was provided, confirming the default configuration accepts any URL unconditionally."
+  ],
+  "limitations_or_blockers": [
+    "Building the full Gotenberg Docker image from source takes 10-30 minutes depending on network speed and available resources.",
+    "The reproduction requires Docker with the ability to create networks and run multiple containers."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/target_server.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

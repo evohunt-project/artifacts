@@ -1,0 +1,32 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service_memory_exhaustion",
+  "summary": "The Docker-based reproduction builds geth from source, starts it in dev mode with --graphql, and demonstrates that a 10 MB POST body is accepted by the /graphql endpoint while being properly rejected (HTTP 413) by the JSON-RPC endpoint, confirming the missing body-size limit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The JSON-RPC endpoint should return HTTP 413 (Request Entity Too Large) for a body exceeding 5 MB, while the GraphQL endpoint should accept the same body without size limitation, demonstrating that an attacker can cause unbounded memory allocation through /graphql.",
+  "actual_observed_result": "The reproduction was generated but not executed in this session. The vulnerability is confirmed by code analysis: graphql/service.go:48 uses json.NewDecoder(r.Body).Decode() without any LimitReader, while rpc/http.go:257 correctly applies io.LimitReader(r.Body, int64(s.httpBodyLimit)).",
+  "verification_method": "The verify.sh script builds geth from the mounted source, starts it with --graphql enabled, creates a 10 MB JSON payload, sends it to both the JSON-RPC endpoint (expecting HTTP 413 rejection) and the GraphQL endpoint (expecting acceptance without 413). The contrast between the two responses confirms the missing body-size limit on GraphQL.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Code analysis confirms graphql/service.go:48 has no body size limit via LimitReader or Content-Length check",
+    "Code analysis confirms rpc/http.go:257 applies io.LimitReader with 5 MB default",
+    "The JSON-RPC handler at rpc/http.go:344-347 also validates Content-Length against httpBodyLimit, returning 413 when exceeded",
+    "No equivalent size validation exists anywhere in the GraphQL handler path"
+  ],
+  "limitations_or_blockers": [
+    "The reproduction was not executed in this session due to Docker not being available in the analysis environment",
+    "Building geth from source requires Go 1.24+ and may take 5-10 minutes",
+    "The GraphQL endpoint must be explicitly enabled with --graphql flag; it is not enabled by default"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag v1.16.7, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.16.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_rce",
+  "summary": "The PoC demonstrates that a crafted ZIP archive with path traversal entries (../../../../../var/www/html/evohunt_shell.php) is extracted by Zip::extract() without path validation, resulting in a web shell being written to the web root. The web shell is then executed via HTTP request, confirming remote code execution capability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Arbitrary file overwrite leading to remote code execution: the malicious ZIP should be extracted to write a PHP web shell outside the intended directory, which should then be accessible and executable via HTTP.",
+  "actual_observed_result": "The malicious ZIP was successfully extracted via Zip::extract(), the path traversal entry ../../../../../var/www/html/evohunt_shell.php resolved to the web root, the web shell was written to /var/www/html/evohunt_shell.php, and HTTP request to the shell with ?cmd=echo+EVOHUNT_ZIPSLIP_SUCCESS executed the command and returned the expected proof string.",
+  "verification_method": "Automated check: verify.sh script confirms the web shell file exists at /var/www/html/evohunt_shell.php and that curl request with ?cmd=echo+EVOHUNT_ZIPSLIP_SUCCESS returns the expected output, distinguishing successful exploitation from extraction failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Web shell file exists at /var/www/html/evohunt_shell.php after ZIP extraction",
+    "HTTP request to web shell returns 'EVOHUNT_ZIPSLIP_SUCCESS' proof string",
+    "File permissions allow execution by web server",
+    "No error messages indicating path validation or extraction failure"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out v2.5.29, and mounts into container at /target-repo.",
+    "pinned_commit_or_ref": "v2.5.29",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/start.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction demonstrates that an attacker can authenticate as any user by sending a spoofed X-Forwarded-User HTTP header when reverse proxy authentication is enabled in the configuration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a request with X-Forwarded-User: admin should authenticate the attacker as the admin user, granting access to administrative endpoints without providing credentials.",
+  "actual_observed_result": "The reproduction successfully authenticated as the admin user using only a spoofed HTTP header. Access to administrative functions was granted without password verification.",
+  "verification_method": "The run script sends a request with a spoofed X-Forwarded-User header to an admin-only endpoint and checks whether the response indicates successful admin access. The verification distinguishes successful authentication bypass from authentication failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response indicates successful admin authentication without providing credentials",
+    "The authenticated session has admin privileges",
+    "No password or valid credentials were required for authentication"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable version, and mounts the checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

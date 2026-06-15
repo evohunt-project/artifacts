@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that a WebSocket connection negotiating permessage-deflate can send a small compressed frame that decompresses to a much larger payload on the server, demonstrating the absence of decompression ratio limits in PerMessageDeflate.java.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit should connect to a Tomcat WebSocket endpoint, negotiate permessage-deflate, send a crafted compressed frame, and observe that the decompressed payload size is at least 100 times larger than the compressed wire size, confirming the decompression amplification vulnerability.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Tomcat server from source, started it with the examples webapp, connected to the echo WebSocket endpoint with permessage-deflate, sent a crafted DEFLATE payload, and measured a decompression amplification ratio exceeding 100:1, confirming the server decompresses without ratio limits.",
+  "verification_method": "The exploit script measures the compressed payload size (bytes sent on the wire) and the decompressed payload size (bytes the server must process). A ratio exceeding 50:1 confirms disproportionate resource consumption. The script also measures round-trip time for compressed vs. uncompressed messages of equivalent decompressed size to demonstrate CPU overhead.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The compressed WebSocket frame payload was significantly smaller than the decompressed equivalent (ratio > 100:1).",
+    "The server accepted the permessage-deflate extension negotiation without any server-side configuration.",
+    "The echo endpoint processed and returned the decompressed data, confirming the full decompression path was exercised.",
+    "Round-trip time for compressed messages was measurably higher than for equivalent uncompressed messages, indicating additional CPU work for decompression."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction requires network access to download Tomcat build dependencies during the Docker build phase.",
+    "CPU impact measurement is qualitative (timing-based) rather than a hard crash; the vulnerability causes resource exhaustion rather than a binary pass/fail condition."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository source tree on the host and mounts that checkout into the container at /target-repo for building.",
+    "pinned_commit_or_ref": "9.0.116-dev-source-snapshot",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/build_tomcat.sh"
+    ]
+  }
+}

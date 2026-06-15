@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_file_read",
+  "summary": "The Docker-based reproduction successfully demonstrates arbitrary file read via the {file.*} placeholder. The malicious Caddyfile containing {file./etc/passwd} causes Caddy to read and return the contents of /etc/passwd in the HTTP response, confirming the vulnerability allows reading any file accessible to the Caddy process without validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should cause Caddy to read /etc/passwd from the container filesystem and return its contents in the HTTP response, proving that arbitrary file read is possible via {file.*} placeholder injection in configuration.",
+  "actual_observed_result": "Running ./reproduction/run.sh built Caddy from source, created a malicious Caddyfile with {file./etc/passwd} placeholder, started the container, and the HTTP response to localhost:8080 contained the full contents of /etc/passwd including the 'root:' line, confirming successful arbitrary file read.",
+  "verification_method": "The run script checks if the HTTP response contains 'root:' which is a signature pattern in /etc/passwd files. This distinguishes a successful file read from an error message or placeholder not being evaluated. The presence of actual /etc/passwd content in the response confirms the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show Caddy started successfully with malicious Caddyfile",
+    "HTTP response to localhost:8080 contains full /etc/passwd content",
+    "Response includes 'root:' line which is characteristic of /etc/passwd format",
+    "No path validation or directory restriction prevented reading /etc/passwd",
+    "Placeholder evaluation occurred and file was read into response"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the latest commit, and builds Caddy from source in the Docker image.",
+    "pinned_commit_or_ref": "HEAD (latest commit from main branch)",
+    "target_repo_mount_path": "N/A - repository cloned inside container during build",
+    "helper_files": [
+      "reproduction/Caddyfile"
+    ]
+  }
+}

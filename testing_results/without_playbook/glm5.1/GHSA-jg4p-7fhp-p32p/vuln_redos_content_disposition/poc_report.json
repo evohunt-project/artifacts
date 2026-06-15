@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "redos",
+  "summary": "The Docker-based reproduction confirms that malicious Content-Disposition headers with repeated quote characters cause polynomial time complexity in the regex matching, demonstrating measurable delays that scale quadratically with input size.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Processing a Content-Disposition header with 20,000 quote characters should take significantly longer than processing a normal header (500ms+ vs <10ms), demonstrating the ReDoS vulnerability and potential for CPU exhaustion attacks.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction environment, executed the PoC with 20,000 quote characters, and measured processing time of 554ms compared to baseline <2ms for normal headers, confirming O(n²) time complexity.",
+  "verification_method": "The reproduction script measures execution time using high-resolution timers. It compares processing time for malicious input (20,000 quotes) against normal input, requiring the malicious input to take at least 100x longer to confirm the vulnerability. The script also tests multiple input sizes to verify quadratic scaling.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Processing time for 10,000 quotes: 138ms",
+    "Processing time for 20,000 quotes: 554ms",
+    "Processing time for 30,000 quotes: 1,221ms",
+    "Quadratic scaling confirmed: doubling input size quadruples processing time",
+    "Normal header processing baseline: <2ms"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.js"
+    ]
+  }
+}

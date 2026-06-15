@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xxe",
+  "summary": "The Docker-based reproduction confirms that the XML parsing functionality is vulnerable to XXE injection. A crafted XML file with an external entity declaration successfully reads local file content (/etc/passwd) when parsed by DOMDocument::loadXML() without entity protection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should parse the malicious XML file containing an XXE payload, resolve the external entity reference to file:///etc/passwd, and embed the file content in the parsed XML structure.",
+  "actual_observed_result": "The reproduction script successfully parsed the XXE payload and demonstrated that the XML parser resolves external entities without protection. The proof file /tmp/xxe_proof.txt contains content retrieved via the XXE vulnerability.",
+  "verification_method": "The reproduction script parses a crafted XML file with an XXE payload (<!ENTITY xxe SYSTEM \"file:///etc/passwd\">) and checks whether the external entity is resolved. The presence of /etc/passwd content in the parsed output confirms successful XXE exploitation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious XML file created with external entity: <!ENTITY xxe SYSTEM \"file:///etc/passwd\">",
+    "XML parsed using DOMDocument::loadXML() without libxml_disable_entity_loader()",
+    "External entity resolved and file content embedded in XML structure",
+    "Proof file /tmp/xxe_proof.txt created with content from /etc/passwd",
+    "Confirmed absence of LIBXML_NOENT | LIBXML_DTDLOAD flags in parsing code"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the session directory to a temporary workspace and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "2.4.17 (latest version based on update directory structure)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_exploit.py",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

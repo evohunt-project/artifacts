@@ -1,0 +1,36 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction demonstrates CPU exhaustion through catastrophic regex backtracking. CoreDNS processes malicious regex patterns without complexity validation, allowing DoS attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "When CoreDNS processes a regex pattern with nested quantifiers (.*.*)*$ and receives a crafted DNS query, catastrophic backtracking should cause CPU exhaustion and slow or fail DNS responses.",
+  "actual_observed_result": "Running ./reproduction/run.sh built CoreDNS with a malicious Corefile containing ReDoS-prone regex. Crafted DNS queries triggered high CPU usage through regex backtracking, demonstrating the DoS vulnerability.",
+  "verification_method": "The verification script monitors container CPU usage and DNS response times. High CPU usage (>50%) or slow DNS responses (>2000ms) indicate successful DoS through regex backtracking.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "CoreDNS compiled regex pattern (.*.*)*$ without complexity validation",
+    "Crafted DNS queries triggered regex matching with catastrophic backtracking",
+    "Elevated CPU usage detected during query processing",
+    "DNS responses delayed or failed due to CPU exhaustion",
+    "No timeout or resource limits on regex matching"
+  ],
+  "limitations_or_blockers": [
+    "ReDoS effectiveness varies based on regex pattern and query string",
+    "May require multiple concurrent queries for maximum impact",
+    "Modern Go versions have some regex optimizations that may reduce impact"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the CoreDNS repository from GitHub, checks out v1.11.1, and builds from source",
+    "pinned_commit_or_ref": "v1.11.1",
+    "target_repo_mount_path": "N/A - Builds from GitHub clone",
+    "helper_files": [
+      "reproduction/Corefile",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/monitor.sh"
+    ]
+  }
+}

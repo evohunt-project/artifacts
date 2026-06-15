@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "open_redirect",
+  "summary": "The Docker-based reproduction confirms that the OAuth redirect validation in FeathersJS can be bypassed using URL-encoded payloads. The regex validation at strategy.ts:111 only checks for literal '@', '//', and '\\' characters but fails to validate URL-encoded versions like '%40', '%2F%2F', and '%5C'. These encoded payloads pass validation but are decoded by the browser, allowing attackers to redirect OAuth callbacks to external domains and capture authentication tokens.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that URL-encoded redirect payloads bypass the validation regex and would allow attackers to redirect OAuth authentication flows to attacker-controlled domains, enabling token theft and account takeover.",
+  "actual_observed_result": "The reproduction script successfully identified multiple bypass payloads including '%40attacker.com', '%2F%2Fattacker.com', '%5Cattacker.com', and '%2540attacker.com'. These payloads pass the vulnerable regex validation at packages/authentication-oauth/src/strategy.ts:111 because the pattern /[@\\\\]|^\\/\\/|\\/\\// only matches literal characters, not their URL-encoded equivalents. When concatenated to the allowed origin and decoded by the browser, these payloads create URLs like 'https://target.com@attacker.com' which redirect to the attacker's domain.",
+  "verification_method": "The test_redirect_bypass.py script systematically tests the validation regex with various payloads and identifies which URL-encoded variants bypass the protection. It then demonstrates how the browser would interpret the resulting URLs, showing that 'https://target.com%40attacker.com' is decoded and redirected to 'attacker.com' rather than 'target.com'. The verification distinguishes between payloads that are blocked (literal '@', '//', '\\') and those that bypass the validation via encoding.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The regex pattern /[@\\\\]|^\\/\\/|\\/\\// was tested against 7 different payload variations",
+    "Direct payloads ('@attacker.com', '//attacker.com', '\\\\attacker.com') are correctly blocked by the validation",
+    "URL-encoded payloads ('%40attacker.com', '%2F%2Fattacker.com', '%5Cattacker.com', '%2540attacker.com') all bypass the validation",
+    "Browser URL parsing demonstrates that 'https://target.com%40attacker.com' would be interpreted as 'https://target.com@attacker.com', redirecting to attacker.com",
+    "The vulnerable code at strategy.ts:115 concatenates the allowed origin with the user-provided redirect parameter without URL decoding, allowing the encoded payload to reach the browser",
+    "Session storage at service.ts:177 persists the malicious redirect parameter without sanitization, enabling the attack across the OAuth flow"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit v5.0.41, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v5.0.41",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_redirect_bypass.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

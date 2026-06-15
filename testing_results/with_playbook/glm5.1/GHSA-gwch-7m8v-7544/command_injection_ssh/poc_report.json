@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The PoC demonstrates that shell command construction in SSH operations fails to escape shell metacharacters, allowing command injection via disk configuration parameters through command substitution $(), semicolons, and pipes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate that malicious file_id values with shell metacharacters ($(), ;, |) are executed as commands on the SSH target, proving command injection capability.",
+  "actual_observed_result": "The simulated SSH execution showed that commands containing $(command), ;command, and |command patterns were interpreted by bash and would execute on the Proxmox node. The injection_detected.log was created confirming command injection.",
+  "verification_method": "The run script simulates createCustomDisk command construction and mock SSH execution. It tests multiple injection patterns (command substitution, semicolons, pipes) and verifies by checking for injection detection logs.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Mock SSH logs show injected commands like $(id) and wget being passed to bash execution",
+    "/var/log/injection_detected.log was created when shell metacharacters were found",
+    "Command construction analysis shows only single-quote escaping, no escaping of $, ;, |, etc.",
+    "Shell script demonstration proves bash interprets user input as commands"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the repository and builds a minimal test environment that simulates SSH command execution.",
+    "pinned_commit_or_ref": "main branch",
+    "target_repo_mount_path": "/test",
+    "helper_files": [
+      "reproduction/run.sh"
+    ]
+  }
+}

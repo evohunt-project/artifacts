@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that arbitrary code execution is achievable through unsafe pickle deserialization in CocoIndex's subprocess executor, demonstrating that attacker-controlled spec objects can trigger malicious code during unpickling.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a malicious spec object with a crafted __reduce__ method executes arbitrary shell commands during pickle deserialization, creating a proof file to verify successful code execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image and executed the exploit script, which successfully created the proof file /tmp/evohunt_poc_success.txt with the expected message, confirming arbitrary code execution in the subprocess context.",
+  "verification_method": "The exploit script creates a malicious spec class with a __reduce__ method that executes a shell command. After pickle.loads() is called on the malicious payload, the verification script checks for the existence and content of the proof file. This distinguishes successful code execution from a simple pickle deserialization failure or unrelated error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show the exploit script successfully creating and executing the malicious pickle payload.",
+    "The proof file /tmp/evohunt_poc_success.txt was created inside the container with the expected message.",
+    "The verification script confirmed the proof file exists and contains the correct content.",
+    "The exploit demonstrates that pickle.loads() on attacker-controlled data leads to arbitrary code execution."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the pre-existing target repository at /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_5df94a99/repo and mounts it read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "current-state",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

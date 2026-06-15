@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "When reverse proxy authentication is enabled, the application trusts the X-WEBAUTH-USER header without validating that the request actually came from the trusted reverse proxy, allowing attackers to impersonate any user including administrators.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Unauthenticated attackers can impersonate any user including administrators by setting the X-WEBAUTH-USER header, leading to complete account takeover and privilege escalation.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully demonstrated that when ENABLE_REVERSE_PROXY_AUTHENTICATION is enabled, an attacker can authenticate as any user (including admin) by simply setting the X-WEBAUTH-USER header in the HTTP request.",
+  "verification_method": "The exploit script enables reverse proxy authentication, then sends requests with spoofed X-WEBAUTH-USER headers to access admin-only endpoints and verify the impersonation works.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 200 response when accessing admin API with spoofed X-WEBAUTH-USER header",
+    "No password or credentials required - header alone grants authentication",
+    "User object in response shows the spoofed username",
+    "Admin privileges granted when spoofing admin username"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Gogs repository from GitHub and checks out the vulnerable version",
+    "pinned_commit_or_ref": "main",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup_gogs.sh"
+    ]
+  }
+}

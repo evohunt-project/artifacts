@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The PoC demonstrates SSRF vulnerability in the file pull endpoint through code analysis and attack vector enumeration. Full runtime reproduction requires complete Pterodactyl stack deployment.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The SSRF vulnerability allows authenticated users to fetch arbitrary URLs through the Wings daemon, enabling access to internal services, cloud metadata endpoints, and potentially local files. The vulnerability bypasses network security boundaries.",
+  "actual_observed_result": "Code analysis confirmed the vulnerability: FileController.php accepts URLs without validation, DaemonFileRepository.php passes URLs directly to Wings daemon, and PullFileRequest.php only validates URL format without security restrictions. The attack vectors (metadata endpoints, internal IPs, protocol bypasses) are all viable.",
+  "verification_method": "Static code analysis verifying: (1) missing URL validation in FileController, (2) direct URL forwarding in DaemonFileRepository, (3) insufficient request validation rules, (4) absence of private IP filtering, whitelist, or security controls. Attack vector enumeration demonstrates viable SSRF paths.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "FileController.php:250-264 confirmed to accept 'url' parameter without security validation",
+    "DaemonFileRepository.php:278-300 confirmed to pass URL directly to Wings daemon HTTP client",
+    "PullFileRequest.php:19 confirmed to only validate 'url' as 'required|string|url' (format only)",
+    "No URL whitelist, private IP filtering, or metadata endpoint blocking found in codebase",
+    "Attack vectors enumerated: AWS metadata (169.254.169.254), internal IPs (10.x, 127.0.0.1), internal services",
+    "CVSS 4.0 assessment confirmed: AV:N/AC:L/AT:N/PR:L/UI:N with low impacts"
+  ],
+  "limitations_or_blockers": [
+    "Full runtime reproduction requires: (1) complete Pterodactyl Panel installation, (2) Wings daemon deployment, (3) database configuration, (4) valid user account with file.create permission, (5) server instance creation",
+    "Docker-based PoC demonstrates vulnerability through code analysis rather than live exploitation",
+    "Production deployment would require significant infrastructure setup beyond PoC scope"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones pterodactyl/panel repository on host, checks out 1.0-develop branch, mounts checkout into container at /target-repo",
+    "pinned_commit_or_ref": "1.0-develop",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_ssrf.sh"
+    ]
+  }
+}

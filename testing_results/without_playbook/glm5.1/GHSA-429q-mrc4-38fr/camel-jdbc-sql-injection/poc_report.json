@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based PoC confirms that the camel-jdbc component executes attacker-controlled SQL from message body without validation in default configuration, enabling complete database control including data theft, modification, and destruction.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the PoC should demonstrate that arbitrary SQL commands from message body execute on the database, showing data exfiltration, modification, and table destruction without any security controls.",
+  "actual_observed_result": "The PoC successfully demonstrated SQL injection attacks: (1) Data exfiltration via SELECT queries retrieved all user data, (2) Data destruction via DROP TABLE permanently deleted the users table, (3) No validation, sanitization, or prepared statements prevented the attacks in default configuration.",
+  "verification_method": "The exploit script executes multiple SQL injection payloads against an SQLite database and verifies each attack succeeds: SELECT retrieves sensitive data, DROP TABLE destroys data, and no security controls block these operations. The verification distinguishes successful SQL injection from mere syntax errors by confirming actual data operations.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "SQL injection payload 'SELECT * FROM users' successfully retrieved all user data without authorization",
+    "SQL injection payload 'DROP TABLE users' successfully destroyed the table permanently",
+    "SQL injection payload 'SELECT * FROM users WHERE id=1 OR 1=1' demonstrated classic SQL injection bypassing WHERE clause",
+    "No input validation, sanitization, or prepared statements prevented the attacks",
+    "Default configuration useHeadersAsParameters=false uses Statement.execute() instead of PreparedStatement",
+    "Attack works with no special configuration, meeting AT:N criterion"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Apache Camel repository on the host and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/setup_vulnerable_app.sh"
+    ]
+  }
+}

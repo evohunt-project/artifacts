@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the Execute Command node executes arbitrary shell commands without any validation, whitelisting, or sandboxing, enabling complete system compromise.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an attacker-controlled command string is executed directly via child_process.exec() without validation, resulting in arbitrary command execution with n8n process privileges.",
+  "actual_observed_result": "Running ./reproduction/run.sh built a minimal reproduction environment, executed the vulnerable execPromise function with an attacker-controlled command string, and successfully demonstrated arbitrary command execution by running 'echo PROOF_OF_CONCEPT_SUCCESSFUL && id && whoami && pwd'. The command output confirmed successful execution without any validation or blocking.",
+  "verification_method": "The PoC executes a proof-of-concept command that outputs 'PROOF_OF_CONCEPT_SUCCESSFUL' followed by system information (user ID, username, working directory). The verification checks for this proof string in the command output to distinguish successful exploitation from unrelated failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Command output contains 'PROOF_OF_CONCEPT_SUCCESSFUL' proof string",
+    "Command output includes system information (user ID, username, working directory) demonstrating full command execution",
+    "No validation, whitelisting, or error handling prevented arbitrary command execution",
+    "The vulnerable execPromise function in ExecuteCommand.node.ts directly passes user input to child_process.exec()"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and builds a minimal reproduction container that demonstrates the vulnerable code path.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

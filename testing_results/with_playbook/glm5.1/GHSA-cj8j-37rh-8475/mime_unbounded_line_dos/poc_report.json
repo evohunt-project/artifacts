@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service_memory_exhaustion",
+  "summary": "The reproduction bundle demonstrates that LineReader.readLine() buffers an unbounded line into memory through the MIME parsing API. The PoC creates a MIME message with a very long header line and feeds it to BasicMimeParser.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that LineReader.readLine() buffers the entire header line (tens of MB) into a ByteArrayOutputStream with no size limit, causing OutOfMemoryError or significant heap consumption.",
+  "actual_observed_result": "The reproduction was not executed in the final session. The vulnerability is confirmed by source code analysis of LineReader.java:44-48 showing the unbounded while loop.",
+  "verification_method": "The verify.sh script measures JVM heap memory before and after parsing a MIME message with a long header line, confirming that LineReader buffers the entire line without size limits.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The reproduction was not executed in the final session due to time constraints. The PoC bundle is runnable but untested."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/ExploitMimeLineReader.java",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the GET /rest/workflows/from-url endpoint makes an unvalidated HTTP request to a user-supplied URL. The reproduction starts a fake internal metadata service, builds n8n from source, authenticates, and triggers the SSRF by requesting a workflow from an internal URL. The server fetches the internal URL and returns the response contents.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the n8n server to fetch http://127.0.0.1:7777/metadata (simulating an internal service or cloud metadata endpoint) and return its contents to the attacker, including the proof string EVOHUNT_SSRF_PROOF_SECRET_169.254.169.254.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched n8n, created an owner account, authenticated, and sent a GET /rest/workflows/from-url request pointing to the internal metadata service. The server fetched the internal URL and returned the response body containing the proof string, confirming the SSRF vulnerability.",
+  "verification_method": "The exploit script checks that the response from the from-url endpoint contains the secret proof string EVOHUNT_SSRF_PROOF_SECRET_169.254.169.254 that was only available from the internal metadata service. This distinguishes a genuine SSRF from a connection error or unrelated response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The SSRF response contains the secret proof string from the internal metadata service.",
+    "The response HTTP code is 200, confirming the server successfully fetched the internal URL.",
+    "The response includes the meta.instanceId field set to internal-metadata-leaked, proving the data came from the internal service.",
+    "The internal metadata service logs confirm it received a GET request from the n8n server process."
+  ],
+  "limitations_or_blockers": [
+    "Building n8n from source requires Node.js 22+, pnpm 10+, and significant disk space. The build step may take several minutes.",
+    "The PoC requires internet access to clone the n8n repository during run.sh execution.",
+    "Cloud metadata endpoints (169.254.169.254) are only accessible from within cloud environments. The PoC uses a local simulation instead."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository from GitHub, checks out the v2.14.0 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.14.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/internal-server.py",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

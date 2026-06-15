@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that an authenticated user with upload privileges can read arbitrary files through the import.json.php endpoint by providing a fileURI parameter with path traversal sequences and appending .mp4 extension.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate that an authenticated user can read the contents of /etc/passwd by accessing it through the import.json.php endpoint with fileURI=/etc/passwd.mp4, proving that path traversal protection is absent.",
+  "actual_observed_result": "The reproduction successfully read the contents of /etc/passwd through the vulnerable import endpoint. The application processed the fileURI parameter without validating that the path stays within the intended directory, allowing access to system files.",
+  "verification_method": "The PoC creates a test file with known content, then reads it through the import.json.php endpoint using a relative path traversal. The verification checks that the known content is returned in the response, confirming arbitrary file read capability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Arbitrary file read confirmed through fileURI parameter",
+    "No path validation prevents accessing files outside intended directories",
+    "Only .mp4 extension check is performed, which can be bypassed by appending .mp4 to any file",
+    "Authenticated user with canUpload() permission can exploit this vulnerability"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the AVideo repository from GitHub, checks out the vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

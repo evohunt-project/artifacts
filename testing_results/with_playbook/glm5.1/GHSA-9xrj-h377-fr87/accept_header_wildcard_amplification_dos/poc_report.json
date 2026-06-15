@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that Mime::Type.parse exhibits 36445x amplification when processing a crafted Accept header with 20000 repeated text/* wildcard entries (140KB), consuming 0.66s of CPU on a single request versus 0.000018s for a normal Accept header.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a single crafted HTTP Accept header with many wildcard MIME types causes disproportionately high CPU consumption in Mime::Type.parse, confirming an unauthenticated algorithmic-efficiency denial-of-service vector.",
+  "actual_observed_result": "Running the Docker container with the target Rails 7.2.3 source mounted at /target-repo, the verify.rb script loaded Mime::Type.parse and measured: normal Accept header (53 bytes) = 0.000018s, crafted Accept header (140000 bytes, 20000 text/* entries) = 0.658s. Amplification ratio = 36445.2x. The proof string EVOHUNT_PROOF:accept_header_wildcard_amplification_dos_confirmed was emitted, confirming successful reproduction.",
+  "verification_method": "The verify.rb script loads the actual Rails Mime::Type.parse code from the target repository, benchmarks a normal Accept header (10 iterations averaged) against a crafted header with 20000 text/* wildcard entries, and confirms the vulnerability if the crafted header processing exceeds 0.5 seconds. The proof string distinguishes a real timing amplification from a startup failure or parsing error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Normal Accept header (53 bytes): 0.000018s per parse",
+    "Crafted Accept header (139999 bytes, 20000 text/* entries): 0.658s per parse",
+    "Amplification ratio: 36445.2x",
+    "EVOHUNT_PROOF:accept_header_wildcard_amplification_dos_confirmed emitted by verification script"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v7.2.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.rb",
+      "reproduction/exploit.rb"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "hardcoded_cryptographic_key",
+  "summary": "The Docker-based reproduction builds SiYuan from source, starts the kernel, configures S3 sync credentials with a known SecretKey, exports the encrypted S3 configuration via the API, and decrypts the exported file using the hardcoded AES key from the public source code, successfully revealing the plaintext S3 credentials including the SecretKey.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the exported S3 sync configuration (encrypted with the hardcoded AES key) to be decrypted, revealing the plaintext S3 credentials (endpoint, accessKey, secretKey, bucket) that were configured through the SiYuan API.",
+  "actual_observed_result": "Running ./reproduction/run.sh built SiYuan from source, started the kernel with an access auth code, logged in via the API, configured S3 sync credentials, exported the encrypted S3 configuration, decrypted it using the hardcoded key 696D897C9AA0611B with IV RandomInitVector, and successfully recovered the plaintext JSON containing all configured S3 credentials including the secretKey value.",
+  "verification_method": "The exploit script configures a known S3 SecretKey (evohunt-test-secret-key-DEADBEEF) through the SiYuan API, then exports and decrypts the configuration. The verification checks that the decrypted plaintext JSON contains the exact known secretKey value, confirming that the hardcoded key successfully decrypts real SiYuan encrypted output. The check distinguishes successful decryption (correct key revealed) from failed decryption (garbage output or empty result).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exported S3 configuration file contains AES-128-CBC encrypted hex-encoded data produced by SiYuan's AESEncrypt function",
+    "The decrypt script successfully decrypts the exported data using the hardcoded key 696D897C9AA0611B and IV RandomInitVector",
+    "The decrypted output is a valid JSON object containing all S3 configuration fields: endpoint, accessKey, secretKey, bucket, region, pathStyle, skipTlsVerify, timeout, concurrentReqs",
+    "The secretKey value in the decrypted output matches the known test value configured through the API, confirming end-to-end exploitation of the hardcoded key"
+  ],
+  "limitations_or_blockers": [
+    "Building SiYuan from source (Node.js frontend + Go backend) requires significant time and network bandwidth for dependency downloads"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.5.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

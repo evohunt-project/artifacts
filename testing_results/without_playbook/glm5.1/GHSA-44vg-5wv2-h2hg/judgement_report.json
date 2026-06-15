@@ -1,0 +1,134 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T16:30:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-44vg-5wv2-h2hg/GHSA-44vg-5wv2-h2hg.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "vuln1_global_config_modification",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln1_global_config_modification",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln1_global_config_modification/vulnerability_report.json",
+      "title": "Mutable global security configuration allows complete sandbox escape",
+      "vulnerability_type": "sandbox_escape_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "Root cause is mutable global security configuration (DISALLOW_FUNCTIONS, DISALLOW_PREFIXES, DISALLOW_METHODS). The advisory describes objects passed as names leaking dangerous modules through attribute access and callback bypass. Modifying module-level globals is a different mechanism entirely.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "H",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:H/VA:N/SC:N/SI:H/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "vuln2_object_attribute_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln2_object_attribute_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln2_object_attribute_bypass/vulnerability_report.json",
+      "title": "Object attribute access bypasses DISALLOW_FUNCTIONS security check",
+      "vulnerability_type": "sandbox_escape_rce",
+      "advisory_match": true,
+      "advisory_match_reason": "Same root cause as the advisory: objects passed via the names parameter have attributes that expose dangerous functions (eval), which bypass DISALLOW_FUNCTIONS when called indirectly through callback/helper functions. The advisory explicitly describes 'dangerous functions or modules could be accessed by passing them as callbacks to other safe functions to call' and objects in names having 'modules or other disallowed / dangerous objects available as attrs'.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "H",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:H/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "vuln3_name_handler_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln3_name_handler_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln3_name_handler_bypass/vulnerability_report.json",
+      "title": "Name handler returned objects bypass security restrictions via method invocation",
+      "vulnerability_type": "sandbox_escape_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "Root cause is callable name handlers (self.names is callable) returning arbitrary objects with dangerous methods. The advisory describes objects in the names dictionary having dangerous attributes accessible through attribute traversal (e.g., os.path.os, pathlib.os). Callable name handlers are a different mechanism than dictionary-based names with dangerous attribute chains.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "H",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:H/VA:N/SC:N/SI:H/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "vuln2_object_attribute_bypass",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln2_object_attribute_bypass",
+      "status": "qualifying_vuln",
+      "title": "Object attribute access bypasses DISALLOW_FUNCTIONS security check",
+      "vulnerability_type": "sandbox_escape_rce"
+    },
+    "reason": "Finding vuln2_object_attribute_bypass matches the advisory root cause: objects passed as names expose dangerous functions through their attributes, and these functions bypass DISALLOW_FUNCTIONS when called indirectly via callback/helper functions. The PoC executed successfully, demonstrating that eval (listed in DISALLOW_FUNCTIONS) is returned by an object's get_eval() method and called via the apply() helper function, achieving arbitrary code execution that writes /tmp/pwned_vuln2. This is the same vulnerable code path described in the advisory: 'dangerous functions or modules could be accessed by passing them as callbacks to other safe functions to call.'",
+    "evidence": [
+      "run.log confirms eval is in DISALLOW_FUNCTIONS at simpleeval 1.0.4",
+      "run.log shows MaliciousObject.get_eval() returning the eval function via attribute access on an object in names",
+      "run.log shows the apply() helper function calling the returned eval, bypassing DISALLOW_FUNCTIONS",
+      "run.log confirms /tmp/pwned_vuln2 created with content 'hacked_by_vuln2' (arbitrary code execution)",
+      "Exit code 0 confirms clean exploit completion"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "vuln2_object_attribute_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln2_object_attribute_bypass",
+      "executed": true,
+      "command": "source venv/bin/activate && python3 run_local.py",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/.judge/poc_runs/vuln2_object_attribute_bypass/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/.judge/poc_runs/vuln2_object_attribute_bypass/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/.judge/poc_runs/vuln2_object_attribute_bypass/poc_execution.json",
+      "observed_effect": "PoC confirmed DISALLOW_FUNCTIONS contains eval, a malicious object in names returns eval through get_eval() method, the apply helper calls the returned eval bypassing the security check, arbitrary code execution creates /tmp/pwned_vuln2 with content 'hacked_by_vuln2'.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln1_global_config_modification",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln1_global_config_modification/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln1_global_config_modification/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln3_name_handler_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln3_name_handler_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_82b44a61/vuln3_name_handler_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

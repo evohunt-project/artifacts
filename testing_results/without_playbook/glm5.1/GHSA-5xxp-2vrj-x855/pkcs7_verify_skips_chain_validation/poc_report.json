@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that PKCS7 Verify() accepts a signature from an untrusted self-signed certificate. The exploit generates a fresh RSA key pair, creates a self-signed certificate with CN=Attacker, signs a forged message, and demonstrates that Verify() returns no error while the certificate chain was never validated.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "PKCS7 Verify() should accept a forged PKCS7 signed message that was signed with a self-signed certificate not in any trust store, demonstrating that the default Verify() method does not perform certificate chain validation.",
+  "actual_observed_result": "Running the reproduction built and launched a Docker container against the target repo. The exploit program generated an RSA key pair, created a self-signed certificate with CN=Attacker, signed the message 'FORGED MESSAGE: this content was not signed by a trusted party', parsed the resulting PKCS7 structure, and called Verify(). The call returned nil (success), confirming that the forged signature from an untrusted certificate was accepted.",
+  "verification_method": "The exploit program calls p7.Verify() and checks the return value. If Verify() returns nil (no error), it prints 'VULNERABILITY CONFIRMED' and 'SUCCESS' and exits with code 0. If Verify() returns an error, it prints 'FAIL' and exits with code 1. The signed content and signer subject are printed as additional evidence that the forgery was accepted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output: '[evohunt] calling Verify() with no trust store (nil)'",
+    "Container output: '[evohunt] VULNERABILITY CONFIRMED: Verify() accepted the forged PKCS7 signature'",
+    "Container output: '[evohunt] signed content: \"FORGED MESSAGE: this content was not signed by a trusted party\"'",
+    "Container output: '[evohunt] signer subject: CN=Attacker'",
+    "Container output: '[evohunt] SUCCESS: the PKCS7 Verify() method accepted a signature from an untrusted self-signed certificate'",
+    "Container exit code: 0 (verification passed)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

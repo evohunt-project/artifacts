@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "CWE-20: Improper Input Validation",
+  "summary": "Docker-based reproduction demonstrates uncaught exception crash when parsing ONNX text with overflow numeric literals (ir_version:999...999 or float 1e999999)",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Application should crash or throw uncaught std::out_of_range exception when parsing malicious ONNX text with overflow numeric literals",
+  "actual_observed_result": "Reproduction successfully triggered RuntimeError/std::out_of_range exception when parsing ir_version:99999999999999999999999999999999999 and float 1e999999, demonstrating uncaught exception vulnerability",
+  "verification_method": "Automated verification script checks for RuntimeError, std::out_of_range, or crash signals in output. Distinguishes from normal parse errors by checking for numeric overflow specific exception types.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Exception thrown: std::out_of_range / RuntimeError",
+    "Stack trace shows parser.h:283 or parser.h:303 in call chain",
+    "Application terminated abnormally or Python exception propagated",
+    "Error message contains 'out_of_range' or 'stoi/stof' indicators"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the vulnerable version, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction builds filebrowser from source with Shell=[\"sh\",\"-c\"] and EnableExec=true, creates a user with Execute permission and allowed command 'ls', then sends 'ls; echo EVOHUNT_POC_SUCCESS' via WebSocket. The allowlist only checks 'ls' but the shell executes both commands.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted WebSocket message to bypass the command allowlist and execute an injected echo command, producing the proof string 'EVOHUNT_POC_SUCCESS' in the WebSocket response output.",
+  "actual_observed_result": "PoC not executed in this session. The reproduction bundle has been generated and is ready for execution via ./reproduction/run.sh.",
+  "verification_method": "The exploit.py script authenticates as a low-privilege user, connects to the WebSocket command endpoint, sends 'ls; echo EVOHUNT_POC_SUCCESS', and checks whether the proof string 'EVOHUNT_POC_SUCCESS' appears in the WebSocket response. This distinguishes genuine command injection from a normal 'ls' output or error message.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker is required on the host machine to execute the reproduction.",
+    "Go 1.25+ is required to build the target from source (the go.mod specifies go 1.25.0).",
+    "The filebrowser CLI must support the --shell and --disable-exec flags for configuration.",
+    "Network access to github.com is required to clone the target repository."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

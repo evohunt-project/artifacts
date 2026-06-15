@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that when remote_lookups is enabled, unfurl makes HTTP requests to arbitrary URLs including internal network resources. The PoC demonstrates SSRF by accessing a simulated cloud metadata endpoint and retrieving sensitive data that should not be accessible from external networks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The unfurl application should make HTTP requests to the attacker-controlled URL and return the response content, demonstrating that it can be used as a proxy to access internal network resources, cloud metadata endpoints, or arbitrary external services.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built and launched the unfurl application with remote_lookups enabled, sent a crafted request to access the internal metadata simulator at http://metadata-server/latest/meta-data/iam/security-credentials/, and the unfurl response included the simulated IAM credentials from the internal service, proving the SSRF vulnerability allows unauthorized access to internal resources.",
+  "verification_method": "The reproduction script sets up a mock metadata server on an internal Docker network, starts the vulnerable unfurl instance with remote_lookups enabled, sends a crafted SSRF payload to access the internal metadata endpoint, and checks if the response contains the expected proof-of-exploitation marker (simulated IAM credentials). The verification confirms that unfurl successfully acted as an SSRF proxy to reach the internal-only service.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unfurl application made HTTP requests to the internal metadata server URL provided in the SSRF payload",
+    "The JSON response from unfurl contained the simulated IAM credentials from the metadata endpoint, proving internal resource access",
+    "The unfurl logs show the parser chain executing and making remote HTTP requests to the attacker-controlled destination",
+    "The metadata server logs confirm it received the request from the unfurl container, demonstrating successful SSRF",
+    "The response time and network behavior confirmed that unfurl acted as a proxy without proper URL validation or private IP range blocking"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_metadata_server.py",
+      "reproduction/test_ssrf.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

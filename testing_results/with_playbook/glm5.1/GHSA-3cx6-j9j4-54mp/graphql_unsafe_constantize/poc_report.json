@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_constantize",
+  "summary": "The Docker-based verification confirmed that the GraphQL API's commentable resolver passes the user-controlled type argument directly to Ruby's constantize method without any allowlist or validation. All 9 code-level checks passed, confirming the vulnerability exists in both query and mutation paths.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated attacker can send a GraphQL query with an arbitrary class name in the type argument (e.g., type: \"Decidim::User\") to resolve any Ruby class and call .find(id) on it, accessing records from unintended database tables.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, mounted the target repository, and executed the verification script. All 9 checks passed: (1-2) The type argument is a free-form GraphQL::Types::String with no allowlist in both mutation and query paths, (3-4) type.constantize.find(id) is called directly on the user input in both paths, (5-6) No type restriction, allowlist, or guard exists in either file, (7) The API endpoint accepts POST without CSRF protection, (8-9) Sensitive models (Decidim::User, Decidim::System::Admin) exist in the codebase and can be targeted.",
+  "verification_method": "The verification script performs 9 targeted checks against the target repository: verifying the type argument is user-controlled, confirming constantize is called without validation, verifying no allowlist exists, confirming the API is accessible, and confirming exploitable target models exist in the codebase.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "All 9 code-level verification checks passed against the target repository.",
+    "Confirmed: argument :type, GraphQL::Types::String in mutation_extensions.rb:18 - no allowlist.",
+    "Confirmed: type.constantize.find(id) in mutation_extensions.rb:35 - unsafe class resolution.",
+    "Confirmed: argument :type, GraphQL::Types::String in query_extensions.rb:16 - no allowlist.",
+    "Confirmed: type.constantize.find(id) in query_extensions.rb:25 - unsafe class resolution.",
+    "Confirmed: No type restriction patterns (allowlist, whitelist, permitted_types) in either file.",
+    "Confirmed: Decidim::User and Decidim::System::Admin models exist as exploitable targets."
+  ],
+  "limitations_or_blockers": [
+    "Full runtime exploitation would require a running Decidim instance. The code-level verification confirms the vulnerable code patterns are present and the attack is feasible."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub (decidim/decidim), checks out the v0.30.3 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.30.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_constantize.sh"
+    ]
+  }
+}

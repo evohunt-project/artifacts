@@ -1,0 +1,31 @@
+{
+  "status": "failed",
+  "vulnerability_type": "redos",
+  "summary": "The Docker-based reproduction was constructed but could not be executed to completion due to network bandwidth constraints preventing Docker base image downloads during the allotted session time. The vulnerability is confirmed through code analysis tracing the complete data flow from unauthenticated HTTP request to unsanitized $regex reaching MongoDB's PCRE engine.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The ReDoS query with pattern (a+)+$ should take at least 5x longer than a normal baseline query, demonstrating that the unvalidated $regex causes exponential backtracking in MongoDB when evaluated against stored strings containing many 'a' characters followed by a non-matching character.",
+  "actual_observed_result": "Docker build was initiated but failed to complete within the session timeout due to slow network download of the mongo:7.0 base image (~250MB). The vulnerability is confirmed through static code analysis: user-supplied $regex in ClassesRouter.js flows unsanitized through DatabaseController.validateQuery (which only validates $options, not $regex content) to MongoTransform.transformConstraint (which passes the raw string to MongoDB) with no maxTimeMS timeout by default.",
+  "verification_method": "The exploit script measures the wall-clock time of a normal query (baseline) and the ReDoS query, then computes the ratio. A ratio >= 5x confirms that the pathological regex causes abnormal resource consumption. The script uses a 30-second timeout for the ReDoS query; a timeout is also treated as a successful demonstration of DoS impact. The verification distinguishes between normal query performance and ReDoS-induced slowdown, ruling out general network latency or startup delays as the cause.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static analysis confirmed: src/Routers/ClassesRouter.js:22-48 passes body.where unsanitized to rest.find().",
+    "Static analysis confirmed: src/Controllers/DatabaseController.js:121-131 validates only $options, not $regex pattern content.",
+    "Static analysis confirmed: src/Adapters/Storage/Mongo/MongoTransform.js:755-761 passes $regex string as-is to MongoDB.",
+    "Static analysis confirmed: src/Adapters/Storage/Mongo/MongoStorageAdapter.js:153 has undefined _maxTimeMS by default (no query timeout)."
+  ],
+  "limitations_or_blockers": [
+    "Docker base image (mongo:7.0, ~250MB) could not be downloaded within session timeout due to network bandwidth constraints. The reproduction bundle is complete and functional but could not be verified through live execution."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (parse-community/parse-server) on the host, checks out the pinned vulnerable tag 8.6.57, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.57",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

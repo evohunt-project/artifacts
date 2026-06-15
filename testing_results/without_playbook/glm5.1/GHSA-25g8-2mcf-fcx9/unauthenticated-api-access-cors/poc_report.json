@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that in the default configuration, all API endpoints are accessible without any authentication. The proof script creates a watch, lists watches, reads system info, and deletes the watch without providing credentials, and observes CORS wildcard headers on every response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that the API returns system information, creates a watch, lists watches, and deletes the watch without any authentication headers, and that all responses include Access-Control-Allow-Origin: *.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the target service, then the verify script confirmed: (1) GET /api/v1/systeminfo returned version and uptime data without auth, (2) POST /api/v1/watch created a new watch without auth, (3) GET /api/v1/watch listed all watches including the newly created one without auth, (4) the responses included CORS wildcard headers, and (5) DELETE /api/v1/watch/<uuid> removed the watch without auth.",
+  "verification_method": "The verify script uses curl to make unauthenticated API calls and checks for specific success indicators in the responses: the presence of 'version' in system info, 'uuid' in the create response, the proof string in the watch listing, and a 204 status for deletion. It also inspects response headers for Access-Control-Allow-Origin.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GET /api/v1/systeminfo returned JSON with version, uptime, and watch_count fields without requiring authentication.",
+    "POST /api/v1/watch with a JSON body containing a URL returned a UUID without requiring authentication.",
+    "GET /api/v1/watch returned all watches including the proof URL without requiring authentication.",
+    "HTTP response headers included Access-Control-Allow-Origin: * confirming the global CORS misconfiguration.",
+    "DELETE /api/v1/watch/<uuid> returned HTTP 204 without requiring authentication, confirming data deletion is possible."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/build-target.sh"
+    ]
+  }
+}

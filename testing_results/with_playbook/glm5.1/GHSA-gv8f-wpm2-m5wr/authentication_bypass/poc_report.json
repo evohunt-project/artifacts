@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction starts the vulnerable application and demonstrates that a JWT token forged with the hardcoded default secret 'claude-ui-dev-secret-change-in-production' is accepted by the authenticateToken middleware, granting access to protected API endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A JWT token forged using the hardcoded default secret should be accepted by the server's authenticateToken middleware, returning HTTP 200 on protected endpoints such as /api/auth/user.",
+  "actual_observed_result": "The reproduction verified the hardcoded secret in server/middleware/auth.js line 6, forged a JWT token signed with this secret, and confirmed the server accepts the forged token on protected endpoints.",
+  "verification_method": "The verify.sh script (1) confirms the hardcoded secret exists in the source code via grep, (2) installs dependencies and starts the server, (3) forges a JWT token using the hardcoded secret, and (4) sends an authenticated request to /api/auth/user expecting HTTP 200.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "server/middleware/auth.js:6 contains hardcoded JWT_SECRET fallback 'claude-ui-dev-secret-change-in-production'",
+    "Forged JWT token signed with the hardcoded secret is accepted by the server",
+    "The authenticateToken middleware verifies tokens using the same hardcoded secret at line 53",
+    "Tokens generated at auth.js:70-78 never expire (no expiresIn field)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

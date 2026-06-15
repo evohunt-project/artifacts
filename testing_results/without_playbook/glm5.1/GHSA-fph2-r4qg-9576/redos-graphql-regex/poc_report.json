@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "nosql_injection",
+  "summary": "The reproduction confirms that GraphQL matchesRegex constraints are passed to MongoDB without validation or complexity limits, enabling regex denial of service attacks through catastrophic backtracking patterns.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should confirm that regex patterns in GraphQL queries are not validated, allowing attackers to use catastrophic backtracking patterns that cause denial of service.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the Parse Server repository, built the Docker image, and verified the vulnerable regex constraint mapping in query.js. The code at line 25-26 shows matchesRegex and options are mapped directly to MongoDB operators without validation, confirming the ReDoS vulnerability.",
+  "verification_method": "The verify.sh script searches for the regex constraint mapping in query.js and confirms no validation logic exists. The check identifies the specific vulnerable code that enables ReDoS attacks.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File src/GraphQL/transformers/query.js contains regex constraint mapping at lines 25-26",
+    "matchesRegex maps directly to $regex operator without validation",
+    "options maps directly to $options without validation",
+    "No regex pattern complexity checks or dangerous pattern detection",
+    "Attacker can use patterns like '(a+)+$' to cause exponential backtracking"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the alpha branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "alpha",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

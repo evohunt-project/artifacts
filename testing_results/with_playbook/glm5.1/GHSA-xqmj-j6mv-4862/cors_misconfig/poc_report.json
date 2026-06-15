@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cors_misconfiguration",
+  "summary": "The Docker-based reproduction confirms that the LiteLLM proxy returns Access-Control-Allow-Origin: http://evil-attacker.com and Access-Control-Allow-Credentials: true for preflight requests with an arbitrary Origin header, allowing any website to make credentialed cross-origin requests to the proxy.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A preflight OPTIONS request with Origin: http://evil-attacker.com should return Access-Control-Allow-Origin: http://evil-attacker.com and Access-Control-Allow-Credentials: true.",
+  "actual_observed_result": "Running the reproduction installed litellm from the target repository, started the proxy, sent a preflight OPTIONS request with Origin: http://evil-attacker.com to /v1/chat/completions, and the response included Access-Control-Allow-Origin: http://evil-attacker.com and Access-Control-Allow-Credentials: true along with Access-Control-Allow-Methods listing all HTTP methods and Access-Control-Allow-Headers including the requested headers.",
+  "verification_method": "The verify.sh script sends an OPTIONS preflight request with Origin: http://evil-attacker.com and checks the response headers for Access-Control-Allow-Origin: http://evil-attacker.com AND Access-Control-Allow-Credentials: true. Both must be present with the expected values.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Response headers contain Access-Control-Allow-Origin: http://evil-attacker.com, confirming the proxy echoes arbitrary origins.",
+    "Response headers contain Access-Control-Allow-Credentials: true, confirming credentialed cross-origin requests are allowed from any origin.",
+    "Response headers contain Access-Control-Allow-Methods: DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT and Access-Control-Allow-Headers: Authorization, Content-Type, granting full access to the API from any origin."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.83.7-stable",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

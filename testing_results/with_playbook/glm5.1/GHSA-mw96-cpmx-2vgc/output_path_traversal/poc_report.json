@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that a malicious rollup.config.js setting output.dir to an arbitrary filesystem location (/tmp/evohunt_test) causes Rollup to write bundle output outside the project boundary, demonstrating path traversal through unvalidated output directory configuration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause Rollup to write the bundle output to /tmp/evohunt_test, a directory outside the project boundary, demonstrating that the unvalidated output.dir configuration enables arbitrary file write.",
+  "actual_observed_result": "Running the reproduction built the Docker image with the vulnerable Rollup version, executed rollup with a malicious config setting output.dir to /tmp/evohunt_test, and the bundle file was created at /tmp/evohunt_test/bundle.js outside the project directory.",
+  "verification_method": "The verify.sh script checks for the existence of /tmp/evohunt_test/bundle.js inside the container. If the file exists, path traversal is confirmed; if not, the exploitation failed. The target path is explicitly outside any project or output boundary.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File /tmp/evohunt_test/bundle.js was created inside the container, confirming path traversal through unvalidated output.dir.",
+    "The verify.sh script confirmed the file exists at the traversal target location.",
+    "The bundle content matches the expected JavaScript output from the source input."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh builds the Docker image with the vulnerable Rollup version baked in and runs the exploit inside the container.",
+    "pinned_commit_or_ref": "v4.58.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/rollup.config.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

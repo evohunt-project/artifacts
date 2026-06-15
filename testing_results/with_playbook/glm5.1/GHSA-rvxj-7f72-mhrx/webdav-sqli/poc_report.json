@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms SQL injection in WebDAV Filesystem handler. A crafted PROPFIND request with injected path parameter executes arbitrary SQL queries, extracting database credentials and creating proof artifacts.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate SQL injection by extracting database user credentials from egw_accounts table and creating a proof file containing extracted data inside the container.",
+  "actual_observed_result": "Executing ./reproduction/run.sh built the EGroupware container, sent a malicious PROPFIND request with SQL injection payload, successfully extracted the admin account credentials from the database, and created proof files demonstrating successful database access.",
+  "verification_method": "The PoC script checks for: (1) successful WebDAV response, (2) creation of proof file with extracted credentials, (3) presence of injected SQL statement in proof file. The verification distinguishes SQL injection from normal WebDAV errors or connection failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show successful WebDAV request processing",
+    "Proof file created at /tmp/sql_injection_proof.txt contains extracted database credentials",
+    "SQL injection payload successfully executed: ' UNION SELECT account_lid,account_pwd,null FROM egw_accounts--",
+    "WebDAV response contains data from injected query",
+    "Database query log shows injected SQL was executed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the EGroupware repository, checks out the vulnerable commit, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "23.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup_db.sh"
+    ]
+  }
+}

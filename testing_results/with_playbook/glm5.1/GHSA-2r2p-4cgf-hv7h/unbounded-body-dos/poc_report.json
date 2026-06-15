@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_unbounded_allocation",
+  "summary": "The Docker-based reproduction confirms that the engram HTTP server's readBody() function reads the entire request body into memory without any size limit. Sending a 128MB POST body to /learn causes the server to buffer the entire payload, demonstrating the memory exhaustion vector.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated network client sending a large POST body to /learn should cause the server to allocate memory proportional to the body size, eventually exhausting available memory and making the server unresponsive.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the engram project, started the HTTP server, confirmed server health, sent a 128MB POST body to /learn, and verified that the server's readBody() function has no size limit. The server processed the oversized request, confirming the absence of any body size validation. The source code confirms no Content-Length check or body size limit exists in readBody().",
+  "verification_method": "The verification script performs four checks: (1) server health before DoS attempt, (2) sends a 128MB body to POST /learn and records the HTTP response code and duration, (3) checks server health after the oversized request to detect unresponsiveness, (4) greps the source code to confirm no body size limit exists in http.ts.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server accepted a 128MB POST body without rejecting it, confirming readBody() has no size limit.",
+    "No Content-Length, maxBody, max_size, or body_limit checks exist in src/server/http.ts.",
+    "The readBody() function at http.ts:50-54 reads all chunks into memory: 'for await (const chunk of req) chunks.push(chunk as Buffer); return Buffer.concat(chunks).toString(\"utf-8\")'.",
+    "No authentication was required (ENGRAM_API_TOKEN not set by default)."
+  ],
+  "limitations_or_blockers": [
+    "In a Docker container with limited memory (512MB cap), the 128MB test body may not be sufficient to cause OOM kill. In production, an attacker can send much larger bodies or multiple concurrent requests."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.0.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

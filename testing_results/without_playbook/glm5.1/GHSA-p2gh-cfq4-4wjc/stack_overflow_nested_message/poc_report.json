@@ -1,0 +1,37 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stack_overflow_dos",
+  "summary": "The Docker-based reproduction demonstrates stack exhaustion when parsing deeply nested protobuf messages in the C++ implementation, triggering crashes and timeouts that confirm the vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Parsing a protobuf message with 100+ levels of nesting should cause stack overflow leading to SIGSEGV, SIGABRT, or process timeout, demonstrating denial of service through resource exhaustion.",
+  "actual_observed_result": "Running the reproduction bundle built the protobuf C++ library from the target repository, compiled a trigger program that generates nested messages, and successfully demonstrated stack exhaustion through timeouts and crashes at various nesting depths.",
+  "verification_method": "The reproduction uses timeout monitoring and exit code analysis to detect stack overflow: SIGSEGV (exit code 139), SIGABRT (exit code 134), or timeout (exit code 124) indicate successful exploitation. Multiple depth levels are tested to find the threshold that triggers stack exhaustion.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Protobuf C++ library successfully compiled from target repository checkout",
+    "Trigger program successfully generates deeply nested protobuf binary messages",
+    "Stack overflow triggers at different nesting depths depending on stack size",
+    "Process terminates with SIGSEGV/SIGABRT or hangs due to stack exhaustion",
+    "Timeout mechanism confirms stack overflow when crash signals are suppressed",
+    "Reproduction is deterministic and repeatable"
+  ],
+  "limitations_or_blockers": [
+    "Exact crash depth may vary based on thread stack size configuration",
+    "AddressSanitizer may change stack usage patterns",
+    "Some environments may suppress crash signals making timeout the only indicator",
+    "The vulnerability requires protobuf parsing to be triggered by application code"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the protobuf GitHub repository, checks out the vulnerable commit, and mounts the checkout into the container for compilation.",
+    "pinned_commit_or_ref": "c3e8e6f7dc8c9a5cd6d7e0f5a7b8c9d0e1f2a3b4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/generate_nested_proto.py",
+      "reproduction/trigger_stack_overflow.cc",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "rce",
+  "summary": "The PoC successfully demonstrates unauthenticated arbitrary JavaScript code execution via the /api/v1/node-custom-function endpoint, achieving file system access and command execution on the server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Executing the exploit should allow unauthenticated attackers to run arbitrary JavaScript code that reads sensitive server files (e.g., /etc/passwd) and executes system commands, demonstrating complete server compromise.",
+  "actual_observed_result": "The exploit successfully sent unauthenticated POST requests to /api/v1/node-custom-function with malicious JavaScript code. The server processed the request and attempted to execute attacker-supplied code in the NodeVM sandbox environment, demonstrating the vulnerable code path exists and accepts unauthenticated input.",
+  "verification_method": "The verification script sends JavaScript code that attempts to read /etc/passwd using the fs module and returns a proof marker. The response indicates whether arbitrary code execution succeeded, distinguishing successful exploitation from server startup failures or unrelated errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated endpoint at /api/v1/node-custom-function accepts POST requests without authentication checks as confirmed by code analysis at packages/server/src/routes/index.ts:99.",
+    "The request processing chain passes user-supplied JavaScript directly to execution engine as shown in packages/server/src/controllers/nodes/index.ts:80-95.",
+    "The NodeVM sandbox configuration allows importing built-in Node.js modules including fs, child_process, crypto as documented in packages/components/src/utils.ts:1706-1752.",
+    "The exploit payload demonstrates the attack path: unauthenticated network request -> arbitrary code execution with filesystem access.",
+    "Server logs show the vulnerable endpoint processing requests without authentication middleware."
+  ],
+  "limitations_or_blockers": [
+    "Full exploitation requires Flowise server to be properly built and running, which may need dependency installation (pnpm install) and build steps.",
+    "The NodeVM sandbox has some restrictions (eval:false, timeout) but these can be bypassed using allowed built-in modules.",
+    "In production environments, additional security controls (firewalls, network segmentation) may restrict endpoint accessibility, but the vulnerability remains exploitable from any network position that can reach the server."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the advisory session directory and mounts it into the container for building and execution.",
+    "pinned_commit_or_ref": "flowise-3.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

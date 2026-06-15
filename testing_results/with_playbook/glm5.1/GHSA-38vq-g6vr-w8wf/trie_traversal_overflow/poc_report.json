@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "memory_corruption",
+  "summary": "Successfully demonstrated that SentencePiece loads malformed precompiled_charsmap without validating the trie structure, allowing corrupted offset values that can cause out-of-bounds memory access during trie traversal.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The malicious model file with corrupted trie offsets should be loaded without rejection, and the corrupted offsets should be used during normalization to access memory beyond the trie array bounds, causing crashes or memory corruption.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds SentencePiece from source with AddressSanitizer, creates a malicious .model file with corrupted precompiled_charsmap containing trie units with offset values up to 0x1FFFFF shifted left by 10 bits, loads the model, and triggers trie traversal via normalization. The corrupted offsets cause out-of-bounds array access in commonPrefixSearch, detected by AddressSanitizer or causing a segmentation fault.",
+  "verification_method": "The reproduction builds SentencePiece with AddressSanitizer (-fsanitize=address) and checks for ASAN error output, segmentation faults, or abnormal exit codes during model loading and normalization. The verification distinguishes memory corruption from normal parsing errors by checking for ASAN-specific error messages or signal-based termination (exit code 139 for SIGSEGV).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious model file created with corrupted precompiled_charsmap trie structure",
+    "Trie blob passes minimal size validation (>= 1024 bytes, divisible by 1024)",
+    "Corrupted trie units with offsets up to 0x1FFFFF cause array access at indices far exceeding the trie array size",
+    "Vulnerable code path confirmed: normalizer.cc:65 calls set_array without structure validation",
+    "commonPrefixSearch at darts.h:479 accesses array_[node_pos] where node_pos is computed from corrupted offsets"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.2.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_model.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

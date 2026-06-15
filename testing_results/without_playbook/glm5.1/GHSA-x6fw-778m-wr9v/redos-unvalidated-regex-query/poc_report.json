@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "redos",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can send a crafted $regex query with a catastrophic-backtracking pattern to the parse-server class find endpoint, causing MongoDB to consume excessive CPU and dramatically increase query response time compared to a normal baseline query.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a crafted $regex query with pattern (a+)+$ against a collection containing matching string data should cause MongoDB to exhibit catastrophic backtracking, resulting in query response times orders of magnitude higher than a normal query, demonstrating denial of service.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched parse-server with MongoDB, seeded test data, executed a baseline query that returned quickly, then executed the crafted $regex query which took significantly longer due to catastrophic backtracking in MongoDB's regex engine.",
+  "verification_method": "The reproduction measures baseline query time (normal $regex pattern) and attack query time (catastrophic-backtracking pattern (a+)+$). The verification passes when the attack query time is at least 5x the baseline time, confirming that the unvalidated $regex input causes measurable denial of service in the database tier.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline query using a simple substring match completes in under 1 second.",
+    "Attack query using $regex pattern (a+)+$ takes multiple seconds to complete due to catastrophic backtracking in MongoDB.",
+    "The timing ratio between attack and baseline confirms the ReDoS vulnerability is exploitable without authentication.",
+    "The parse-server logs show the MongoDB query executing during the attack but not timing out because maxTimeMS is not set by default."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6b1b50c8baf7e332e47307f81db7c48bca924bdc",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/exploit_helper.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

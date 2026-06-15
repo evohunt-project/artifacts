@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ldap_injection",
+  "summary": "The Docker-based reproduction confirms that LDAP injection in the groupFilter template bypasses group membership verification. By injecting *)(objectClass=*))(|(objectClass=* as the authData.id, the LDAP search filter is manipulated to match all entries, allowing authentication without valid group membership.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated attacker can bypass LDAP group membership verification and authenticate as any user by injecting LDAP filter syntax into the authData.id field, which is directly substituted into the groupFilter without sanitization.",
+  "actual_observed_result": "Running the reproduction built parse-server from source, started a mock LDAP server, and demonstrated that the injected filter *)(objectClass=*))(|(objectClass=* in the authData.id field manipulates the LDAP search to match all entries, bypassing group membership verification.",
+  "verification_method": "The exploit script creates three test cases: (1) legitimate user in admins group succeeds, (2) non-admin user outside admins group is blocked, (3) injection payload bypasses the group check. The test confirms that the injected LDAP filter returns a match for the admins group even though the injected user is not a member.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Legitimate user (legituser) authenticated successfully as member of admins group",
+    "Non-admin user (nonadmin) was correctly rejected - not in admins group",
+    "LDAP injection payload *)(objectClass=*))(|(objectClass=* bypassed group membership check",
+    "Mock LDAP server logs show the injected filter matching the admins group entry"
+  ],
+  "limitations_or_blockers": [
+    "The mock LDAP server (ldapjs) simulates the vulnerable LDAP filter evaluation. A real LDAP server may have additional parsing constraints, but the core vulnerability in parse-server's unsanitized string replacement is confirmed."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the parse-community/parse-server repository on the host, checks out the 8.6.14 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.14",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.js",
+      "reproduction/mock_ldap_server.js",
+      "reproduction/parse_server.js",
+      "reproduction/setup_ldap.sh"
+    ]
+  }
+}

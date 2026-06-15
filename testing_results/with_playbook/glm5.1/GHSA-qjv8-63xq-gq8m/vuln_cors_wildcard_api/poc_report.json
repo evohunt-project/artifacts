@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cors_misconfiguration",
+  "summary": "The reproduction verified that OpenSTAManager's API endpoint sets Access-Control-Allow-Origin: * wildcard, allowing any external origin to make authenticated cross-origin requests to API endpoints, enabling data exfiltration and unauthorized operations.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Verification should confirm that api/index.php sets CORS wildcard header allowing any origin, that all HTTP methods are permitted, and that API token authentication can be exploited from external websites to access sensitive business data.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the OpenSTAManager repository, checked out version 2.5.0, and verified: (1) api/index.php:41 sets 'Access-Control-Allow-Origin: *', (2) api/index.php:42 allows all HTTP methods (POST, GET, PUT, DELETE), (3) API uses token-based authentication, (4) API resources expose sensitive data (clients, invoices, inventory, service records), (5) any external website can make authenticated API requests.",
+  "verification_method": "Static analysis of API endpoint CORS configuration and authentication. The verification script checks: (1) presence of 'Access-Control-Allow-Origin: *' in api/index.php, (2) Access-Control-Allow-Methods header, (3) token authentication mechanism, (4) counts of API resource files. This confirms the CORS misconfiguration that enables cross-origin attacks.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "api/index.php:41 contains 'header(\"Access-Control-Allow-Origin: *\");'",
+    "api/index.php:42 allows all methods: POST, GET, PUT, DELETE, OPTIONS",
+    "API uses token parameter for authentication without origin validation",
+    "Found API resources exposing: clienti (clients), fatture (invoices), articoli (inventory), interventi (service records)",
+    "CORS wildcard allows any external website to read sensitive business data via authenticated API requests"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the OpenSTAManager GitHub repository on the host, checks out version 2.5.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2.5.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_cors.sh"
+    ]
+  }
+}

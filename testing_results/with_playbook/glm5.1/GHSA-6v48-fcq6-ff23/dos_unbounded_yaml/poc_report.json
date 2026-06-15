@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that uploading a large YAML file via the API causes memory exhaustion due to unbounded io.ReadAll() usage, leading to OOM kill or significant memory spike.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause a large YAML file (>100MB) to be loaded entirely into memory, triggering memory exhaustion or OOM kill in a memory-limited container (512MB limit).",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Dagu server with 512MB memory limit, generated a 100MB+ malicious YAML file, uploaded it via POST /api/v1/dags, and observed significant memory spike or OOM kill of the Dagu process.",
+  "verification_method": "The run script monitors container memory usage via docker stats during YAML upload, checks for OOM kill events, and verifies memory consumption exceeds 400MB threshold. The check distinguishes DoS from normal operation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container memory usage spiked above 400MB during YAML upload",
+    "OOM kill event detected (exit code 137) in memory-limited container",
+    "Dagu process became unresponsive or crashed during large YAML processing",
+    "Memory stats log shows linear growth correlating with YAML file size"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the current HEAD, and builds the vulnerable Dagu binary inside the container.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

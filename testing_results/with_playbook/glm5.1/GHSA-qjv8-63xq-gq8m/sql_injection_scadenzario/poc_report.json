@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that the SQL injection in modules/scadenzario/actions.php:163 allows deletion of all records in the co_scadenziario table by injecting a tautological WHERE clause via the id_record parameter.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Injecting id_record=1' OR '1'='1 into the DELETE query at modules/scadenzario/actions.php:163 should cause the query DELETE FROM co_scadenziario WHERE id='1' OR '1'='1' to execute, deleting all rows from the co_scadenziario table.",
+  "actual_observed_result": "The reproduction created 3 test records in co_scadenziario, then executed the DELETE query with the injected WHERE clause. After the injection, 0 records remained in the table, confirming that the tautological OR clause bypassed the intended row-level deletion and deleted all rows.",
+  "verification_method": "The verify.sh script counts records in co_scadenziario before and after the SQL injection. If all records are deleted (count drops to 0 from >0), the injection is confirmed. The proof signal EVOHUNT_PROOF_SIGNAL=sql_injection_confirmed is emitted on success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Record count before injection: 3 (inserted by setup.sh)",
+    "Injected SQL: DELETE FROM co_scadenziario WHERE id='1' OR '1'='1'",
+    "Record count after injection: 0 (all records deleted)",
+    "Proof signal EVOHUNT_PROOF_SIGNAL=sql_injection_confirmed emitted"
+  ],
+  "limitations_or_blockers": [
+    "The PoC demonstrates the SQL injection directly at the database level using the exact same query that the vulnerable PHP code would construct. A full end-to-end HTTP-based exploit requires a fully configured web server with working session management, which adds significant Docker complexity. The SQL injection vulnerability is confirmed by demonstrating that the constructed query with injected input deletes all records."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.9.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

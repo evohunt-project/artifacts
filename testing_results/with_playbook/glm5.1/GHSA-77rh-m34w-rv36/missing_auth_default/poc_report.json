@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that AgentOS with default settings (no OS_SECURITY_KEY) grants unauthenticated access to all API endpoints. The auth_dependency function returns True when the security key is None.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should confirm that auth_dependency returns True when os_security_key is not set, and that a proof file is created demonstrating the authentication bypass.",
+  "actual_observed_result": "The exploit demonstrates that AgnoAPISettings() has os_security_key=None by default, and auth_dependency(request, credentials) returns True unconditionally. A proof file is created confirming the authentication bypass.",
+  "verification_method": "The verify.sh script checks: (1) the vulnerable auth bypass pattern exists in auth.py via grep, (2) the default=None pattern exists in settings.py, and (3) the exploit.py creates a proof file at /tmp/evohunt_noauth_proof confirming auth returns True without credentials.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof file /tmp/evohunt_noauth_proof with content confirming auth bypass",
+    "grep confirmation that 'if not settings or not settings.os_security_key: return True' exists in auth.py",
+    "grep confirmation that 'os_security_key: Optional[str] = Field(default=None)' exists in settings.py"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref v2.3.23, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.3.23",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/server.py",
+      "reproduction/requirements.txt"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "out_of_bounds_memory_access",
+  "summary": "The Docker-based reproduction confirms that a crafted Cap'n Proto message with a double-far pointer structure bypasses the bounds_check at the second far pointer resolution in follow_fars(), allowing the pointer to resolve to an out-of-bounds memory address. The trigger successfully resolves a root pointer from an address 800 bytes beyond the 16-byte segment boundary.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted double-far pointer to resolve the inner far pointer to an out-of-bounds address without calling bounds_check(), demonstrating arbitrary memory read access through the Cap'n Proto message parsing pipeline.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the trigger binary against the target capnp crate, crafted a 2-segment message with a double-far pointer, and the root pointer resolved successfully from an out-of-bounds address (position 100 = byte offset 800 in a 16-byte segment 0). The inner far pointer at layout.rs:539-540 was followed without any bounds validation.",
+  "verification_method": "The trigger crafts a double-far message where the inner far pointer targets position 100 in a 2-word segment (byte offset 800 vs 16-byte segment). A single-far or bounds-checked path would reject this with an out-of-bounds error. Successful root resolution confirms the double-far bypass. The output string EVOHUNT_DOUBLE_FAR_OOB_RESOLVED distinguishes a genuine bypass from a generic parse error or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The trigger binary successfully parsed the crafted message and resolved the root pointer from an OOB address.",
+    "The inner far pointer (position=100, segment=0) resolved to byte offset 800 in a 16-byte segment without triggering any bounds error.",
+    "Output signal EVOHUNT_DOUBLE_FAR_OOB_RESOLVED confirms the vulnerability was triggered through the actual code path in layout.rs:539-540."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "240dba17704fd20d058281aff660bc79b89cb3bb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/trigger.rs",
+      "reproduction/verify.sh",
+      "reproduction/Cargo.toml"
+    ]
+  }
+}

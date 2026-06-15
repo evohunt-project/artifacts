@@ -1,0 +1,88 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9fcd432e",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-wvvq-wgcr-9q48/GHSA-wvvq-wgcr-9q48.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "open-redirect-x-forwarded-prefix",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9fcd432e/open-redirect-x-forwarded-prefix",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9fcd432e/open-redirect-x-forwarded-prefix/vulnerability_report.json",
+      "title": "Open redirect via unsanitized X-Forwarded-Prefix header in dashboard root handler",
+      "vulnerability_type": "open_redirect",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes an open redirect vulnerability in the dashboard root handler via the X-Forwarded-Prefix header. This is unrelated to the advisory's TLS ClientHello fragmentation vulnerability. The advisory focuses on mTLS bypass through SNI extraction failure in the TCP router's pre-sniffing logic, while this finding involves HTTP header handling in the dashboard API endpoint.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:L/VA:N/SC:N/SI:L/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unauthenticated-rest-api-config-injection",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9fcd432e/unauthenticated-rest-api-config-injection",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9fcd432e/unauthenticated-rest-api-config-injection/vulnerability_report.json",
+      "title": "Unauthenticated arbitrary configuration injection via REST provider API",
+      "vulnerability_type": "configuration_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes a configuration injection vulnerability via the unauthenticated REST provider API endpoint (/api/providers/rest). This is completely unrelated to the advisory's TLS SNI pre-sniffing vulnerability in router.go. The advisory describes mTLS bypass via fragmented ClientHello packets causing SNI extraction failure, while this finding describes a different authentication bypass mechanism through the REST API configuration endpoint.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "H",
+          "SI": "H",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "None of the two qualifying findings identify the advisory-described vulnerable code or root cause. The advisory describes a mTLS bypass vulnerability in Traefik caused by fragmented TLS ClientHello packets that fail SNI extraction, leading to fallback to a default TLS configuration without client certificate requirements. The affected code is in router.go's clientHelloInfo function and the SNI pre-sniffing logic. The qualifying findings describe completely different vulnerabilities: (1) open redirect via X-Forwarded-Prefix header in the dashboard, and (2) configuration injection via the REST provider API. Neither of these findings relate to TLS SNI extraction, ClientHello fragmentation, or the mTLS bypass mechanism described in the advisory.",
+    "evidence": [
+      "Advisory GHSA-wvvq-wgcr-9q48 describes mTLS bypass via fragmented TLS ClientHello causing pre-SNI sniff fallback to default non-mTLS TLS config",
+      "Advisory root cause: clientHelloInfo function in router.go peeks only one TLS record length and fails on fragmented ClientHello, returning empty SNI",
+      "Advisory impact: Allows access to mTLS-protected routes without valid client certificate authentication",
+      "Finding 'open-redirect-x-forwarded-prefix' targets dashboard HTTP handler, not TLS handshake logic",
+      "Finding 'unauthenticated-rest-api-config-injection' targets REST provider API endpoint, not TLS handshake logic"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9fcd432e/open-redirect-x-forwarded-prefix",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9fcd432e/open-redirect-x-forwarded-prefix/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9fcd432e/open-redirect-x-forwarded-prefix/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9fcd432e/unauthenticated-rest-api-config-injection",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9fcd432e/unauthenticated-rest-api-config-injection/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9fcd432e/unauthenticated-rest-api-config-injection/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

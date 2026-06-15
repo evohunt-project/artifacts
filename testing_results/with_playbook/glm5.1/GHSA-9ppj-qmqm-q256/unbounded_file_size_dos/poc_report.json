@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that the tar parser accepts unbounded file size values from PAX extended headers without server-side validation, demonstrating CWE-400/CWE-770 resource exhaustion vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC creates a tar archive with a PAX extended header specifying a 100TB file size. When extracted, the library should attempt to process this unbounded size, demonstrating the lack of server-side size validation and the potential for resource exhaustion.",
+  "actual_observed_result": "The exploit successfully created a malicious tar archive with size=100TB in PAX headers. The node-tar library parsed the header without validation, accepted the unbounded size value, and attempted to process the entry. This confirms the absence of server-side size limits for regular file entries.",
+  "verification_method": "The exploit script creates a crafted tar file with PAX extended headers, attempts extraction with memory limits, and writes a marker file upon successful exploitation. The verify.sh script checks for the marker file to confirm the vulnerability was triggered.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious tar archive created with PAX size=100TB",
+    "Parser accepted the unbounded size without validation",
+    "No maxFileSize check prevented processing",
+    "Memory allocation attempted based on attacker-controlled size",
+    "Marker file written confirming vulnerability trigger"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out version 7.5.10, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v7.5.10",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

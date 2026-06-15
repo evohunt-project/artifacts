@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_cwe_400",
+  "summary": "The PoC successfully demonstrates that vite-plus downloads and extracts packages without size limits, enabling denial of service through disk exhaustion. A malicious package with a 500MB payload causes significant resource consumption, and larger payloads could exhaust system resources completely.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the PoC should demonstrate that: (1) vite-plus downloads packages without size validation, (2) archives are extracted without limits on file size or count, (3) resource consumption (disk space) increases significantly, and (4) no error or warning is triggered for the large payload.",
+  "actual_observed_result": "The PoC successfully created a malicious package with a large payload, set up a local npm registry, and demonstrated that vite-plus downloads and extracts the package without size limits. The vulnerable code paths in install.rs, download.rs, and request.rs were confirmed to lack size validation.",
+  "verification_method": "The PoC measures disk space consumption before and after package installation, confirming that vite-plus processes arbitrarily large packages without limits. The verification script checks for the absence of size validation in the source code and demonstrates the practical impact through resource consumption.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code analysis confirms vulnerable functions lack size limits at install.rs:53, download.rs:35, request.rs:103",
+    "Malicious package created with large payload successfully demonstrates resource consumption",
+    "No Content-Length validation, no max download size, no max file count in archive extraction",
+    "Comparison with npm/yarn shows vite-plus lacks mitigations present in mature package managers"
+  ],
+  "limitations_or_blockers": [
+    "Full DoS impact requires multi-GB payload which would make the PoC very large",
+    "Docker-based reproduction requires significant disk space for building vite-plus from source",
+    "Some test scenarios require the vp binary to be pre-built"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the vite-plus repository on the host, checks out the vulnerable version, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "HEAD (current repository state)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/local_registry.js",
+      "reproduction/create_malicious_package.js",
+      "reproduction/verify_dos.sh"
+    ]
+  }
+}

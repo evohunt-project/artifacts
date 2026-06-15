@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that path traversal vulnerabilities in jsPDF's Node.js file operations allow reading arbitrary files (including /etc/passwd) and writing to arbitrary locations outside the intended directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate reading /etc/passwd via loadFile() with path traversal, and writing a test file to /tmp/arbitrary_location.txt via save() with traversal payload, confirming both read and write path traversal capabilities.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the target environment, executed the PoC script that read /etc/passwd using '../../../etc/passwd' traversal, and wrote a test file to /tmp/arbitrary_location.txt using '../../../tmp/arbitrary_location.txt' traversal. Both operations succeeded without any path validation errors.",
+  "verification_method": "The PoC script explicitly reads /etc/passwd and checks for expected content (root:x:0:0), then writes to /tmp/arbitrary_location.txt and verifies the file exists with expected content. The verification distinguishes actual path traversal from permission errors or missing files.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Successfully read /etc/passwd containing 'root:x:0:0:root:/root:/bin/bash' via traversal payload",
+    "Successfully wrote test content to /tmp/arbitrary_location.txt via traversal payload",
+    "File write location is outside the current working directory, confirming path containment bypass",
+    "No path validation errors or exceptions occurred during exploitation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the jsPDF repository on the host, checks out version 3.0.4, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.0.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc_traversal.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

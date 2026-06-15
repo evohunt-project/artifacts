@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_rce",
+  "summary": "The Docker-based reproduction confirms that the skills code execution feature allows arbitrary Python code execution with a basic user API key, demonstrating complete lack of authentication and authorization controls in the vulnerable code path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Executing the reproduction script should demonstrate arbitrary code execution in the Docker sandbox using a basic user API key (non-admin), proving that privilege checks are absent and any user can execute arbitrary code.",
+  "actual_observed_result": "The reproduction successfully triggered the vulnerable code path with a basic user API key, confirming that the SkillsInjectionHook processes skills without checking user_role or requiring PROXY_ADMIN privileges. The code execution flow from async_pre_call_hook through _execute_code_tool to SkillsSandboxExecutor.execute demonstrates the complete exploit chain without authentication or authorization.",
+  "verification_method": "The verification checks for the proof marker 'EVOHUNT_RCE_SUCCESS' written to /sandbox/pwned.txt, which confirms that arbitrary code execution occurred. The script also checks Docker logs for the execution marker 'EVOHUNT_POC_MARKER'. This distinguishes successful code execution from unrelated errors or startup failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Request to /v1/chat/completions accepted with basic user API key (not admin)",
+    "SkillsInjectionHook.async_pre_call_hook processed container.skills without privilege check",
+    "Code execution triggered in Docker sandbox through litellm_code_execution tool",
+    "Proof file /sandbox/pwned.txt created with EVOHUNT_RCE_SUCCESS marker",
+    "Execution logs show arbitrary Python code ran without validation or sanitization"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the LiteLLM repository from GitHub on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup_db.py"
+    ]
+  }
+}

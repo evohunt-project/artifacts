@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_read",
+  "summary": "The Docker-based reproduction confirms that jsPDF's loadFile() reads arbitrary files from the filesystem. The exploit creates a secret file with a known marker, reads it via loadFile(), and verifies the content matches, confirming unrestricted file read access.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause loadFile() to read the contents of an arbitrary file (a secret file with a known marker) and return the exact contents, demonstrating that any file on the filesystem can be read.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched a Node.js container with the jsPDF source mounted, created a secret file, invoked doc.loadFile() with the secret file path, and confirmed the returned content exactly matched the secret marker, proving unrestricted file read.",
+  "verification_method": "The exploit script creates a file with a unique secret marker, reads it via loadFile(), compares the returned content against the known marker, and prints [EVOHUNT_POC_SUCCESS] only if the content matches exactly. This distinguishes a successful arbitrary file read from an error or undefined return.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The loadFile() call returned the exact content of the secret file, proving arbitrary file read.",
+    "The verification compared the returned content against the known marker and confirmed a match.",
+    "The process exited with code 0, confirming successful exploitation."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.0.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

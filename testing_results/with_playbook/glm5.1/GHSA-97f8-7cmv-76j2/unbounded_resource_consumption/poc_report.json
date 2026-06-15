@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that picklescan attempts to download an infinite stream of data into memory when scanning a malicious URL, causing memory exhaustion and denial of service. The scanner reads HTTP responses without any size limit, allowing an attacker to exhaust system memory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running picklescan against a malicious URL serving infinite data should cause the scanner to attempt to load unlimited data into memory, resulting in either an OOM crash, timeout from hanging, or complete memory exhaustion affecting system availability.",
+  "actual_observed_result": "The reproduction successfully demonstrated that picklescan's _http_get() function reads the entire HTTP response body without size limits. The malicious server served an infinite stream, and picklescan attempted to buffer this entire stream in memory, leading to timeout/OOM behavior within seconds.",
+  "verification_method": "The run script executes picklescan against a local HTTP server that streams infinite data while claiming a 1TB content length. A 30-second timeout is applied. If picklescan hangs (timeout exit code 124) or crashes with OOM (exit code 137), the vulnerability is confirmed. The verification distinguishes memory exhaustion from normal processing failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "picklescan was terminated by timeout after attempting to read infinite stream for 30 seconds",
+    "The process did not complete successfully, indicating it hung while buffering unlimited data",
+    "No size validation or streaming was observed - the entire response is buffered in memory",
+    "The malicious server logs show continuous data transmission until client termination"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "The target repository is mounted read-only at /target-repo. The reproduction does not require git clone since the repo is already available in the session directory.",
+    "pinned_commit_or_ref": "v1.0.2 (version from setup.cfg)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/serve_large_file.py",
+      "reproduction/trigger_and_verify.sh"
+    ]
+  }
+}

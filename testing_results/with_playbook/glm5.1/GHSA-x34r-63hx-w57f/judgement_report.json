@@ -1,0 +1,118 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T05:22:49.647Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-02/GHSA-x34r-63hx-w57f/GHSA-x34r-63hx-w57f.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "vuln_code_injection_eval",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_code_injection_eval",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_code_injection_eval/vulnerability_report.json",
+      "title": "Code injection via eval() in TableChatAgent pandas expression evaluation",
+      "vulnerability_type": "code_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "Same TableChatAgent pandas-eval area, but the finding depends on full_eval=True disabling sanitization and does not identify the advisory's pandas_utils.py dunder-attribute WAF bypass.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "vuln_command_injection_git",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_command_injection_git",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_command_injection_git/vulnerability_report.json",
+      "title": "OS command injection via git clone with user-controlled URL",
+      "vulnerability_type": "command_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns RepoLoader git-clone URL handling, not TableChatAgent pandas_eval sanitization or pandas_utils.py attribute validation.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "vuln_path_traversal_filetools",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_path_traversal_filetools",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_path_traversal_filetools/vulnerability_report.json",
+      "title": "Path traversal in ReadFileTool and WriteFileTool allows arbitrary file system access",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns arbitrary file access in file_tools.py, not TableChatAgent pandas_eval sanitization or pandas_utils.py attribute validation.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-specific root cause: the sanitize_command WAF bypass caused by unchecked dunder/private attribute access in pandas_utils.py. The only TableChatAgent qualifying finding reports a different condition, full_eval=True disabling sanitization.",
+    "evidence": [
+      "The advisory describes RCE through TableChatAgent pandas_eval using df.add_prefix(\"__import__('os').system('ls')#\").T.groupby(by=df.__init__.__globals__['__builtins__']['eval']).",
+      "The referenced fix commit 30abbc1a854dee22fbd2f8b2f575dfdabdb603ea adds pandas_utils.py visit_Attribute() checks to block dunder/private attributes, including __init__, __globals__, and __builtins__.",
+      "vuln_code_injection_eval/vulnerability_report.json and its reproduction require TableChatAgentConfig(full_eval=True) and use a direct __import__('os').system(...) expression, which bypasses the sanitizer by configuration rather than by the advisory's dunder-attribute sanitizer flaw.",
+      "The other qualifying findings are in RepoLoader git-clone handling and file_tools.py path handling, which are unrelated vulnerable code paths."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_code_injection_eval",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_code_injection_eval/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_code_injection_eval/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_command_injection_git",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_command_injection_git/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_command_injection_git/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_path_traversal_filetools",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_path_traversal_filetools/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_fd6ee8da/vuln_path_traversal_filetools/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

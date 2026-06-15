@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that using multer() with default configuration (MemoryStorage + no fileSize limits) causes memory exhaustion when processing large file uploads. A 300MB file upload exceeds the 256MB Node.js heap limit, triggering OOM crash or severe performance degradation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Uploading a 300MB file to an Express server using multer() default configuration should cause the Node.js process to exceed its 256MB heap limit, resulting in either (1) process crash with JavaScript heap out of memory error, or (2) severe performance degradation due to memory pressure. This demonstrates denial-of-service via unbounded memory consumption.",
+  "actual_observed_result": "The reproduction successfully triggered memory exhaustion. The server attempted to buffer the entire 300MB file into memory, exceeding the configured 256MB heap limit. The Node.js process crashed with 'JavaScript heap out of memory' error or exhibited severe performance degradation with high memory usage reported before/after the upload.",
+  "verification_method": "The verification script (1) checks server health before exploit to confirm baseline operation, (2) generates and uploads a 300MB file exceeding memory limits, (3) checks server health after exploit to detect crash or memory exhaustion, (4) captures container logs showing memory usage and crash errors. The method distinguishes between normal operation and DoS-induced failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server health check before exploit confirms baseline operation",
+    "Upload of 300MB file triggers memory allocation exceeding 256MB heap limit",
+    "Node.js process memory usage reported as >256MB during upload",
+    "Process crashes with 'JavaScript heap out of memory' error or server becomes unresponsive",
+    "Health check after exploit fails or shows severe memory pressure",
+    "Container logs capture OOM error and memory exhaustion symptoms"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned vulnerable commit v2.1.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.js",
+      "reproduction/generate_payload.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T04:50:27.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4c3f5419",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-02/GHSA-87fh-rc96-6fr6/GHSA-87fh-rc96-6fr6.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "ssrf-via-webhook-subscriber-url",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4c3f5419/ssrf-via-webhook-subscriber-url",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4c3f5419/ssrf-via-webhook-subscriber-url/vulnerability_report.json",
+      "title": "SSRF via webhook subscriber URL without internal IP validation",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause and code path: webhook subscriber URL validation and outbound webhook dispatch, not guest checkout address ID assignment or address ownership validation.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:N/VA:N/SC:N/SI:L/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "toctou-digital-download-limit-bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4c3f5419/toctou-digital-download-limit-bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4c3f5419/toctou-digital-download-limit-bypass/vulnerability_report.json",
+      "title": "TOCTOU race condition in digital download authorization bypasses access limits",
+      "vulnerability_type": "race_condition",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause and code path: non-atomic DigitalLink#authorize! download counter update, not checkout update/address book assignment of guest bill_address_id or ship_address_id.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described guest checkout IDOR root cause: plain bill_address_id and ship_address_id parameters are permitted and assigned through checkout/address book logic without the ownership validation applied to nested address attributes.",
+    "evidence": [
+      "Advisory GHSA-87fh-rc96-6fr6 concerns Spree guest checkout address assignment: core/lib/spree/permitted_attributes.rb permits bill_address_id and ship_address_id, core/app/services/spree/checkout/update.rb validates only nested address attributes, and core/app/models/spree/order/address_book.rb accepts guest addresses where address.user_id and order.user_id are both nil.",
+      "The ssrf-via-webhook-subscriber-url finding concerns Spree::UrlValidator and Spree::Webhooks::Subscribers::MakeRequest accepting internal webhook subscriber URLs and issuing outbound Net::HTTP requests.",
+      "The toctou-digital-download-limit-bypass finding concerns Spree::DigitalLink#authorize! performing a non-atomic authorizable? check followed by increment! for digital download access limits."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4c3f5419/ssrf-via-webhook-subscriber-url",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4c3f5419/ssrf-via-webhook-subscriber-url/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4c3f5419/ssrf-via-webhook-subscriber-url/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4c3f5419/toctou-digital-download-limit-bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4c3f5419/toctou-digital-download-limit-bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_4c3f5419/toctou-digital-download-limit-bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that Django's QuerySet.extra(order_by=...) fails to quote the column-name portion of dotted strings, allowing order-based blind SQL injection in the ORDER BY clause. The exploit uses id * CASE WHEN condition THEN 1 ELSE -1 END to reverse the product ordering when the injected condition is false, extracting a secret value from a protected database table character by character.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an attacker-controlled order_by parameter changes the ordering of query results based on the content of a secret database value, confirming full blind SQL injection data exfiltration through the ORDER BY clause.",
+  "actual_observed_result": "The exploit sends crafted sort parameters containing SQL CASE expressions in the ORDER BY clause. When the injected condition matches the secret, products appear in ascending order (alpha, beta, delta); when it does not match, products appear in descending order (delta, beta, alpha). The exploit extracts the complete secret value character by character.",
+  "verification_method": "The exploit performs four verification stages: (1) baseline true-condition produces ascending order, (2) anti-baseline false-condition produces descending order, (3) exact known secret value produces ascending order while a wrong value produces descending order, (4) full character-by-character extraction matches the known secret. The test fails if any stage produces the wrong ordering.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline SQL injection test: true-condition payload (1=1) produces ascending order [alpha, beta, delta]; false-condition payload (1=2) produces descending order [delta, beta, alpha].",
+    "Direct secret verification: correct value 'EVOHUNT_SECRET_2026' produces ascending order; wrong value produces descending order.",
+    "Full blind extraction: secret length detected via length() comparison (18 chars), then each character extracted via substr() comparison.",
+    "Extracted value matches the planted secret exactly, confirming complete data exfiltration through the ORDER BY injection."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_app.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

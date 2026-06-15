@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "Docker-based reproduction confirms that Code node execution in insecure mode allows arbitrary command execution, sensitive file access, and full system compromise via new Function() sandbox bypass.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Code node with insecure mode should execute user-supplied JavaScript that reads /etc/passwd, executes shell commands, accesses environment variables, and demonstrates full escape from sandbox isolation.",
+  "actual_observed_result": "Running ./reproduction/run.sh built n8n with task runner, created workflow with Code node in insecure mode, executed malicious code that successfully read /etc/passwd, executed shell commands via process object, and accessed environment variables, confirming complete sandbox escape and system compromise.",
+  "verification_method": "The run script creates a malicious workflow with Code node, triggers execution, and verifies: (1) /etc/passwd content is accessible and returned, (2) shell command execution output is captured, (3) environment variables are readable, (4) no sandbox restriction prevents these operations. The verification distinguishes successful code execution from sandbox-blocked attempts.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Code node execution returned contents of /etc/passwd file, confirming filesystem access.",
+    "Shell command execution via process.binding('spawn_sync') succeeded, returning command output.",
+    "Environment variables including PATH, USER, HOME were accessible and logged.",
+    "No sandbox exception or permission denied error occurred during execution.",
+    "The malicious code executed with full Node.js runtime privileges outside the intended sandbox."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository, checks out the vulnerable version, builds with task runner support, configures insecure mode, and executes the exploit.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/analyze.sh",
+      "reproduction/workflow.json"
+    ]
+  }
+}

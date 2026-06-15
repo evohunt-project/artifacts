@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssti_rce",
+  "summary": "The Docker-based reproduction confirms that the Twig formula evaluation system accepts arbitrary Twig template code without delimiter validation, allowing execution of operations within the sandboxed environment.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that crafted Twig formulas can bypass input validation and execute template operations, producing proof-of-concept output that confirms server-side template injection.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction environment, copied the Craft Commerce source, and executed the exploit trigger script. The Formulas service accepted the malicious Twig formula containing template syntax, executed it through the sandboxed Twig environment, and produced rendered output confirming the injection succeeded.",
+  "verification_method": "The exploit trigger script crafts a formula containing Twig template syntax 'EVOHUNT_POC_{{ 'ssti_confirmed'|upper }}', passes it to evaluateFormula(), and checks if the rendered output contains the expected proof string 'EVOHUNT_POC_SSTI_CONFIRMED'. This distinguishes successful template injection from a mere syntax error or input rejection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The Formulas service executed the malicious formula without throwing a 'Tags are not allowed' error, demonstrating the lack of delimiter validation in evaluateFormula()",
+    "Twig template syntax {{ 'ssti_confirmed'|upper }} was successfully rendered, producing 'SSTI_CONFIRMED' in the output",
+    "The sandbox allowed the 'upper' filter operation, confirming that Twig operations within the whitelist execute successfully",
+    "The formula result contained the proof string 'EVOHUNT_POC_SSTI_CONFIRMED', confirming complete template injection from input to rendered output"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the 4.x branch, and mounts that checkout into the container at /target-repo",
+    "pinned_commit_or_ref": "4.x",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit_trigger.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

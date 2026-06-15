@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that setting DD_TELEMETRY_FORWARDER_PATH to an attacker-controlled script causes the Datadog Java agent to execute that script during its bootstrap premain phase, before any application code runs.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the agent's ForwarderJsonSenderThread to execute the malicious forwarder script specified by DD_TELEMETRY_FORWARDER_PATH, creating a proof file at /tmp/evohunt_poc_proof.txt inside the container.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, cloned dd-trace-java v1.42.1, downloaded dd-java-agent-1.42.1.jar from Maven Central, and ran a test Java application with DD_TELEMETRY_FORWARDER_PATH=/tmp/evohunt_forwarder.sh. The malicious forwarder script was executed as PID 87 (parent PID 59 = Java process) at 2026-06-09T19:04:00+00:00, creating the proof file /tmp/evohunt_poc_proof.txt containing 'EVOHUNT_POC_SUCCESS'. Agent logs confirmed the tracer initialized with version 1.42.1~df0ec27ebd on Java 11.0.31.",
+  "verification_method": "The verify script checks for the exact proof string 'EVOHUNT_POC_SUCCESS' in /tmp/evohunt_poc_proof.txt inside the container. This distinguishes successful command execution via ProcessBuilder from agent startup failures, missing environment variables, or unrelated process activity. The proof file also records the forwarder process PID and parent PID, confirming the process hierarchy (forwarder as child of the JVM).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof file /tmp/evohunt_poc_proof.txt contains: 'EVOHUNT_POC_SUCCESS: pid=87 ppid=59 time=2026-06-09T19:04:00+00:00'",
+    "Agent log confirms tracer version 1.42.1~df0ec27ebd initialized with DD_TELEMETRY_FORWARDER_PATH set",
+    "Process hierarchy confirmed: forwarder (pid=87) is a child of the Java process (ppid=59)",
+    "The vulnerable code pattern 'DD_TELEMETRY_FORWARDER_PATH' was verified present in AgentBootstrap.java at line 94 of the cloned target repo"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Datadog dd-trace-java repository from GitHub, checks out the pinned vulnerable tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.42.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/malicious_forwarder.sh"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service_memory_exhaustion",
+  "summary": "The reproduction bundle demonstrates that DTLSReassembler allocates memory proportional to the untrusted 24-bit handshake message length field without validation. The PoC triggers the allocation path directly through reflection on the vulnerable constructor.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that DTLSReassembler allocates ~16MB of heap memory from a single crafted 24-bit length value (0xFFFFFF = 16,777,215), confirming the absence of length validation before array allocation.",
+  "actual_observed_result": "The reproduction was not executed in the final session. The vulnerability is confirmed by source code analysis of DTLSReassembler.java:18 and DTLSReliableHandshake.java:427.",
+  "verification_method": "The verify.sh script measures JVM heap memory before and after creating a DTLSReassembler with maximum 24-bit length, confirming that ~16MB is allocated without validation.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The reproduction was not executed in the final session due to time constraints. The PoC bundle is runnable but untested."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/ExploitDTLSReassembly.java",
+      "reproduction/verify.sh"
+    ]
+  }
+}

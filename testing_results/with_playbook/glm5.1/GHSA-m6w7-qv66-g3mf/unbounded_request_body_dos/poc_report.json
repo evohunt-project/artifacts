@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "dos",
+  "summary": "The Docker-based reproduction starts a minimal BentoML service with constrained memory (768 MB), sends a 512 MB JSON payload via POST to the /predict endpoint, and verifies that the worker process is killed by the OOM killer or becomes unresponsive due to memory exhaustion from reading the unbounded request body.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a 512 MB JSON payload to the BentoML predict endpoint should cause the worker to allocate the entire body into memory via Starlette's request.body(), exhausting the 768 MB container memory limit and triggering OOM kill or complete service unavailability.",
+  "actual_observed_result": "PoC was not executed in this session. The reproduction bundle is self-contained and ready for execution.",
+  "verification_method": "The verify.sh script confirms the service is healthy before the exploit, sends the oversized payload, then checks whether the healthz endpoint is still responsive. If the service becomes unresponsive or the process terminates, the OOM DoS is confirmed. Memory RSS is logged before and after for evidence.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The PoC was not executed during this session due to time constraints. Docker must be available on the host.",
+    "Memory behavior may vary across Docker versions and host OS. The 768 MB limit may need adjustment."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/service.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

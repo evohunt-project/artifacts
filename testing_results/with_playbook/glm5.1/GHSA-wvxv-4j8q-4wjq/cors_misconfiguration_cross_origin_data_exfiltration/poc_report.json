@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cors_misconfiguration",
+  "summary": "The Docker-based reproduction confirms that Glances reflects an arbitrary attacker-controlled Origin header in Access-Control-Allow-Origin and sets Access-Control-Allow-Credentials: true, enabling cross-origin data exfiltration from any malicious website.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The Glances REST API should respond to cross-origin requests with Access-Control-Allow-Origin reflecting the attacker's Origin header and Access-Control-Allow-Credentials: true, allowing any website to read system monitoring data via the victim's browser.",
+  "actual_observed_result": "Running the reproduction container started Glances v4.5.2_dev01 in web server mode, sent a request with Origin: http://evil-attacker.com, and observed Access-Control-Allow-Origin: http://evil-attacker.com and Access-Control-Allow-Credentials: true in the response. The /api/4/all endpoint returned full system monitoring data including CPU and memory statistics.",
+  "verification_method": "The verify.sh script starts Glances in web server mode, sends an HTTP request with the Origin: http://evil-attacker.com header to the /api/4/status endpoint, and checks that the response contains Access-Control-Allow-Origin: http://evil-attacker.com and Access-Control-Allow-Credentials: true. It also requests /api/4/all and confirms the response body contains system monitoring data (cpu or mem keys). The script distinguishes CORS header reflection from a missing or restrictive CORS policy by checking exact Origin reflection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Response headers include access-control-allow-origin: http://evil-attacker.com reflecting the attacker-controlled Origin header.",
+    "Response headers include access-control-allow-credentials: true, allowing credentialed cross-origin requests.",
+    "The /api/4/all endpoint returned system monitoring data (cpu, mem) cross-origin, confirming data exfiltration is possible."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

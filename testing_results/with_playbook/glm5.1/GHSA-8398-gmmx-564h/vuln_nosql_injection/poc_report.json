@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "nosql_injection",
+  "summary": "The Docker-based reproduction confirms that the MongoDB workflow node accepts raw JSON query strings with dangerous NoSQL operators like $where without validation. The PoC demonstrates $where operator injection that executes JavaScript in MongoDB query context.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a MongoDB workflow node with a $where operator query, demonstrating that dangerous NoSQL operators pass through without validation and execute JavaScript in MongoDB context.",
+  "actual_observed_result": "The reproduction successfully created a workflow with MongoDB node containing $where operator, executed the workflow, and MongoDB processed the $where query showing JavaScript execution in query context.",
+  "verification_method": "The reproduction script checks MongoDB logs for evidence of $where operator processing, distinguishing successful NoSQL injection from normal query execution or connection failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "MongoDB credential created without validation",
+    "Workflow with $where operator query created successfully",
+    "Workflow execution triggered MongoDB query processing",
+    "MongoDB logs show $where operator was processed",
+    "No validation or sanitization of dangerous NoSQL operators observed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones target repository, checks out master branch, and mounts checkout into container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh"
+    ]
+  }
+}

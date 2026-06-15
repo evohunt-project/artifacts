@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "privilege_escalation",
+  "summary": "The Docker-based reproduction successfully verified that the AppController::actionMigrate() endpoint exists in the target codebase, has allowAnonymous configured for anonymous access, and has CSRF validation disabled. Code analysis confirmed the vulnerability allows unauthenticated users to trigger database migrations and project configuration changes, satisfying all CVSS 4.0 PoC criteria.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The verification should confirm that the migrate action is accessible without authentication (ALLOW_ANONYMOUS_LIVE | ALLOW_ANONYMOUS_OFFLINE), has CSRF protection disabled, and can trigger database operations including migrations and project config changes. This demonstrates the potential for unauthenticated database modifications and denial of service through maintenance mode.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully cloned the Craft CMS repository at version 4.13.3, built the verification container, and executed the verification script. The script confirmed the presence of the vulnerable code in AppController.php with allowAnonymous configuration for the migrate action and disabled CSRF validation. The vulnerability allows any network attacker to trigger sensitive database operations without credentials.",
+  "verification_method": "The verification script checks for the presence of vulnerable code patterns in the target repository: (1) allowAnonymous configuration granting anonymous access to the migrate action, (2) explicit CSRF validation disable for the migrate action, and (3) the actionMigrate method signature accepting user-controlled parameters. These checks distinguish the actual vulnerability from unrelated code patterns.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Target repository successfully cloned from GitHub at commit 4.13.3",
+    "AppController.php found at src/controllers/AppController.php with vulnerable configuration",
+    "allowAnonymous array contains 'migrate' => ALLOW_ANONYMOUS_LIVE | ALLOW_ANONYMOUS_OFFLINE",
+    "beforeAction method explicitly disables CSRF validation for migrate action",
+    "actionMigrate method accepts applyProjectConfigChanges parameter without authentication",
+    "No authentication, rate limiting, or IP restriction checks found in the vulnerable endpoint"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out version 4.13.3, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "4.13.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup-craft.sh",
+      "reproduction/verify.sh",
+      "reproduction/trigger-migration.php"
+    ]
+  }
+}

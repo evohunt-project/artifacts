@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "missing_authentication",
+  "summary": "A Docker-based reproduction was prepared that builds the UDM from source, starts it with a minimal configuration (no NRF so OAuth2Required remains false), and sends unauthenticated requests to multiple SBI endpoints to confirm they are not rejected with HTTP 401.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the UDM to start, accept HTTPS connections, and respond to requests without an Authorization header with a non-401 HTTP status code, proving that the RouterAuthorizationCheck middleware bypasses authentication when OAuth2Required defaults to false.",
+  "actual_observed_result": "The reproduction bundle was created but not executed in this session due to network constraints preventing Docker base image and Go toolchain downloads. The vulnerable code path was verified through static analysis: context.go:507-511 shows AuthorizationCheck returns nil when OAuth2Required is false, and server.go:61-74 shows the HTTP server starts even when NRF registration fails.",
+  "verification_method": "The verify.sh script builds the UDM from the mounted target repository, starts it with a minimal config, and sends three HTTP requests without Authorization headers to distinct SBI endpoints (GenerateAuthData, SDM GetSupi, UEAU Index). If any response is not HTTP 401, the auth bypass is confirmed. The script distinguishes auth bypass from unrelated errors by checking that the response code differs from 401 Unauthorized.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The reproduction could not be executed because Docker base image pull (golang:1.24-bookworm) and Go toolchain downloads timed out due to network constraints in the execution environment.",
+    "The go.mod specifies Go 1.25.5 which may require Go toolchain auto-download or go.mod patching; verify.sh includes a fallback that patches go.mod to match the installed Go version."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from https://github.com/free5gc/udm.git, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/udmcfg.yaml"
+    ]
+  }
+}

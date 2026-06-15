@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the SiYuan kernel's netAssets2LocalAssets feature fetches arbitrary internal URLs using an HTTP client without private-IP filtering. A document containing a remote asset link pointing to a localhost HTTP server causes the kernel to connect to that server, fetch its response, and save it as a local asset file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the SiYuan kernel to connect to a localhost HTTP server (simulating an internal service), fetch its response body, and save it as an asset file in the workspace. The proof marker in the fetched file confirms the kernel performed an outbound HTTP request to the attacker-specified internal URL.",
+  "actual_observed_result": "The exploit script creates a document with a remote asset URL pointing to http://127.0.0.1:18888/secret-internal-data. After calling POST /api/format/netAssets2LocalAssets, the kernel fetches the URL, saves the response containing the proof marker, and the verification script confirms the proof marker is present in the saved asset file.",
+  "verification_method": "The PoC sets up a Python HTTP server on port 18888 that logs all incoming requests and returns a unique proof marker. After triggering the SSRF, the verification script checks: (1) the fake server received a request (logged to /tmp/ssrf_hit.log), and (2) the response file in the assets directory contains the proof marker. Both conditions must be met for verification to pass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The fake HTTP server received an inbound GET request from the SiYuan kernel process, logged to /tmp/ssrf_hit.log",
+    "A network-asset file was created in the workspace assets directory containing the proof marker string",
+    "The kernel's netAssets2LocalAssets0 function at model/assets.go:342 executed request.Get(u) where u was the internal URL"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.6.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

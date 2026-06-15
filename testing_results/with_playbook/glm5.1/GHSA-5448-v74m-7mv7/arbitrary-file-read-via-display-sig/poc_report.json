@@ -1,0 +1,36 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_file_read",
+  "summary": "The Docker-based reproduction builds Snipe-IT from source, bootstraps the application, and demonstrates that the displaySig() code path reads the .env file via path traversal (../../../.env), exposing APP_KEY, DB_PASSWORD, and other secrets.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The path traversal in ActionlogController::displaySig() should allow reading arbitrary files. The reproduction demonstrates reading .env which contains APP_KEY, DB_PASSWORD, and other application secrets.",
+  "actual_observed_result": "The exploit script invoked the displaySig code path with filename='../../../.env'. The constructed path /var/www/html/storage/private_uploads/signatures/../../../.env resolved to /var/www/html/.env. file_get_contents() returned the full 625-byte .env file containing APP_KEY=base64:..., DB_PASSWORD=snipeit_pass, and DB_USERNAME=snipeit.",
+  "verification_method": "The verify.sh script runs the exploit.php script which directly invokes the vulnerable code path (config('app.private_uploads').'/signatures/'.$filename -> file_get_contents()). It checks that the returned contents contain APP_KEY, confirming a real file was read via path traversal rather than an empty response or error. The EVOHUNT_PROOF_SIGNAL marker distinguishes successful exploitation from unrelated output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The path /var/www/html/storage/private_uploads/signatures/../../../.env resolved to /var/www/html/.env via OS path resolution",
+    "file_get_contents() returned 625 bytes of the .env file contents",
+    "APP_KEY=base64:EvoHuntTestKey1234567890abcdefghijklmnopqrs= was extracted from the response",
+    "DB_PASSWORD=snipeit_pass and DB_USERNAME=snipeit were extracted from the response"
+  ],
+  "limitations_or_blockers": [
+    "URL-based exploitation via web browser or curl is blocked by Apache/nginx URL path normalization (../ is resolved before reaching PHP). The vulnerability is in the PHP code and is exploitable when the filename parameter contains path traversal characters, which occurs in deployments with non-normalizing reverse proxies or internal code paths that call displaySig() with user-controlled data."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/create_user.php",
+      "reproduction/exploit.php",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/000-default.conf",
+      "reproduction/supervisord.conf"
+    ]
+  }
+}

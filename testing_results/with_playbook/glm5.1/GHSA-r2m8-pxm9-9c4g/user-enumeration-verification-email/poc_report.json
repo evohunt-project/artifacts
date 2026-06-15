@@ -1,0 +1,30 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction bundle was constructed but could not be executed in the audit environment due to Docker base image download timeout. The vulnerability is confirmed via static code analysis of src/Routers/UsersRouter.js:550-560.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that the endpoint returns EMAIL_NOT_FOUND for unregistered emails and a different response for registered emails, enabling user enumeration.",
+  "actual_observed_result": "The Docker build stage timed out while downloading the node:22-bookworm base image. The vulnerability was confirmed via code review: UsersRouter.js:552 returns EMAIL_NOT_FOUND with the email for unregistered addresses, and line 560 returns OTHER_CAUSE with 'already verified' for registered+verified addresses. These three distinct response states enable complete user enumeration.",
+  "verification_method": "The exploit script (exploit.js) creates a user with a known email, then sends verification email requests for both a registered and an unregistered email address. It verifies that the responses are distinct, confirming user enumeration. The proof string EVOHUNT_USER_ENUM_PROOF is emitted on success.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static analysis confirms src/Routers/UsersRouter.js:552 returns Parse.Error(Parse.Error.EMAIL_NOT_FOUND, `No user found with email ${email}`) revealing email is NOT registered.",
+    "Static analysis confirms src/Routers/UsersRouter.js:560 returns Parse.Error(Parse.Error.OTHER_CAUSE, `Email ${email} is already verified.`) revealing email IS registered AND verified.",
+    "Static analysis confirms the endpoint requires no authentication: middlewares.js:310-316 sets unauthenticated req.auth."
+  ],
+  "limitations_or_blockers": [
+    "The Docker base image download timed out in the audit environment, preventing actual runtime execution of the PoC."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.31",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

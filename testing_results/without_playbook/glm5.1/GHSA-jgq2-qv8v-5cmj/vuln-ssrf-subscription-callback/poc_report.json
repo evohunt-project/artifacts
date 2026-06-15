@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction builds the UDR, starts a local HTTP listener, creates a subscription with the listener URL as the callback, inserts test subscriber data, modifies it to trigger a notification, and verifies the listener received the SSRF request with subscriber data in the payload.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After creating a subscription with an arbitrary callback URL and modifying the subscribed UE data, the UDR should send an HTTP POST notification to the attacker-controlled URL containing sensitive subscriber data.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the UDR, started a local listener on port 9999, created a subscription with callbackReference pointing to the listener, inserted test authentication data, patched it to trigger a change notification, and the listener received an HTTP POST request from the UDR containing the subscriber data change notification.",
+  "verification_method": "The verify script starts a background HTTP listener on port 9999 that logs received requests to a file. It then creates a subscription with callbackReference=http://127.0.0.1:9999/ssrf-callback, inserts test auth data for the subscribed UE, patches the data to trigger SendOnDataChangeNotify, waits for the notification, and checks the listener log for an incoming request. The test passes if the listener log contains a POST request to /ssrf-callback.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The local HTTP listener received a POST request to /ssrf-callback after data modification.",
+    "The notification payload contained the ueId and change items with original and new values of the modified subscriber data.",
+    "The UDR server made an outbound HTTP request to the attacker-controlled URL, confirming the SSRF."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/build_and_run.sh",
+      "reproduction/udrcfg_test.yaml",
+      "reproduction/listener.py",
+      "reproduction/insert_test_data.py"
+    ]
+  }
+}

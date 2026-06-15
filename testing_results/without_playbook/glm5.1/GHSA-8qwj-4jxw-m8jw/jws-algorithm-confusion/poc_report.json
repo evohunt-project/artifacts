@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that JWS.verify accepts a forged JWT with HS256 algorithm when the key is passed as a non-PEM hex string. The exploit generates an RSA-2048 key pair, extracts the public key modulus as a hex string, creates a forged JWT with alg:HS256 signed with HMAC-SHA256 using the hex string as the shared secret, and verifies it with JWS.verify. The verification returns true. The same forged token throws an exception when verified with the PEM key (the safe path), and returns false with an unrelated wrong key, confirming the algorithm confusion is specific to the hex key string path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should produce a forged JWT with HS256 that passes JWS.verify when the key is provided as a hex string. The same forged token should fail (throw exception) when verified with a PEM key, and return false with a wrong key.",
+  "actual_observed_result": "The exploit generates an RSA-2048 key pair, extracts the public key hex modulus (a ~512 character hex string), creates a forged JWT with alg:HS256 using this hex as the HMAC-SHA256 key, and calls JWS.verify(forgedToken, hexKeyString). Verification returns true. Verification with the PEM-formatted public key throws 'KJUR.crypto.Mac unsupported password type: [object Object]'. Verification with a wrong key returns false. This confirms the algorithm confusion vulnerability: the library accepts HS256 when the key is a non-PEM string because it does not enforce key-type checking for HMAC algorithms.",
+  "verification_method": "The exploit performs five verification steps: (1) create a legitimate RS256 JWT and verify with PEM key (baseline), (2) create a forged HS256 JWT using the public key hex as HMAC secret, (3) verify the forged JWT with the hex key string (should return true for confusion attack), (4) verify the forged JWT with the PEM key (should throw - safe path), (5) verify with a wrong key (should return false). The proof is confirmed when step 3 returns true while steps 4 and 5 fail, demonstrating the algorithm confusion is specific to the string-key code path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "A forged JWT with alg:HS256 is accepted by JWS.verify when the key is passed as a hex string (returns true).",
+    "The same forged JWT causes 'KJUR.crypto.Mac unsupported password type' exception when verified with a PEM key.",
+    "Verification with a wrong key returns false, confirming the success is not coincidental.",
+    "The exploit outputs EVOHUNT_PROOF markers showing the algorithm confusion results for all verification paths."
+  ],
+  "limitations_or_blockers": [
+    "The attack requires the application to pass the RSA public key as a non-PEM string (e.g., hex of the modulus). Most applications use PEM format, which triggers an exception instead of a bypass. The vulnerability is exploitable when applications extract and pass raw key bytes as strings, which occurs in some JWKS-based implementations."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version 11.1.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "11.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

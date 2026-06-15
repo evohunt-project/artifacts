@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "Docker-based PoC confirms that absolute path '/etc/passwd' bypasses SanitizeUserPath validation and returns system file content through the /api/resources endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Requesting /api/resources?path=/etc/passwd should return metadata/content of the system password file, demonstrating arbitrary file read.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully retrieved /etc/passwd content including 'root:' entries through the vulnerable endpoint, confirming the absolute path bypass vulnerability.",
+  "verification_method": "The verify.sh script checks for 'root:' pattern in the HTTP response, which uniquely identifies /etc/passwd content and distinguishes real exploitation from unrelated errors or empty responses.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response contained 'root:' entries confirming /etc/passwd read",
+    "Response JSON included file metadata for system password file",
+    "No authentication or authorization blocked the arbitrary file access",
+    "SanitizeUserPath accepted absolute path without error"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out HEAD, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

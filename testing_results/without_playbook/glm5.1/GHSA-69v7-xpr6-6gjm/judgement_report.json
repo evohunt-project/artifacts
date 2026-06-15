@@ -1,0 +1,61 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T17:23:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_99679a28",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-69v7-xpr6-6gjm/GHSA-69v7-xpr6-6gjm.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "lupa_unsafe_eval_exposure",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_99679a28/lupa_unsafe_eval_exposure",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_99679a28/lupa_unsafe_eval_exposure/vulnerability_report.json",
+      "title": "Unsafe default exposure of Python eval() to Lua code permits arbitrary code execution",
+      "vulnerability_type": "code_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes exposure of python.eval() by default (register_eval=True), which is a different vulnerability from the advisory-described attribute_filter bypass via getattr/setattr. The advisory root cause is incomplete enforcement of the attribute_filter when builtins are exposed, while this finding describes direct exposure of a dangerous Python function.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "H",
+          "SI": "H",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The qualifying finding does not identify the advisory-described vulnerability. The advisory (GHSA-69v7-xpr6-6gjm) describes a sandbox escape/RCE due to incomplete attribute_filter enforcement in Lupa, where the filter is bypassed through getattr/setattr when Python builtins are exposed. The qualifying finding describes a different vulnerability: exposure of python.eval() by default via register_eval=True. While both vulnerabilities affect the same package (Lupa) and could lead to RCE, they have fundamentally different root causes. The advisory vulnerability requires (1) attribute_filter configured, (2) Python builtins exposed to Lua, (3) bypass via getattr/setattr. The finding describes (1) python.eval() exposed by default, (2) direct code execution without needing filter bypass. These are distinct vulnerabilities with different mitigation strategies and different vulnerable code paths.",
+    "evidence": [
+      "Advisory summary: 'Lupa has a Sandbox escape and RCE due to incomplete attribute_filter enforcement in getattr / setattr'",
+      "Advisory details: 'The attribute_filter in the Lupa library is intended to restrict access to sensitive Python attributes when exposing objects to Lua. However, the filter is not consistently applied when attributes are accessed through built-in functions like getattr and setattr.'",
+      "Advisory PoC demonstrates bypass via: 'local getattr = py.getattr', 'local cls = getattr(user, \"__class__\")', walking __mro__ chain through getattr",
+      "Finding title: 'Unsafe default exposure of Python eval() to Lua code permits arbitrary code execution'",
+      "Finding describes: 'LuaRuntime constructor exposes Python's eval() built-in to Lua code via register_py_object(b'eval', b'eval', eval) at line 655'",
+      "Finding vulnerability location: 'lupa/_lupa.pyx:654-655' (register_eval default=True)",
+      "Advisory vulnerability: incomplete attribute_filter enforcement on getattr/setattr paths",
+      "Finding vulnerability: dangerous builtin (eval) exposed by default configuration",
+      "Different root causes: advisory about filter bypass mechanism; finding about dangerous function exposure by default"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_99679a28/lupa_unsafe_eval_exposure",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_99679a28/lupa_unsafe_eval_exposure/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_99679a28/lupa_unsafe_eval_exposure/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

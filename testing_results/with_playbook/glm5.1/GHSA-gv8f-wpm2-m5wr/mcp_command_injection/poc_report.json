@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction starts the vulnerable application, forges a JWT token using the hardcoded default secret to bypass authentication, then sends a crafted MCP server configuration request to /api/mcp/cli/add with an attacker-controlled command field that is passed directly to spawn() without validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The crafted MCP add request should pass the attacker-controlled command field through to spawn('claude', cliArgs) without any validation, demonstrating that arbitrary commands can be injected into the MCP server configuration pipeline.",
+  "actual_observed_result": "The reproduction verified the vulnerable code pattern in server/routes/mcp.js where cliArgs.push(command) passes user input directly to spawn(), confirmed the absence of any validation/sanitization, and demonstrated the attack chain with a forged JWT token.",
+  "verification_method": "The verify.sh script (1) confirms the vulnerable spawn pattern in mcp.js, (2) confirms the hardcoded JWT secret enables auth bypass, (3) starts the server, (4) forges a JWT token, and (5) sends a malicious MCP add request verifying the server processes the injected command field.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "server/routes/mcp.js:91 - cliArgs.push(command) passes user input directly without validation",
+    "server/routes/mcp.js:109 - spawn('claude', cliArgs) executes with user-controlled arguments",
+    "No import of commandParser.js validateCommand in mcp.js - the existing validation utility is unused",
+    "Forged JWT token accepted by authenticateToken middleware using hardcoded secret"
+  ],
+  "limitations_or_blockers": [
+    "The spawn() call targets the 'claude' CLI binary which may not be present in the container; the vulnerability is in the user input reaching spawn() without validation, not in the spawn execution result"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

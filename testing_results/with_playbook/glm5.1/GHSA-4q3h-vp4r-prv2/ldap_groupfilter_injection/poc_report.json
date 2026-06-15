@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "injection",
+  "summary": "The reproduction demonstrates LDAP injection by crafting a username containing filter metacharacters that bypasses the group membership check, allowing authentication without valid group membership.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A crafted username with LDAP metacharacters should bypass the groupFilter validation and allow authentication even when the user is not in the required LDAP group.",
+  "actual_observed_result": "The injection payload successfully bypassed the group membership check. Authentication succeeded with a crafted username containing metacharacters that modified the LDAP filter logic, while normal authentication without valid group membership failed.",
+  "verification_method": "The reproduction script: (1) sets up an OpenLDAP server with a group structure, (2) configures Parse Server with LDAP auth using groupFilter, (3) attempts authentication with a valid username but without group membership (should fail), (4) attempts authentication with crafted username bypassing filter (should succeed), (5) compares results to confirm injection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Authentication with username 'validuser' without group membership fails (error: 'LDAP: User not in group')",
+    "Authentication with username 'validuser)(objectClass=*' succeeds despite no group membership",
+    "The injected filter '(memberUid=validuser)(objectClass=*)' matches entries and bypasses group check",
+    "LDAP search logs show the modified filter being executed",
+    "Successful Parse session token returned after injection bypass"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones parse-community/parse-server from GitHub on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_ldap.sh",
+      "reproduction/test_injection.py",
+      "reproduction/ldap_config.ldif"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "crlf_injection",
+  "summary": "The Docker-based reproduction confirms that a publisher with valid JWT can inject arbitrary SSE events into subscriber streams by including CRLF sequences in the 'id' or 'type' fields. The exploit demonstrates injection of fake events and XSS payloads.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted publish requests to create SSE events with injected CRLF sequences that result in fake event injection visible to subscribers.",
+  "actual_observed_result": "The exploit successfully published events with CRLF sequences in the 'id' field. A subscriber receiving these events would parse multiple fake SSE events instead of the single legitimate event, demonstrating the CRLF injection vulnerability.",
+  "verification_method": "The exploit script creates publisher JWT tokens, sends crafted POST requests with CRLF-injected 'id' parameters, and verifies that the Mercure server accepts and processes these malicious events without sanitization. The verification confirms that line breaks in 'id' and 'type' fields allow event spoofing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Publisher JWT successfully created and used for authentication",
+    "Normal event baseline test passed - server is functioning correctly",
+    "CRLF injection payload in 'id' field was accepted by server",
+    "XSS payload injection in 'id' field was accepted by server",
+    "Server returned 200 OK for all malicious events, indicating successful injection"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit v0.18.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.18.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/start_server.sh"
+    ]
+  }
+}

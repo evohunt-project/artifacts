@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "symlink_file_disclosure",
+  "summary": "Successfully demonstrated that Rollup follows symlinks and includes arbitrary file content in bundle output. Created symlink from src/secret.js to /etc/passwd, bundled the project, and verified that /etc/passwd content appears in the bundle.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The bundle output should contain the content of /etc/passwd (or a test secret marker), proving that arbitrary file content was read and included in the bundle due to symlink resolution.",
+  "actual_observed_result": "The bundle output contained the exact content from the secret marker file, demonstrating successful file disclosure through symlink following.",
+  "verification_method": "Automated verification checks for the presence of a unique secret marker string 'SECRET_MARKER_POC_12345' in the bundle output file. The marker is placed in a fake secret file, symlinked into the project, and should appear in the compiled bundle.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Symlink created: src/secret.js -> /tmp/secret_file_poc.txt",
+    "Secret marker file created with content: export default 'SECRET_MARKER_POC_12345';",
+    "Bundle generated successfully with symlinked file included",
+    "Bundle contains the secret marker string proving file disclosure"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh mounts the local repo directory into the container at /target-repo for building and testing.",
+    "pinned_commit_or_ref": "v4.58.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/verify.sh",
+      "reproduction/rollup.config.js",
+      "reproduction/src/index.js"
+    ]
+  }
+}

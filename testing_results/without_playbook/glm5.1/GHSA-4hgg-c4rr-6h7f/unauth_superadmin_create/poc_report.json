@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "privilege_escalation",
+  "summary": "The Docker-based reproduction builds the Netmaker server from source and demonstrates that an unauthenticated attacker can create a superadmin account on a fresh deployment, then use that account to access protected admin-only endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated POST to /api/users/adm/createsuperadmin should require authentication but instead creates a superadmin account, granting full system control to the attacker.",
+  "actual_observed_result": "The reproduction pipeline built the Netmaker server, confirmed no superadmin existed via the unauthenticated hasSuperAdmin endpoint, created a superadmin account without any authentication, authenticated with the new credentials, and accessed admin-only endpoints successfully.",
+  "verification_method": "The exploit script first checks GET /api/users/adm/hassuperadmin to confirm the system is in its initial state. It then creates a superadmin via POST /api/users/adm/createsuperadmin without any authorization header. It authenticates with the new credentials and calls GET /api/users (admin-only) to verify full superadmin access. Success is confirmed when the admin-only endpoint returns user data.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GET /api/users/adm/hassuperadmin returned false without authentication, confirming fresh deployment state.",
+    "POST /api/users/adm/createsuperadmin returned 200 with the new admin user without any authorization header.",
+    "POST /api/users/adm/authenticate with the new credentials returned a valid JWT.",
+    "GET /api/users (admin-only) returned the user list, confirming full superadmin access."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

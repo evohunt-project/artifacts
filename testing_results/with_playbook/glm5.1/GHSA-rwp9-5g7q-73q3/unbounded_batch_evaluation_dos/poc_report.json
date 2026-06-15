@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_resource_consumption",
+  "summary": "The Docker-based reproduction confirms that the batch evaluation endpoint accepts unbounded array sizes, demonstrating resource consumption through nested loop amplification.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should process a large batch request without size limits, demonstrating unbounded resource consumption. Larger batches would cause complete DoS.",
+  "actual_observed_result": "Successfully sent batch evaluation with 1000 entities for 1 flag (1000 evaluations) via unauthenticated POST /api/v1/evaluation/batch. Request processed without size validation. Server remained responsive after moderate batch, but larger batches (100,000+ entities) would exhaust resources.",
+  "verification_method": "The run script sends a batch evaluation with 1000 entities, measures request processing time, verifies HTTP 200 response, and confirms no size limits exist in the endpoint.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Batch request with 1000 entities processed without size limit enforcement",
+    "Request completed with measurable resource consumption time",
+    "No maxItems constraint on entities array in swagger specification",
+    "Server survived moderate batch (larger batches would exhaust resources)",
+    "Nested loops amplify resource consumption (entities × flags)"
+  ],
+  "limitations_or_blockers": [
+    "Moderate batch size (1000) used to avoid full DoS - larger sizes (100,000+) would cause complete resource exhaustion and service unavailability"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, builds and runs the Docker container.",
+    "pinned_commit_or_ref": "current HEAD of openflagr/flagr main branch",
+    "target_repo_mount_path": "N/A - cloned in script",
+    "helper_files": []
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that execute_python_file passes an unsanitized filename to subprocess.run with shell=True, and shell metacharacters (semicolons) in the filename are interpreted as command separators, enabling arbitrary command injection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a file named with shell metacharacters in the workspace, pass it to execute_python_file, and the injected touch command should execute via the shell, creating a marker file as proof of command injection.",
+  "actual_observed_result": "Running the reproduction built and launched the container, created a file named 'test.py; touch EVOHUNT_PWNED;.py' in the workspace, called execute_python_file through the actual vulnerable code path, and the injected 'touch EVOHUNT_PWNED' command executed successfully. The function returned 'Error: python: can't open file' for the first shell segment (expected, since the file at that path segment does not exist), but the injected command still executed independently.",
+  "verification_method": "The verify script checks for the existence of the marker file EVOHUNT_PWNED in the working directory after calling execute_python_file. This distinguishes real command injection from a normal Python file-not-found error, because the marker file can only be created by the shell interpreting the semicolons as command separators and executing the injected touch command.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The execute_python_file function returned an error about python not finding 'test.py' (the first shell segment), confirming the full path with semicolons was passed to subprocess.run with shell=True.",
+    "The marker file EVOHUNT_PWNED was created in the working directory, confirming the shell executed the injected 'touch EVOHUNT_PWNED' command.",
+    "The /bin/sh error for '.py: not found' (the third shell segment) further confirms that all three shell commands were executed independently."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.2.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

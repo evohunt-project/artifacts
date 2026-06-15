@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can make the crawl4ai server fetch and return content from internal services. A mock internal HTTP server serving a proof string was started inside the container on localhost:8888, and the POST /md endpoint successfully fetched and returned its content.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crawl4ai server to fetch content from the mock internal service (localhost:8888) and return it in the /md response, demonstrating Server-Side Request Forgery.",
+  "actual_observed_result": "The /md endpoint returned the content of the mock internal service, including the proof string EVOHUNT_SSRF_PROOF_7f3a9c2b, confirming that the server can be made to access internal services without authentication.",
+  "verification_method": "The verify.sh script checks that the /md response body contains the unique proof string 'EVOHUNT_SSRF_PROOF_7f3a9c2b' served by the mock internal service. This string is only accessible from within the container's localhost network, confirming the SSRF. A generic crawl failure or startup error would not contain this string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The /md endpoint response contained the proof string EVOHUNT_SSRF_PROOF_7f3a9c2b from the internal mock service.",
+    "The internal service was bound to 127.0.0.1:8888, inaccessible from outside the container.",
+    "No authentication token was required to exploit the /md endpoint."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and uses it to build the base crawl4ai Docker image. A second build step layers the exploit scripts on top.",
+    "pinned_commit_or_ref": "v0.8.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/internal_server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

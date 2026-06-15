@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_exposure",
+  "summary": "The Docker-based reproduction confirms that malformed pickle files trigger warning messages that expose internal analysis details to stdout/stderr, demonstrating the information exposure vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should create a malformed pickle with invalid STACK_GLOBAL stack items, load it via Pickled.load(), and trigger warning messages that expose module/attribute types, values, and internal AST node details to stdout.",
+  "actual_observed_result": "The reproduction script created a malformed pickle with EMPTY_TUPLE and NONE opcodes before STACK_GLOBAL, causing type mismatches. When loaded via Pickled.load(), the STACK_GLOBAL handler at fickle.py:1136-1140 triggered a warning message that wrote module and attribute type information (tuple, NoneType) and their repr() values to stdout, exposing internal analysis state that could aid attackers in developing bypass techniques.",
+  "verification_method": "The verify_info_exposure.py script captures stdout using io.StringIO while loading the malformed pickle through Pickled.load(). It then checks the captured output for warning messages containing type information, module names, attribute names, or internal AST details. The presence of such information confirms the information exposure vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malformed pickle with type-mismatched STACK_GLOBAL stack items was created",
+    "Pickled.load() successfully loaded and processed the pickle",
+    "Warning message was triggered by STACK_GLOBAL handler",
+    "Warning exposed module type (tuple) and attribute type (NoneType) information",
+    "Warning included repr() representations of AST nodes",
+    "Internal analysis details were leaked to stdout/stderr",
+    "This information could aid attackers in understanding detection logic"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Fickling repository from GitHub, checks out the v0.1.6 release, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_info_leak_pickle.py",
+      "reproduction/verify_info_exposure.py"
+    ]
+  }
+}

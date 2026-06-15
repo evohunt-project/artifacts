@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ldap_injection",
+  "summary": "The Docker-based reproduction confirms that LDAP injection in the group filter allows bypassing group membership authorization. The reproduction sets up OpenLDAP, configures Parse Server with LDAP auth requiring group membership, and demonstrates that a user NOT in the required group can authenticate by injecting into the groupFilter.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A user not in the required LDAP group should be able to authenticate by crafting an authData.id value that injects into the groupFilter, causing the group search to return a match and bypassing the authorization check.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started OpenLDAP with test users and groups, started Parse Server with LDAP auth requiring the 'admins' group, and demonstrated that a user in the 'users' group (not 'admins') successfully authenticated by injecting a wildcard into the group filter via authData.id.",
+  "verification_method": "The verify script first confirms normal auth fails for a non-admin user with a clean id, then confirms auth succeeds for the same user with an injected id that manipulates the group filter. Success is determined by the second auth request returning a session token while the first does not.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Authentication with a clean id (e.g., 'testuser') fails for a user not in the required group, returning an error.",
+    "Authentication with an injected id (e.g., 'testuser)(|(cn=*)') succeeds, returning a valid session token.",
+    "The LDAP server logs show the manipulated group filter being evaluated, confirming the injection."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.16",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.js",
+      "reproduction/setup-ldap.sh",
+      "reproduction/ldap-base.ldif",
+      "reproduction/ldap-users.ldif"
+    ]
+  }
+}

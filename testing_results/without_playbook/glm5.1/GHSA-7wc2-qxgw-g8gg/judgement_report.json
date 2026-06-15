@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T16:34:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_41e1af48",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-7wc2-qxgw-g8gg/GHSA-7wc2-qxgw-g8gg.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "jwk-header-injection-signature-bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_41e1af48/jwk-header-injection-signature-bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_41e1af48/jwk-header-injection-signature-bypass/vulnerability_report.json",
+      "title": "JWK header injection in JsonWebSignature enables complete JWT signature bypass",
+      "vulnerability_type": "authentication_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes a signature bypass vulnerability using 'alg: none' with blank signature introduced in commit a61c2acb. This finding describes a different vulnerability: JWK header injection where passing key=None to deserialize methods causes the library to use an attacker-controlled JWK from the JWT header. While both affect JWT signature verification, they are distinct root causes: the advisory's vulnerability is about accepting unsigned tokens with alg=none, while this finding is about trusting attacker-supplied JWK keys from the token header.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The qualifying finding does not match the advisory-described vulnerability. The advisory (GHSA-7wc2-qxgw-g8gg) describes a specific JWT signature bypass in authlib versions 1.6.0-1.6.6 where tokens with 'alg: none' and an empty signature bypass verification. The root cause is the 'none' algorithm implementation accepting empty signatures (commit a61c2acb). The 'jwk-header-injection-signature-bypass' finding describes a different vulnerability: JWK header injection where key=None allows using attacker-controlled JWK from the header. The finding does not identify the vulnerable 'none' algorithm verification logic, the same vulnerable function/class (NoneAlgorithm.verify), or the specific commit where the bug was introduced.",
+    "evidence": [
+      "Advisory references commit a61c2acb which changed NoneAlgorithm.verify from 'return False' to 'return sig == b\"\"'",
+      "Advisory references commit b87c32e which removed 'none' from default JWT instance algorithm list",
+      "Advisory PoC uses alg=none with empty signature to bypass verification",
+      "jwk-header-injection-signature-bypass finding targets different code path: _prepare_algorithm_key extracting JWK from header when key=None"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_41e1af48/jwk-header-injection-signature-bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_41e1af48/jwk-header-injection-signature-bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_41e1af48/jwk-header-injection-signature-bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

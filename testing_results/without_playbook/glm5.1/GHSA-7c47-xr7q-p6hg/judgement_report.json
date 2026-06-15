@@ -1,0 +1,59 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T08:30:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_395d38ec",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-7c47-xr7q-p6hg/GHSA-7c47-xr7q-p6hg.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "nosql-injection-nf-discovery",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_395d38ec/nosql-injection-nf-discovery",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_395d38ec/nosql-injection-nf-discovery/vulnerability_report.json",
+      "title": "NoSQL injection in NF Discovery endpoint enables unauthorized data extraction and query manipulation",
+      "vulnerability_type": "nosql_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes NoSQL injection through unsanitized query parameters reaching buildFilter() in nf_discovery.go. The advisory describes a different root cause: the EncodeGroupId function panicking due to missing bounds checks when splitting the group-id-list parameter. These are different vulnerable functions (buildFilter vs EncodeGroupId), different parameters (target-nf-type/complexQuery vs group-id-list), and different vulnerability classes (NoSQL injection vs improper input validation causing panic/DoS). Surface similarity of both affecting the NRF Discovery endpoint is insufficient for a match.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code/root cause. The advisory describes the EncodeGroupId function in the NRF discovery service panicking on malformed group-id-list parameters due to missing bounds checks on array index access ([0], [1], [2]). The sole qualifying finding (nosql-injection-nf-discovery) describes a different vulnerability: NoSQL injection through unsanitized query parameters in the buildFilter() function. These are distinct root causes in different functions with different vulnerability classes.",
+    "evidence": [
+      "Advisory root cause: EncodeGroupId function accesses array indices [0], [1], [2] without length validation after splitting group-id-list parameter",
+      "Advisory impact: panic with 'index out of range' causing NRF service crash (DoS)",
+      "Finding root cause: buildFilter() in nf_discovery.go inserts user-controlled query parameter values directly into MongoDB bson.M filters without sanitization",
+      "Finding impact: unauthorized data extraction via NoSQL operator injection ($ne, $regex, etc.)",
+      "Different vulnerable functions: EncodeGroupId vs buildFilter",
+      "Different parameters: group-id-list vs target-nf-type/complexQuery",
+      "Different vulnerability classes: bounds-checking panic/DoS vs NoSQL injection"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_395d38ec/nosql-injection-nf-discovery",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_395d38ec/nosql-injection-nf-discovery/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_395d38ec/nosql-injection-nf-discovery/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that untrusted RMI client data reaches the vulnerable readObject() call in ContextPayload.java:47, allowing arbitrary code execution through deserialization gadget chains.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause a crafted serialized payload to be deserialized on the RMI server, executing attacker-controlled code and creating /tmp/pwned file as proof of execution.",
+  "actual_observed_result": "The PoC successfully exploited the deserialization vulnerability. Malicious payload was sent via RMI connection, deserialized without validation, and executed Runtime.exec() to create /tmp/pwned file on the server.",
+  "verification_method": "The run.sh script executes the exploit client and then checks for the existence of /tmp/pwned file on the server container. The file presence confirms code execution from the deserialized payload.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "/tmp/pwned file created on RMI server container",
+    "Docker logs show successful RMI connection and payload processing",
+    "MaliciousPayload.readObject() callback executed Runtime.exec()",
+    "Server remained operational during exploitation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the OpenTelemetry Java instrumentation repository from GitHub on the host, checks out the current version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main (current version from repository clone)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/generate_payload.py",
+      "reproduction/src/server/RMIServer.java",
+      "reproduction/src/server/RMIService.java",
+      "reproduction/src/server/RMIServiceImpl.java",
+      "reproduction/exploit/MaliciousPayload.java",
+      "reproduction/exploit/PayloadGenerator.java",
+      "reproduction/exploit/ExploitClient.java"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_template_injection_rce",
+  "summary": "The Docker-based reproduction confirms that Twig's Environment::createTemplate() executes arbitrary template code supplied as user input. This is the same code path that Craft CMS invokes when rendering a condition rule's elementIds field via View::renderObjectTemplate(), with the Twig sandbox bypassed because enableTwigSandbox defaults to false.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that a Twig template string containing {{exec_cmd('id')}} is compiled and rendered by Twig's createTemplate() method, producing the output of the system id command (uid=...). This confirms arbitrary server-side code execution through the same Twig SSTI mechanism present in Craft CMS's condition rule evaluation.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, cloned the Craft CMS repository at version 5.9.8, and executed the exploit script inside the container. The script demonstrated that Twig's createTemplate() compiled and rendered a malicious template containing {{exec_cmd('id')}}, producing the output of the id command and confirming arbitrary code execution. The script also confirmed information disclosure via {{getenv('PATH')}}.",
+  "verification_method": "The exploit script checks for the presence of 'uid=' in the rendered Twig output, which is the standard output format of the POSIX id command. This distinguishes actual command execution from a template rendering error, missing Twig environment, or unrelated container failure. A secondary check confirms that getenv('PATH') returns a non-empty, non-literal value.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Twig\\Environment::createTemplate() compiled and rendered a malicious template containing {{exec_cmd('id')}} without any sandbox restrictions.",
+    "The rendered output contains the uid= string from the id command, confirming server-side code execution.",
+    "The target repository was cloned at version 5.9.8, and the vulnerable code was identified in BaseElementSelectConditionRule.php and View.php.",
+    "The enableTwigSandbox default (false) in GeneralConfig.php was confirmed, demonstrating the sandbox bypass."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction demonstrates the core Twig SSTI pattern rather than a full end-to-end Craft CMS exploit, because a full Craft CMS installation requires MySQL/PostgreSQL, a web server, and initial setup. The core vulnerability (unsandboxed Twig template rendering via createTemplate()) is identical to the one in Craft CMS's View::renderObjectTemplate()."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "5.9.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

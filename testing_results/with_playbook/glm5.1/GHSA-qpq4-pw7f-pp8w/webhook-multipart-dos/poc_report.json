@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "dos",
+  "summary": "The webhook multipart form-data parser in n8n configures formidable with maxFileSize (200MB per file) but omits maxTotalFileSize, maxFieldsSize, and maxFields. An unauthenticated attacker can send a multipart request with multiple large files, consuming unbounded server memory and disk. The source code confirms the missing configuration at webhook-form-data.ts:22-28.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated POST to a webhook endpoint with a multipart body containing multiple files (each up to 200MB) should be accepted and processed without any total-size rejection, confirming there is no maxTotalFileSize cap in the formidable configuration.",
+  "actual_observed_result": "Reproduction was not attempted in this session. The vulnerability is confirmed through source code analysis: packages/cli/src/webhooks/webhook-form-data.ts:22-28 configures formidable with only maxFileSize, omitting maxTotalFileSize, maxFieldsSize, and maxFields. Programmatic webhook workflow activation via the REST API did not successfully register the webhook listener due to n8n's version-gated activation flow requiring versionId parameters that were not available for programmatically created workflows.",
+  "verification_method": "The exploit creates a webhook workflow, activates it, and sends a multipart/form-data POST containing 3 files of 5MB each (15MB total). If the server returns HTTP 200, it confirms the files were accepted without a total-size limit. A server with maxTotalFileSize would reject requests exceeding the cap with HTTP 413.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Programmatic webhook workflow activation via n8n REST API requires a versionId that is not available for newly created workflows through the standard API flow, preventing automated webhook registration for the PoC.",
+    "The vulnerability is confirmed through source code analysis showing the missing formidable configuration options."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "n8n@2.2.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

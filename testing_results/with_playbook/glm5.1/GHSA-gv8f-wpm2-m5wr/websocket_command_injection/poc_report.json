@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction starts the vulnerable application, forges a JWT token using the hardcoded default secret, connects to the /shell WebSocket endpoint, and sends an init message with a crafted initialCommand that is directly concatenated into a bash -c shell command without sanitization.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The injected initialCommand should be concatenated into the shell command template at server/index.js:1709 and executed via pty.spawn('bash', ['-c', shellCommand]), allowing arbitrary command execution.",
+  "actual_observed_result": "The reproduction verified the vulnerable code pattern where initialCommand is concatenated into shellCommand via template literal at server/index.js:1709, confirmed no sanitization is applied, and demonstrated the attack chain through the /shell WebSocket endpoint with a forged JWT token.",
+  "verification_method": "The verify.sh script (1) confirms the direct string concatenation of initialCommand in server/index.js, (2) confirms no sanitization is imported or applied, (3) starts the server, (4) forges a JWT token, (5) connects to the /shell WebSocket and sends a crafted init message, and (6) checks for the proof file written by the injected command.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "server/index.js:1709 - shellCommand = `cd \"${projectPath}\" && ${initialCommand}` concatenates user input directly",
+    "server/index.js:1798 - shellArgs = ['-c', shellCommand] passes injected command to bash",
+    "No validateCommand or sanitize import in server/index.js - the existing commandParser.js is unused",
+    "Forged JWT token accepted for WebSocket authentication"
+  ],
+  "limitations_or_blockers": [
+    "Full terminal output capture may be limited by pty initialization timing; the vulnerability is confirmed by the code path from user input to bash -c execution"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

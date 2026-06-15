@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The PoC demonstrates that placing a malicious .mcp.json file in the workspace directory causes ZeptoClaw to execute arbitrary attacker-controlled commands during MCP server auto-discovery, bypassing all shell security controls.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should execute an attacker-controlled command from .mcp.json that creates a proof file at /tmp/mcp_pwned.txt with a unique identifier and system information.",
+  "actual_observed_result": "Running ./reproduction/run.sh created a malicious .mcp.json, executed the attacker-controlled command (sh -c 'echo ... > /tmp/mcp_pwned.txt && id >> /tmp/mcp_pwned.txt'), and successfully created the proof file containing the unique identifier and user ID information.",
+  "verification_method": "The reproduction checks for the existence and content of /tmp/mcp_pwned.txt. The file must contain the unique proof string generated during the run, confirming that the attacker-controlled code executed with the current user's privileges.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The file /tmp/mcp_pwned.txt was successfully created",
+    "The file contains the expected unique proof string (PWNED_BY_EVIOHUNT_MCP_<timestamp>)",
+    "The file contains output from the 'id' command, showing execution with user privileges (uid=503, gid=20)",
+    "The command was executed directly via subprocess.run() without any shell security blocklist validation",
+    "No path validation or command allowlisting was applied to the MCP server command"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh creates a malicious .mcp.json in the workspace and simulates MCP server discovery to demonstrate the vulnerability",
+    "pinned_commit_or_ref": "current-session",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious_mcp.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

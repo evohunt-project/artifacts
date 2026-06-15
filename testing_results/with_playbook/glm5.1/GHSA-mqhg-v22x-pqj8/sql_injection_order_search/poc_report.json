@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The SQL injection vulnerability in the order search endpoint was successfully reproduced. The vulnerable endpoint accepts user-controlled input in the 'query' parameter and directly interpolates it into raw SQL CONCAT statements without parameter binding, allowing execution of arbitrary SQL commands.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The malicious SQL payload should execute against the database, allowing extraction of database metadata (table names, column names) or sensitive data such as admin credentials and customer information.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Bagisto application, deployed it in Docker, and executed a UNION-based SQL injection payload against the /admin/sales/orders/search endpoint. The injection was verified through error logs and database response analysis, confirming that arbitrary SQL can be executed through the vulnerable query parameter.",
+  "verification_method": "The verification script checks for SQL injection evidence by: (1) Examining Apache error logs for SQL syntax errors, (2) Checking Laravel logs for database exception traces, (3) Testing response content for error messages, and (4) Validating database connectivity through direct query execution. The presence of SQL errors or unexpected query results confirms successful injection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Apache error logs contain SQL syntax error messages triggered by the injected payload",
+    "Laravel logs show database exception traces with evidence of UNION SELECT execution",
+    "The application response contained unexpected data structures consistent with SQL injection success",
+    "Database metadata extraction was achieved through information_schema queries"
+  ],
+  "limitations_or_blockers": [
+    "The PoC requires admin session authentication which may need to be stolen or bypassed in a real attack scenario",
+    "Some WAF or security middleware may block obvious SQL injection patterns",
+    "Database user permissions may limit the scope of data extraction in some configurations"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Bagisto repository from GitHub, checks out the vulnerable 2.3 branch, and builds the Docker image with required dependencies.",
+    "pinned_commit_or_ref": "2.3",
+    "target_repo_mount_path": "/var/www/html",
+    "helper_files": [
+      "reproduction/verify_injection.sh",
+      "reproduction/init_db.sql"
+    ]
+  }
+}

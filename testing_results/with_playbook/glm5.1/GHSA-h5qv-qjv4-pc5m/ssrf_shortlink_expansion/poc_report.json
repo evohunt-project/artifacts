@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the parse_shortlink.py expand_url_via_redirect_header function makes HTTP requests to user-controlled domains without validation. A mock internal service at 127.0.0.1:18888 received an HTTP GET request from the Unfurl application, confirming the SSRF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should cause Unfurl to make an HTTP request to a simulated internal service at 127.0.0.1:18888, demonstrating that user-controlled domain names from URLs flow into outbound requests.get() calls without validation.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Docker container. The exploit_trigger.py started a mock HTTP server on 127.0.0.1:18888, then called expand_url_via_redirect_header('http://127.0.0.1:18888/', 'ssrf-test'). The mock server received the request and responded with a 302 redirect, confirming the SSRF. The success marker /tmp/ssrf_success.txt was written.",
+  "verification_method": "The reproduction starts a mock HTTP server on 127.0.0.1:18888 inside the container, then calls the vulnerable expand_url_via_redirect_header function with a URL pointing to that server. verify.sh checks for the presence of /tmp/ssrf_success.txt, which is written by the mock server when it receives a request. This distinguishes a real SSRF from a startup failure or unrelated error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Mock HTTP server at 127.0.0.1:18888 received GET /ssrf-test from the Unfurl application",
+    "expand_url_via_redirect_header returned 'https://example.com/expanded-url' (the 302 Location header from the mock server)",
+    "Success marker /tmp/ssrf_success.txt created with content: SSRF_POC_SUCCESSFUL"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_trigger.py",
+      "reproduction/internal_server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

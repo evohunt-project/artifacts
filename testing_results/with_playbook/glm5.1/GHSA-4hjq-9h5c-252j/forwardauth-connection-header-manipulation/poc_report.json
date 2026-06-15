@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "http_header_manipulation",
+  "summary": "The Docker-based reproduction confirms that the ForwardAuth middleware's RemoveConnectionHeaders function allows an attacker to delete arbitrary headers from the authentication request by listing them in the HTTP Connection header. When a request includes both X-Auth-Token and Connection: X-Auth-Token, the auth server receives the request without the X-Auth-Token header, causing authentication to fail with 401.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a request with Connection: X-Auth-Token should cause the ForwardAuth middleware to delete the X-Auth-Token header from the request forwarded to the auth server. Without the header, the auth server returns 401 instead of 200, demonstrating that the attacker can selectively remove security headers from the authentication flow.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the Traefik v2.11.39 repository, verified the vulnerable source code in connectionheader.go, downloaded the pre-built Traefik binary, configured ForwardAuth pointing to a Python auth server, and ran two differential tests. Test 1 (no Connection header) returned 200, confirming the auth token passes through normally. Test 2 (Connection: X-Auth-Token) returned 401, confirming the auth token was deleted from the forwarded request by RemoveConnectionHeaders.",
+  "verification_method": "The verify.sh script performs a differential test: it sends the same request with and without the Connection header. Test 1 (without Connection) includes X-Auth-Token and expects HTTP 200 from the backend. Test 2 adds Connection: X-Auth-Token and expects HTTP 401 because the ForwardAuth middleware deletes the token. The verification passes only when both outcomes match expectations, confirming the header was selectively deleted. The script also verifies the vulnerable code pattern exists in the mounted source at /target-repo before running the test. The EVOHUNT_VERIFY_SUCCESS marker is printed only on successful verification.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Test 1 without Connection header returned HTTP 200, confirming the auth token reached the auth server and authentication succeeded.",
+    "Test 2 with Connection: X-Auth-Token returned HTTP 401, confirming the auth token was deleted from the forwarded auth request by RemoveConnectionHeaders.",
+    "The differential result (200 vs 401) proves the Connection header caused selective header deletion in the ForwardAuth path.",
+    "Source code verification confirmed req.Header.Del(sf) pattern in connectionheader.go and RemoveConnectionHeaders call in forward.go."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container at /target-repo. The verify.sh script verifies vulnerable source code exists in the mount and downloads the matching pre-built Traefik binary for testing.",
+    "pinned_commit_or_ref": "v2.11.44",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/auth_server.py",
+      "reproduction/backend.py",
+      "reproduction/traefik.yml",
+      "reproduction/dynamic.yml"
+    ]
+  }
+}

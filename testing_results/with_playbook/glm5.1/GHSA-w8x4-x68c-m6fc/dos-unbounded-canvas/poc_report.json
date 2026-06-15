@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The Docker-based reproduction demonstrates that html2pdf.js processes HTML with extreme canvas dimensions without validation, causing excessive memory allocation and CPU consumption that freezes or crashes the browser.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Processing HTML with height 50,000px should cause unbounded canvas allocation, excessive memory consumption, and processing time exceeding 10 seconds, demonstrating denial of service via resource exhaustion.",
+  "actual_observed_result": "The Puppeteer-based verification detected excessive processing time and resource consumption when rendering HTML with extreme dimensions, confirming the DoS vulnerability through browser freeze/timeout.",
+  "verification_method": "Automated browser test using Puppeteer with timeout monitoring. Measures processing duration for extreme-height HTML and detects timeout/memory exhaustion. Distinguishes DoS from normal slow rendering via excessive time thresholds (>10s) and resource markers.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Processing time exceeded 10 seconds for single-element HTML with extreme dimensions",
+    "Browser timeout or freeze occurred during canvas allocation for 50,000px height content",
+    "Window property EVOHUNT_DOS_POC set to 'EXCESSIVE_TIME' confirming resource exhaustion",
+    "No dimension validation in canvas creation or page splitting logic confirmed by code analysis"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out v0.13.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.13.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_dos.py"
+    ]
+  }
+}

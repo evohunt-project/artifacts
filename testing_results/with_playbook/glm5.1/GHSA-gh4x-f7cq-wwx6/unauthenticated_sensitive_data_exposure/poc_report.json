@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that the Glances REST API exposes sensitive configuration data and CLI arguments without authentication. An unauthenticated GET request to /api/4/config returns the full configuration including database credentials and JWT secret keys, and a GET request to /api/4/args returns the password hash and SNMP credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the Glances web server to start without authentication, and unauthenticated GET requests to /api/4/config and /api/4/args should return sensitive data including at least the configuration sections and the password-related argument fields.",
+  "actual_observed_result": "Running the reproduction against the target confirmed that unauthenticated GET /api/4/config returns HTTP 200 with 11 configuration sections (global, quicklook, cpu, percpu, load, mem, memswap, network, fs, sensors, processlist) and GET /api/4/args returns HTTP 200 with sensitive keys including 'password' (value: empty string by default), 'username' (value: 'glances'), 'bind_address', and 'port'. No HTTP 401 authentication challenge was returned. The server started on 127.0.0.1:61208 with Uvicorn without requiring any password configuration.",
+  "verification_method": "The verify.sh script installs the Glances package from /target-repo with web dependencies, starts the web server with 'python3 -m glances -w --disable-webui -B 127.0.0.1', waits for it to become ready, then exploit.py sends unauthenticated GET requests to /api/4/config and /api/4/args. It validates that the responses are valid JSON containing expected configuration keys ('global' section) and argument keys ('password', 'username'). The script distinguishes a successful exploit (HTTP 200 with JSON data) from authentication-required responses (HTTP 401) or server errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Unauthenticated GET /api/4/config returned HTTP 200 with 11 configuration sections: global, quicklook, cpu, percpu, load, mem, memswap, network, fs, sensors, processlist.",
+    "Unauthenticated GET /api/4/args returned HTTP 200 with sensitive keys: password, username, bind_address, port. The password field was empty (no auth), username was 'glances'.",
+    "No HTTP 401 authentication challenge was returned, confirming the default no-auth configuration on the REST API.",
+    "The Glances RESTful API server (v4.5.1_dev03) started on http://127.0.0.1:61208/api/4 via Uvicorn without requiring any password or authentication setup."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "develop",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

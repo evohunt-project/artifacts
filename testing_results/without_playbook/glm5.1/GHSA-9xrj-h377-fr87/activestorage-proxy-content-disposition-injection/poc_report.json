@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "http_header_injection",
+  "summary": "The reproduction confirms that the ContentDisposition.format method in Rails 7.2.3 does not sanitize or validate the disposition parameter. CRLF characters in the disposition value are preserved through string interpolation into the Content-Disposition HTTP response header. The proxy controller path in ActiveStorage passes params[:disposition] directly to this method without the validation guard that protects the redirect controller path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that CRLF characters injected via the disposition parameter survive through ContentDisposition.format string interpolation into the header output, confirming that the ActiveStorage proxy controller path lacks the disposition validation present in the redirect path.",
+  "actual_observed_result": "The exploit script loads ContentDisposition.format from the target Rails source, passes a disposition value containing CRLF characters (inline\\r\\n<PROOF_STRING>: proof), and confirms that the CRLF characters are preserved in the output. The Rack mock request test further demonstrates that the injected disposition reaches the HTTP response headers. The contrast with the redirect path's presence_in(%w(attachment inline)) validation confirms the proxy path is missing an equivalent guard.",
+  "verification_method": "The exploit script uses a unique proof string (EVOHUNT_PROOF_HEADER_INJECTION) embedded in the CRLF-injected disposition value. It checks that this proof string appears in the ContentDisposition.format output alongside the CRLF characters, confirming the value was not sanitized. A secondary Rack::MockRequest test verifies the behavior at the HTTP response level. The script exits with code 0 only when the vulnerability is confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "ContentDisposition.format output contains CRLF characters followed by the proof string, confirming the disposition is not sanitized.",
+    "The contrast test shows the redirect path validates disposition via presence_in(%w(attachment inline)) while the proxy path has no validation.",
+    "The Rack mock request test confirms the injected disposition value reaches the HTTP response headers."
+  ],
+  "limitations_or_blockers": [
+    "Some Rack versions or web servers may normalize or filter CRLF characters at the HTTP layer. The code-level vulnerability (missing validation in ContentDisposition.format and the proxy controller path) persists regardless of server-level mitigations.",
+    "The signed blob ID required to access the proxy endpoint is a shared URL token, not a secret credential. In practice, any user who has been given an ActiveStorage blob URL can exploit this vulnerability."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the v7.2.3 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v7.2.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.rb",
+      "reproduction/verify.sh"
+    ]
+  }
+}

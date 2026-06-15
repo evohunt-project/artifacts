@@ -1,0 +1,88 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T17:30:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3c1fddcc",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-9wc7-mj3f-74xv/GHSA-9wc7-mj3f-74xv.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "oauth2_ssrf_metadata_exfil",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3c1fddcc/oauth2_ssrf_metadata_exfil",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3c1fddcc/oauth2_ssrf_metadata_exfil/vulnerability_report.json",
+      "title": "OAuth2 token exchange endpoints allow authenticated SSRF via user-controlled accessTokenUrl",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerability type (SSRF vs code injection), different component (OAuth2 credential system vs CSVAgent), different root cause (missing SSRF validation on accessTokenUrl vs missing sanitization on customReadCSVFunc), different attack path (OAuth2 callback/refresh vs prediction endpoint triggering pyodide Python execution).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "L",
+          "VA": "N",
+          "SC": "L",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:L/VA:N/SC:L/SI:L/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "stored_xss_flow_description",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3c1fddcc/stored_xss_flow_description",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3c1fddcc/stored_xss_flow_description/vulnerability_report.json",
+      "title": "Stored XSS via unsanitized request body in chatflow node description with unsafe client-side HTML rendering",
+      "vulnerability_type": "xss",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerability type (stored XSS vs code injection), different component (chatflow UI rendering vs CSVAgent Python execution), different root cause (missing request body sanitization and unsafe html-react-parser vs missing sanitization on customReadCSVFunc interpolated into Python code), different execution context (client-side JavaScript vs server-side Python via pyodide).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "P",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The advisory describes a code injection vulnerability in CSVAgent where the user-controlled customReadCSVFunc parameter is interpolated into Python code and executed by pyodide without sanitization, leading to authenticated RCE when the prediction endpoint is triggered. None of the qualifying findings identify this vulnerability: (1) oauth2_ssrf_metadata_exfil is an SSRF vulnerability in the OAuth2 credential system via user-controlled accessTokenUrl, (2) stored_xss_flow_description is a stored XSS vulnerability in chatflow UI rendering, (3) example is a template file with placeholder URLs. The prediction_endpoint_rce finding mentions unauthenticated prediction endpoint and CustomFunction nodes, but it does not specifically address CSVAgent and was marked as non_qualifying_vuln with AT:P (requires pre-existing chatflow), disqualifying it from PoC generation. The advisory root cause (missing sanitization on customReadCSVFunc interpolated into Python code executed by pyodide) is not identified in any finding.",
+    "evidence": [
+      "Advisory CVE-2026-41137 describes CSVAgent code injection via customReadCSVFunc parameter at packages/components/nodes/agents/CSVAgent/CSVAgent.ts:157",
+      "Advisory attack path: authenticated user creates chatflow with CSVAgent containing malicious customReadCSVFunc, triggers via POST /api/v1/prediction/[CHATFLOWID], Python code executed by pyodide",
+      "oauth2_ssrf_metadata_exfil targets packages/server/src/routes/oauth2/index.ts:240,355 - different component (OAuth2 vs CSVAgent)",
+      "stored_xss_flow_description targets packages/server/src/utils/XSS.ts + packages/ui/src/ui-component/tooltip/TooltipWithParser.jsx - different component (XSS middleware/UI vs CSVAgent)",
+      "prediction_endpoint_rce finding status is non_qualifying_vuln with AT:P precondition, does not mention CSVAgent or customReadCSVFunc"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3c1fddcc/oauth2_ssrf_metadata_exfil",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3c1fddcc/oauth2_ssrf_metadata_exfil/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3c1fddcc/oauth2_ssrf_metadata_exfil/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3c1fddcc/stored_xss_flow_description",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3c1fddcc/stored_xss_flow_description/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3c1fddcc/stored_xss_flow_description/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

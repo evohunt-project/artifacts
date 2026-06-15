@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that deleting the .env file bypasses the install guard and allows the installer to run again, creating a new admin account and taking over the application.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should delete the .env file, access the /install endpoint, configure a new database and admin account, demonstrating complete application takeover through install guard bypass.",
+  "actual_observed_result": "Running ./reproduction/run.sh demonstrated that after removing .env, the install flow becomes accessible and creates a new admin account with attacker-controlled credentials, confirming the install guard bypass.",
+  "verification_method": "The run script verifies that a new admin account was created and can log in with the attacker-specified credentials, confirming successful application takeover.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The .env file was successfully deleted, bypassing the install guard.",
+    "The /install endpoint became accessible and accepted new configuration.",
+    "A new admin account was created with attacker-controlled credentials.",
+    "The new admin account can successfully log in, confirming complete takeover."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

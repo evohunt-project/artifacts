@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the UDR accepts user-controlled notification URLs via unauthenticated POST requests and stores them in subscriptions. When triggered, the UDR makes outbound HTTP requests to the attacker-specified URL.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Creating a subscription with an attacker-controlled notificationUri should result in the UDR storing the URL. When a data change notification is triggered, the UDR should attempt an HTTP POST to the attacker-specified URL, confirming SSRF.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the UDR, started the server, and created a subscription with a notificationUri pointing to an internal HTTP listener. The subscription was stored successfully (201 Created) and the server was observed making connection attempts to the attacker-controlled URL when data change notifications were triggered.",
+  "verification_method": "The verify script starts a local HTTP listener on a custom port, creates a subscription pointing to that listener, then triggers a data change. The listener records incoming requests from the UDR, confirming the SSRF. The subscription creation without authentication also confirms the auth bypass co-factor.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Subscription creation with attacker-controlled notificationUri returned 201 Created without authentication.",
+    "The local HTTP listener received connection attempts from the UDR process after data change triggers.",
+    "No URL validation was applied to the notificationUri value."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/udrcfg.yaml"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stored_xss",
+  "summary": "The Docker-based reproduction confirms that YesWiki's raw HTML wiki markup feature permits stored XSS attacks. User content wrapped in \"\"...\"\" is returned without sanitization when allow_raw_html is enabled, and the injected JavaScript would execute in the browser context of any user viewing the page.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate successful injection of JavaScript code into a wiki page using the raw HTML syntax, confirming that the payload is stored and would execute when the page is viewed.",
+  "actual_observed_result": "The reproduction bundle set up YesWiki with default configuration (allow_raw_html=true), created a page with XSS payload using the \"\"...\"\" syntax, and confirmed that the malicious script is present in the page source without sanitization.",
+  "verification_method": "The verify.sh script checks if the XSS payload string 'EV0HUNT_XSS_POC_SUCCESSFUL' or script tags are present in the page HTML, distinguishing successful injection from normal sanitized output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "XSS payload successfully injected into page content via \"\"<script>...\"\" syntax",
+    "The malicious script appears in page source without HTML entity encoding",
+    "The allow_raw_html configuration enables this attack by default",
+    "Multiple XSS vectors (script, img onerror, svg onload) all succeed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the YesWiki repository on the host, checks out the doryphore-dev branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "doryphore-dev",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

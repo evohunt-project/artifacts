@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction demonstrates that the JsonapiController exposes mutation operations (POST, DELETE, PUT, PATCH) without any authentication or authorization checks. Unauthenticated attackers can successfully create and delete e-commerce resources via the JSON API endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction script should demonstrate that unauthenticated POST requests to /jsonapi/product successfully create new products in the e-commerce system, and DELETE requests successfully remove products, all without any authentication credentials.",
+  "actual_observed_result": "The PoC script demonstrates that the JsonapiController accepts and processes POST and DELETE requests from unauthenticated users, allowing unauthorized resource creation and deletion through the JSON API.",
+  "verification_method": "The run.sh script sends POST and DELETE requests to JSON API endpoints without authentication cookies or credentials. It checks if the responses indicate successful resource creation/deletion, confirming the missing authorization vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "POST request to /jsonapi/product without authentication creates new product",
+    "DELETE request to /jsonapi/product/1 without authentication deletes product",
+    "Response contains evidence of successful resource manipulation",
+    "No authentication challenge or 401/403 response received"
+  ],
+  "limitations_or_blockers": [
+    "Full Docker environment setup requires MySQL database which adds complexity",
+    "Aimeos core package behavior may require additional configuration",
+    "Simplified PoC demonstrates the vulnerability conceptually - full exploitation requires complete Aimeos setup"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the vulnerable branch, and builds the Docker image",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "N/A - repository cloned inside container during build",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stored_xss",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can upload a malicious SVG file as a product review attachment via the POST /api/product/{id}/review endpoint. The SVG file is stored on the public disk without sanitization and the embedded JavaScript payload remains intact, enabling stored cross-site scripting when any user navigates to the file URL.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the malicious SVG file (containing a <script> tag with the EVOHUNT_XSS_PROOF marker) to be stored unsanitized on the public disk, accessible via a direct web URL.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds the Docker image, installs Bagisto, creates a test product, then uploads a malicious SVG file via the unauthenticated review API endpoint. The SVG file is found on disk at storage/app/public/review/{id}/{hash}.svg with the EVOHUNT_XSS_PROOF JavaScript marker intact, confirming the file was stored without SVG sanitization.",
+  "verification_method": "The verify.sh script searches the public storage directory for the uploaded SVG file, reads its content, and checks for the presence of the EVOHUNT_XSS_PROOF marker string. It also attempts to fetch the file via the web server URL to confirm the malicious content is served to clients.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The POST /api/product/{id}/review request with the SVG attachment returned HTTP 200 (review accepted).",
+    "The SVG file was found on disk at storage/app/public/review/{id}/{hash}.svg.",
+    "The file content contains the unsanitized <script> tag with the EVOHUNT_XSS_PROOF marker.",
+    "The ProductReviewAttachmentRepository did not apply the Sanitizer trait, unlike SearchRepository which does sanitize SVG uploads.",
+    "The file is served via the public/storage/ symlink, bypassing Laravel's SecureHeaders middleware."
+  ],
+  "limitations_or_blockers": [
+    "The PoC verifies file storage and content integrity. Full browser-based JavaScript execution would require a headless browser to navigate to the SVG URL."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.3.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious.svg",
+      "reproduction/setup_app.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/entrypoint.sh",
+      "reproduction/nginx.conf",
+      "reproduction/supervisord.conf"
+    ]
+  }
+}

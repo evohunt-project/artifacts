@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the secure_popen() function allows command chaining via &&, pipe operations via |, and file redirection via >, enabling arbitrary command injection through AMP configuration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The chained commands in the AMP configuration should execute multiple commands, create proof files, and demonstrate that command chaining, piping, and file redirection are all possible despite the function's name suggesting security.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully demonstrated that secure_popen() processes chained commands (&&), pipe operations (|), and file redirection (>), creating multiple proof files that confirm arbitrary command execution is possible through AMP configurations.",
+  "verification_method": "The verify script tests three different injection vectors: command chaining with &&, data piping with |, and file redirection with >. Each test creates a proof file with a unique marker. The presence of all three proof files confirms multiple exploitation paths are available.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Command chaining with && successfully executed multiple commands",
+    "Pipe operation with | successfully piped data to external commands",
+    "File redirection with > successfully created files with attacker-controlled content",
+    "All three proof files were created with expected markers",
+    "This demonstrates that AMP commands can be weaponized for full system compromise"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh mounts the target repository from /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/repo as read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "current state of /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/repo",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

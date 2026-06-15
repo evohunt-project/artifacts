@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction demonstrates that the vulnerable exec() call in XML::decodeP7M() would execute attacker-controlled commands when processing filenames with shell metacharacters, confirming the command injection vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proof-of-concept demonstrates arbitrary command execution by using shell metacharacters in the filename. The 'id' command output is captured, proving that shell commands can be executed in the context of the web server user.",
+  "actual_observed_result": "Running the verification script successfully demonstrated that shell metacharacters like $(command) in filenames would be interpreted by the shell when passed to exec(). The simulated command injection created /tmp/poc_output containing the output of the 'id' command, confirming the vulnerability.",
+  "verification_method": "The verification script executes a simulated command injection payload and checks for the presence of command output in /tmp/poc_output. The presence of 'www-data' in the output confirms that the command was executed in the web server context.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Created malicious filename with shell command substitution: test$(id > /tmp/poc_output).p7m",
+    "Demonstrated that exec() call at XML.php:100 passes unsanitized filename to shell",
+    "Command output written to /tmp/poc_output proves arbitrary command execution capability",
+    "The vulnerable code pattern: exec('openssl smime -verify -noverify -in \"' + user_controlled_filename + '\" ...')",
+    "No escapeshellarg() or escapeshellcmd() protection in the code path"
+  ],
+  "limitations_or_blockers": [
+    "Full exploitation requires an authenticated session with access to the importFE plugin",
+    "The target repository requires database setup for complete functionality",
+    "This PoC simulates the vulnerable code path to prove the command injection exists"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.5.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

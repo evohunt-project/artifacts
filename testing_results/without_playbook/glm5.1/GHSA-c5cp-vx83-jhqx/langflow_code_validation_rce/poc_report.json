@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_rce",
+  "summary": "The Docker-based PoC confirms that unauthenticated attackers can execute arbitrary Python code through the vulnerable /api/v1/validate/code endpoint when AUTO_LOGIN is enabled. The exploit demonstrates command execution, file system access, and environment variable exfiltration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should successfully execute attacker-controlled Python code on the server, create a file in /tmp as proof of execution, and demonstrate the ability to read environment variables and execute system commands.",
+  "actual_observed_result": "The PoC successfully exploited the vulnerability by sending malicious Python code to the validate endpoint. The code was executed server-side, creating the proof file /tmp/evohunt_pwned and demonstrating complete code execution capabilities.",
+  "verification_method": "The PoC verifies successful exploitation by checking for the existence of /tmp/evohunt_pwned file created by the malicious payload, which would not exist without successful code execution. This distinguishes actual RCE from parser errors or validation failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File /tmp/evohunt_pwned was successfully created on the server filesystem",
+    "Environment variables were accessible from the executed code",
+    "System commands could be executed through Python's os module",
+    "The vulnerable endpoint accepted and executed the malicious payload without authentication",
+    "HTTP response confirmed the code was processed without errors"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host, checks out the vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

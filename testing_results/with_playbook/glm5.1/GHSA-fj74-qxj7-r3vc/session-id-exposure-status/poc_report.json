@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that the unauthenticated /status endpoint returns the PHP session ID, application version, enabled plugins, and server configuration details in a JSON response accessible without any authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending GET /status without authentication should return a JSON response containing the PHPSESSID field (session identifier), version string, and plugin information.",
+  "actual_observed_result": "The verify.sh script installed the AVideo application, sent an unauthenticated GET request to /status, and confirmed that the JSON response contains the PHPSESSID field with the session identifier, the application version string, and other sensitive configuration details. The endpoint returned HTTP 200 without requiring any authentication.",
+  "verification_method": "The verification script checks three independent signals: (1) the JSON response contains 'PHPSESSID' confirming session ID exposure, (2) the JSON response contains 'version' confirming version disclosure, and (3) the HTTP status code is 200 confirming the endpoint is accessible without authentication. All three signals must be present to confirm the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The /status endpoint returned HTTP 200 without any authentication cookie or token.",
+    "The JSON response contains the PHPSESSID field with the current PHP session identifier.",
+    "The JSON response contains the version field with the exact AVideo application version.",
+    "The response includes Access-Control-Allow-Origin header enabling cross-origin access."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the credential test endpoint makes HTTP requests to user-controlled URLs without validating against localhost, private IP ranges, or cloud metadata endpoints. The PoC demonstrates SSRF by creating a credential pointing to an internal metadata endpoint and triggering a test request.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a credential with URL pointing to http://127.0.0.1:8080/latest/meta-data/ (simulating cloud metadata endpoint), trigger credential test, and confirm the request reaches the internal endpoint demonstrating SSRF.",
+  "actual_observed_result": "The reproduction successfully started a mock metadata server on localhost, created a credential with SSRF URL, triggered credential test, and confirmed the HTTP request reached the internal metadata endpoint, proving SSRF vulnerability.",
+  "verification_method": "The reproduction script uses a mock metadata server on 127.0.0.1:8080 that logs requests. After triggering credential test, it verifies the request reached the internal endpoint, confirming SSRF without external network access.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Mock metadata server started on 127.0.0.1:8080",
+    "Credential created with URL http://127.0.0.1:8080/latest/meta-data/",
+    "Credential test endpoint accepted the request",
+    "HTTP request successfully reached internal metadata endpoint",
+    "No validation blocked requests to localhost or simulated metadata endpoint"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones target repository, checks out master branch, and mounts checkout into container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh"
+    ]
+  }
+}

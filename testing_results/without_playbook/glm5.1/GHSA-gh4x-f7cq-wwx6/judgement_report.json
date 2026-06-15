@@ -1,0 +1,120 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-gh4x-f7cq-wwx6/GHSA-gh4x-f7cq-wwx6.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "amp-command-injection",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/amp-command-injection",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/amp-command-injection/vulnerability_report.json",
+      "title": "Command injection via AMP command execution with insufficient input validation",
+      "vulnerability_type": "command_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "Root cause is command injection through secure_popen() in glances/amps/default/__init__.py and glances/secure.py. The advisory describes unauthenticated config secret exposure via /api/4/config endpoint and as_dict() in glances/config.py:280-287. Different vulnerable code, different root cause, different impact.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "command-injection-config-backticks",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/command-injection-config-backticks",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/command-injection-config-backticks/vulnerability_report.json",
+      "title": "Command injection via backtick execution in configuration file parser",
+      "vulnerability_type": "command_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "Root cause is backtick command execution in config.get_value() at glances/config.py:332-336 via system_exec(). The advisory describes as_dict() returning all config values without filtering at glances/config.py:280-287 via an unauthenticated REST API endpoint. Different function, different lines, different root cause (command execution vs information disclosure), different impact.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "pickle-deserialization-rce",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/pickle-deserialization-rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/pickle-deserialization-rce/vulnerability_report.json",
+      "title": "Arbitrary code execution via unsafe pickle deserialization in version cache",
+      "vulnerability_type": "deserialization_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "Root cause is unsafe pickle.load() in glances/outdated.py:120-121. The advisory describes unauthenticated config secret exposure via /api/4/config endpoint. Completely different component, different root cause, different vulnerability class.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerability. The advisory (GHSA-gh4x-f7cq-wwx6) describes unauthenticated exposure of configuration secrets via the /api/4/config REST API endpoint in glances_restful_api.py:1154-1167, where config.as_dict() returns all config values including passwords and tokens without filtering. None of the three qualifying findings target this specific root cause. amp-command-injection targets secure_popen() in AMP execution; command-injection-config-backticks targets backtick command execution in config.get_value() at a different location in config.py; pickle-deserialization-rce targets pickle.load() in the outdated module.",
+    "evidence": [
+      "Advisory root cause: _api_config() in glances/outputs/glances_restful_api.py:1154-1167 calls self.config.as_dict() returning all config including secrets",
+      "Advisory root cause: as_dict() in glances/config.py:280-287 iterates all sections/options without filtering",
+      "Advisory root cause: When self.args.password is not set, no authentication is required (glances_restful_api.py:472-475)",
+      "amp-command-injection targets glances/secure.py and glances/amps/default/__init__.py - different code",
+      "command-injection-config-backticks targets config.get_value() at config.py:332-336 - different function and lines",
+      "pickle-deserialization-rce targets glances/outdated.py:120-121 - different module entirely"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/amp-command-injection",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/amp-command-injection/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/amp-command-injection/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/command-injection-config-backticks",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/command-injection-config-backticks/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/command-injection-config-backticks/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/pickle-deserialization-rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/pickle-deserialization-rce/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/pickle-deserialization-rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

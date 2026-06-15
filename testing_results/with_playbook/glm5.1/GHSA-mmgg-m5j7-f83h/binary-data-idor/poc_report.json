@@ -1,0 +1,30 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "idor_missing_authorization",
+  "summary": "A Docker-based reproduction bundle was prepared that creates two users, produces binary data as the owner via a workflow execution, and demonstrates the second user reading that binary data through the GET /rest/binary-data/ endpoint without authorization checks. The bundle was not executed within the session.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the second user (authenticated but unprivileged) to successfully download binary data belonging to the owner user via the GET /rest/binary-data/ endpoint, returning content containing the proof string EVOHUNT_IDOR_PROOF_SECRET_DATA_OWNED_BY_USER_A.",
+  "actual_observed_result": "The reproduction bundle was not executed during the session. The exploit.mjs script and verify.sh orchestration are included in the reproduction/ directory for future reruns.",
+  "verification_method": "The exploit script creates a proof string EVOHUNT_IDOR_PROOF_SECRET_DATA_OWNED_BY_USER_A as binary data owned by user A, then attempts to read it as user B via the GET /rest/binary-data/ endpoint. Success is confirmed when the proof string appears in the response body for user B, proving the IDOR. Failure is indicated by a 403/404 status or missing proof string.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The reproduction bundle (Dockerfile, run.sh, exploit.mjs, verify.sh) was generated and is self-contained.",
+    "The exploit.mjs script implements the full IDOR attack path: owner setup, second user invitation, workflow creation, binary data production, and cross-user binary data read."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction was not executed during the session due to time constraints on building the n8n Docker image and running the full exploit.",
+    "The exploit requires n8n v1.123.21 to be installed via npm, which takes several minutes for initial setup."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version tag n8n@1.123.21, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "n8n@1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

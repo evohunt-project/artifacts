@@ -1,0 +1,25 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "user_enumeration",
+  "summary": "A Docker-based reproduction that demonstrates user enumeration by probing the POST /auth/send-link endpoint with registered and unregistered email addresses and observing the distinct HTTP response codes (200 vs 400).",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a request with a registered email should return HTTP 200, while sending a request with an unregistered email should return HTTP 400 with errorCode EMAIL_NOT_REGISTERED. The response differential confirms that an unauthenticated attacker can enumerate registered user email addresses.",
+  "actual_observed_result": "PoC was not executed in this session. The reproduction bundle is provided for independent verification.",
+  "verification_method": "The verify.sh script creates a test user with a known registered email, sends two HTTP requests to /auth/send-link (one registered, one unregistered), compares the HTTP status codes, and exits with success only if the registered email yields 200 and the unregistered email yields 400. This distinguishes genuine user enumeration from a generic server error or startup failure.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The PoC was not executed during this session. The reproduction bundle is self-contained and should produce the expected verification signal when run in an environment with Docker available."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the session directory into a temporary workspace and mounts that copy into the container at /target-repo, since the target repository is not a git repository.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

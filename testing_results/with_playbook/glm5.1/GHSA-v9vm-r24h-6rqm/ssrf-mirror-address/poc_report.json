@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "The PoC bundle demonstrates that the mirror repository address can be updated to an internal URL without SSRF validation. The reproduction builds Gogs, starts an internal metadata server, creates a mirror repository, updates its address to the internal server, and triggers a sync to observe the outbound request.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After updating the mirror address to an internal URL and triggering sync, the Gogs server should make an HTTP request to the internal server, proving that no SSRF validation is applied to mirror address updates.",
+  "actual_observed_result": "The reproduction was not executed because the Docker base image could not be pulled in the available environment.",
+  "verification_method": "The verify.sh script (1) starts a local HTTP server on port 9999 that logs incoming requests, (2) builds and starts Gogs, (3) runs exploit.py to create a mirror repo, update its address to the internal server, and trigger sync, (4) checks /tmp/ssrf_proof.txt for evidence that the internal server received a request from Gogs.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker base image pull timed out in the execution environment, preventing the PoC from being built and run."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the local target repository and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/internal_server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The FUXA /api/upload endpoint writes files to arbitrary filesystem locations without any authentication. The destination parameter is passed unsanitized to path.resolve(), enabling path traversal to escape the intended upload directory. The exploit writes a proof file to /tmp/ outside the FUXA application directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a POST request to /api/upload with destination='x/../../..' should resolve via path.resolve(serverDir, '_x/../../..') to /tmp/, and the proof file should be written to /tmp/evohunt-proof.txt with the attacker-controlled content.",
+  "actual_observed_result": "Running the exploit locally against the FUXA v1.2.7 server: POST /api/upload without any authentication header returned HTTP 200 with {\"location\":\"/resources/evohunt-proof.txt\"}. The proof file was found at /tmp/evohunt-proof.txt (outside the FUXA application directory) containing the exact proof string EVOHUNT_UPLOAD_PROOF_<timestamp>. This confirms the path.resolve() at projects/index.js:212 traversed to /tmp/ via the unsanitized destination parameter. The Docker-based reproduction bundle was not executed due to infrastructure constraints, but the identical exploit code path was verified through direct local execution.",
+  "verification_method": "The verify script sends the upload request with a unique proof string and destination='x/../../..', then checks that the proof file exists at /tmp/evohunt-proof.txt with the exact expected content. This distinguishes genuine path traversal (file written outside the upload directory) from normal uploads that stay within the upload folder.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "POST /api/upload returned HTTP 200 without any authentication header, confirming the endpoint has no auth middleware.",
+    "The proof file was found at /tmp/evohunt-proof.txt, which is outside the FUXA server directory at /tmp/evohunt-fuxa-test/server/. This confirms path traversal via the unsanitized destination parameter.",
+    "The file contained the exact proof string, confirming arbitrary content write to an attacker-controlled filesystem location."
+  ],
+  "limitations_or_blockers": [
+    "The Docker-based reproduction bundle (./reproduction/run.sh) was not executed due to Docker base image pull timeout in the test environment. The identical exploit was verified through local execution of the FUXA server."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the FUXA repository from GitHub, checks out the pinned vulnerable tag v1.2.7, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "bbd738d21d7192d5eaaf58577de68eced4a609eb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

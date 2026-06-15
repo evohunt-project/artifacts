@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_template_injection",
+  "summary": "The Docker-based reproduction confirms that Caddy's templates middleware processes Go template directives in served files. A file containing {{env \"EVOHUNT_TEST_SECRET\"}} served through the templates middleware exposes the value of the EVOHUNT_TEST_SECRET environment variable in the HTTP response body, demonstrating unrestricted environment variable access.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the templates middleware to evaluate {{env \"EVOHUNT_TEST_SECRET\"}} and include the secret environment variable value in the HTTP response body, proving that any process environment variable can be exfiltrated through template injection.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Caddy reproduction image, started Caddy with the templates middleware and file_server, sent an HTTP request for /index.html containing {{env \"EVOHUNT_TEST_SECRET\"}}, and received the actual value of EVOHUNT_TEST_SECRET in the response body (e.g., evohunt-poc-secret-1780658064), confirming the environment variable was leaked.",
+  "verification_method": "The verify.sh script sets a unique proof string as EVOHUNT_TEST_SECRET, starts Caddy, requests the exploit page via HTTP, and checks whether the response body contains the exact proof string. This distinguishes a real environment variable leak from a generic template error, an empty response, or an unprocessed template directive (which would show the literal {{env ...}} text).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The HTTP response body contains the exact value of EVOHUNT_TEST_SECRET, not the template directive {{env \"EVOHUNT_TEST_SECRET\"}}.",
+    "The verify.sh script confirmed the proof string was present in the response, ruling out a false positive from template parsing errors.",
+    "Caddy started successfully with templates middleware enabled and processed the file as a Go template, ruling out a startup failure."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.html",
+      "reproduction/Caddyfile"
+    ]
+  }
+}

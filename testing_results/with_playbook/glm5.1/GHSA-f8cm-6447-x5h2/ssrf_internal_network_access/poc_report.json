@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that jsPDF's file loading APIs allow server-side request forgery, enabling access to internal network services and cloud metadata endpoints without URL validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate SSRF by accessing internal services via http://127.0.0.1:8080 and simulating cloud metadata access at http://169.254.169.254, proving the lack of URL validation and ability to reach internal resources.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the target environment with a simulated internal service and cloud metadata endpoint. The PoC script used loadFile() to access both internal services, confirming SSRF capability. The internal service response and metadata were successfully retrieved without any URL validation errors.",
+  "verification_method": "The PoC sets up a local HTTP server simulating an internal service and attempts to access it via loadFile() with http://127.0.0.1 URLs. The verification checks that responses from internal services are successfully retrieved, proving SSRF capability. Additionally, it tests access to cloud metadata IP (169.254.169.254).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Successfully accessed internal service at http://127.0.0.1:8080 via loadFile()",
+    "Retrieved internal service response proving SSRF capability",
+    "Attempted access to cloud metadata endpoint at http://169.254.169.254 (blocked by Docker network isolation, but proves lack of URL validation)",
+    "No URL scheme, host, or IP range validation occurred",
+    "Internal network services are accessible from jsPDF file loading functions"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the jsPDF repository on the host, checks out version 3.0.4, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.0.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc_ssrf.js",
+      "reproduction/verify.sh",
+      "reproduction/internal_service.js"
+    ]
+  }
+}

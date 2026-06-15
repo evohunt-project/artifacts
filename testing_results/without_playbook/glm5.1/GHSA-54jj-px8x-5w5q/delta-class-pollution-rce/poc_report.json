@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms both class pollution DoS and Remote Code Execution vulnerabilities in DeepDiff v8.6.0. The exploit demonstrates: (1) Pollution of Python's built-in int class via dunder attribute traversal, and (2) Two-step RCE attack by first polluting the SAFE_TO_IMPORT whitelist then executing arbitrary system commands via pickle __reduce__.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate: (1) Class pollution causing int() to behave incorrectly or raise exceptions, achieving DoS; (2) Successful execution of os.system commands creating /tmp/pwned file, confirming RCE. Both attacks should succeed on v8.6.0 but be blocked by the security patch in v8.6.1.",
+  "actual_observed_result": "The exploit_dos.py script successfully pollutes the int built-in class on v8.6.0, demonstrating undefined behavior in int() after delta application. The exploit_rce.py script successfully executes the two-step RCE attack: first polluting SAFE_TO_IMPORT to add posix.system to the whitelist, then executing arbitrary shell commands via pickle __reduce__. The attacks are blocked in v8.6.1 with error: 'traversing dunder attributes is not allowed'.",
+  "verification_method": "The scripts verify: (1) For DoS - int() returns incorrect values or raises exceptions after class pollution; (2) For RCE - /tmp/pwned file is created with attacker-controlled content and command output. Both exploits return exit code 0 on success and 1 when blocked by the patch, distinguishing real exploits from unrelated errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "exploit_dos.py shows int() behavior corruption after malicious delta application on v8.6.0",
+    "exploit_rce.py creates /tmp/pwned file containing '[EXPLOIT SUCCESS]' and command output on v8.6.0",
+    "Both scripts fail with 'traversing dunder attributes is not allowed' error on v8.6.1, confirming patch effectiveness",
+    "The attacks work over network via HTTP APIs accepting pickle-serialized Delta data",
+    "No special privileges or user interaction required for successful exploitation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable v8.6.0 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v8.6.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_dos.py",
+      "reproduction/exploit_rce.py"
+    ]
+  }
+}

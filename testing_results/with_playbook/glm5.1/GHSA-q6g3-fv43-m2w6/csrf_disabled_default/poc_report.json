@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "csrf",
+  "summary": "The Docker-based reproduction confirms that OpenSTAManager ships with CSRF protection disabled by default ($disableCSRF = true). When installed with default configuration, state-changing operations can be triggered by cross-origin requests without any CSRF token validation, enabling cross-site request forgery attacks against authenticated users.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An authenticated victim visiting a malicious webpage should trigger state-changing operations on the target application without any CSRF token validation, demonstrating that the default configuration enables cross-site request forgery.",
+  "actual_observed_result": "The reproduce.sh script installed OpenSTAManager with default configuration, confirmed that config.inc.php has $disableCSRF = true, verified that core.php skips csrfProtector::init() when disabled, and confirmed that csrf_config.php sets failedAuthAction to 0 (do nothing) even when enabled. A state-changing request was accepted without CSRF token.",
+  "verification_method": "The verification script checks three conditions: (1) config.inc.php contains disableCSRF = true, (2) the CSRF protector initialization is skipped by core.php, and (3) a state-changing GET request is accepted without CSRF token. The combination proves CSRF protection is disabled by default. The EVOHUNT_PROOF_TOKEN distinguishes a confirmed CSRF bypass from unrelated server behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "config.example.php line 36 sets $disableCSRF = true by default, disabling CSRF protection on fresh installations.",
+    "core.php lines 197-199 skip csrfProtector::init() when $config['disableCSRF'] is truthy.",
+    "config/csrf_config.php lines 26-29 set failedAuthAction to 0 for both GET and POST, meaning even when enabled, invalid tokens are not blocked.",
+    "State-changing request was accepted without CSRF token validation."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/supervisord.conf"
+    ]
+  }
+}

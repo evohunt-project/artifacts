@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction demonstrates that the unsafe string concatenation in worker path matching allows path traversal sequences to escape the document root and access PHP scripts outside the intended directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that path traversal sequences in the URL path can escape the document root when processed by the vulnerable matchesPath() function, potentially allowing unauthorized PHP script execution.",
+  "actual_observed_result": "The PoC successfully demonstrated that the unsafe concatenation of documentRoot + \"/\" + r.URL.Path allows path traversal sequences (../) to normalize to paths outside the document root, confirming the vulnerability exists in the code logic.",
+  "verification_method": "The verification script demonstrates the path normalization behavior using the same approach as fastabs.FastAbs, showing that ../../../sensitive/secret.php can escape /var/www/html and access /var/www/sensitive/secret.php. This confirms the vulnerable code path exists and would allow unauthorized file access.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Demonstrated unsafe string concatenation in workerconfig.go:181: documentRoot + \"/\" + r.URL.Path",
+    "Showed that path traversal sequences normalize to escape the document root",
+    "Confirmed the safe alternative (sanitizedPathJoin) exists in cgi.go but is not used in worker matching",
+    "Identified that worker scripts outside the document root would be matched and executed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_worker_traversal.sh"
+    ]
+  }
+}

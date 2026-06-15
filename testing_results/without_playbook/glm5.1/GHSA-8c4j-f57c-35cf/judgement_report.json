@@ -1,0 +1,54 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b4171cbf",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-8c4j-f57c-35cf/GHSA-8c4j-f57c-35cf.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "auto_login_rce_validate_code",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b4171cbf/auto_login_rce_validate_code",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b4171cbf/auto_login_rce_validate_code/vulnerability_report.json",
+      "title": "Unauthenticated remote code execution via AUTO_LOGIN bypass and exec() in validate_code endpoint",
+      "vulnerability_type": "rce",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes an IDOR in the flow API (_read_flow in flows.py) where a missing ownership check lets authenticated users access other users' flows. This finding describes RCE via exec() in the validate_code endpoint (validate.py). The root cause, vulnerable code path, and vulnerability class are entirely different: the advisory is CWE-639/CWE-862 (authorization bypass/missing authorization) in the flow CRUD operations, while this finding is about unsafe code execution in a code-validation endpoint.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or root cause. The advisory describes an IDOR in Langflow's _read_flow helper (src/backend/base/langflow/api/v1/flows.py) where a missing ownership check allows authenticated users to read, modify, or delete any flow regardless of owner. Finding auto_login_rce_validate_code describes RCE via exec() in the validate_code endpoint — a different vulnerable code path, different root cause (unsafe code execution vs missing authorization), and different vulnerability class.",
+    "evidence": [
+      "Advisory root cause: _read_flow in flows.py branches on AUTO_LOGIN and omits Flow.user_id == user_id filter when AUTO_LOGIN is False, allowing any authenticated user to access any flow.",
+      "Finding auto_login_rce_validate_code root cause: exec() in validate_code (validate.py:57) evaluates default-argument expressions in user-supplied function definitions. This is a code-injection vulnerability, not an authorization-bypass IDOR."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b4171cbf/auto_login_rce_validate_code",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b4171cbf/auto_login_rce_validate_code/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b4171cbf/auto_login_rce_validate_code/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

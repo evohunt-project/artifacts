@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction uses the official Traefik v1.7.34 image, starts Traefik with default API+REST configuration, and demonstrates that an unauthenticated network attacker can read the full live configuration via GET /api and inject arbitrary routing rules via PUT /api/providers/rest.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted configuration payload to be accepted by the unauthenticated REST API endpoint and become active in the live Traefik routing configuration, while the unauthenticated GET /api endpoint returns the full configuration including backend server URLs.",
+  "actual_observed_result": "Running the reproduction built the Docker image with Traefik v1.7.34, started it with default configuration, successfully read the configuration without authentication via GET /api (HTTP 200), GET /health (HTTP 200), and GET /api/version (HTTP 200). The PUT /api/providers/rest with a crafted JSON configuration containing an attacker-controlled backend returned HTTP 200. Subsequent GET /api/providers/rest confirmed the injected configuration is present in the live routing table with the attacker-controlled backend URL (http://evohunt-attacker.example.com:4444) and route rule (Host:evohunt-attacker-controlled.example.com).",
+  "verification_method": "The verify.sh script sends unauthenticated GET requests to /api, /health, and /api/version and confirms all return HTTP 200. It then sends an unauthenticated PUT request with a crafted JSON configuration containing a unique attacker-controlled backend URL. After a brief delay, it reads the provider configuration via GET /api/providers/rest and checks for the presence of the attacker-controlled hostname. The presence of the injected backend URL in the live configuration distinguishes successful injection from a generic API response or error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GET /api returned HTTP 200 with full configuration JSON without authentication.",
+    "GET /health returned HTTP 200 with server health data (PID, uptime, request counts) without authentication.",
+    "GET /api/version returned HTTP 200 with Version:v1.7.34 and Codename:maroilles without authentication.",
+    "PUT /api/providers/rest with attacker-controlled JSON returned HTTP 200 confirming acceptance.",
+    "GET /api/providers/rest after injection contains the attacker-controlled backend URL http://evohunt-attacker.example.com:4444 in the live configuration.",
+    "GET /api after injection shows the full live configuration now includes the frontend-evohunt-exploit route."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag v1.7.34, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.7.34",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

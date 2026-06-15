@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that setting the EDITOR environment variable to a malicious script results in arbitrary command execution when 'curio config edit' is invoked. The malicious editor script was successfully executed, creating a proof-of-concept file that demonstrates code execution with curio process privileges.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a malicious EDITOR environment variable causes arbitrary script execution when curio config edit is run, creating a proof file and logging the command injection success.",
+  "actual_observed_result": "The reproduction successfully executed the malicious_editor.sh script instead of a legitimate editor. The script created /tmp/command_injection_successful.txt with a message confirming arbitrary code execution. This demonstrates that an attacker controlling the EDITOR variable can execute any command with curio process privileges.",
+  "verification_method": "The verification script checks for the existence of /tmp/command_injection_successful.txt created by the malicious editor script. This file serves as proof that the injected command was executed. The test confirms that (1) EDITOR environment variable is honored, (2) no validation is performed, and (3) arbitrary commands can be executed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious editor script (/app/malicious_editor.sh) was executed",
+    "File /tmp/command_injection_successful.txt was created by the malicious script",
+    "Script output confirms: 'MALICIOUS EDITOR EXECUTED!' and 'Command injection successful!'",
+    "No validation or sanitization was performed on the EDITOR value",
+    "The exec.Command call at cmd/curio/config.go:426 executed the attacker-controlled string"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from https://github.com/filecoin-project/curio on the host and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious_editor.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

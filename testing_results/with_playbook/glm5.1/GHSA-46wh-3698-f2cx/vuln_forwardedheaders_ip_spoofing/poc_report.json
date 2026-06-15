@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass_ip_spoofing",
+  "summary": "Successfully demonstrated IP spoofing bypass using X-Forwarded-For header when ForwardedHeaders insecure mode is enabled. Requests with spoofed X-Forwarded-For headers containing allowed IPs bypassed IPAllowList restrictions, while requests without the header were blocked.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "External attackers can bypass IP-based access controls by spoofing X-Forwarded-For headers when insecure mode is enabled, gaining unauthorized access to protected resources.",
+  "actual_observed_result": "Request without X-Forwarded-For header was blocked (HTTP 403). Requests with spoofed X-Forwarded-For headers containing allowed IPs (10.0.0.1, 192.168.1.1) were accepted, demonstrating successful bypass of IPAllowList middleware.",
+  "verification_method": "Configured IPAllowList middleware allowing only 10.0.0.1 and 192.168.1.1. Enabled ForwardedHeaders insecure mode. Sent requests with and without spoofed X-Forwarded-For headers. Verified that spoofed headers were trusted and bypassed IP restrictions.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Request without X-Forwarded-For: HTTP 403 Forbidden (blocked by IPAllowList)",
+    "Request with X-Forwarded-For: 10.0.0.1: HTTP 200 OK (bypass successful)",
+    "Request with X-Forwarded-For: 192.168.1.1: HTTP 200 OK (bypass successful)",
+    "Spoofed IP addresses were accepted as client IP",
+    "IPAllowList decision based on spoofed X-Forwarded-For value"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones Traefik repository and checks out v2.11.0, mounts read-only at /target-repo",
+    "pinned_commit_or_ref": "v2.11.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that HAR replay navigates to attacker-controlled internal URLs, exposing cloud metadata endpoints that should be inaccessible.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Navigation to cloud metadata endpoint http://169.254.169.254/latest/meta-data/ should succeed and expose IAM role information in the page content, demonstrating SSRF to internal resources.",
+  "actual_observed_result": "The reproduction successfully navigated to the cloud metadata endpoint via HAR redirect, and the page content contained the expected metadata response (IAM role names), confirming the SSRF vulnerability allows access to internal network resources.",
+  "verification_method": "The PoC creates a mock cloud metadata server, loads a malicious HAR file that redirects to that server, and verifies that the page content contains the metadata response. This distinguishes successful SSRF from a generic navigation failure or HAR parsing error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console output shows successful navigation to mock metadata endpoint via HAR redirect",
+    "Page content contains the metadata response string that only the mock internal server would return",
+    "No network validation errors or redirect blocking occurred, confirming the URL was not validated before navigation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Playwright repository on the host, checks out the vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious.har",
+      "reproduction/test_ssrf.js",
+      "reproduction/mock_metadata_server.js"
+    ]
+  }
+}

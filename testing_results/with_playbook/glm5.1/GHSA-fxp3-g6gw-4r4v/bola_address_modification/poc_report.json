@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_object_level_authorization",
+  "summary": "The Docker-based reproduction confirms that an authenticated low-privilege user can successfully modify another user's address without authorization. The PoC demonstrates the complete attack flow from authentication to unauthorized modification with clear before/after evidence.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that User A (attacker) can modify User B's (victim) address data without proper authorization checks. The proof signal is successful modification of the victim's address fields (addressLine1, locality) by the attacker.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Craft CMS environment, created two test users with addresses, and demonstrated that the attacker user successfully modified the victim user's address. The before/after comparison shows the victim's address was changed from '123 Victim St' to '456 Attacker Modified Ave' without authorization.",
+  "verification_method": "The PoC script (poc_script.py) automates the complete attack flow: (1) creates attacker and victim users, (2) authenticates as attacker, (3) sends unauthorized modification request with victim's userId and addressId, (4) verifies the modification succeeded by comparing before/after states. The verification distinguishes successful unauthorized access from authentication failures or permission errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Victim's address before attack: {'addressLine1': '123 Victim St', 'locality': 'Victim City'}",
+    "Attacker successfully sent modification request with victim's userId and addressId",
+    "Victim's address after attack: {'addressLine1': '456 Attacker Modified Ave', 'locality': 'Hacked City'}",
+    "HTTP 200 OK response confirms the unauthorized modification was accepted by the server",
+    "No authorization error or permission denied message was returned"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "4.16.17",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc_script.py",
+      "reproduction/create-users.php",
+      "reproduction/init-craft.php",
+      "reproduction/verify_fix.py"
+    ]
+  }
+}

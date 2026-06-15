@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that the OAuth introspection validator accepts tokens with a mismatched audience. A mock OAuth server returns an introspection response with audience https://wrong-resource.example.com, while the MCP server is configured to expect https://mcp-server.example.com. Despite this mismatch, the server accepts the token and processes the initialize request successfully.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The MCP server should reject the initialize request with HTTP 401 because the token's audience does not match the configured audience. Instead, the server returns HTTP 200 with a valid MCP initialize response, confirming complete authentication bypass.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the framework, started the mock OAuth introspection server and MCP server, sent an initialize request with a Bearer token whose audience was wrong-resource.example.com, and the MCP server returned HTTP 200 with a valid JSON-RPC initialize response, accepting the mismatched-audience token.",
+  "verification_method": "The exploit first confirms that unauthenticated requests are rejected (HTTP 401), then sends a request with a Bearer token that is introspected by the mock server. The mock server returns an active token with audience https://wrong-resource.example.com while the MCP server is configured for https://mcp-server.example.com. If the server returns HTTP 200 (not 401), the audience validation is confirmed missing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Mock OAuth server received the introspection request and returned active=true with aud=https://wrong-resource.example.com.",
+    "MCP server accepted the initialize request with HTTP 200 despite the audience mismatch.",
+    "The exploit script confirmed the vulnerability by checking that the response status was 200 (not 401)."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.2.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/mock-oauth-server.mjs",
+      "reproduction/test-server.mjs",
+      "reproduction/exploit.mjs"
+    ]
+  }
+}

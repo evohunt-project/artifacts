@@ -1,0 +1,88 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T09:44:22.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b3f90743",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-qpv2-rwc8-c993/GHSA-qpv2-rwc8-c993.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "idor-extclient-wg-key",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b3f90743/idor-extclient-wg-key",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b3f90743/idor-extclient-wg-key/vulnerability_report.json",
+      "title": "IDOR on ext-client endpoints allows any authenticated user to read WireGuard private keys",
+      "vulnerability_type": "idor",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes an IDOR vulnerability in ext-client CRUD endpoints where SecurityCheck uses no-op permission checks. The advisory describes a JWT signature verification bypass in VerifyHostToken (logic/jwts.go) where token.Valid is not checked after jwt.ParseWithClaims. While the IDOR finding mentions JWT authentication in the exploit path, the root cause is different: no-op permission checks vs. missing signature validation. The vulnerable code locations (controllers/ext_client.go, logic/security.go) differ from the advisory's vulnerable function (logic/jwts.go).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "H",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:N/SC:H/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "sql-injection-sqlite-delete",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b3f90743/sql-injection-sqlite-delete",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b3f90743/sql-injection-sqlite-delete/vulnerability_report.json",
+      "title": "SQL injection in SQLite DELETE path via string-concatenated key parameter",
+      "vulnerability_type": "sql_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes a SQL injection vulnerability in database/sqlite.go where the DELETE statement is constructed via string concatenation. The advisory describes a JWT signature verification bypass in logic/jwts.go. These are completely different vulnerability types (SQL injection vs. authentication bypass), different vulnerable code locations, and different root causes.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code/root cause. The advisory describes a JWT signature verification bypass in Netmaker's VerifyHostToken function (logic/jwts.go) where token.Valid is not checked after jwt.ParseWithClaims, allowing attackers to forge host tokens and read host configurations including bcrypt-hashed passwords, MQTT credentials, and WireGuard peer data. The two qualifying findings describe: (1) an IDOR vulnerability in ext-client endpoints via no-op permission checks, and (2) a SQL injection in SQLite DELETE operations. Neither identifies the VerifyHostToken signature verification flaw, the same vulnerable function/class (logic/jwts.go), or the same missing guard (token.Valid check).",
+    "evidence": [
+      "Advisory vulnerability: JWT signature verification bypass in logic/jwts.go VerifyHostToken function",
+      "Advisory root cause: Missing token.Valid check after jwt.ParseWithClaims",
+      "Advisory impact: Forged host tokens allow reading host configurations with credentials",
+      "Finding 1 (idor-extclient-wg-key): IDOR via no-op permission checks in ext-client endpoints - different vulnerability type, different code location (controllers/ext_client.go, logic/security.go)",
+      "Finding 2 (sql-injection-sqlite-delete): SQL injection in SQLite DELETE - different vulnerability type, different code location (database/sqlite.go)"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b3f90743/idor-extclient-wg-key",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b3f90743/idor-extclient-wg-key/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b3f90743/idor-extclient-wg-key/poc_report.json",
+      "poc_report_status": "not_attempted"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b3f90743/sql-injection-sqlite-delete",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b3f90743/sql-injection-sqlite-delete/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b3f90743/sql-injection-sqlite-delete/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

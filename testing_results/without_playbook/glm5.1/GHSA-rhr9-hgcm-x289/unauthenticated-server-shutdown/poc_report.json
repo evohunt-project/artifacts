@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated POST request to /api/server/shutdown terminates the Netmaker server process, causing a complete denial of service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending an unauthenticated POST request to /api/server/shutdown should cause the Netmaker server to shut down immediately, making the health endpoint unreachable.",
+  "actual_observed_result": "Running the reproduction built the Netmaker binary from source, started the server on port 8081 (confirmed via GET /api/server/health returning 'Server is up and running!!'), sent an unauthenticated POST to /api/server/shutdown which returned HTTP 200 with body 'received api call to shutdown server, sending interruption...', and the server process terminated within seconds. The subsequent health check confirmed the server was no longer responding.",
+  "verification_method": "The verification script first confirms the server health endpoint is responding before the attack, then sends the unauthenticated shutdown request, and finally checks that the health endpoint is no longer reachable. The shutdown is verified by both the response body containing 'sending interruption' and the health endpoint becoming unreachable after the attack.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server health endpoint returned 'Server is up and running!!' before the attack, confirming the server was running.",
+    "The POST /api/server/shutdown returned HTTP 200 with body 'received api call to shutdown server, sending interruption...' confirming the shutdown handler executed without authentication.",
+    "Server logs showed 'Stopping the REST server...' and 'REST Server closed.' immediately after the shutdown request.",
+    "The server process terminated and the health endpoint became unreachable after the unauthenticated shutdown request."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "18c41f18098ca0cd81e334404ad7104c116d560c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/dev.yaml"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The PoC successfully demonstrates JWT authentication bypass by exploiting unverified claims used for JWKS endpoint resolution. A self-signed JWT with malicious issuer claim achieves complete authentication bypass.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that an attacker can craft a JWT with malicious issuer claim, serve a malicious JWKS from their controlled server, and successfully authenticate to a protected endpoint that requires JWT authentication.",
+  "actual_observed_result": "The PoC successfully created a self-signed JWT with malicious 'iss' claim, started an attacker-controlled JWKS server, and achieved authentication bypass on a protected endpoint. The JWT was verified against the attacker's public key fetched from the malicious JWKS endpoint.",
+  "verification_method": "The PoC verifies success by checking that the protected endpoint returns HTTP 200 (authorized) when accessed with the malicious JWT, demonstrating complete authentication bypass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Attacker JWKS server successfully started and served public key",
+    "Malicious JWT crafted with attacker-controlled issuer claim",
+    "Heimdall fetched JWKS from attacker server (confirmed via server logs)",
+    "Protected endpoint returned HTTP 200 with malicious JWT, confirming authentication bypass",
+    "Heimdall logs show JWKS fetch from attacker URL"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Heimdall repository on the host, checks out the vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/attacker_jwks_server.py",
+      "reproduction/exploit.py",
+      "reproduction/demo.py",
+      "reproduction/internal_server.py",
+      "reproduction/config.yaml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

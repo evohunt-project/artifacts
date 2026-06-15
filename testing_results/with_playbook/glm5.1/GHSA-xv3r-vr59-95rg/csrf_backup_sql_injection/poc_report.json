@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "csrf_sql_injection",
+  "summary": "The Docker-based reproduction confirms that the CSRF-exempt backup restore endpoint accepts a crafted ZIP upload containing arbitrary SQL and executes it in the database without CSRF token verification, enabling full database compromise via cross-origin request forgery.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted backup ZIP to be uploaded to the CSRF-exempt restore endpoint, the contained SQL to be executed by DbBackup::restore(), and a proof-of-concept marker table to be created in the database confirming arbitrary SQL execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started the CI4 CMS with MariaDB, installed the CMS via the installer endpoint, logged in as the created admin user, uploaded a crafted backup ZIP containing proof SQL via the CSRF-exempt /backend/backup/restore endpoint, and verified that the proof marker table was created in the database.",
+  "verification_method": "After uploading the malicious backup ZIP via curl to the CSRF-exempt endpoint, the verification script queries the database directly for the proof marker table ci4ms_evhunt_proof. The check distinguishes successful SQL injection from a generic HTTP error or backup upload failure by confirming the specific proof string EVOHUNT_CSRF_SQL_INJECTION_PROOF exists in the database.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The backup restore endpoint returned a redirect (302) after processing the ZIP, indicating the upload was accepted and the restore code path was executed.",
+    "The proof marker table ci4ms_evhunt_proof was found in the database with the exact proof string EVOHUNT_CSRF_SQL_INJECTION_PROOF.",
+    "The SQL injection proof row was created without any CSRF token, confirming the CSRF exception on the backup restore endpoint."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction requires internet access to download Composer dependencies during CMS setup.",
+    "The CMS setup step takes several minutes to complete due to Composer dependency installation."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/setup_cms.sh",
+      "reproduction/create_admin.php",
+      "reproduction/create_exploit.py",
+      "reproduction/exploit.py"
+    ]
+  }
+}

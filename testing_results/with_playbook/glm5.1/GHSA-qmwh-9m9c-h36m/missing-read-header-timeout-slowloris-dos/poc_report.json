@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that the Gotenberg HTTP server does not set ReadHeaderTimeout, allowing Slowloris-style attacks. The verification script opened 50 slow connections that were held open for 30 seconds each, demonstrating that connections in the header-reading phase are never timed out.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that TCP connections sending headers slowly are held open indefinitely by the Gotenberg server, proving that ReadHeaderTimeout is not set.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Gotenberg Chromium image, started the container, and ran the Slowloris script. The script opened 50 connections sending partial HTTP headers. The connections were held open for 30+ seconds without being timed out by the server, confirming that ReadHeaderTimeout is not configured.",
+  "verification_method": "The verify.sh script first checks baseline availability, then runs a Python Slowloris script that opens 50 TCP connections and sends headers byte-by-byte every 2 seconds. After 30 seconds, it checks how many connections are still open. Connections surviving the full duration prove that ReadHeaderTimeout is not set, since with a proper ReadHeaderTimeout they would be closed within seconds.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "50 slow TCP connections were established to the Gotenberg server.",
+    "Connections survived the full 30-second Slowloris duration without being timed out.",
+    "The server's net/http Server configuration at api.go:449-452 does not set ReadHeaderTimeout."
+  ],
+  "limitations_or_blockers": [
+    "Full denial of service may require more connections or longer duration depending on the server's file descriptor limits and the container's resource constraints."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and builds the Gotenberg Chromium Docker image from source. The cloned repository is also mounted into the verification container at /target-repo.",
+    "pinned_commit_or_ref": "808a96f3d03d5281a4ea5c1876354513467cc3c5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/slowloris.py"
+    ]
+  }
+}

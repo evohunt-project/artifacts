@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that ImageMath.unsafe_eval() allows arbitrary code execution through callable keyword arguments that bypass all security restrictions, executing attacker-controlled code with full Python context.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should execute arbitrary Python code through unsafe_eval() by passing a malicious lambda function, resulting in system command execution and proof file creation.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the container, executed the exploit script that passed a malicious callable to ImageMath.unsafe_eval(), successfully created /tmp/exploit_proof.txt with proof markers, and executed system commands.",
+  "verification_method": "The exploit script creates a proof file at /tmp/exploit_proof.txt containing the marker 'EVOTHUNT_EXPLOIT_SUCCESSFUL' and writes output from os.system() calls. The script checks for file existence and marker presence to confirm exploitation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof file /tmp/exploit_proof.txt was created with expected marker string.",
+    "System command execution was confirmed through os.system() output in proof file.",
+    "The lambda function executed in unrestricted Python context bypassing all security filters.",
+    "Container logs show successful exploitation without errors or security blocks."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

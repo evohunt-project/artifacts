@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction demonstrates that when ENGRAM_API_TOKEN environment variable is not set, the HTTP server accepts unauthenticated requests and allows arbitrary content injection via the /learn endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should successfully inject malicious content into the knowledge graph via an unauthenticated POST request to /learn, demonstrating complete authentication bypass when ENGRAM_API_TOKEN is not configured.",
+  "actual_observed_result": "The reproduction successfully demonstrated that the HTTP server accepts unauthenticated requests to /learn when ENGRAM_API_TOKEN is not set, and the injected content was stored in the knowledge graph and retrievable via /query endpoint.",
+  "verification_method": "The run script starts the engram HTTP server without ENGRAM_API_TOKEN, sends an unauthenticated POST request to /learn with malicious content, then queries the graph to verify the content was injected and persists in the database.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP server started successfully without authentication requirement (checkAuth returned true)",
+    "Unauthenticated POST to /learn returned 201 Created status",
+    "Subsequent GET to /query endpoint returned the injected malicious content in query results",
+    "Knowledge graph database (.engram/graph.db) contains the injected content after server shutdown"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_injection.sh"
+    ]
+  }
+}

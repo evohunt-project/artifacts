@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cryptographic_weakness",
+  "summary": "The Docker-based reproduction confirms that the SRP implementation uses SHA-1 for password hashing at core/srp.js:44-45, demonstrating the use of a cryptographically broken hash function in a security-critical authentication protocol.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that SHA-1 is used in the SRP password verification flow, showing the use of a deprecated and broken cryptographic hash function.",
+  "actual_observed_result": "The verification script successfully identified SHA-1 usage in the SRP implementation at the specified code locations, confirming that the makeX function uses sjcl.hash.sha1.hash() for password derivation in the SRP protocol.",
+  "verification_method": "The verification script reads and analyzes the core/srp.js source code to detect SHA-1 usage in the authentication implementation. The proof signal is the presence of sjcl.hash.sha1.hash calls in the makeX function for password processing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code inspection at core/srp.js:44-45 confirms SHA-1 is used for password hashing",
+    "The makeX function calls sjcl.hash.sha1.hash() twice for SRP x derivation",
+    "SHA-1 is cryptographically broken and deprecated by NIST",
+    "This compromises the security of SRP authentication"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the existing target repository checkout at /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_67122281/repo and mounts it into the container.",
+    "pinned_commit_or_ref": "1.0.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T17:24:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6cf6a998",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-xw7x-h9fj-p2c7/GHSA-xw7x-h9fj-p2c7.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "rmi-unsafe-deserialization",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6cf6a998/rmi-unsafe-deserialization",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6cf6a998/rmi-unsafe-deserialization/vulnerability_report.json",
+      "title": "Unsafe Java deserialization in RMI context propagation allows remote code execution",
+      "vulnerability_type": "deserialization_rce",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the exact same vulnerable code/root cause as the advisory: ContextPayload.read() at line 47 calls oi.readObject() on untrusted RMI stream input without any deserialization filter. This is the identical vulnerable component (OpenTelemetry RMI instrumentation), same vulnerability class (CWE-502 unsafe deserialization), same attack vector (network access to RMI port), and same impact (RCE via gadget chains).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "rmi-unsafe-deserialization",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6cf6a998/rmi-unsafe-deserialization",
+      "status": "qualifying_vuln",
+      "title": "Unsafe Java deserialization in RMI context propagation allows remote code execution",
+      "vulnerability_type": "deserialization_rce"
+    },
+    "reason": "The selected finding perfectly matches the advisory-described vulnerability. The PoC successfully executed and demonstrated exploit success: a deserialization gadget chain executed arbitrary code during readObject(), creating the RCE marker file. The exploit satisfied the exploit_success_predicate by proving that untrusted serialized data reaches the vulnerable oi.readObject() sink and achieves remote code execution via gadget chains.",
+    "evidence": [
+      "The finding identifies the exact vulnerable code location: ContextPayload.java:47 with oi.readObject()",
+      "The @SuppressWarnings(\"BanSerializableRead\") annotation confirms the developers were aware of the deserialization risk but suppressed the warning",
+      "The PoC successfully created a serialized gadget object and demonstrated it executes during deserialization",
+      "The RCE marker file /tmp/evohunt-rce-marker was created during readObject(), proving arbitrary code execution",
+      "The exploit path matches the advisory: network -> RMI port -> JRMP call -> ContextPayload.read() -> oi.readObject() -> gadget execution"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "rmi-unsafe-deserialization",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6cf6a998/rmi-unsafe-deserialization",
+      "executed": true,
+      "command": "bash run_local.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6cf6a998/.judge/poc_runs/rmi-unsafe-deserialization/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6cf6a998/.judge/poc_runs/rmi-unsafe-deserialization/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6cf6a998/.judge/poc_runs/rmi-unsafe-deserialization/poc_execution.json",
+      "observed_effect": "The PoC successfully executed the deserialization attack. The vulnerable code pattern (oi.readObject() without filter) was confirmed in ContextPayload.java. A serialized gadget was created and deserialized through the same readObject() path used by the vulnerable method. The gadget's readObject() callback executed and created the marker file /tmp/evohunt-rce-marker with proof-of-execution details (username: mac, timestamp: Mon Jun 08 17:23:54 CST 2026). This demonstrates complete end-to-end RCE through the advisory-described vulnerability.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

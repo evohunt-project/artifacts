@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution",
+  "summary": "The Docker-based reproduction confirms that the incomplete prototype pollution protection in set-in can be bypassed using Object.prototype method names, allowing an attacker to pollute Function.prototype and affect all functions globally.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that setIn({}, ['toString', 'call', 'evilProp'], 'EVIL_PAYLOAD') successfully pollutes Function.prototype.call.evilProp with the attacker-controlled payload, affecting all JavaScript functions.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository, installed dependencies, executed the exploit script, and confirmed that Function.prototype.call.evilProp was set to 'EVIL_PAYLOAD'. The exploit demonstrated global impact by showing innocentFunction.call.evilProp and Array.prototype.map.call.evilProp also contained the payload.",
+  "verification_method": "The exploit script checks that Function.prototype.call.evilProp === 'EVIL_PAYLOAD' after calling setIn with the malicious path, and verifies that innocentFunction.call.evilProp and Array.prototype.map.call.evilProp also contain the payload, proving global impact.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Function.prototype.call.evilProp was successfully set to 'EVIL_PAYLOAD' through the bypass",
+    "The pollution affected all functions: innocentFunction.call.evilProp and Array.prototype.map.call.evilProp both contained the payload",
+    "The incomplete POLLUTED_KEYS blocklist (only __proto__, constructor, prototype) failed to prevent Object.prototype method names from being used in the attack path"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out version 2.0.3, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2.0.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

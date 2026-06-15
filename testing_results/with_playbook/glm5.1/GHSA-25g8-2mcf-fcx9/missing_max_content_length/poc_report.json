@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that the Flask application accepts arbitrarily large request bodies without any size limit. A 5MB POST body was accepted with HTTP 202, proving that MAX_CONTENT_LENGTH is not configured. A properly configured Flask application would reject this with HTTP 413 (Request Entity Too Large).",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the Flask application accepts a 5MB request body with HTTP 202 instead of rejecting it with HTTP 413 (Request Entity Too Large). This proves MAX_CONTENT_LENGTH is not set, enabling unbounded memory consumption and denial of service.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, started a Flask app mirroring the import endpoint pattern from changedetection.io, confirmed MAX_CONTENT_LENGTH is None (unlimited), sent a normal 3-URL request (accepted with HTTP 202), then sent a 5MB request body containing 43,329 URLs which was also accepted with HTTP 202. The server read the entire 5,242,809 bytes into memory without any limit.",
+  "verification_method": "The exploit script verifies that Flask's MAX_CONTENT_LENGTH is None, then sends two requests: a normal-sized request and a 5MB request. Both are accepted with HTTP 202, confirming no body size limit exists. A protected Flask app would return HTTP 413 for the large request if MAX_CONTENT_LENGTH were configured.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Flask MAX_CONTENT_LENGTH confirmed as None (unlimited), matching flask_app.py:61 which never sets this configuration.",
+    "Normal request (66 bytes, 3 URLs) accepted with HTTP 202.",
+    "Large request (5,242,809 bytes / 5.0 MB, 43,329 URLs) accepted with HTTP 202, body_size confirmed as 5,242,809 bytes read into memory.",
+    "The server accepted both requests identically, proving no request body size limit exists."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0.54.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

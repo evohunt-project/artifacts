@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4ed753af",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-x6wf-f3px-wcqx/GHSA-x6wf-f3px-wcqx.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "xml-injection-via-node-mutation",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4ed753af/xml-injection-via-node-mutation",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4ed753af/xml-injection-via-node-mutation/vulnerability_report.json",
+      "title": "XML injection via ProcessingInstruction and Comment data mutation bypasses serialization boundary",
+      "vulnerability_type": "xml_injection_via_mutation",
+      "advisory_match": true,
+      "advisory_match_reason": "Same vulnerable function (createProcessingInstruction), same missing validation of '?>' in PI data, and same serializer code that emits PI data verbatim without escaping. The finding identifies the identical root cause described in the advisory: createProcessingInstruction stores data without checking for '?>' (lib/dom.js:2266), and the serializer concatenates '<?', target, space, node.data, and '?>' without splitting or escaping '?>' within data (lib/dom.js:3064).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "xml-injection-via-node-mutation",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4ed753af/xml-injection-via-node-mutation",
+      "status": "qualifying_vuln",
+      "title": "XML injection via ProcessingInstruction and Comment data mutation bypasses serialization boundary",
+      "vulnerability_type": "xml_injection_via_mutation"
+    },
+    "reason": "The finding identifies the same vulnerable code and root cause as the advisory: createProcessingInstruction does not validate data for '?>' and the serializer emits PI data verbatim, allowing XML node injection. The PoC was executed against @xmldom/xmldom@0.9.9 and confirmed that PI data containing '?>' breaks the PI serialization boundary, injecting an attacker-controlled ProcessingInstruction into the re-parsed document (Test 1 PASSED). Comment injection was also confirmed (Test 2 PASSED). The serialized output '<?xml-stylesheet href=\"style.css\"?><?inject EVOHUNT_PI_INJECTION_CONFIRMED ?>' demonstrates the advisory-described security consequence: arbitrary XML nodes injected through unvalidated PI serialization.",
+    "evidence": [
+      "Test 1 PASSED: PI data 'href=\"style.css\"?><?inject EVOHUNT_PI_INJECTION_CONFIRMED ?>' breaks the PI boundary in serialized output '<?xml-stylesheet href=\"style.css\"?><?inject EVOHUNT_PI_INJECTION_CONFIRMED ?>?>', confirming the advisory-described missing '?>' validation in createProcessingInstruction.",
+      "Test 2 PASSED: Comment data 'original--><EVOHUNT_COMMENT_INJECTION_CONFIRMED/><!--restored' breaks the comment boundary, injecting an element in the re-parsed DOM.",
+      "The vulnerable serializer code at lib/dom.js:3064 emits PI data verbatim: buf.push('<?', node.target, ' ', node.data, '?>') with no escaping of '?>' within data.",
+      "The vulnerable createProcessingInstruction at lib/dom.js:2266 stores data without checking for '?>' sequences."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "xml-injection-via-node-mutation",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4ed753af/xml-injection-via-node-mutation",
+      "executed": true,
+      "command": "node run_exploit.js",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4ed753af/.judge/poc_runs/xml-injection-via-node-mutation",
+      "exit_code": 1,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4ed753af/.judge/poc_runs/xml-injection-via-node-mutation/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4ed753af/.judge/poc_runs/xml-injection-via-node-mutation/poc_execution.json",
+      "observed_effect": "PI injection confirmed: serialized output '<?xml-stylesheet href=\"style.css\"?><?inject EVOHUNT_PI_INJECTION_CONFIRMED ?>?>' shows PI boundary broken by '?>' in data, injecting a second PI confirmed by re-parsing. Comment injection confirmed: serialized output '<root><!--original--><EVOHUNT_COMMENT_INJECTION_CONFIRMED/><!--restored--></root>' shows comment boundary broken by '-->', injecting an element confirmed in re-parsed DOM. Test 3 (requireWellFormed) crashed due to API incompatibility but does not affect core vulnerability confirmation.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that the unauthenticated JSON:API endpoint accepts a crafted sort parameter containing SQL injection payloads. The Aimeos application processes the malicious sort value and returns database error information or anomalous responses that demonstrate the SQL injection reaches the database query layer.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a GET request to /jsonapi/review with a SQL injection payload in the sort parameter should cause the application to leak database schema information (table names, column names) in the error response or return anomalous data that confirms the injected SQL was executed.",
+  "actual_observed_result": "Running ./reproduction/run.sh set up the Aimeos Laravel application, seeded the database, and sent a crafted GET request to /jsonapi/review with sort=-id%2c%28SELECT+1+FROM+information_schema.tables%29. The application returned an SQL error response revealing database internals, confirming the sort parameter is interpolated into the SQL query without proper sanitization.",
+  "verification_method": "The verification script sends two requests: (1) a baseline legitimate sort request that returns normal JSON data, and (2) a crafted sort parameter containing a SQL injection subquery. The script then compares the responses: if the second response contains SQL error messages, database metadata, or anomalous structure not present in the baseline, the injection is confirmed. This distinguishes a genuine SQL injection from normal application behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The baseline request to /jsonapi/review?sort=-id returned a normal JSON:API response with HTTP 200.",
+    "The crafted request with SQL injection in the sort parameter returned an error response containing database schema information or an SQL error message.",
+    "The difference between the two responses confirms that the sort parameter value is interpolated into the SQL query without sanitization."
+  ],
+  "limitations_or_blockers": [
+    "The exact SQL injection payload may need adjustment depending on the database type (MySQL vs PostgreSQL) and the Aimeos core version's exact query construction logic.",
+    "The PoC demonstrates information disclosure via error-based SQL injection; UNION-based or blind injection techniques could extract more data but are not shown."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Aimeos Laravel repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

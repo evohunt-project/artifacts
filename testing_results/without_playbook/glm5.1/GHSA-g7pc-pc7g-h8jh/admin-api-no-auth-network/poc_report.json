@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that when Caddy's admin API is configured to listen on a network interface (0.0.0.0:2019), unauthenticated attackers can access the admin endpoint, read sensitive configuration, modify routing rules, and achieve complete server takeover.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that an unauthenticated network attacker can read the Caddy configuration, modify routing rules to serve attacker-controlled content, and effectively take over the server.",
+  "actual_observed_result": "Running ./reproduction/run.sh built Caddy from source, started it with a vulnerable configuration exposing the admin API on 0.0.0.0:2019, and successfully demonstrated unauthenticated configuration disclosure, configuration modification, and server takeover through route manipulation.",
+  "verification_method": "The exploit script performs three operations without authentication: (1) reads the current configuration via GET /config/, (2) modifies the configuration via POST /load with a malicious route, and (3) verifies the modified configuration is active by querying the HTTP server. Success is confirmed when all three operations complete and the modified content is served.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Admin API responded to unauthenticated GET /config/ request with full configuration disclosure",
+    "Admin API accepted unauthenticated POST /load request modifying server routes",
+    "HTTP server served attacker-controlled content after configuration modification",
+    "No authentication tokens, credentials, or special headers were required for any operation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.8.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/vulnerable_config.json",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

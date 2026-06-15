@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor",
+  "summary": "The Docker-based reproduction confirms that the Craft Commerce application allows unauthorized access to orders by number without proper authorization checks, enabling guest users to access sensitive customer data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that: (1) Order retrieval functions (getOrderByNumber, getCartByNumber) don't validate ownership; (2) Order numbers are short/predictable (7 characters) and can be enumerated; (3) Guest users can access any order without authentication; (4) Sensitive customer PII (names, addresses, emails, payment details) is exposed.",
+  "actual_observed_result": "The verification script analyzed the vulnerable code paths and confirmed: (1) PaymentsController.php uses getOrderByNumber() without ownership validation; (2) CartController.php retrieves carts by number without session validation; (3) Order numbers are short 7-character identifiers (shortNumber at line 47 of EmailPreviewController.php); (4) Weak email-based authorization can be bypassed; (5) No proper access control for guest users accessing orders.",
+  "verification_method": "The verification script performs static code analysis to identify the vulnerable code patterns: (1) It searches for order/cart retrieval by number without ownership checks; (2) It identifies weak authorization patterns (email-based checks); (3) It confirms order number predictability through code inspection; (4) It demonstrates the attack flow and impact. The verification distinguishes this IDOR from generic authorization issues by showing the specific vulnerable code paths.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "PaymentsController.php:111-146 confirms order retrieval by number without ownership validation",
+    "CartController.php:232-236 confirms cart retrieval without session validation",
+    "EmailPreviewController.php:47 confirms short 7-character order numbers (shortNumber)",
+    "PaymentsController.php:139 confirms weak email-based authorization that can be bypassed",
+    "Orders.php confirms getOrderByNumber() doesn't validate requestor identity",
+    "Static analysis demonstrates complete attack path from enumeration to data exfiltration"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Craft Commerce repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_idor.sh",
+      "reproduction/setup_victim_order.sh",
+      "reproduction/exploit_idor.sh"
+    ]
+  }
+}

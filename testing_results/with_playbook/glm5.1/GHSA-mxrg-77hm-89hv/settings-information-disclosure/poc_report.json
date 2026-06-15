@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated HTTP GET to /rest/settings returns a JSON object containing security-relevant configuration: authentication method, SSO login URLs, enterprise license flags, setup status, SMTP status, auth cookie settings, and MFA enforcement status.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start n8n and demonstrate that an unauthenticated GET /rest/settings returns a JSON object with security-relevant fields including authenticationMethod, SSO configuration, enterprise flags, showSetupOnFirstLoad, and authCookie settings.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched n8n, then made an unauthenticated GET request to /rest/settings. The response contained security-relevant fields including the authentication method, SSO configuration with OIDC login URL, enterprise license flags, instance setup status, and cookie security settings.",
+  "verification_method": "The verify.sh script checks that at least 4 security-relevant fields are present in the unauthenticated response (authenticationMethod, showSetupOnFirstLoad, SSO configuration, enterprise flags, authCookie settings). The script parses the JSON response and enumerates all disclosed security fields, confirming the information disclosure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "An unauthenticated GET /rest/settings returned a JSON object containing security configuration.",
+    "The response included the authenticationMethod field revealing the auth infrastructure type.",
+    "The response included SSO configuration with loginEnabled flags and the OIDC login URL.",
+    "The response included the showSetupOnFirstLoad flag indicating whether the instance has been configured.",
+    "The response included authCookie.secure revealing whether session cookies require HTTPS."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref (n8n@2.14.0), and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.14.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

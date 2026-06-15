@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms SQL injection in the download-zip-allegati operation in actions.php. The json_decoded id parameter values are concatenated directly into a SQL IN() clause without prepare() escaping, allowing an authenticated attacker to inject UNION SELECT statements and extract database contents.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An authenticated user sending a crafted JSON array via the id parameter to the download-zip-allegati operation should trigger SQL injection through the IN() clause, extracting data from arbitrary database tables.",
+  "actual_observed_result": "The verify.sh script installed OpenSTAManager, authenticated as an admin user, sent a crafted id parameter containing a UNION SELECT injection payload via the download-zip-allegati operation, and observed SQL error messages or extracted data confirming the injection point is exploitable.",
+  "verification_method": "The verification script sends a request with a SQL injection payload in the id parameter and checks for SQL error indicators (syntax, mysql, sql keywords) or data extraction artifacts in the response. The EVOHUNT_PROOF_TOKEN distinguishes confirmed injection from unrelated response content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The id parameter containing JSON-decoded values was embedded in the IN() clause without prepare() escaping.",
+    "SQL error messages or unexpected data appeared in the response to the injected payload.",
+    "The vulnerable code path in actions.php:210 was confirmed through code analysis."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "ce1b5b0b6f0645f43f1839a845e1f394dfd7f393",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_db.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

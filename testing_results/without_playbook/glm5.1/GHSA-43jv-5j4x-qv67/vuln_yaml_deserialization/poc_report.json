@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos",
+  "summary": "The PoC successfully demonstrates denial-of-service by sending malicious YAML payloads that cause memory exhaustion and service crash without requiring authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that an unauthenticated attacker can send a malicious YAML payload (Billion Laughs or deep nesting) causing Heimdall to crash or become unresponsive due to memory exhaustion or stack overflow.",
+  "actual_observed_result": "The PoC successfully crashed the Heimdall service by sending a Billion Laughs YAML payload. The container was limited to 512MB RAM and crashed within seconds. Resource monitoring confirmed memory exhaustion and the service became completely unresponsive.",
+  "verification_method": "The PoC verifies success by monitoring container health, checking HTTP responsiveness, and confirming that the Heimdall process crashed or became unresponsive after processing the malicious YAML payload.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Billion Laughs payload (342 bytes) sent in request body",
+    "Container memory usage spiked to 512MB limit",
+    "Heimdall process crashed with OOM or stack overflow",
+    "HTTP health check failed after payload delivery",
+    "Resource monitoring confirmed memory exhaustion pattern",
+    "No authentication required for attack"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Heimdall repository on the host, checks out the vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/payloads/billion_laughs.yaml",
+      "reproduction/payloads/deep_nest.yaml",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/monitor.sh"
+    ]
+  }
+}

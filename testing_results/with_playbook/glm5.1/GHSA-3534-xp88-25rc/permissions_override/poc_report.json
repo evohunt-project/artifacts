@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "privilege_escalation",
+  "summary": "Docker-based reproduction confirms that authenticated non-read-only user can override permissions in agent endpoint request to perform unauthorized destructive operations.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Authenticated non-read-only user should be able to perform destructive database operations (e.g., delete class) by providing elevated permissions in request body.",
+  "actual_observed_result": "Successfully performed unauthorized destructive operation by providing permissions object with deleteClass permission. Operation completed despite user's limited actual privileges.",
+  "verification_method": "Automated check verifies: (1) User authenticates with valid credentials, (2) POST to /apps/:appId/agent with elevated permissions succeeds, (3) Destructive operation (deleteClass) is performed, (4) User's actual permissions would not allow this operation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Successful authentication with non-admin user credentials",
+    "POST request to agent endpoint with permissions override",
+    "Destructive database operation completed successfully",
+    "Privilege escalation confirmed through unauthorized operation execution"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v9.0.0-alpha.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc_exploit.py",
+      "reproduction/manual_exploit.sh"
+    ]
+  }
+}

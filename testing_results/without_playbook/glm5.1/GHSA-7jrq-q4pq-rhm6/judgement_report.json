@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T09:24:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_5dbab726",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-7jrq-q4pq-rhm6/GHSA-7jrq-q4pq-rhm6.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "path-traversal-snapshot-chunk",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_5dbab726/path-traversal-snapshot-chunk",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_5dbab726/path-traversal-snapshot-chunk/vulnerability_report.json",
+      "title": "Path traversal in SendSnapshot RPC allows arbitrary file write via unsanitized chunk filename",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes a path traversal vulnerability in kv_pebble.go AddChunk due to missing sanitization of SnapshotChunk.Name. The advisory describes a TLS CA certificate chain validation failure in common/security/tls.go trustedCertPool() which only parses the first PEM block. The root causes, vulnerable code locations, and vulnerability classes (CWE-22 path traversal vs. CWE-295 improper certificate validation) are entirely different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or root cause. The advisory describes a TLS CA certificate chain validation failure in common/security/tls.go where trustedCertPool() only parses the first PEM block from multi-certificate CA bundles (CWE-295). The sole qualifying finding describes a path traversal in kv_pebble.go where unsanitized SnapshotChunk.Name reaches os.OpenFile via filepath.Join (CWE-22). These are different vulnerabilities in different code with different root causes.",
+    "evidence": [
+      "Advisory root cause: trustedCertPool() in common/security/tls.go calls pem.Decode() only once, discarding additional PEM certificates in CA bundle files.",
+      "Finding root cause: AddChunk in kv_pebble.go:809 passes unsanitized SnapshotChunk.Name to os.OpenFile via filepath.Join, enabling path traversal.",
+      "Different vulnerable code files: tls.go vs kv_pebble.go, follower_controller.go, internal_rpc_server.go.",
+      "Different CWE classes: CWE-295 (Improper Certificate Validation) vs CWE-22 (Path Traversal).",
+      "No overlap in function, endpoint, parser state, sanitizer bypass, or security check between the advisory and the finding."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_5dbab726/path-traversal-snapshot-chunk",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_5dbab726/path-traversal-snapshot-chunk/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_5dbab726/path-traversal-snapshot-chunk/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

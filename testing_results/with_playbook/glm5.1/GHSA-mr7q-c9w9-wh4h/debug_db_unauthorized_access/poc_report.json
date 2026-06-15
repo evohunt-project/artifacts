@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authorization",
+  "summary": "The Docker-based reproduction confirms that debug database access methods can be called without authentication when the debug namespace is exposed, demonstrating unauthorized data access.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Unauthenticated JSON-RPC calls to debug_dbGet, debug_dbAncient, and debug_dbAncients should successfully access database contents without returning authentication errors.",
+  "actual_observed_result": "The reproduction demonstrates: (1) Geth node starts with debug API exposed on HTTP port 8545, (2) Python script successfully calls debug_dbGet without authentication credentials, (3) Methods return data or valid error messages (not authentication errors), (4) No JWT token or authentication required to invoke debug database methods.",
+  "verification_method": "The attack script attempts to call debug database methods via unauthenticated HTTP requests. Success is confirmed if methods respond with data or database errors (not authentication errors), proving authorization is missing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Geth node configured with --http.api=debug,eth,net exposes debug namespace",
+    "HTTP requests to debug_dbGet succeed without Authorization header or JWT token",
+    "Methods return 'database not found' or data errors, not 'unauthorized' errors",
+    "No authentication middleware intercepts debug database calls",
+    "Direct database access confirmed via unauthenticated RPC channel"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.13.5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/attack.py",
+      "reproduction/verify_exploit.sh"
+    ]
+  }
+}

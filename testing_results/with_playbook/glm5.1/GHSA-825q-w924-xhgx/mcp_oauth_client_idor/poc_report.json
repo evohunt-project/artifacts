@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass_idor",
+  "summary": "Docker-based reproduction confirms that an authenticated user with mcp:oauth scope can delete OAuth clients owned by other users without authorization verification.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "User A creates an OAuth client, User B authenticates with separate account having mcp:oauth scope, User B deletes User A's OAuth client by ID, demonstrating unauthorized deletion through missing ownership check.",
+  "actual_observed_result": "The reproduction script successfully created OAuth client for User A, authenticated User B with mcp:oauth permissions, and User B deleted User A's client without ownership verification. The deletion was confirmed via API response and client absence after deletion.",
+  "verification_method": "The run script executes the full IDOR attack chain and verifies: (1) User A client creation success, (2) User B authentication with mcp:oauth scope, (3) User B deletion of User A's client succeeds, (4) Client is absent after deletion. The verification distinguishes successful unauthorized deletion from permission denied or not found errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "User A OAuth client creation returned clientId X.",
+    "User B authenticated successfully with account having mcp:oauth scope.",
+    "User B DELETE request to /rest/mcp/oauth-clients/X returned 200 OK with deletion confirmation.",
+    "Subsequent GET request for client X returned 404 Not Found, confirming deletion.",
+    "No ownership check was executed in the service deletion path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository from GitHub, checks out the vulnerable version, builds the Docker image, and runs the exploit.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_vulnerability.sh",
+      "reproduction/demo_multiuser.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that the orval mock generator interpolates the OpenAPI schema `const` value directly into generated TypeScript code without escaping. A crafted const value containing single quotes breaks out of the string literal and injects arbitrary JavaScript expressions into the generated mock function.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause orval to generate a mock TypeScript file containing injected JavaScript code (a console.log call) that originated from the attacker-controlled const value in the OpenAPI spec.",
+  "actual_observed_result": "Running ./reproduction/run.sh clones orval v8.0.1, builds it from source, generates mock code from a crafted OpenAPI 3.1 spec, and the generated endpoints.ts file contains the injected console.log('EVOHUNT_CODE_INJECTION_CONFIRMED') call inside the mock function body. The const value x'+console.log('EVOHUNT_CODE_INJECTION_CONFIRMED')+'y was interpolated without escaping, producing valid JavaScript that executes when the mock is invoked.",
+  "verification_method": "The verify.sh script greps the generated mock file for the injection marker string EVOHUNT_CODE_INJECTION_CONFIRMED and confirms that console.log() with the marker appears in the generated code. This distinguishes real code injection from normal mock generation output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The generated endpoints.ts file contains the string console.log('EVOHUNT_CODE_INJECTION_CONFIRMED') inside a mock function body.",
+    "The injected expression uses the + concatenation operator to break out of the string literal: 'x'+console.log('EVOHUNT_CODE_INJECTION_CONFIRMED')+'y'.",
+    "The crafted spec passes OpenAPI 3.1 validation, confirming the exploit is practical against a spec-compliant input.",
+    "Runtime verification confirmed that calling the generated mock function executes the injected console.log, producing the marker output."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v8.0.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious-spec.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

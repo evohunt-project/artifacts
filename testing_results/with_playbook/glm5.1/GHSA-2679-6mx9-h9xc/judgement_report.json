@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T06:08:16.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1913fc91",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-2679-6mx9-h9xc/GHSA-2679-6mx9-h9xc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "mcp_stdio_rce",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1913fc91/mcp_stdio_rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1913fc91/mcp_stdio_rce/vulnerability_report.json",
+      "title": "Arbitrary command execution via MCP STDIO server configuration",
+      "vulnerability_type": "os_command_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerable code and root cause: this finding targets POST /api/kernel/save_user_config accepting MCP STDIO command configuration that is later spawned by the MCP client, while the advisory targets /terminal/ws missing WebSocket authentication before accepting a PTY shell.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described /terminal/ws authentication bypass, missing validate_auth or @requires enforcement, or PTY shell creation path. The sole qualifying finding is an open-world MCP STDIO command-spawn issue through save_user_config.",
+    "evidence": [
+      "Advisory GHSA-2679-6mx9-h9xc describes pre-auth RCE through marimo/_server/api/endpoints/terminal.py at /terminal/ws, where the endpoint accepts a WebSocket without validate_auth() and creates a PTY shell.",
+      "mcp_stdio_rce/vulnerability_report.json describes POST /api/kernel/save_user_config accepting config.mcp.mcpServers command and args, followed by MCP client auto-connection and stdio_client subprocess spawning.",
+      "The finding report's cited code locations are config.py, marimo/_server/ai/mcp/config.py, marimo/_server/ai/mcp/transport.py, and marimo/_server/ai/mcp/client.py, not the terminal WebSocket endpoint or its authentication guard."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1913fc91/mcp_stdio_rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1913fc91/mcp_stdio_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1913fc91/mcp_stdio_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

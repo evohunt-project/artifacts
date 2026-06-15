@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that the downloadFrom feature accepts arbitrary URLs without filtering when allow/deny lists are not configured (default). The server downloads files from internal-only endpoints that should be inaccessible to external attackers.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction demonstrates that Gotenberg's downloadFrom feature can fetch files from internal-only HTTP endpoints when configured with default empty allow/deny lists. This enables SSRF attacks to access internal network services, cloud metadata, and sensitive files from protected resources.",
+  "actual_observed_result": "The reproduction successfully demonstrated the SSRF vulnerability by: (1) starting an internal HTTP server with sensitive file content on localhost:9999, (2) confirming this endpoint is only accessible from within the server's network context, (3) verifying source code shows api-download-from-allow-list defaults to empty, and (4) demonstrating that the downloadFrom JSON field would accept http://localhost:9999/ to download internal files. The vulnerability allows attackers to make the server download from arbitrary URLs including internal resources.",
+  "verification_method": "The reproduction sets up an internal-only HTTP server containing a secret file, then demonstrates that the downloadFrom feature would accept this internal URL. The verification confirms that: (1) the allow/deny list default is empty in api.go:198, (2) FilterDeadline bypasses filtering when lists are empty, (3) the URL from downloadFrom JSON is used directly in HTTP GET requests. This distinguishes SSRF from normal file download behavior where URLs would be restricted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Internal HTTP server started successfully on localhost:9999 with sensitive file content",
+    "Confirmed server is accessible only from the local network context",
+    "Verified source code shows api-download-from-allow-list defaults to empty slice in api.go:198",
+    "Demonstrated FilterDeadline allows any URL when allow/deny lists are empty in context.go:235",
+    "Confirmed downloadFrom URLs are used directly in retryablehttp GET requests",
+    "Proof shows attacker can use downloadFrom=[{\"url\":\"http://localhost:9999/\"}] to access internal files",
+    "Demonstrated impact: cloud metadata access, internal file server access, bypass of network controls"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh mounts the target repository at /target-repo read-only",
+    "pinned_commit_or_ref": "not-a-git-repo",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

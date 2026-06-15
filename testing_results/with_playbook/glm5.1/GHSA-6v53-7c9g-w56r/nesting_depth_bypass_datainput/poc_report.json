@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_constraint_bypass",
+  "summary": "The Docker-based reproduction confirms that UTF8DataInputJsonParser bypasses the StreamReadConstraints.maxNestingDepth validation. A JSON document with 2000 nesting levels is correctly rejected by the InputStream parser but fully parsed by the DataInput parser, demonstrating the constraint bypass.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The DataInput parser should throw StreamConstraintsException when nesting depth exceeds the configured maxNestingDepth of 10, matching the InputStream parser behavior. Instead, it silently parses 2000 nesting levels without error.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned jackson-core 3.1.0-rc1, built it inside a Docker container, and ran the ExploitTest. The InputStream parser correctly threw StreamConstraintsException at depth 11. The DataInput parser completed parsing 4001 tokens (2000 START_ARRAY + 1 VALUE_NUMBER_INT + 2000 END_ARRAY) without any depth validation, confirming the maxNestingDepth constraint is completely bypassed.",
+  "verification_method": "The ExploitTest constructs a 2000-level nested JSON array, configures maxNestingDepth=10, and parses it via both InputStream and DataInput. It checks that InputStream throws StreamConstraintsException (control) and that DataInput does NOT (vulnerability). The proof signal EVOHUNT_PROOF_SIGNAL:NESTING_DEPTH_BYPASS_CONFIRMED is emitted on success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "InputStream parser output: StreamConstraintsException: Document nesting depth (11) exceeds the maximum allowed (10)",
+    "DataInput parser output: VULNERABLE: DataInput parser completed parsing 4001 tokens WITHOUT enforcing maxNestingDepth",
+    "Proof signal: EVOHUNT_PROOF_SIGNAL:NESTING_DEPTH_BYPASS_CONFIRMED"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the jackson-core-3.1.0-rc1 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "jackson-core-3.1.0-rc1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/ExploitTest.java",
+      "reproduction/compile_and_run.sh",
+      "reproduction/fdp.jar"
+    ]
+  }
+}

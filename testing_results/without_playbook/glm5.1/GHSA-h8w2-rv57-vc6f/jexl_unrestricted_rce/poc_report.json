@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "expression_language_rce",
+  "summary": "The Docker-based reproduction demonstrates that the Splunk OTEL Java agent's nocode module evaluates a JEXL expression with UNRESTRICTED permissions from a controlled YAML configuration, and the expression chain this.getClass().forName('java.lang.Runtime').getMethod('getRuntime').invoke(null).exec('touch /tmp/evohunt_pwned') successfully executes the OS command inside the container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the malicious JEXL expression in the nocode YAML configuration to be evaluated when the instrumented method is called, executing 'touch /tmp/evohunt_pwned' via java.lang.Runtime.exec() and creating the proof file inside the container.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository, built the Docker image with the pre-built agent JAR and test application, launched the container with the malicious YAML config, and the JEXL expression evaluation created the file /tmp/evohunt_pwned inside the container, confirming arbitrary command execution.",
+  "verification_method": "The verify.sh script checks for the existence of /tmp/evohunt_pwned inside the container after the test application exits. This file is created exclusively by the Runtime.exec() call within the JEXL expression evaluation. The proof file path is unique to this reproduction and cannot be created by agent startup, normal instrumentation, or unrelated container processes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The file /tmp/evohunt_pwned was created inside the container, confirming that the JEXL expression successfully called java.lang.Runtime.exec().",
+    "The test application's standard output shows the instrumented method was called and the agent loaded the malicious YAML configuration.",
+    "No errors were reported during JEXL expression parsing or evaluation, confirming the reflection chain from this.getClass() through Runtime.exec() is functional with JexlPermissions.UNRESTRICTED."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the v2.26.0 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.26.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/TestApp.java",
+      "reproduction/malicious.yml"
+    ]
+  }
+}

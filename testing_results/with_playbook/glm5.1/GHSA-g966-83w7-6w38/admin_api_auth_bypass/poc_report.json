@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authorization",
+  "summary": "The PoC confirms that admin endpoints are accessible without authentication. Worker restart succeeds and causes measurable service disruption. Thread information is exposed, revealing internal state.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Unauthenticated POST to /frankenphp/workers/restart should be rejected with 401 Unauthorized. GET to /frankenphp/threads should require authentication. Both should fail access control.",
+  "actual_observed_result": "Both endpoints accept unauthenticated requests. Worker restart succeeds and causes all PHP workers to restart, disrupting service. Thread endpoint returns detailed internal state including worker names, thread indices, and states. No authentication required.",
+  "verification_method": "Automated scripts send HTTP requests without authentication headers or tokens. Verification checks that restart succeeds (not rejected) and that thread info is returned (not forbidden). Success indicates vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "POST /frankenphp/workers/restart succeeds with HTTP 200 without authentication",
+    "Worker restart log confirms all workers restarted",
+    "GET /frankenphp/threads returns JSON with thread details without authentication",
+    "Service disruption measurable during restart",
+    "No authentication required for either endpoint"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones target repository, builds Docker image with admin API exposed, mounts vulnerable code.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_restart.sh",
+      "reproduction/exploit_info.sh",
+      "reproduction/dos_attack.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

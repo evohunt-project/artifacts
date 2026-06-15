@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T09:15:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_61a15eaf",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-m272-9rp6-32mc/GHSA-m272-9rp6-32mc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "prototype-pollution-json-deserializer",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_61a15eaf/prototype-pollution-json-deserializer",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_61a15eaf/prototype-pollution-json-deserializer/vulnerability_report.json",
+      "title": "Prototype pollution via attacker-controlled deserialization metadata in RPC codec",
+      "vulnerability_type": "prototype_pollution",
+      "advisory_match": true,
+      "advisory_match_reason": "Same vulnerable function (StandardRPCJsonSerializer.deserialize), same file (packages/client/src/adapters/standard/rpc-json-serializer.ts:137-213), same root cause (no sanitization of __proto__ and constructor path segments in meta array during deserialization), and same package (@orpc/client).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "prototype-pollution-json-deserializer",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_61a15eaf/prototype-pollution-json-deserializer",
+      "status": "qualifying_vuln",
+      "title": "Prototype pollution via attacker-controlled deserialization metadata in RPC codec",
+      "vulnerability_type": "prototype_pollution"
+    },
+    "reason": "The finding identifies the same vulnerable function (StandardRPCJsonSerializer.deserialize) in the same file (packages/client/src/adapters/standard/rpc-json-serializer.ts:137-213) with the same root cause (unsanitized __proto__ path segments in the meta array). The PoC installed @orpc/client@1.13.5 (the last vulnerable version), called deserialize() with meta=[[2,'__proto__','polluted']], and confirmed Object.prototype.polluted was set to NaN. This satisfies the exploit success predicate: prototype pollution via the advisory-described RPC JSON deserializer was achieved.",
+    "evidence": [
+      "PoC installed @orpc/client@1.13.5 and imported StandardRPCJsonSerializer from @orpc/client/standard",
+      "Called serializer.deserialize({}, [[2, '__proto__', 'polluted']]) which navigated __proto__ to reach Object.prototype",
+      "After exploit: ({}).polluted = NaN confirmed via Number.isNaN()",
+      "Object.prototype pollution persists for the lifetime of the process, affecting all subsequent object property lookups"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "prototype-pollution-json-deserializer",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_61a15eaf/prototype-pollution-json-deserializer",
+      "executed": true,
+      "command": "node test-pollution.mjs",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_61a15eaf/.judge/poc_runs/prototype-pollution-json-deserializer/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_61a15eaf/.judge/poc_runs/prototype-pollution-json-deserializer/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_61a15eaf/.judge/poc_runs/prototype-pollution-json-deserializer/poc_execution.json",
+      "observed_effect": "After calling StandardRPCJsonSerializer.deserialize() with meta=[[2,'__proto__','polluted']], Object.prototype.polluted was set to NaN. The PoC confirmed Number.isNaN(({}).polluted) returns true, proving prototype pollution via the RPC JSON deserializer's unsanitized __proto__ path traversal.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

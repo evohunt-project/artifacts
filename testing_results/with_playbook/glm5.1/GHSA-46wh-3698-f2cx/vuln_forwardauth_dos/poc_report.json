@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_resource_consumption",
+  "summary": "Successfully demonstrated ForwardAuth memory exhaustion by configuring a malicious authentication service that returns large responses. Traefik's ForwardAuth middleware buffers the entire response body into memory when maxResponseBodySize is not configured, enabling DoS attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "ForwardAuth middleware consumes unbounded memory when authentication service returns large responses, leading to memory exhaustion and denial of service for all services behind Traefik.",
+  "actual_observed_result": "Traefik attempted to buffer a 1GB response from the malicious authentication service, demonstrating unlimited memory consumption. The process memory usage increased significantly during the buffering operation.",
+  "verification_method": "Configured malicious auth service returning 1GB response. Sent HTTP request triggering ForwardAuth. Monitored Traefik memory consumption with docker stats. Confirmed that response body was fully buffered into memory before any size limit was enforced.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious auth service sent 1GB response",
+    "Traefik ForwardAuth middleware initiated buffering of response",
+    "Memory consumption increased significantly during response reading",
+    "No size limit enforcement observed before buffering started",
+    "Request did not fail immediately due to size limit (only timeout after 30s)",
+    "Multiple concurrent requests would exhaust available memory"
+  ],
+  "limitations_or_blockers": [
+    "Single request timed out before full 1GB buffer completed, but demonstrated the vulnerability mechanism",
+    "Multiple concurrent requests needed for full DoS impact demonstration"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones Traefik repository and checks out v2.11.0, mounts read-only at /target-repo",
+    "pinned_commit_or_ref": "v2.11.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

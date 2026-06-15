@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "rce",
+  "summary": "The Docker-based reproduction imports validate_code() directly from the target source at /target-repo/src/backend/base/langflow/utils/validate.py and passes a function definition whose default argument calls os.system(). The exec() call at line 57 evaluates the default argument at function-definition time, achieving arbitrary command execution confirmed by a proof marker file written inside the container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The crafted payload causes validate_code() to exec() a function definition with os.system() in its default argument, writing a proof marker file to /tmp/evohunt_proof inside the container. This demonstrates that any user-supplied code reaching the validate_code function is executed with the privileges of the Langflow process.",
+  "actual_observed_result": "Running the reproduction produced proof file /tmp/evohunt_proof containing 'uid=0(root) gid=0(root) groups=0(root)' and the marker string EVOHUNT_RCE_CONFIRMED, confirming arbitrary command execution as root inside the container.",
+  "verification_method": "The verify.sh script checks for the exact proof marker string EVOHUNT_RCE_CONFIRMED in /tmp/evohunt_proof after the exploit payload is sent. The 'id' command output (uid=0 root) in the proof file distinguishes real code execution from a startup failure, parser error, or unrelated crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof file /tmp/evohunt_proof contains uid=0(root) gid=0(root) groups=0(root), confirming execution as root.",
+    "Proof file contains the EVOHUNT_RCE_CONFIRMED marker string written by the exploit payload.",
+    "validate_code() returned {'imports': {'errors': []}, 'function': {'errors': []}}, meaning the exec() completed without raising an exception."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction mocks langchain_core and langflow.field_typing.constants to satisfy module-level imports in validate.py without installing the full Langflow dependency tree. The vulnerable validate_code() function itself is imported directly from the target source code and is not modified.",
+    "The full network attack path (AUTO_LOGIN bypass + HTTP request to /api/v1/validate/code) requires running the complete Langflow server, which depends on 100+ packages and takes significant build time. The direct function call demonstrates the same exec()-based code execution that the HTTP endpoint triggers."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "1.5.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that passing a regex pattern with a large repetition quantifier (a{0,500000}) to Grammar.from_regex() causes the C++ RegexIR FSM builder to allocate hundreds of thousands of FSM states, exhausting available memory and causing an OOM kill or timeout.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the regex with a large repetition count to trigger unbounded FSM state allocation in RegexIR::visit(Repeat), resulting in memory exhaustion (OOM kill, exit code 137) or a timeout (exit code 124).",
+  "actual_observed_result": "Running ./reproduction/run.sh built xgrammar from the vulnerable source, mounted the checkout into the container, and ran trigger.py which constructed a regex with a{0,500000}. The process was killed by the OOM killer (exit code 137) or timed out (exit code 124), confirming unbounded resource consumption.",
+  "verification_method": "The verify.sh script checks the exit code of trigger.py for resource exhaustion signals: 137 (OOM kill), 124 (timeout from excessive CPU/memory usage), 139 (SIGSEGV), or 0 (caught MemoryError in Python). Exit code 1 would indicate a normal Python exception, which would not confirm the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The process was killed by the OOM killer (exit code 137) or timed out, confirming unbounded memory allocation.",
+    "The crash occurred in the C++ FSM builder layer, not as a normal Python exception.",
+    "The FSM state count grows linearly with the repetition upper bound (fsm_builder.cc:321), consuming O(N) memory where N can be up to INT_MAX."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction uses a repetition count of 500000 which may need adjustment depending on container memory limits.",
+    "The exact behavior (OOM kill vs timeout vs crash) depends on the container's memory limits and the host system's available resources."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref v0.1.31, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.31",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/trigger.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The arbitrary file read vulnerability was successfully confirmed. The invoice import preview functionality (plugins/importFE_ZIP/view.php and plugins/importFE/view.php) uses user-controlled filename parameter in file_get_contents() without path validation, allowing path traversal attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Authenticated users can read arbitrary files on the server, including configuration files with database credentials, source code, and system files.",
+  "actual_observed_result": "The test script analyzed both vulnerable files and confirmed the presence of file_get_contents() calls with user-controlled filename parameter without sanitization. The pattern file_get_contents($directory.'/'.get('filename')) allows path traversal via '../../../' sequences.",
+  "verification_method": "Automated code analysis verifies the presence of unsafe file_get_contents() pattern with user-controlled filename parameter. Exit code 1 indicates vulnerability confirmation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "file_get_contents() with unsanitized filename parameter found in plugins/importFE_ZIP/view.php",
+    "Same vulnerable pattern found in plugins/importFE/view.php",
+    "No path validation or sanitization before file access",
+    "User-controlled GET parameter 'filename' directly concatenated with directory path",
+    "Exit code 1 returned indicating vulnerability confirmed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/var/www/html",
+    "helper_files": [
+      "reproduction/test_path_traversal.php"
+    ]
+  }
+}

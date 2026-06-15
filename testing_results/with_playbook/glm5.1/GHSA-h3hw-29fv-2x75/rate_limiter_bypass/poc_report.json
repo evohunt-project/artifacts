@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "rate_limit_bypass",
+  "summary": "The Docker-based reproduction confirms that empty array arguments bypass rate limiting when arrayLengthField is configured, allowing unlimited requests despite max=5 rate limit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that requests with empty arrays (ids: []) bypass the rate limit of max=5 requests, allowing unlimited requests.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, executed 20 requests with empty arrays, and confirmed that all succeeded despite the rate limit configuration of max=5, demonstrating complete rate limit bypass.",
+  "verification_method": "The exploit script checks: (1) rate limit configured with max=5, (2) more than 5 requests with empty arrays succeed, (3) no rate limit errors returned. This confirms client-controlled token consumption enables bypass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Rate limit configured: max=5 requests per minute",
+    "Made 20+ successful requests with empty arrays",
+    "No rate limit errors returned for empty array requests",
+    "arrayLengthField='ids' configuration causes callCount=0 for empty arrays",
+    "Client-controlled array length defeats rate limiting entirely"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and builds the Docker image.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js"
+    ]
+  }
+}

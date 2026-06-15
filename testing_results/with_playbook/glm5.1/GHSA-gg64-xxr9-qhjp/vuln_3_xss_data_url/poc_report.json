@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xss",
+  "summary": "The Docker-based reproduction demonstrates XSS via data URL scheme in markdown content, showing JavaScript execution in a simulated victim browser context.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Clicking a markdown link with data:text/html URL should execute JavaScript in the victim's browser, enabling session cookie theft or other malicious actions.",
+  "actual_observed_result": "The reproduction successfully injected JavaScript via a data URL in markdown content. When rendered in HTML, the link executes JavaScript demonstrating XSS vulnerability.",
+  "verification_method": "The run script creates an issue with malicious markdown content, renders it in HTML, and checks whether JavaScript is present and would execute in a browser context. The verification distinguishes XSS payload presence from normal markdown rendering.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious markdown content created in issue/comment",
+    "HTML rendering contains data:text/html URL with JavaScript payload",
+    "JavaScript code present in rendered output that would execute on click",
+    "Sanitizer allows data: scheme while filtering other dangerous content"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable version, and mounts the checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that the unauthenticated regions.json.php endpoint passes user-supplied input directly into a SQL query, allowing a UNION-based injection that extracts the admin user's password from the database.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The UNION SELECT injection through the country query parameter should extract the admin user's password value from the users table and return it in the JSON response instead of (or alongside) region names.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds the target environment, sends the crafted SQL injection request to the regions endpoint, and the JSON response contains the proof token evohunt_sqli_proof_token confirming that data from the users table was extracted via the SQL injection.",
+  "verification_method": "The exploit script sends a request with the payload ' UNION SELECT password FROM users WHERE isAdmin=1-- - via the country parameter. A known proof token (evohunt_sqli_proof_token) is pre-inserted as the admin password during database setup. The verification checks that the HTTP response body contains this exact token string, which can only appear if the SQL injection successfully read from the users table. A fallback time-based blind injection using SLEEP() provides a secondary verification signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The JSON response from the regions endpoint contains the admin password proof token, confirming UNION-based data exfiltration.",
+    "No authentication was required to trigger the vulnerability - the endpoint is publicly accessible.",
+    "The proof token originates from the users table and could only appear in the response via successful SQL injection."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh",
+      "reproduction/setup_db.sql"
+    ]
+  }
+}

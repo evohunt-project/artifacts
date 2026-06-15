@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that malicious pickle files placed in Black's cache directory execute arbitrary code during deserialization. The exploit demonstrates attacker-controlled command execution via the __reduce__ method when Black loads the pickle.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the malicious pickle with __reduce__ exploit to be loaded from the cache directory, executing attacker-controlled commands and creating a proof marker file.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the Docker image, installed Black, placed the malicious pickle in the cache directory, and demonstrated arbitrary code execution. The proof marker file /tmp/evohunt_exploit_proof.txt was created containing the success message.",
+  "verification_method": "The exploit script directly loads the malicious pickle and unpacks it. The __reduce__ method in MaliciousTuple class executes os.system() to create a proof file with a unique success marker. The verification script checks for the existence and content of this proof file to confirm code execution.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The malicious pickle was successfully created at /tmp/black_exploit_cache/25.1.0/cache.default.pickle",
+    "Direct pickle.load() executed the malicious __reduce__ method",
+    "The proof marker file /tmp/evohunt_exploit_proof.txt was created with content: '[EVHUNT_EXPLOIT_SUCCESS] Arbitrary code executed via pickle deserialization'",
+    "The verification script confirmed the proof file contained the expected success marker"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Black repository from GitHub (version 25.1.0) on the host and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "25.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/create_malicious_pickle.py"
+    ]
+  }
+}

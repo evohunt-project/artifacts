@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_rce",
+  "summary": "The Docker-based reproduction confirms that the vulnerable script execution endpoint allows unauthenticated attackers to execute arbitrary JavaScript code on the server. The exploit creates a proof file on the server filesystem, demonstrating successful remote code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the malicious JavaScript payload to be executed on the server, creating a proof file at /tmp/pwned.txt without requiring authentication. This demonstrates that an unauthenticated remote attacker can achieve arbitrary code execution.",
+  "actual_observed_result": "The PoC successfully built and launched FUXA, sent a malicious script to the /api/runscript endpoint without authentication, and the script was executed on the server. The proof file /tmp/pwned.txt was created, confirming that arbitrary JavaScript code execution was achieved through the vulnerable script engine.",
+  "verification_method": "The exploit script executes JavaScript code that creates a proof file at /tmp/pwned.txt containing the hostname and timestamp. The verification script checks for the existence and content of this file. The presence of this file confirms that attacker-controlled code was executed on the server.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The malicious script was accepted and executed by the /api/runscript endpoint without authentication.",
+    "A proof file was successfully created at /tmp/pwned.txt on the server.",
+    "The proof file contains the server hostname and timestamp, confirming code execution in the server context.",
+    "No authentication token was required to execute the malicious script, confirming the default configuration has no authentication.",
+    "The script execution engine's Module._compile() function successfully executed arbitrary JavaScript code."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the FUXA repository from GitHub on the host, checks out the pinned version tag v1.2.9-2654, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.2.9-2654",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

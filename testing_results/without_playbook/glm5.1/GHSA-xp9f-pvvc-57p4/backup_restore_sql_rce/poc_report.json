@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection_rce",
+  "summary": "The Docker-based reproduction confirms that uploading a malicious backup ZIP through the restore endpoint allows arbitrary SQL execution and PHP file creation, achieving remote code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Uploading the malicious backup ZIP should trigger SQL execution that writes a PHP file to the public directory, allowing arbitrary command execution via HTTP request to the created PHP file.",
+  "actual_observed_result": "Running ./reproduction/run.sh deployed the CI4MS application, authenticated as a low-privilege backend user, uploaded the malicious backup ZIP, and successfully created a PHP shell. The verification request to the shell endpoint confirmed command execution with the expected proof signal.",
+  "verification_method": "The run script uploads the malicious backup, waits for SQL execution, then issues an HTTP request to the created PHP shell with a unique proof command. The response is checked for the expected output marker, distinguishing successful RCE from failed exploitation or unrelated errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response from /shell.php?c=id shows command execution output (uid/gid information).",
+    "The PHP file was successfully created in the public/templates directory via SELECT INTO OUTFILE.",
+    "Container logs confirm the backup restore process accepted and processed the malicious SQL file.",
+    "The verification script confirmed the shell responds with attacker-controlled output."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.31.5.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_backup.py",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that a low-privilege authenticated user can POST to /modules/utenti/actions.php and change the admin user's password, escalating to full administrator privileges, because $skip_permissions=true bypasses all authorization checks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should allow a low-privilege tecnico user to change the admin password via modules/utenti/actions.php and then log in as admin with the new password, demonstrating privilege escalation.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the target service, logged in as the low-privilege tecnico user, sent a POST request to /modules/utenti/actions.php with op=update_user to change the admin password, and successfully logged in as admin with the attacker-chosen password. Database verification confirmed the admin password hash matches the new value.",
+  "verification_method": "The verify script performs two-stage verification: (1) HTTP-level verification - attempts to log in as admin with the new password and checks for a successful dashboard/controller redirect, and (2) database-level verification - queries the admin password hash from the database and confirms it matches the attacker-chosen password using PHP's password_verify().",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The low-privilege tecnico user successfully sent a POST request to /modules/utenti/actions.php and modified the admin user's password.",
+    "Subsequent login as admin with the attacker-chosen password (EvohuntPoc2026!) succeeded.",
+    "Database query confirmed the admin password hash was updated to match the attacker-chosen value.",
+    "The $skip_permissions=true flag in modules/utenti/actions.php:21 bypassed all permission and authentication checks."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_app.sh",
+      "reproduction/verify.sh",
+      "reproduction/install_db.php"
+    ]
+  }
+}

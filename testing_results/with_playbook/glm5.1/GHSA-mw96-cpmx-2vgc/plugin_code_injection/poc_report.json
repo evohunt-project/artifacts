@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that the vulnerable --plugin argument handling executes arbitrary JavaScript code via new Function(), creating a proof file indicating successful exploitation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should execute the rollup CLI with a malicious --plugin argument that triggers code execution via new Function(), creating /tmp/exploited.txt with content 'EVOHUNT_POC_SUCCESS'.",
+  "actual_observed_result": "The PoC successfully executed arbitrary code through the vulnerable new Function() call in the plugin loading logic, creating the proof file /tmp/exploited.txt with the expected content.",
+  "verification_method": "The run script executes rollup with a crafted --plugin argument and verifies successful exploitation by checking for the existence and content of /tmp/exploited.txt containing 'EVOHUNT_POC_SUCCESS'.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The file /tmp/exploited.txt was created inside the container with exact content 'EVOHUNT_POC_SUCCESS'.",
+    "Container logs show the rollup command executed with the malicious --plugin argument.",
+    "No errors were encountered during plugin loading, confirming the code injection succeeded."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag (v4.58.0), and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v4.58.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

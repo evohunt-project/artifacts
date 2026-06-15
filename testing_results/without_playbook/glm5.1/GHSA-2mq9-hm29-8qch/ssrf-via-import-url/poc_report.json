@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that with SSRF_PROTECTION_ENABLED=False (the default), the ssrf_safe_get() function in core/utils/io.py fetches arbitrary internal-loopback URLs. The fake internal service received the server-initiated request and the proof token was returned in the response body, demonstrating data exfiltration from internal services.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause ssrf_safe_get() to fetch the internal-loopback URL of the fake internal service. The proof token embedded in the fake service's response should appear in the ssrf_safe_get() return value, confirming that internal data was exfiltrated through the SSRF.",
+  "actual_observed_result": "Running the exploit confirmed: (1) ssrf_safe_get() successfully fetched http://127.0.0.1:{port}/internal/secret-data with SSRF_PROTECTION_ENABLED=False, (2) the fake internal service received the server-initiated request, (3) the proof token EVOHUNT_SSRF_* was present in the response body, and (4) with SSRF_PROTECTION_ENABLED=True the same URL was blocked with 'URL resolves to a reserved network address (block: 127.0.0.0/8)'.",
+  "verification_method": "The exploit starts a fake internal HTTP server on a random loopback port, calls ssrf_safe_get() with the internal URL, checks that the fake server received a request from the server process, and verifies the proof token appears in the response. A second test confirms the SSRF protection works when explicitly enabled.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "ssrf_safe_get() returned HTTP 200 from the internal-loopback URL.",
+    "The fake internal service received exactly 1 GET request to /internal/secret-data from 127.0.0.1.",
+    "The response body contained the proof token EVOHUNT_SSRF_552f7f3991c02c93 confirming internal data was exfiltrated.",
+    "With SSRF_PROTECTION_ENABLED=True, validate_upload_url() raised InvalidUploadUrlError: 'URL resolves to a reserved network address (block: 127.0.0.0/8)'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the develop branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "develop",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

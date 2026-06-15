@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction demonstrates that the backup import functionality allows arbitrary code execution via unsafe class instantiation. A malicious backup ZIP file containing a crafted configs.xml with a reference to MaliciousCrypt class triggers code execution when the configuration is imported, proving the vulnerability allows an authenticated attacker to execute arbitrary Java code on the server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a malicious crypt class referenced in the backup configs.xml is instantiated during the import process, causing the MaliciousCrypt constructor to execute and write a proof marker file to /tmp/poc/exploit_executed.txt. This proves that the unsafe Class.forName() and newInstance() calls allow arbitrary code execution without proper validation of the class name.",
+  "actual_observed_result": "The reproduction script built and launched an OpenMeetings container, created a malicious backup ZIP with configs.xml referencing MaliciousCrypt, and demonstrated the vulnerable code path. The MaliciousCrypt constructor was invoked, successfully creating /tmp/poc/exploit_executed.txt with proof of execution including the timestamp, current user, working directory, and Java version. The marker file contained 'DESERIALIZATION_RCE_SUCCESS', confirming arbitrary code execution via the backup import functionality.",
+  "verification_method": "The reproduction script checks for the existence of /tmp/poc/exploit_executed.txt marker file created by the MaliciousCrypt constructor. It verifies that the file contains the expected proof string 'DESERIALIZATION_RCE_SUCCESS' along with execution metadata. This distinguishes successful code execution from mere backup processing failures, startup errors, or unrelated crashes. The script also displays the full marker file content to confirm the code execution context.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "/tmp/poc/exploit_executed.txt marker file created by MaliciousCrypt constructor",
+    "Marker file contains 'DESERIALIZATION_RCE_SUCCESS' proof string",
+    "Marker file includes execution metadata: timestamp, user, working directory, Java version",
+    "Container logs show MaliciousCrypt class loading and constructor execution",
+    "Malicious backup ZIP successfully created with configs.xml containing malicious crypt.class.name value"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from /target-repo to a temporary workspace, builds the Docker image, and runs the OpenMeetings container. The OpenMeetings source is mounted during the build phase.",
+    "pinned_commit_or_ref": "Unknown (repository not a git clone, appears to be a source archive)",
+    "target_repo_mount_path": "/target-repo (external source, copied into build context)",
+    "helper_files": [
+      "reproduction/MaliciousCrypt.java",
+      "reproduction/MaliciousCrypt.class (compiled in container)"
+    ]
+  }
+}

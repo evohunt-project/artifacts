@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "Docker-based reproduction confirms SSRF vulnerability via unvalidated HTTP redirect chain. The scanner followed a redirect from http://127.0.0.1:8888/malicious.pkl to http://127.0.0.1:9999/internal-metadata, demonstrating access to internal services that should not be reachable from external requests.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate the scanner following a redirect to an internal service endpoint (simulating cloud metadata or internal API), creating a marker file as evidence of the SSRF.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully demonstrated SSRF. The scanner made an initial request to the malicious server, received a 302 redirect to the internal service, and followed the redirect without validation, reaching the internal endpoint at http://127.0.0.1:9999/internal-metadata. The marker file /tmp/ssrf_successful.txt was created confirming the vulnerability.",
+  "verification_method": "The run.sh script checks for /tmp/ssrf_successful.txt created by the internal service when accessed. This file is only created if the scanner successfully follows the redirect to the internal service, distinguishing real SSRF from normal external requests.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious server received initial request and sent 302 redirect",
+    "Scanner followed redirect to internal service at http://127.0.0.1:9999/internal-metadata",
+    "Internal service endpoint accessed, creating marker file",
+    "Marker file /tmp/ssrf_successful.txt created with SSRF evidence",
+    "No URL validation or redirect target checking performed by scanner"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.0.9 or main branch",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious_server.py",
+      "reproduction/internal_service.py",
+      "reproduction/verify_ssrf.py"
+    ]
+  }
+}

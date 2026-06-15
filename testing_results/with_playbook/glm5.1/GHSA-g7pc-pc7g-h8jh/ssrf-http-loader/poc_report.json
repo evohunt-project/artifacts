@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf_via_http_loader",
+  "summary": "The Docker-based reproduction successfully demonstrates SSRF via the HTTP Config Loader. A malicious Caddyfile configures the HTTPLoader to fetch from the AWS metadata endpoint 169.254.169.254, and Caddy successfully makes the request, confirming the vulnerability allows arbitrary internal URL access without any validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should cause Caddy to fetch configuration from an internal URL (AWS metadata endpoint 169.254.169.254), demonstrating that the HTTP loader can access arbitrary internal network resources without validation or restrictions.",
+  "actual_observed_result": "Running ./reproduction/run.sh built Caddy from source, created a malicious JSON config with HTTPLoader pointing to 169.254.169.254, started a mock metadata server and Caddy container, and Caddy successfully attempted to fetch from the internal URL, confirming SSRF capability. The response contained simulated AWS metadata content, proving the HTTP loader executes arbitrary HTTP requests to internal endpoints.",
+  "verification_method": "The run script starts a mock AWS metadata server on the container's internal network, configures Caddy's HTTPLoader to fetch from that endpoint, and verifies the response contains AWS metadata signature patterns ('ami-id', 'instance-id'). This confirms the HTTP loader executes requests to arbitrary internal URLs without any network validation or allowlisting.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Caddy config loader successfully executed HTTP request to 169.254.169.254",
+    "No URL validation prevented fetching from internal metadata endpoint",
+    "Response from metadata endpoint was processed by Caddy configuration loader",
+    "HTTP loader accepts any URL including RFC 1918 addresses and link-local ranges",
+    "No protocol restrictions beyond http/https blocking internal network access",
+    "Caddy attempted to load the fetched content as valid configuration"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the latest commit, and builds Caddy from source in the Docker image.",
+    "pinned_commit_or_ref": "HEAD (latest commit from main branch)",
+    "target_repo_mount_path": "N/A - repository cloned inside container during build",
+    "helper_files": [
+      "reproduction/caddy_config.json",
+      "reproduction/mock_metadata.sh"
+    ]
+  }
+}

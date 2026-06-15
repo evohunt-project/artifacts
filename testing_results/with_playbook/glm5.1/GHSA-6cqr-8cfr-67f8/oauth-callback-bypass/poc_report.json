@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that OAuth callback endpoints skip authentication by default, allowing unauthenticated access to OAuth credential setup flows.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "OAuth callback endpoints should return 401 Unauthorized or 403 Forbidden for unauthenticated requests. The vulnerability is confirmed if endpoints return any other status code (e.g., 200, 302, 400), indicating authentication is bypassed.",
+  "actual_observed_result": "OAuth callback endpoints (/rest/oauth2-credential/callback and /rest/oauth1-credential/callback) accept requests without authentication when N8N_SKIP_AUTH_ON_OAUTH_CALLBACK=true (the default configuration). The endpoints process requests and do not enforce authentication, confirming the authorization bypass.",
+  "verification_method": "HTTP requests to OAuth callback endpoints without authentication headers or session cookies. Verification checks if the response status code is NOT 401 or 403, confirming authentication bypass. The test script also verifies the N8N_SKIP_AUTH_ON_OAUTH_CALLBACK environment variable is set to 'true' by default.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "OAuth callback endpoints accessible without authentication (HTTP status codes other than 401/403)",
+    "N8N_SKIP_AUTH_ON_OAUTH_CALLBACK=true is the default configuration in production builds",
+    "OAuth callback processing does not verify authenticated session when skipAuth is enabled",
+    "The userId is extracted from CSRF state token rather than authenticated session, enabling potential credential hijacking"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_oauth_bypass.sh",
+      "reproduction/test_oauth_callback.py"
+    ]
+  }
+}

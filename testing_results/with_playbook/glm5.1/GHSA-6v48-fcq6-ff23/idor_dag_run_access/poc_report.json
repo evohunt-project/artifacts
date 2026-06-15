@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor",
+  "summary": "The Docker-based reproduction confirms that any authenticated user can access any DAG run's logs and outputs by providing the dagRunId, regardless of ownership or user isolation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate horizontal privilege escalation where User A (viewer role) can successfully access User B's (viewer role) DAG run logs and outputs.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Dagu server, created two separate viewer users, User B created and executed a DAG with sensitive output, and User A successfully accessed User B's DAG run logs and outputs via HTTP 200 responses.",
+  "verification_method": "The run script creates two users, User B runs a DAG with sensitive data, User A enumerates DAG run IDs and accesses User B's logs/outputs, verifying HTTP 200 status and presence of User B's sensitive data in responses.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "User A successfully authenticated with viewer role credentials",
+    "User A retrieved User B's DAG run ID from the list endpoint",
+    "GET /api/v1/dagruns/{name}/{id}/log returned HTTP 200 with User B's log content",
+    "GET /api/v1/dagruns/{name}/{id}/outputs returned HTTP 200 with User B's sensitive output data",
+    "No ownership verification or HTTP 403 error, confirming IDOR vulnerability"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the current HEAD, and builds the vulnerable Dagu binary inside the container.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/sensitive-dag.yaml",
+      "reproduction/cleanup.sh"
+    ]
+  }
+}

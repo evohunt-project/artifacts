@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that a crafted HTTP request with path traversal sequences to the /files endpoint successfully accesses files from an unauthorized Artifactory repository, confirming the SSRF vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a request to /files/../repo2-secret/secret.txt successfully retrieves content from the repo2-secret repository, which is outside the intended repo1 scope, proving SSRF via path traversal.",
+  "actual_observed_result": "The reproduction successfully built the marketplace binary, started a mock Artifactory server with two repositories (repo1 and repo2-secret), configured the marketplace to use repo1, and then demonstrated that a crafted request with path traversal accessed files from repo2-secret, confirming the SSRF vulnerability.",
+  "verification_method": "The verify.sh script sets up a mock Artifactory server with two separate repositories (repo1 as legitimate, repo2-secret as unauthorized), starts the marketplace configured to use only repo1, then sends a crafted HTTP request with path traversal (/../repo2-secret/secret.txt) to access repo2-secret. Success is confirmed by detecting the secret file content from the unauthorized repository.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP request to /files/../repo2-secret/secret.txt successfully returned content from repo2-secret repository",
+    "The marketplace was configured to use only repo1, confirming unauthorized cross-repository access",
+    "Path traversal was not sanitized or validated in the Artifactory backend implementation",
+    "No authentication or authorization checks prevented access to the unauthorized repository"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the advisory session directory and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "current-state",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/setup_artifactory.sh"
+    ]
+  }
+}

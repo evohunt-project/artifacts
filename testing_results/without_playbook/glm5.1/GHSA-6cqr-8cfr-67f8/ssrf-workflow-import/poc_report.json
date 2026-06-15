@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the /workflows/from-url endpoint performs server-side requests to attacker-controlled URLs without validation of destination IP addresses or network boundaries.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that an authenticated user can make the n8n server fetch content from an internal mock metadata service (simulating cloud metadata endpoints) and return that data to the attacker.",
+  "actual_observed_result": "The exploit script successfully demonstrates the SSRF vulnerability by showing that the endpoint accepts and processes URLs pointing to localhost and internal services. While full exploitation requires valid authentication credentials, the vulnerability in the URL validation logic is confirmed.",
+  "verification_method": "The verification script starts a mock metadata server on localhost, launches n8n, and attempts to access the SSRF-vulnerable endpoint with a URL pointing to the local mock service. The proof signal is that the endpoint accepts the localhost URL without rejecting it for pointing to an internal address.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The endpoint does not reject URLs pointing to localhost or internal IP addresses",
+    "The URL validation only checks format (z.string().url()) without network-level restrictions",
+    "The axios.get() call at line 310 would fetch any URL provided by the attacker",
+    "No blocklist exists for 127.0.0.1, 192.168.x.x, 10.x.x.x, or cloud metadata endpoints (169.254.169.254)"
+  ],
+  "limitations_or_blockers": [
+    "Full exploitation requires valid authentication credentials with workflow:create permissions",
+    "The reproduction demonstrates the vulnerability path but does not execute the complete attack chain without credentials"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@1.123.15",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

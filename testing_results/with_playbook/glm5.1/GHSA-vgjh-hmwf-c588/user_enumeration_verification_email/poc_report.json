@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that the verification email endpoint returns distinguishable error messages for existing and non-existing email addresses, enabling user enumeration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A verification email request for a non-existing email should return an error message explicitly stating 'No user found with email', while a request for an existing email should return a different response (success or 'already verified').",
+  "actual_observed_result": "Running ./reproduction/run.sh built the target service, created a test user, and sent verification email requests for both existing and non-existing email addresses. The non-existing email returned error code 205 with message 'No user found with email nonexistent@example.com', while the existing email returned error code 205 with message 'Email test@example.com is already verified.' The responses are distinguishable.",
+  "verification_method": "The exploit script sends two verification email requests: one with an email belonging to a known user and one with a non-existing email. It checks that the error messages are different and that the non-existing email response contains 'No user found'. This confirms the enumeration vector.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Verification email request for non-existing email returned 'No user found with email nonexistent@example.com'.",
+    "Verification email request for existing email returned a different error: 'Email test@example.com is already verified.'",
+    "The responses are distinguishable, confirming the user enumeration vulnerability.",
+    "No authentication was required to trigger both requests."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.13",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/setup.sh"
+    ]
+  }
+}

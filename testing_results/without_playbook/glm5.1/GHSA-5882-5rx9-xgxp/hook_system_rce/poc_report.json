@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sandbox_bypass_rce",
+  "summary": "The Docker-based reproduction confirms that the hook system sandbox can be bypassed through Python object introspection, achieving arbitrary command execution inside the target container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the sandbox bypass allows reading /etc/passwd, executing system commands (whoami), and exfiltrating environment variables through the malicious hook code.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the target service with CRAWL4AI_HOOKS_ENABLED=true, submitted a malicious hook via POST /crawl, and the hook executed arbitrary Python code that read /etc/passwd and ran system commands, confirming complete sandbox escape.",
+  "verification_method": "The run script executes the exploit trigger and checks for the proof string 'EV0HUNT_POC_SUCCESS' in the container logs, which is emitted by the malicious hook after successful command execution. This distinguishes successful RCE from hook compilation failures or sandbox enforcement.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs contain the proof string 'EV0HUNT_POC_SUCCESS' after the malicious hook is executed",
+    "The hook successfully read /etc/passwd through the sandbox bypass chain",
+    "The hook successfully executed 'whoami' command through __import__('os').system()",
+    "The service processed the crawl request, confirming the hook was attached and executed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

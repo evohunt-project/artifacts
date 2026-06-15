@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "session_fixation",
+  "summary": "The Docker-based reproduction confirms that the session ID does not change after customer login. An attacker who shares the same session cookie as the victim gains authenticated access after the victim logs in, demonstrating full account takeover via session fixation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that: (1) the session cookie value is identical before and after login, (2) a second client holding the same session cookie gains authenticated access after the victim logs in, and (3) no session()->regenerate() call occurs in the authentication flow.",
+  "actual_observed_result": "The PoC successfully deployed Bagisto, created a customer account, obtained a session cookie, performed login, and verified that the session cookie remained unchanged. A second HTTP client using the same session cookie was able to access authenticated endpoints as the victim.",
+  "verification_method": "The exploit script performs three checks: (1) captures the pre-login session cookie from the Set-Cookie header, (2) logs in as the customer and captures the post-login session cookie, (3) compares the two cookies to confirm they are identical, and (4) uses the original session cookie from a separate client to access the protected /customer/account page and confirm authenticated access.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Pre-login session cookie value captured from the server's Set-Cookie header.",
+    "Post-login session cookie value captured and confirmed identical to pre-login value.",
+    "A second HTTP client using the pre-login session cookie successfully accessed the authenticated /customer/account endpoint.",
+    "The authenticated response contains the victim customer's name and email, confirming full account takeover.",
+    "The session ID was never regenerated across the entire login flow."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Bagisto repository on the host, checks out the pinned vulnerable version, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v2.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup_app.sh"
+    ]
+  }
+}

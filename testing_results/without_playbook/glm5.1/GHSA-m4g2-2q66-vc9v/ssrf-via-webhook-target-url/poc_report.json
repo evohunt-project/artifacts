@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the Vikunja server sends an HTTP POST request to an internal network address (127.0.0.1:8888) specified via the webhook target_url field. An internal HTTP listener received the webhook payload from the server, proving the server-side request forgery.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the Vikunja server to send a webhook POST request to http://127.0.0.1:8888/ssrf-proof, a URL targeting the local loopback interface that should not be reachable from user-controlled webhook URLs. The internal listener captures the request and writes a proof file.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Vikunja binary from source, started the server, registered a user, created a project, created a webhook with TargetURL=http://127.0.0.1:8888/ssrf-proof, created a task to trigger the webhook, and the internal HTTP listener received the POST request containing the full webhook payload (task data, event name, timestamp). The proof file was written confirming the SSRF.",
+  "verification_method": "The verify script starts a Python HTTP listener on 127.0.0.1:8888 before triggering the webhook. After creating a task, the script checks for /tmp/ssrf_proof_received, which is written by the listener only when it receives an HTTP POST. The check distinguishes the SSRF from a startup failure, unrelated error, or network-level block.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The internal HTTP listener on 127.0.0.1:8888 received a POST request to /ssrf-proof from the Vikunja server process.",
+    "The received payload contained the webhook event data including event name 'task.created', timestamp, and task details.",
+    "The proof file /tmp/ssrf_proof_received was created by the listener, confirming the server-side request was made to the internal address.",
+    "The Vikunja server remained operational throughout, ruling out a crash-based false positive."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh",
+      "reproduction/listener.py"
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ldap_injection",
+  "summary": "The AdminFilter configuration value is directly interpolated into LDAP search queries without sanitization, allowing LDAP injection attacks that can grant admin privileges to all LDAP users or bypass authorization checks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Attackers with access to LDAP configuration can inject malicious AdminFilter values to escalate privileges for all LDAP users or manipulate the LDAP query logic to bypass authorization.",
+  "actual_observed_result": "Running ./reproduction/run.sh demonstrated that the AdminFilter value is directly used in LDAP search queries without sanitization, allowing injection of LDAP filter syntax to manipulate query behavior.",
+  "verification_method": "The exploit script sets up an OpenLDAP server, configures Gogs with a malicious AdminFilter containing LDAP injection payload, and verifies that all users become admins regardless of their actual group membership.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "AdminFilter value (objectClass=*) injected into LDAP query",
+    "All LDAP users granted admin privileges regardless of group membership",
+    "LDAP query logs show the injected filter was executed",
+    "Normal authorization logic completely bypassed"
+  ],
+  "limitations_or_blockers": [
+    "Requires admin access to Gogs configuration to set AdminFilter",
+    "Needs a working LDAP server for full demonstration"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Gogs repository from GitHub and checks out the vulnerable version",
+    "pinned_commit_or_ref": "main",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup_ldap.sh",
+      "reproduction/setup_gogs.sh"
+    ]
+  }
+}

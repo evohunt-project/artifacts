@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction builds the UDR from source, starts it with a default configuration that uses HTTP and no NRF, and demonstrates that API requests without any Authorization header are accepted rather than rejected with 401 Unauthorized.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated HTTP GET request to the authentication subscription endpoint should be accepted (returning 200 or 404 depending on data presence) rather than rejected with 401 Unauthorized, proving the authentication bypass.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the UDR binary, started MongoDB, started the UDR server (which logged NRF registration failure but continued serving), sent unauthenticated GET and POST requests to SBI endpoints, and received non-401 responses confirming the authentication bypass.",
+  "verification_method": "The verify script sends two HTTP requests without an Authorization header: (1) GET /nudr-dr/v2/subscription-data/imsi-001010000000001/00101/authentication-subscription to check if the endpoint returns 200 or 404 (data not found) instead of 401, and (2) POST /nudr-dr/v2/subscription-data/subs-to-notify with a subscription body to verify write access is also unauthenticated. The script checks that neither response is HTTP 401, confirming that the auth middleware authorized the requests despite the missing token.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "UDR server logs show 'register to NRF failed' confirming OAuth2Required was never set to true.",
+    "UDR server logs show 'OAuth2 not required' debug message from AuthorizationCheck.",
+    "HTTP response to unauthenticated GET request was 404 (data not found in empty DB) rather than 401, proving the request was authorized.",
+    "HTTP response to unauthenticated POST request was 201 (subscription created) rather than 401, proving write access is also unauthenticated."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/build_and_run.sh",
+      "reproduction/udrcfg_test.yaml"
+    ]
+  }
+}

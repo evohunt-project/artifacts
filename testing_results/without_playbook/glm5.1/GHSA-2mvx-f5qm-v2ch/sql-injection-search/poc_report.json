@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that LIKE wildcard characters injected via the unauthenticated REST API search parameter bypass the sanitization layer and cause the SQL query to return all events, demonstrating the SQL injection vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A search query containing LIKE wildcards (%%%) should cause the SQL query to match all event records, returning more results than a targeted search for a specific event title.",
+  "actual_observed_result": "The targeted search for 'AlphaEvent77' returned only the matching event. The wildcard search for '%%%' returned both test events (AlphaEvent77 and BetaEvent99), confirming that unescaped LIKE wildcards allow an unauthenticated attacker to enumerate all event data.",
+  "verification_method": "The exploit script creates two events with distinctive titles (AlphaEvent77, BetaEvent99), performs a targeted REST API search for 'AlphaEvent77' and records the count of matching events, then performs a wildcard search for '%%%' and records the count. The wildcard search returning strictly more events than the targeted search confirms that LIKE wildcards are not escaped, allowing the attacker to bypass search filtering and enumerate all events.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "REST API response for search=AlphaEvent77 contains exactly one event (AlphaEvent77 only).",
+    "REST API response for search=%%% contains two or more events (both AlphaEvent77 and BetaEvent99).",
+    "The difference in result counts proves that the LIKE wildcard % is not escaped by esc_sql() and is interpolated directly into the SQL LIKE clause."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3.7.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup-wp.sh",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

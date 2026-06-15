@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction builds the survey-pdf library from the pinned vulnerable commit, starts a simulated internal HTTP metadata service on 127.0.0.1:9999, creates a SurveyPDF instance with an image question whose imageLink points to that internal service, and confirms the library makes an outbound HTTP GET request to the attacker-specified internal URL.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The library should make an HTTP request to http://127.0.0.1:9999/ssrf-proof-metadata without any URL validation, demonstrating that an attacker can force the server to fetch arbitrary internal or external URLs through the survey JSON imageLink field.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository, built the library, launched the simulated internal service, created a SurveyPDF instance with the malicious imageLink, and the library made an HTTP GET request to http://127.0.0.1:9999/ssrf-proof-metadata. The simulated service received and logged the request, confirming the SSRF.",
+  "verification_method": "The exploit script starts a local HTTP server on 127.0.0.1:9999 before invoking SurveyPDF. It sets a boolean flag when any request arrives. After PDF generation completes (or fails due to image processing), the script checks the flag. A true value confirms the library made an outbound request to the attacker-specified URL. The script distinguishes SSRF success from unrelated failures by checking the flag, not by checking PDF output quality.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The simulated internal HTTP service on 127.0.0.1:9999 received a GET request to /ssrf-proof-metadata.",
+    "The request was initiated by the survey-pdf library's ImageUtils._getImageInfo() method in node.ts.",
+    "The library fetched the full response body into memory via res.arrayBuffer(), confirming the attacker can read internal service responses.",
+    "The SSRF occurred during normal survey PDF generation with no special configuration beyond the imageLink URL in the survey JSON."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "de58595e0d69cf94179da8762516081a1ef78442",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that a Deno process connecting to a malicious SSE server via EventSource is OOM-killed. The malicious server sends repeated data: lines without a blank line separator, causing unbounded accumulation in the EventSource data variable. Under a 128MB Docker memory limit, the process is killed (exit code 137) within seconds.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A Deno process using EventSource to connect to a malicious SSE server should exhaust available memory and be killed by the OOM killer, demonstrating unbounded data accumulation without size limits.",
+  "actual_observed_result": "Running the reproduction with a 128MB memory limit: the malicious SSE server sends 500,000 data lines (200 bytes each) without a blank line separator. The Deno client connects via EventSource, and the process is killed (exit code 137 = SIGKILL from OOM killer). With a 256MB limit, RSS grows to 293MB in 25 seconds before the timeout.",
+  "verification_method": "The verify.sh script starts a malicious SSE server that sends data lines without blank line separators, then runs a Deno client that connects via EventSource. The container is run with --memory=128m to trigger OOM. If the Deno process exits with code 137 (OOM kill), the vulnerability is confirmed. A baseline check verifies the server is reachable before the attack.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Deno process exits with code 137 (SIGKILL/OOM kill) under 128MB memory limit.",
+    "Memory RSS grows to 293MB in 25 seconds under 256MB limit, confirming unbounded accumulation.",
+    "The EventSource data variable at ext/fetch/27_eventsource.js:302 grows without any size limit.",
+    "The TextLineStream buffer at ext/fetch/27_eventsource.js:97 also grows without limit."
+  ],
+  "limitations_or_blockers": [
+    "Without a memory limit, the attack takes longer to exhaust available system memory. The PoC uses Docker --memory=128m to demonstrate the effect quickly."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.5.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/evil_sse_server.py",
+      "reproduction/client.ts",
+      "reproduction/verify.sh"
+    ]
+  }
+}

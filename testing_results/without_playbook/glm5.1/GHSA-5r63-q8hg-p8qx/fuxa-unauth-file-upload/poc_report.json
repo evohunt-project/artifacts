@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_file_upload",
+  "summary": "The Docker-based reproduction confirms that the FUXA v1.2.7 /api/upload endpoint accepts file uploads without any authentication. A crafted SVG file containing an XSS payload was uploaded, written to disk without sanitization, and served statically from the /resources/ path with the malicious JavaScript intact.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a POST request to /api/upload with a crafted SVG file containing an embedded JavaScript payload should result in the file being written to disk and served at the returned location URL. Fetching that URL should return the SVG with the XSS payload intact, confirming stored XSS capability.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the vulnerable FUXA v1.2.7 repository, built the Docker image, started the FUXA server, uploaded a crafted SVG file via POST /api/upload without any authentication header, received a location URL, fetched the URL, and confirmed the XSS payload was served intact in the response.",
+  "verification_method": "The exploit script generates a unique proof string (EVOHUNT_XSS_PROOF_<pid>_<timestamp>), embeds it in an SVG with an onload alert, uploads the SVG via POST /api/upload without authentication, retrieves the uploaded file from the returned location URL, and checks whether the proof string appears in the served content. This confirms the file was both uploaded without auth and served without sanitization.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The /api/upload endpoint accepted the file upload without any authentication token and returned a valid location URL.",
+    "The uploaded SVG file was served statically from /resources/ with the XSS payload (onload alert) intact.",
+    "No Content-Security-Policy or X-Content-Type-Options headers were present to mitigate the XSS risk."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit bbd738d21d7192d5eaaf58577de68eced4a609eb (v1.2.7), and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "bbd738d21d7192d5eaaf58577de68eced4a609eb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "SSRF (Server-Side Request Forgery)",
+  "summary": "Successfully demonstrated SSRF to localhost via IPv6 bypass. The PoC starts an esm.sh server, sets up a simulated internal HTTP service on localhost:8080, and uses IPv6 localhost address [::1] to bypass the isLocalhost() check. The request successfully reaches the internal service, proving the vulnerability. Comparison with IPv4 localhost (127.0.0.1) shows it is properly blocked, confirming the bypass is specific to IPv6.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC demonstrates that an attacker can access internal HTTP services running on localhost by using IPv6 addresses (::1, ::ffff:127.0.0.1) to bypass the isLocalhost() validation. This proves the SSRF vulnerability and shows it can be used to exfiltrate data from internal services, access cloud metadata endpoints, or interact with any HTTP-accessible service bound to the server's loopback interface.",
+  "actual_observed_result": "The PoC successfully bypassed the localhost restriction. When requesting /http://[::1]:8080/internal-metadata from the esm.sh server, the request reached the internal test service running on localhost:8080 and returned 'INTERNAL_SERVICE_SECRET_DATA_EXPOSED_VIA_IPV6_BYPASS'. In contrast, requesting /http://127.0.0.1:8080/internal-metadata was properly blocked with 'Invalid URL' error. This confirms the isLocalhost() function fails to detect IPv6 localhost addresses, allowing SSRF to localhost.",
+  "verification_method": "Automated verification via test_ipv6_bypass.sh which: (1) Tests IPv6 localhost [::1] bypass - expects 200 response with internal service data; (2) Tests IPv4 localhost 127.0.0.1 - expects 400 'Invalid URL' error (baseline); (3) Tests IPv4-mapped IPv6 [::ffff:127.0.0.1] bypass - expects 200 response; (4) Verifies the response contains expected internal service marker; (5) Compares success/failure patterns to confirm the vulnerability is real and not a false positive.",
+  "verification_passed": "true",
+  "evidence_produced_by_run": [
+    "HTTP 200 response from esm.sh when accessing http://[::1]:8080/internal-metadata",
+    "Response body contains 'INTERNAL_SERVICE_SECRET_DATA_EXPOSED_VIA_IPV6_BYPASS' from internal service",
+    "HTTP 400 'Invalid URL' response when attempting to access http://127.0.0.1:8080/internal-metadata (IPv4 blocked as expected)",
+    "HTTP 200 response from http://[::ffff:127.0.0.1]:8080/internal-metadata (alternative IPv6 bypass)",
+    "Server logs showing internal service received request from esm.sh server process",
+    "Docker container network traffic confirming SSRF request reached localhost:8080"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the esm.sh repository on the host, checks out the vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main (vulnerable at time of audit - isLocalhost() function lacks IPv6 checks)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_internal_service.sh",
+      "reproduction/test_ipv6_bypass.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

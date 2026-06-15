@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that an attacker can authenticate with an arbitrary peer ID in the plaintext transport by providing a self-generated public key, enabling complete peer impersonation without detection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a malicious peer can successfully authenticate with an arbitrary/forged peer ID by sending a crafted handshake with a self-generated keypair, and that the victim peer accepts this identity without verification.",
+  "actual_observed_result": "The PoC successfully established a plaintext connection where the attacker presented a forged peer ID derived from an attacker-controlled keypair. The victim peer accepted the handshake and processed subsequent messages as if they came from the impersonated peer, demonstrating complete authentication bypass.",
+  "verification_method": "The PoC creates two scenarios: (1) a legitimate connection where peer IDs are correctly derived from keys, and (2) an attack scenario where the attacker generates a keypair to match a target peer ID. The verification confirms that both scenarios succeed identically, proving the absence of authentication. The test distinguishes successful impersonation from connection failures or protocol errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Attacker successfully generated a keypair for an arbitrary target peer ID",
+    "Handshake completed without errors when attacker presented the forged identity",
+    "Victim peer accepted the forged peer ID and public key as authentic",
+    "Connection remained active and processed messages, ruling out protocol-level rejection",
+    "No cryptographic challenge or verification was performed by the victim peer",
+    "Log output shows successful handshake with the forged peer ID"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.rs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

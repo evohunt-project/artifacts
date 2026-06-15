@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the file download handler's path construction logic permits reading arbitrary files on the server filesystem when realpath() returns false for non-existent paths, allowing attackers to traverse outside the upload directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate successful reading of a secret configuration file outside the web root via crafted path traversal in the 'file' GET parameter, confirming the realpath() bypass vulnerability.",
+  "actual_observed_result": "The reproduction bundle set up YesWiki, created a test file outside the upload directory at /secret/config.txt, and demonstrated that the download handler can be manipulated to read this file via path traversal payload ../../../../secret/config.txt, successfully returning the sensitive content.",
+  "verification_method": "The verify.sh script checks if the response contains the proof string 'SENSITIVE_DATA_EV0HUNT_POC_SECRET_12345' from the secret file, distinguishing successful path traversal from normal file access or error messages.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response contains the exact content of /secret/config.txt demonstrating file read outside upload directory",
+    "Path traversal payload ../../../../secret/config.txt successfully bypasses basename(realpath()) sanitization",
+    "The realpath() function returns false for files not in the upload path, causing basename() to concatenate the raw user input",
+    "Sensitive configuration data is exposed to unauthenticated attackers through this vulnerability"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the YesWiki repository on the host, checks out the doryphore-dev branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "doryphore-dev",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that FileBrowser Quantum is vulnerable to symlink-based path traversal, allowing attackers to access files outside the configured root directory through symbolic links.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should successfully create a symlink pointing outside the allowed directory and use FileBrowser to access sensitive files (e.g., /etc/passwd) that should be restricted.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the FileBrowser service, and the exploit successfully created symbolic links that traverse outside the root directory, allowing access to restricted system files.",
+  "verification_method": "The run script creates symbolic links within the served directory that point to sensitive system files outside the allowed root, then attempts to read those files through FileBrowser. The verification confirms successful path traversal by checking for content from restricted files.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Symlinks were successfully created pointing to files outside the allowed directory.",
+    "FileBrowser served content from restricted system files through the symlinks.",
+    "The exploit demonstrated access to sensitive files that should be outside the application's scope."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository, builds FileBrowser from source, and sets up a container with the vulnerable binary.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/filebrowser",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

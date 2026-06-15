@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "Docker-based PoC demonstrates Slowloris attack by establishing persistent connections without complete HTTP headers, causing the server to hold connections indefinitely and exhaust connection resources.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Multiple slow HTTP connections should remain open indefinitely, preventing new connections from being accepted and demonstrating complete service availability exhaustion.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully established persistent slow connections that the server failed to timeout, confirming the missing ReadHeaderTimeout vulnerability allows Slowloris-style DoS attacks.",
+  "verification_method": "The PoC script establishes N concurrent TCP connections sending incomplete HTTP headers at slow intervals, then measures connection duration and server response capability. Connections remaining open beyond timeout threshold confirm vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Multiple TCP connections established successfully",
+    "Connections remained open for >60 seconds without completing headers",
+    "Server did not close idle connections or enforce timeout",
+    "Connection pool exhaustion prevented new legitimate connections during attack"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/slowloris.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

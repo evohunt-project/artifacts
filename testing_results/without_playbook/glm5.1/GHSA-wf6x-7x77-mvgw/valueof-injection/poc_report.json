@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The PoC demonstrates that a custom valueOf method on an object is automatically invoked when the object is used as a Map key, enabling arbitrary code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create an object with a malicious valueOf method, use it as a Map key, and observe that valueOf() is called during the hashing process, executing attacker-controlled code.",
+  "actual_observed_result": "The PoC created an object with a custom valueOf method that sets a flag when called. When the object was used as a Map key, valueOf() was invoked automatically, setting the execution flag and demonstrating code execution.",
+  "verification_method": "The PoC script creates a malicious key object with valueOf that sets a boolean flag. After Map().set(maliciousKey, value), the script checks if the flag was set, confirming that valueOf was called.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console output shows '[PWNED] valueOf() was called!'",
+    "The codeExecuted flag was set to true after Map creation",
+    "valueOf received the object parameter as expected",
+    "Attacker-controlled function executed successfully during hash computation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v5.1.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test-valueof.js"
+    ]
+  }
+}

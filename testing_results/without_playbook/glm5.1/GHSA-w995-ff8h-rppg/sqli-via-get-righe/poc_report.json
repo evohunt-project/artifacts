@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that the SQL injection vulnerability in the confronta_righe.php code pattern allows an authenticated attacker to extract sensitive data from arbitrary database tables via UNION SELECT injection through the unsanitized GET righe parameter.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted righe parameter to bypass the SQL IN() clause and execute a UNION SELECT that extracts the secret_credentials table contents, including the EVOSHUNT_PROOF_SqliSecretValue proof string.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the container, started a PHP server with a SQLite database seeded with test data including a protected secret_credentials table, sent the UNION SELECT injection payload via GET righe parameter, and successfully extracted both admin and superadmin password hashes from the secret_credentials table. The response contained the proof string EVOSHUNT_PROOF_SqliSecretValue.",
+  "verification_method": "The verify.sh script checks for the exact proof string EVOSHUNT_PROOF_SqliSecretValue in the HTTP response body after sending the UNION SELECT payload. The proof string is a unique marker injected into the secret_credentials table that cannot appear in the response unless the SQL injection successfully reads from that protected table. The setup.sh also verifies that the vulnerable code pattern exists in the mounted target repository at /target-repo/modules/fatture/modals/confronta_righe.php.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show the SQL injection response containing both extracted credential rows: {id:1, username:admin, password_hash:$2y$10$EVOSHUNT_PROOF_SqliSecretValue_admin} and {id:2, username:superadmin, password_hash:$2y$10$EVOSHUNT_PROOF_SqliSecretValue_super}.",
+    "The setup.sh confirmed the vulnerable code exists in /target-repo/modules/fatture/modals/confronta_righe.php: raw $_GET['righe'] is directly interpolated into a SQL IN() clause.",
+    "The UNION SELECT injection payload 0) UNION SELECT id,username,password_hash FROM secret_credentials-- successfully bypassed the intended WHERE IN() clause."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction uses a standalone PHP script that replicates the exact vulnerable code pattern ($righe = $_GET['righe'] concatenated into SQL) rather than the full OpenSTAManager application, because the full application requires composer install, npm build, and a complex web-based database installer. The vulnerable code pattern is identical to the one in the target repository."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned master branch, and mounts that checkout into the container at /target-repo for vulnerable code verification.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/trigger_exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/exploit_page.php",
+      "reproduction/php.ini"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the LiteLLM proxy makes an HTTP POST request to an arbitrary internal URL when api_base and api_key are provided in the request body. The SSRF probe server received the request from the proxy at path /ssrf-probe-endpoint/chat/completions with the Authorization header containing the user-provided api_key value.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proxy should make an HTTP POST request to the attacker-controlled api_base URL (http://127.0.0.1:8888/ssrf-probe-endpoint), proving the SSRF. The probe server should log the request including the path and forwarded Authorization header.",
+  "actual_observed_result": "Running the reproduction installed litellm from the target repository, started the proxy without a database or master key, started the SSRF probe server, sent the exploit request with api_base pointing to the probe server, and the probe server received an HTTP POST request at path /ssrf-probe-endpoint/chat/completions with Authorization: Bearer sk-fake-attacker-key. The proxy returned the probe server's response (containing 'SSRF_PROBE_CONFIRMED') to the client, confirming end-to-end SSRF with data exfiltration.",
+  "verification_method": "The verify.sh script starts an HTTP probe server on port 8888 that logs all incoming requests to /tmp/ssrf_probe.log. After sending the exploit request with api_base=http://127.0.0.1:8888/ssrf-probe-endpoint and api_key=sk-fake-attacker-key, the script checks if the log file contains 'SSRF_PROBE_RECEIVED'. The probe server also returns a valid OpenAI-format response to confirm the proxy processes and returns the target's response to the client.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The SSRF probe server log at /tmp/ssrf_probe.log contains 'SSRF_PROBE_RECEIVED' with the request path '/ssrf-probe-endpoint/chat/completions'.",
+    "The probe server received the Authorization header with value 'Bearer sk-fake-attacker-key', confirming the proxy forwarded the user-provided api_key to the attacker-controlled URL.",
+    "The proxy returned the probe server's response body to the client, including the content 'SSRF_PROBE_CONFIRMED', confirming end-to-end SSRF with response exfiltration.",
+    "The probe server logged the model field as 'gpt-4' and request keys as ['messages', 'model'], confirming the proxy forwarded the original request data to the target."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.83.7-stable",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/target_server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the Myfiles controller allows path traversal via URL manipulation. Files in /MyFiles/Public/ are accessible without authentication, and the lack of realpath() validation enables directory traversal using ../ sequences to read arbitrary files.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Accessing URLs with path traversal sequences (e.g., /MyFiles/Public/../../../etc/passwd) should allow reading files outside the MyFiles directory without authentication, demonstrating arbitrary file read capability.",
+  "actual_observed_result": "The reproduction successfully demonstrated that the Myfiles controller does not properly validate file paths. Path traversal sequences in URLs allow reading files outside the intended MyFiles directory without any authentication or token validation for files in the Public folder.",
+  "verification_method": "The exploit script sends HTTP GET requests with path traversal sequences (../) in the URL and verifies that files outside the MyFiles directory can be accessed. The verification confirms that no authentication is required for Public folder access.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP requests to /MyFiles/Public/ with path traversal sequences did not return 403 Forbidden",
+    "Files outside MyFiles directory were accessible via crafted URLs",
+    "No authentication token, session cookie, or credentials were required for Public folder access",
+    "The vulnerable code at Core/Controller/Myfiles.php:43 directly concatenates user-controlled URL without validation"
+  ],
+  "limitations_or_blockers": [
+    "Exact file paths depend on the specific deployment configuration and file permissions"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub (https://github.com/NeoRazorX/facturascripts.git) and checks out the main branch.",
+    "pinned_commit_or_ref": "main (latest development version)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

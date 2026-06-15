@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that the addJS function embeds arbitrary JavaScript code into PDF documents without validation, enabling execution of malicious scripts when the PDF is opened in a compatible viewer.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should generate a PDF containing embedded malicious JavaScript with app.launchURL for data exfiltration and app.alert for execution demonstration, which would execute when the PDF is opened in a viewer supporting PDF JavaScript.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully generated a PDF containing the injected JavaScript with: (1) app.launchURL call for data exfiltration, (2) app.alert call for execution verification, (3) custom marker MALICIOUS_JSPDF_INJECTION for identification. Pattern matching confirmed the JavaScript is embedded in the PDF Names dictionary under /JS key.",
+  "verification_method": "The run.sh script executes the exploit and uses grep pattern matching to verify: (1) /JS pattern confirms JavaScript dictionary presence, (2) app.launchURL confirms exfiltration capability, (3) app.alert confirms execution demonstration, (4) MALICIOUS_JSPDF_INJECTION marker confirms custom injection. These patterns distinguish actual JavaScript injection from normal PDF content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Generated PDF file contains embedded JavaScript in Names dictionary",
+    "grep verification found /JS dictionary containing the malicious code",
+    "grep verification found app.launchURL function call for data exfiltration",
+    "grep verification found app.alert function call demonstrating code execution capability"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the latest commit, and builds the jsPDF library in the container.",
+    "pinned_commit_or_ref": "latest",
+    "target_repo_mount_path": "/app/jsPDF",
+    "helper_files": [
+      "reproduction/generate_malicious_pdf.js",
+      "reproduction/verify_injection.sh"
+    ]
+  }
+}

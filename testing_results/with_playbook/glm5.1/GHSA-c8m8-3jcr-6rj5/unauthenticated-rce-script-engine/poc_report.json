@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_rce",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated remote attacker can execute arbitrary operating system commands through the FUXA script execution engine. A single POST request to /api/runscript with script.test=true and attacker-controlled JavaScript in script.code triggers Module._compile() with full require() access, enabling require('child_process').execSync() for OS command execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted script payload to reach the Module._compile() sink in msm.js and execute require('child_process').execSync('id'), writing a proof file containing the EVOHUNT_RCE_PROOF_SUCCESS marker and the OS id command output (e.g., uid=0(root) gid=0(root) groups=0(root)) to /tmp/evohunt-proof-rce.txt inside the container.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the FUXA repository at v1.3.0, built the Docker image, started the FUXA server with default settings (secureEnabled=false), and sent a POST /api/runscript request with the exploit payload. The server compiled and executed the attacker JavaScript via Module._compile(), which ran require('child_process').execSync('id') and wrote the proof file. The verification step confirmed the proof file contained the expected marker and the id command output.",
+  "verification_method": "The exploit script (exploit.py) writes a proof file at /tmp/evohunt-proof-rce.txt containing the string EVOHUNT_RCE_PROOF_SUCCESS followed by the output of the id command. The verify.sh script checks that this proof file exists and contains the expected marker. This distinguishes actual code execution from a generic HTTP error, startup failure, or unrelated crash. The proof file can only be created if require('child_process').execSync() successfully executes on the server.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/evohunt-proof-rce.txt was created inside the container, containing EVOHUNT_RCE_PROOF_SUCCESS and the output of the id command.",
+    "The /api/runscript endpoint returned a 200 response with the id command output in the response body, confirming the attacker JavaScript was compiled and executed server-side.",
+    "No authentication headers (x-access-token or x-api-key) were included in the request, confirming the exploit works without any credentials."
+  ],
+  "limitations_or_blockers": [
+    "npm install for FUXA takes several minutes due to many dependencies including native modules (sqlite3). Total reproduction time is approximately 5-10 minutes.",
+    "The server has a 60-second initialization timeout hardcoded in main.js, but in practice the server is ready within 30 seconds on a modern machine."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned v1.3.0 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.3.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

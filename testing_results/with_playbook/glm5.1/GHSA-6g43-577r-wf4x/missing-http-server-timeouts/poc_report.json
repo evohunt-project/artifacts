@@ -1,0 +1,29 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The PoC demonstrates that the CHF HTTP server accepts slow-header connections without any timeout, holding server goroutines indefinitely. Multiple slow connections exhaust server resources and block legitimate requests.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Multiple slow-header connections should be held open by the server for at least 30 seconds without being timed out, proving the absence of ReadHeaderTimeout. A legitimate request sent after establishing slow connections should fail or timeout, demonstrating the denial-of-service impact.",
+  "actual_observed_result": "Not yet executed. The reproduction bundle is prepared and self-contained for future rerun.",
+  "verification_method": "The verify.sh helper opens 50 slow-header TCP connections to the CHF SBI port (sending 1 byte per 2 seconds). After 10 seconds, it checks that all 50 connections are still open (ESTABLISHED state). It then attempts a legitimate HTTP GET to the health endpoint. If the slow connections are still open after 30 seconds and the server becomes unresponsive, the DoS is confirmed.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The CHF requires Go toolchain and MongoDB to build and run.",
+    "The number of slow connections needed to exhaust resources depends on the container's file descriptor limit. In Docker, this is typically high enough that 50-100 connections demonstrate the issue without fully exhausting resources.",
+    "The PoC demonstrates the vulnerability principle (connections held indefinitely) rather than a full resource exhaustion attack."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/slowloris.py",
+      "reproduction/chfcfg_test.yaml"
+    ]
+  }
+}

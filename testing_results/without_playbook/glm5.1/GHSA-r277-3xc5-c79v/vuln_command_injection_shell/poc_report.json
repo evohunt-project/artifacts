@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction demonstrates that the execute_shell function executes arbitrary commands when EXECUTE_LOCAL_COMMANDS is enabled, using shell=True without input validation. The PoC creates a file to prove command execution capability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the simulated malicious command to execute and create poc_marker_post.txt in the workspace, demonstrating arbitrary command execution capability.",
+  "actual_observed_result": "The PoC successfully executed the touch command through the vulnerable execute_shell code path, creating poc_marker_post.txt in /app/workspace and confirming arbitrary command execution.",
+  "verification_method": "The verify_exploit.sh script checks for the presence of poc_marker_post.txt file created by the malicious command, distinguishing successful execution from failures or unrelated behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "poc_marker_post.txt file exists in workspace after exploit execution",
+    "Command execution exit code was 0 indicating successful completion",
+    "The simulated attack path matches the real vulnerability in execute_code.py:113"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out v0.2.2, and mounts it read-only at /target-repo.",
+    "pinned_commit_or_ref": "v0.2.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_exploit.sh",
+      "reproduction/trigger_exploit.py",
+      "reproduction/verify_exploit.sh"
+    ]
+  }
+}

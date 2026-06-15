@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "auth_bypass",
+  "summary": "The Docker-based reproduction confirms that by rotating the X-Forwarded-For header value, the brute-force login protection in Auth::isBrute() is completely bypassed because get_client_ip() trusts the attacker-controlled header and each spoofed IP accumulates only 1 failed attempt, never reaching the threshold of 3.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Simulating failed login attempts from the same real IP should trigger brute-force protection after 3 attempts. Simulating failed login attempts with rotating X-Forwarded-For headers should NOT trigger brute-force protection, demonstrating the bypass.",
+  "actual_observed_result": "With a normal IP, 5 failed login attempts were recorded and brute-force protection was triggered (count > 3). With 10 rotating spoofed IPs via X-Forwarded-For, each IP accumulated only 1 failed attempt, and brute-force protection was never triggered. Zero spoofed IPs reached the threshold of 3 attempts.",
+  "verification_method": "The verify.sh script directly inserts failed login records into the zz_logs table using the same IP-based tracking that Auth::isBrute() uses. It compares the count per IP against the brute-force threshold of 3. For normal IPs, the threshold is exceeded (protection works). For rotating spoofed IPs, the threshold is never reached (protection is bypassed).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Normal IP 192.168.1.100: 5 failed attempts, brute-force triggered (count > 3)",
+    "10 unique spoofed IPs (10.0.0.1 through 10.0.9.1): each has exactly 1 failed attempt",
+    "0 spoofed IPs reached the brute-force threshold of 3",
+    "Proof signal EVOHUNT_PROOF_SIGNAL=ip_spoofing_bruteforce_bypass_confirmed emitted"
+  ],
+  "limitations_or_blockers": [
+    "The PoC demonstrates the bypass at the database level by directly simulating the IP-based logging that Auth::isBrute() uses. A full end-to-end HTTP demonstration would require the application's login endpoint to read the X-Forwarded-For header via get_client_ip(), which is confirmed by code analysis of lib/functions.php:192-214."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.9.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

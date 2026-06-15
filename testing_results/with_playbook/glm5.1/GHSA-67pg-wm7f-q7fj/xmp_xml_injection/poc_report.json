@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xml_injection",
+  "summary": "The Docker-based reproduction confirms that the addMetadata function with rawXml=true bypasses XML sanitization and allows injection of arbitrary XML constructs including XXE payloads with DOCTYPE declarations and external entity references.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should generate a PDF containing malicious XML with XXE payload, including DOCTYPE declaration with external entity reference to /etc/passwd, and malicious script elements for potential XSS.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully generated a PDF containing the injected malicious XML with: (1) DOCTYPE declaration with XXE payload referencing /etc/passwd, (2) malicious:script element demonstrating XSS potential, (3) malicious:exfil element for data exfiltration. Pattern matching confirmed all malicious XML constructs are preserved in the PDF.",
+  "verification_method": "The run.sh script executes the exploit and uses grep pattern matching to verify: (1) DOCTYPE.*xxe.*SYSTEM.*passwd pattern confirms XXE payload injection, (2) malicious:script pattern confirms XSS payload, (3) ENTITY declaration confirms XML injection bypass. These patterns distinguish actual XML injection from normal PDF metadata generation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Generated PDF file at /poc/output.pdf contains raw malicious XML in XMP metadata stream",
+    "grep verification found DOCTYPE declaration with XXE payload in PDF binary",
+    "grep verification found malicious:script element demonstrating XSS injection vector",
+    "grep verification found ENTITY declaration preserved without escaping"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the latest commit, and builds the jsPDF library in the container.",
+    "pinned_commit_or_ref": "latest",
+    "target_repo_mount_path": "/app/jsPDF",
+    "helper_files": [
+      "reproduction/generate_malicious.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

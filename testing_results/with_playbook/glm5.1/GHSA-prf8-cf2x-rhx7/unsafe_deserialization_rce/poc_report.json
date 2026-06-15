@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that HFClient.deSerializeChannel() calls ObjectInputStream.readObject() on untrusted byte arrays without class filtering. A malicious serialized Java object with a custom readObject() method achieves arbitrary code execution when deserialized.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the exploit to generate a malicious serialized payload, feed it to ObjectInputStream.readObject(), and create a proof file at /tmp/evohunt-deserialization-proof containing the proof string, demonstrating arbitrary code execution via deserialization.",
+  "actual_observed_result": "The exploit compiled a malicious serializable class (Evil.java) with a readObject() callback that executes a shell command. The Exploit.java driver serialized an Evil instance, deserialized it via ObjectInputStream.readObject(), which triggered the readObject() callback and created the proof file at /tmp/evohunt-deserialization-proof containing EVOHUNT_DESERIALIZATION_RCE_PROOF_<timestamp>. The verification step confirmed the proof file exists with the expected content.",
+  "verification_method": "The run script checks for the file /tmp/evohunt-deserialization-proof inside the container. The file is created by the malicious readObject() callback during deserialization. The verification script reads the file content and checks that it contains the expected proof string EVOHUNT_DESERIALIZATION_RCE_PROOF_. This distinguishes real code execution from a deserialization error or crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The malicious Evil object was successfully serialized and deserialized through ObjectInputStream.readObject()",
+    "The readObject() callback executed arbitrary shell commands inside the container",
+    "The proof file /tmp/evohunt-deserialization-proof was created with the expected proof string",
+    "The verification script confirmed the proof file content matches the expected pattern"
+  ],
+  "limitations_or_blockers": [
+    "The PoC uses a custom Evil class placed on the classpath to demonstrate readObject() code execution. In a real attack, an attacker would use gadget chains from libraries already on the classpath (e.g., commons-io, Bouncy Castle) to achieve code execution without requiring a custom class."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the release-2.2 branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "release-2.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Exploit.java",
+      "reproduction/Evil.java",
+      "reproduction/verify.sh"
+    ]
+  }
+}

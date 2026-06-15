@@ -1,0 +1,32 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction demonstrates that an authenticated user with SOAP rights can set the pictureUri field to a path traversal string via the REST API and then read the traversed file content through the profile image endpoint, because isRelative() does not block ../ sequences and OmFileHelper.getUserProfilePicture() passes the unsanitized uri directly into File construction.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The profile image endpoint at /profile/<userId> should return the contents of /etc/passwd (or another target file) instead of a profile picture, demonstrating that arbitrary files can be read from the server filesystem.",
+  "actual_observed_result": "Reproduction was not attempted in this run. The vulnerability was confirmed through static code analysis tracing the data flow from pictureUri setting through REST API to file serving via ProfileImageResourceReference.",
+  "verification_method": "The verification script checks whether the response from /profile/<userId> contains content from /etc/passwd (specifically looking for the 'root:' line typical of passwd files). A successful traversal is distinguished from a normal profile image response by checking for file content signatures versus PNG image headers.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static analysis confirmed ProfileImageResourceReference.java:72-80 isRelative() only checks URI.isAbsolute() and does not block ../ sequences",
+    "Static analysis confirmed OmFileHelper.java:181 constructs new File(getUploadProfilesUserDir(userId), uri) without traversal validation",
+    "Static analysis confirmed UserMapper.java:61 copies dto.getPictureUri() to User entity without sanitization",
+    "Static analysis confirmed ProfileImageResourceReference.java:112-114 reads the traversed file via FileInputStream and returns its contents"
+  ],
+  "limitations_or_blockers": [
+    "Building Apache OpenMeetings from source requires Maven and significant build time; the full build was not executed during this run",
+    "The reproduction requires a running OpenMeetings server with database initialization, SOAP-enabled user, and REST API access"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

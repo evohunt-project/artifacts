@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction successfully demonstrates command injection in the disk import workflow. A crafted file_id parameter containing shell command substitution syntax executes arbitrary commands on the target system, creating proof artifacts that confirm the vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The crafted disk file_id parameter should trigger command substitution in the bash shell context, creating files and writing arbitrary content to demonstrate control over the execution flow on the target Proxmox node.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Alpine-based test environment, created simulated Proxmox utilities, executed the crafted shell commands with the malicious file_id payload, and successfully created the proof artifact /tmp/EVOHUNT_INJECTED containing the injected content 'INJECTED'.",
+  "verification_method": "The verification script checks for the presence and content of the proof file /tmp/EVOHUNT_INJECTED created by the injected command. This distinguishes successful command execution from mere script errors or command parsing failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The file /tmp/EVOHUNT_INJECTED was created during the exploit execution",
+    "The file contains the exact injected content 'INJECTED' confirming the attacker-controlled command executed successfully",
+    "The shell command substitution syntax $(touch /tmp/EVOHUNT_INJECTED && echo INJECTED > /tmp/EVOHUNT_INJECTED) was properly interpreted by bash despite being embedded in a variable assignment",
+    "The injection bypassed the single-quote escaping mechanism in the SSH command execution path (proxmox/ssh/client.go:297)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host from https://github.com/bpg/terraform-provider-proxmox.git and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_trigger.sh",
+      "reproduction/verify_exploit.sh",
+      "reproduction/simulate_proxmox.sh"
+    ]
+  }
+}

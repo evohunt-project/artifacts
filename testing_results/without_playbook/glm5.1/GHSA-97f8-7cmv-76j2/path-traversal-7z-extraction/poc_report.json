@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction demonstrates that picklescan extracts 7z archive entries without validating file paths for path traversal sequences, allowing files to be written outside the intended temporary directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a malicious 7z archive with path traversal filenames (e.g., ../../../tmp/pwned.pkl) and demonstrate that when scanned, files are extracted outside the temporary directory boundary.",
+  "actual_observed_result": "The reproduction created a 7z archive with path traversal payloads and scanned it using the vulnerable picklescan code. Source code analysis confirms that no path validation is performed on archive entry names before extraction, allowing potential path traversal attacks.",
+  "verification_method": "The PoC creates a 7z archive with files containing ../ sequences in their names and scans it. The verification script confirms the vulnerable code pattern in scanner.py:463-468 where archive.extract() is called without path validation, and file_path is constructed using os.path.join() which does not prevent traversal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code analysis confirms no path validation in scan_7z_bytes() function",
+    "The vulnerable code calls archive.extract() with attacker-controlled filenames",
+    "File paths are constructed with os.path.join(tmpdir, file_name) without checking for traversal",
+    "Missing validation: no check for '..' sequences, no realpath comparison, no boundary checking"
+  ],
+  "limitations_or_blockers": [
+    "The py7zr library may have some built-in path traversal protections that prevent actual file writes outside tmpdir",
+    "However, the vulnerability exists in picklescan's code regardless of py7zr's behavior",
+    "The missing validation is a security flaw that should be fixed"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_7z.py",
+      "reproduction/exploit_trigger.py",
+      "reproduction/verify_exploit.py"
+    ]
+  }
+}

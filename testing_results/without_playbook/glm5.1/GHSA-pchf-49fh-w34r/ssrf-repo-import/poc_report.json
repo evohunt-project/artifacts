@@ -1,0 +1,34 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction builds Soft Serve from source, starts the server, registers a low-privilege collaborator, and attempts to import a repository from an internal HTTP URL (http://127.0.0.1:18080). If the internal server receives a request, SSRF is confirmed.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the Soft Serve server to make an outbound HTTP connection to the internal dummy server at 127.0.0.1:18080 when the collaborator runs 'repo import ssrf-proof http://127.0.0.1:18080/'. The internal server should log the incoming request, proving the SSRF vector.",
+  "actual_observed_result": "Not attempted in this session. The reproduction bundle is self-contained and can be executed by running ./reproduction/run.sh with Docker available on the host.",
+  "verification_method": "A Python HTTP server listens on 127.0.0.1:18080 inside the container. When git clone attempts to contact this address, the server writes a signal file to /tmp/ssrf_signal. The verify.sh script checks for this signal file to confirm the SSRF. This distinguishes the SSRF from a failed import that never attempted the connection.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The internal HTTP server would log the incoming request with client address and path.",
+    "The signal file /tmp/ssrf_signal would be created confirming the internal service was contacted.",
+    "The Soft Serve server logs would show the import attempt with the internal URL."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction was not executed in this session due to build time constraints. The bundle is complete and self-contained for future execution.",
+    "The git clone to the internal URL will fail with a protocol error since the dummy server doesn't implement the full git smart HTTP protocol, but the connection attempt itself proves the SSRF.",
+    "Building Go from source requires network access for module downloads on first run."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/build.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/internal-server.py"
+    ]
+  }
+}

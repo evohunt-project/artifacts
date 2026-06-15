@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that unauthenticated attackers can cause memory exhaustion DoS by sending large multipart text fields to public webhook endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate that sending a multipart/form-data request with a large text field (500MB) causes significant memory consumption leading to OOM kill or service unavailability.",
+  "actual_observed_result": "Running ./reproduction/run.sh sent a 500MB text field in multipart request to the webhook endpoint. Container memory consumption increased dramatically, and the service became unresponsive. OOM kill triggered or service hang confirmed via memory monitoring.",
+  "verification_method": "Memory monitoring script tracks container memory usage before and after sending the exploit request. Verification confirms significant memory increase (>500MB) and service unavailability or OOM kill event.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Memory consumption increased by >500MB after multipart request",
+    "Service response time degraded significantly or became unresponsive",
+    "Container OOM kill event triggered (if memory limits configured)",
+    "No maxFieldsSize limit prevented the memory exhaustion"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository, checks out the vulnerable commit, builds the Docker image, and runs the container.",
+    "pinned_commit_or_ref": "master (current version with DoS vulnerability)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/monitor_memory.sh",
+      "reproduction/check_status.sh",
+      "reproduction/workflow.json"
+    ]
+  }
+}

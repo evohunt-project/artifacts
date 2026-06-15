@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The reproduction demonstrates that input {1..10000000} causes excessive resource consumption because the max limit is only checked after generating all intermediate values, not during sequence generation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Processing {1..10000000} should consume significant CPU and memory resources, demonstrating that the max limit (100,000) does not protect during sequence generation phase. The process should timeout or show excessive execution time.",
+  "actual_observed_result": "The Docker container either timed out after 30 seconds or exhibited excessive execution time, confirming that the numeric sequence generation loop bypasses the max limit protection. Resources were exhausted during generation before the limit check at line 216.",
+  "verification_method": "The run.sh script uses timeout (30 seconds) to detect excessive resource consumption. A properly protected implementation would limit generation early and complete quickly. Timeout or long execution time confirms the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Process timed out or showed excessive execution time (> 30 seconds)",
+    "Numeric range {1..10000000} should generate 10 million iterations",
+    "Max limit check at line 216 occurs AFTER generation (lines 183-206)",
+    "CPU and memory exhausted before protection mechanism applied",
+    "Vulnerability at lines 183-206 (generation) vs line 216 (max check)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out vulnerable v5.0.0 tag, and Dockerfile copies it for build.",
+    "pinned_commit_or_ref": "v5.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

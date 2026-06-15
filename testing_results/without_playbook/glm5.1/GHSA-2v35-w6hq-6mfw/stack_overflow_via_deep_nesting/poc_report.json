@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The PoC successfully demonstrates a stack overflow denial of service by parsing a deeply nested XML document (15,000 levels). The DOMParser automatically calls normalize() after parsing, which triggers recursive DOM traversal that exhausts the JavaScript call stack, causing a RangeError.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Parsing a deeply nested XML document (15,000+ levels) should trigger the recursive normalize() call chain during DOMParser.parseFromString(), exhausting the JavaScript call stack and causing a RangeError: Maximum call stack size exceeded.",
+  "actual_observed_result": "Running ./reproduction/run.sh parsed a 15,000-level deep XML document and triggered the stack overflow during parsing (in the endDocument handler's normalize() call). The process crashed with 'RangeError: Maximum call stack size exceeded', confirming the vulnerability.",
+  "verification_method": "The PoC script catches the RangeError exception and checks for the 'Maximum call stack size exceeded' message. If this specific error is caught during parsing, the PoC exits with code 0 (success). Any other error or successful parse results in exit code 1 or 2, clearly distinguishing the expected stack overflow from other outcomes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console output shows 'Generating XML with 15000 levels of nesting...'",
+    "Console output shows 'Parsing XML (stack overflow occurs during parse)...'",
+    "Console output shows 'SUCCESS: Stack overflow triggered during XML parsing'",
+    "Console output shows 'Error: Maximum call stack size exceeded'",
+    "Process exited with code 0, confirming the expected error was caught"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh builds a Docker image from the reproduction directory. The Dockerfile clones the xmldom repository and checks out the v0.9.9 tag.",
+    "pinned_commit_or_ref": "v0.9.9",
+    "target_repo_mount_path": "N/A - clones during Docker build",
+    "helper_files": [
+      "reproduction/poc.js"
+    ]
+  }
+}

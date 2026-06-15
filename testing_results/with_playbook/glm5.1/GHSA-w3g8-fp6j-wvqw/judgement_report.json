@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T04:26:39.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_d7e79010",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-w3g8-fp6j-wvqw/GHSA-w3g8-fp6j-wvqw.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "p521-insufficient-scalar-reduction",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_d7e79010/p521-insufficient-scalar-reduction",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_d7e79010/p521-insufficient-scalar-reduction/vulnerability_report.json",
+      "title": "Insufficient modular reduction in p521 Scalar::reduce() produces invalid scalars",
+      "vulnerability_type": "incorrect_computation",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is in p521 scalar reduction and concerns a single-subtraction modular reduction error. The advisory concerns sm2/src/pke/encrypting.rs, where EncryptingKey::encrypt passes a byte count as a bit count to next_k, producing a 32-bit SM2 PKE nonce.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding in the run manifest identifies the advisory-described SM2 PKE nonce-generation root cause. The advisory root cause is the sm2 EncryptingKey::encrypt path passing N_BYTES, a byte length of 32, into next_k as a bit length, causing U256::try_random_bits to generate only a 32-bit ephemeral nonce. The qualifying finding instead covers a P-521 scalar reduction arithmetic bug.",
+    "evidence": [
+      "Advisory GHSA-w3g8-fp6j-wvqw describes sm2/src/pke/encrypting.rs, EncryptingKey::encrypt, next_k, and U256::try_random_bits receiving 32 bits instead of 256 bits for SM2 PKE nonce k.",
+      "p521-insufficient-scalar-reduction/vulnerability_report.json describes p521/src/arithmetic/scalar.rs Reduce<U576>::reduce performing only one subtraction, with no SM2 PKE encrypt/next_k path."
+    ],
+    "blockers_to_higher_tier": [
+      "No qualifying finding matches the target advisory, so Tier1, Tier2, and Tier3 do not apply.",
+      "PoC execution was skipped because the task restricts PoC runs to advisory-matched qualifying findings."
+    ]
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_d7e79010/p521-insufficient-scalar-reduction",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_d7e79010/p521-insufficient-scalar-reduction/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_d7e79010/p521-insufficient-scalar-reduction/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

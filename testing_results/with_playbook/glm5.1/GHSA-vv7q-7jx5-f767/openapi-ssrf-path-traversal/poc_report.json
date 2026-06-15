@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that an MCP client can inject path traversal sequences (../../../) into OpenAPI tool arguments. The unsanitized values flow through RequestDirector._build_url() which uses raw string substitution into the URL path template, followed by urljoin() which resolves the ../ segments. The resulting HTTP request reaches the /secret endpoint on the backend API instead of the intended /api/v1/items/{item_id} endpoint, leaking secret data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted tool argument (item_id='../../../secret') to traverse the URL path on the backend API server, reaching the /secret endpoint and returning secret data marked with EVOHUNT_SECRET_DATA_CONFIRMED.",
+  "actual_observed_result": "Running the exploit against the vulnerable target repo code confirmed the path traversal: the OpenAPI tool made an HTTP request to /secret on the backend instead of /api/v1/items/{item_id}. The response contained the secret data: {\"secret\":\"EVOHUNT_SECRET_DATA_CONFIRMED\",\"marker\":\"EVOHUNT_POC_EVOHUNT_SECRET_DATA_CONFIRMED\"}. The backend request log shows the /secret endpoint was hit twice (initial verification + traversal exploit).",
+  "verification_method": "The exploit sets up a backend HTTP server with two endpoints: /api/v1/items/{item_id} (intended) and /secret (unintended). A catch-all route logs all requests. The exploit calls the OpenAPI-backed getItem tool with item_id='../../../secret' and checks whether the backend received a request to /secret. The proof signal is the presence of EVOHUNT_SECRET_DATA_CONFIRMED or EVOHUNT_POC_EVOHUNT_SECRET_DATA_CONFIRMED in the tool's response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Backend request log shows /secret endpoint was reached via path traversal through the OpenAPI tool.",
+    "Tool response contains {\"secret\":\"EVOHUNT_SECRET_DATA_CONFIRMED\",\"marker\":\"EVOHUNT_POC_EVOHUNT_SECRET_DATA_CONFIRMED\"} proving secret data was leaked.",
+    "Normal call with item_id=42 correctly hits /api/v1/items/42, confirming the tool works normally for non-malicious inputs.",
+    "The vulnerable code in director.py:213 does url_path.replace(placeholder, str(param_value)) without URL-encoding, allowing ../ to pass through. urljoin at line 216 then resolves the traversal."
+  ],
+  "limitations_or_blockers": [
+    "Full SSRF (redirecting to an arbitrary host) requires the OpenAPI path template to start with a parameter (e.g., /{id}). Path traversal to unintended endpoints on the same host works with any parameterized path template.",
+    "The fix in PyPI fastmcp 3.4.2 encodes path parameter values with quote(str(param_value), safe=\"\").replace(\".\", \"%2E\"), which prevents both path traversal and SSRF."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

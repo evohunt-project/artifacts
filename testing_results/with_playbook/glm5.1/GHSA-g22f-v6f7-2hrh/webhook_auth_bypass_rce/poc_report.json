@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass_rce",
+  "summary": "Successfully demonstrated unauthenticated webhook execution leading to arbitrary code execution. The webhook endpoint accepts requests without any authentication when WEBHOOK_AUTH_ENABLE=False (default), and triggers flow execution containing malicious custom components that execute via exec().",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should create a proof file at /tmp/evohunt_webhook_poc_success.txt demonstrating that: (1) webhooks execute without authentication, (2) flow execution triggers arbitrary Python code, (3) code runs with full system access including command execution.",
+  "actual_observed_result": "The Langflow server starts with WEBHOOK_AUTH_ENABLE=False. The exploit creates a malicious flow containing a custom component with code execution payload. When the webhook endpoint is triggered without authentication headers, the flow executes and the custom component code runs via exec(), creating the proof file and executing system commands.",
+  "verification_method": "Automated check for proof file existence and content validation. The verify_exploit.py script checks for /tmp/evohunt_webhook_poc_success.txt and validates it contains the expected exploitation markers.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious flow created successfully",
+    "Webhook endpoint accepted unauthenticated POST request",
+    "Flow execution triggered via webhook without credentials",
+    "Arbitrary Python code executed via exec() in custom component",
+    "Proof file created at /tmp/evohunt_webhook_poc_success.txt",
+    "System command 'id' executed successfully from webhook-triggered code"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit v1.7.3, and builds the Docker image.",
+    "pinned_commit_or_ref": "v1.7.3",
+    "target_repo_mount_path": "/app/langflow",
+    "helper_files": [
+      "reproduction/create_malicious_flow.py",
+      "reproduction/trigger_webhook.py",
+      "reproduction/verify_exploit.py"
+    ]
+  }
+}

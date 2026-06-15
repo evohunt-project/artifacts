@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that the free5gc UDR stores subscription data in plain Go maps without size limits, rate limiting, or synchronization. An unauthenticated attacker can create unlimited subscriptions via POST requests, causing unbounded memory growth and concurrent map access panics that crash the UDR service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the UDR service to either crash from Go's fatal concurrent-map-access panic or consume excessive memory from unbounded subscription map growth, both triggered by unauthenticated HTTP POST requests.",
+  "actual_observed_result": "The reproduction builds the UDR from the target repository, starts MongoDB, and sends unauthenticated subscription-creation requests. The subscription maps grow without bound. Under concurrent load (PATCH + POST race), Go's runtime detects concurrent map read/write and issues a fatal panic, crashing the UDR process. Even without the crash, memory consumption grows linearly with subscription count, confirming the resource exhaustion vector.",
+  "verification_method": "The verify.sh script monitors the UDR process after the exploit trigger. If the process has exited (PID no longer exists), the crash is confirmed as the proof signal. If the process is still alive, RSS memory is measured to confirm unbounded growth. The trigger.sh script sends concurrent PATCH requests (which trigger notification goroutines iterating the maps) alongside POST requests (which write to the maps) to force a Go runtime concurrent-map-access panic.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Unauthenticated POST requests to /nudr-dr/v2/subscription-data/subs-to-notify return HTTP 201, confirming no authentication is enforced.",
+    "Subscription count grows linearly with requests, each adding an entry to the in-memory map without any size limit.",
+    "Concurrent PATCH + POST triggers Go runtime fatal panic on concurrent map access, crashing the UDR process.",
+    "The UDR process terminates with a non-zero exit code after the concurrent map panic."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref (main branch), and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/trigger.sh",
+      "reproduction/verify.sh",
+      "reproduction/config/udrcfg.yaml"
+    ]
+  }
+}

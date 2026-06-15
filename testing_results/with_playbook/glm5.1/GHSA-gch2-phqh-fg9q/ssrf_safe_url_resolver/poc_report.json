@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that orval v7.20.0 follows $ref entries in remote OpenAPI specs to internal network addresses. A local HTTP server served a malicious spec containing $ref: http://127.0.0.1:3456/internal/secret. When orval resolved this spec, it made an HTTP request to the internal service, creating a marker file that confirms the SSRF. The root cause is safeUrlResolver: false in http-resolver.ts which disables the upstream json-schema-ref-parser's built-in URL safety checks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause orval to follow a $ref entry pointing to an internal service URL (http://127.0.0.1:3456/internal/secret), creating a marker file at /tmp/evohunt_ssrf_marker with content SSRF_CONFIRMED.",
+  "actual_observed_result": "Running the reproduction pipeline started a local HTTP server with both a spec endpoint and an internal service endpoint. Orval fetched the spec, resolved the $ref to the internal URL, and accessed the internal service. The marker file /tmp/evohunt_ssrf_marker was created with content SSRF_CONFIRMED.",
+  "verification_method": "The verify.sh script starts a background HTTP server with two endpoints: /spec.yaml (malicious spec with $ref to internal URL) and /internal/secret (simulated internal service that writes a marker file). After orval processes the spec, the script checks for the marker file at /tmp/evohunt_ssrf_marker. The marker file only exists if orval's parser followed the $ref to the internal URL, which is the SSRF proof signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The upstream parser @apidevtools/json-schema-ref-parser@14.0.1 has safeUrlResolver feature confirmed present in its HTTP resolver code",
+    "Orval processed the remote spec at http://127.0.0.1:3456/spec.yaml and generated output without errors",
+    "The internal service endpoint /internal/secret was accessed by orval's $ref resolver, creating the marker file",
+    "Marker file /tmp/evohunt_ssrf_marker contained SSRF_CONFIRMED, proving the SSRF request was made"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v7.20.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.mjs",
+      "reproduction/package.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

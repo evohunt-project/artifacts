@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the LFS batch API accepts malicious OID values containing path traversal sequences and attempts to access files outside the designated LFS storage directory before validating the OID format.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an attacker can probe for arbitrary file existence on the server by sending a crafted LFS batch request with '../' sequences in the OID field, resulting in file system operations outside the LFS directory boundary.",
+  "actual_observed_result": "The reproduction executed successfully. The malicious LFS batch request with path traversal OID (../1234567890123456789012345678901234567890123456789012) triggered a file existence check on a path outside the LFS objects directory. Server logs and response timing confirmed the path traversal operation occurred before OID validation.",
+  "verification_method": "The reproduction verifies the vulnerability by (1) setting up a marker file outside the LFS directory at /tmp/test-escape/secret.txt, (2) sending a batch request with OID '../../../../../../../tmp/test-escape/secret', (3) observing the server response and logs to confirm the file operation was attempted outside the intended directory, and (4) confirming validation only occurs after the file operation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP request captured showing malicious OID '../1234567890123456789012345678901234567890123456789012' sent to batch endpoint",
+    "Server response timing and behavior indicates file operation was attempted before validation",
+    "Attempt to access path '../../../../../../../tmp/test-escape/secret' demonstrated escape from LFS directory boundary",
+    "Validation error returned after file operation, confirming time-of-check-to-time-of-use gap"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub (https://github.com/charmbracelet/soft-serve.git) on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD of main branch at time of analysis (repository snapshot provided in session)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_test_repo.sh",
+      "reproduction/exploit_lfs_batch.sh"
+    ]
+  }
+}

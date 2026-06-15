@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction confirms that the GraphQL asset upload mutation performs SSRF by fetching a file from an internal test service (127.0.0.1:9999) that is not accessible from external networks. The vulnerable application successfully made an HTTP request to the internal service, demonstrating that hostname validation fails to prevent access to private network resources.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate the vulnerable Craft CMS instance making an HTTP GET request to an internal-only service, proving that hostname validation can be bypassed to reach private network ranges via SSRF.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker environment, started an internal test server on localhost:9999, executed the GraphQL mutation with a file URL 'http://localhost:9999/ssrf-test' (using hostname instead of IP to bypass validation), and confirmed that the application made a request to the internal endpoint. The proof string 'EVOHUNT_SSRF_PROOF_70360008_SUCCESS' was observed in the internal server logs, confirming successful SSRF via hostname bypass.",
+  "verification_method": "An internal HTTP server logs all incoming requests. The exploit sends a GraphQL mutation with a URL parameter pointing to this internal-only service. Successful SSRF is confirmed when the internal server receives the request and the proof string appears in logs. This distinguishes real SSRF from GraphQL validation errors or network failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Internal test server (127.0.0.1:9999) received HTTP GET request from the Craft CMS application",
+    "Request headers show the request originated from the vulnerable application's Guzzle client",
+    "Proof string 'EVOHUNT_SSRF_PROOF_70360008_SUCCESS' logged by internal server confirms SSRF success",
+    "Hostname validation (validateHostname) was bypassed by using 'localhost' instead of '127.0.0.1'. The validation rejects raw IP addresses but allows hostnames, even if they resolve to loopback or private IPs."
+  ],
+  "limitations_or_blockers": [
+    "Reproduction requires a GraphQL schema that permits asset creation mutations. In a default installation, this may require authentication or specific schema configuration.",
+    "The exploit uses a 'localhost' hostname (resolving to 127.0.0.1) to bypass hostname validation. Direct IPs like '127.0.0.1' are rejected, but hostnames are allowed even if they resolve to private/internal IPs. This demonstrates that any internal hostname (e.g., 'db.internal', 'admin.local') that resolves to private ranges can be exploited for SSRF.",
+    "Cloud metadata endpoints (169.254.169.254, etc.) are explicitly blocked, but other sensitive internal services remain accessible."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub (or uses the provided local checkout), checks out the HEAD commit, and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD (latest commit at time of reproduction)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/internal-server.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

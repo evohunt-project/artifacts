@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_execution_rce",
+  "summary": "The Docker-based reproduction demonstrates the complete attack chain: the plugin system clones arbitrary git repositories via installPluginFromGit(), then executes the plugin's server.js via spawn('node', [serverPath]) with the host's PATH and HOME environment, without sandboxing or code review. Combined with the hardcoded JWT secret, an unauthenticated network attacker can install a malicious plugin.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A malicious plugin installed via the POST /api/plugins/install endpoint should have its server.js executed as a Node.js subprocess with host-level permissions, enabling arbitrary code execution including file access and command execution.",
+  "actual_observed_result": "The reproduction verified the plugin system's code execution pipeline: installPluginFromGit at plugin-loader.js:247 clones from arbitrary URLs, and startPluginServer at plugin-process-manager.js:30 executes the plugin's server.js with spawn('node', [serverPath]) inheriting PATH and HOME. The URL validation only checks for https:// or git@ prefix.",
+  "verification_method": "The verify.sh script (1) confirms spawn('node', [serverPath]) execution in plugin-process-manager.js, (2) confirms weak URL validation in plugins.js, (3) confirms arbitrary git clone in plugin-loader.js, (4) confirms HOME/PATH inheritance, (5) starts the server with a forged JWT token, and (6) attempts to install a local malicious plugin repository.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "server/utils/plugin-process-manager.js:30 - spawn('node', [serverPath]) executes arbitrary JavaScript from cloned repos",
+    "server/utils/plugin-loader.js:247 - spawn('git', ['clone', '--depth', '1', '--', url, tempDir]) clones from arbitrary URLs",
+    "server/routes/plugins.js:144 - URL validation only checks startsWith('https://') or startsWith('git@')",
+    "No sandboxing, seccomp, filesystem isolation, or code review for plugin code"
+  ],
+  "limitations_or_blockers": [
+    "Full end-to-end exploitation requires a publicly accessible malicious git repository; the reproduction uses a local git repo to demonstrate the vulnerability pattern"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T16:45:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9157ec3f",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-9c4h-pwmf-m6fj/GHSA-9c4h-pwmf-m6fj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "jit_arbitrary_memory_access",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9157ec3f/jit_arbitrary_memory_access",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9157ec3f/jit_arbitrary_memory_access/vulnerability_report.json",
+      "title": "Arbitrary memory read/write via JIT sandbox JSON configuration",
+      "vulnerability_type": "memory_safety_violation",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the exact same vulnerable code and root cause as the advisory: unvalidated JIT instruction generation via the CFFI interface. The advisory describes 'unvalidated JIT instruction generation' through the CFFI layer allowing 'arbitrary code execution' (CWE-94, CWE-20). The finding demonstrates that rssn_jit_configure_sandbox_json accepts attacker-controlled memory addresses (json.rs:67) and casts them to raw pointers without validation, while rssn_jit_compile_json compiles Load/Store instructions that read/write from those addresses (engine.rs:342-435). This is the precise mechanism: unvalidated input (CWE-20) leading to improper code generation (CWE-94) via the FFI/JIT layer, resulting in arbitrary memory access and code execution capability.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "H",
+          "SI": "H",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:N/SC:H/SI:H/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier3",
+    "target_match": "match",
+    "runtime_evidence": "failed_or_none",
+    "selected_finding": {
+      "folder_name": "jit_arbitrary_memory_access",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9157ec3f/jit_arbitrary_memory_access",
+      "status": "qualifying_vuln",
+      "title": "Arbitrary memory read/write via JIT sandbox JSON configuration",
+      "vulnerability_type": "memory_safety_violation"
+    },
+    "reason": "The jit_arbitrary_memory_access finding matches the advisory-described vulnerable code/root cause: unvalidated JIT instruction generation via the CFFI interface allowing arbitrary code execution. The finding correctly identifies that rssn_jit_configure_sandbox_json casts attacker-controlled usize values directly to raw pointers (json.rs:67) without validation, and the JIT engine's Load/Store instructions (engine.rs:342-435) read/write from those attacker-specified addresses, enabling arbitrary memory access and code execution. However, the PoC execution failed due to network connectivity issues preventing repository cloning, and no runtime evidence was captured. The finding is semantically correct with strong static analysis evidence and a previously successful reproduction (poc_report.json shows 'status: reproduced'), but no Tier1/Tier2 runtime evidence was obtained during this judgement.",
+    "evidence": [
+      "Finding report identifies the exact vulnerable functions: rssn_jit_configure_sandbox_json, rssn_jit_compile_json, rssn_jit_execute",
+      "Finding pinpoints the root cause at json.rs:65-68 where attacker-controlled usize is cast to *mut u8 without validation",
+      "Finding demonstrates the exploit path: configure sandbox with arbitrary address -> compile Load instruction -> execute to read arbitrary memory",
+      "poc_report.json confirms previous successful reproduction with status='reproduced' and verification_passed=true",
+      "Advisory describes 'unvalidated JIT instruction generation' via CFFI leading to 'arbitrary code execution' - finding matches this precisely",
+      "Both advisory and finding reference the same CWE-94 (Code Injection) and CWE-20 (Improper Input Validation)"
+    ],
+    "blockers_to_higher_tier": [
+      "Network failure prevented repository clone during PoC execution",
+      "No local repository checkout or cached Docker image available",
+      "Unable to obtain fresh runtime evidence to satisfy exploit_success_predicate or bug_activation_predicate",
+      "Previous poc_report.json confirms reproducibility but was generated outside this judgement run"
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "jit_arbitrary_memory_access",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9157ec3f/jit_arbitrary_memory_access",
+      "executed": false,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9157ec3f/.judge/poc_runs/jit_arbitrary_memory_access/reproduction",
+      "exit_code": null,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9157ec3f/.judge/poc_runs/jit_arbitrary_memory_access/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9157ec3f/.judge/poc_runs/jit_arbitrary_memory_access/poc_execution.json",
+      "observed_effect": "Unable to execute PoC due to missing target repository. Network failure blocked git clone from GitHub.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    }
+  ],
+  "open_world_findings": []
+}

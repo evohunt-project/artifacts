@@ -1,0 +1,104 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T08:36:19.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-5hwf-rc88-82xm/GHSA-5hwf-rc88-82xm.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "antigravity_module_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13/antigravity_module_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13/antigravity_module_bypass/vulnerability_report.json",
+      "title": "antigravity module not in UNSAFE_IMPORTS blocklist enabling SSRF and phishing attacks",
+      "vulnerability_type": "incomplete_blocklist_bypass",
+      "advisory_match": true,
+      "advisory_match_reason": "Same vulnerable code (UNSAFE_IMPORTS frozenset in fickling/fickle.py) and same root cause (incomplete blocklist missing dangerous stdlib modules). The advisory describes missing uuid, _osx_support, _aix_support; this finding identifies antigravity as another missing module. Same CWE-184 incomplete deny list, same mechanism: modules absent from UNSAFE_IMPORTS pass security screening.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "ext_opcode_denial_of_service",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13/ext_opcode_denial_of_service",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13/ext_opcode_denial_of_service/vulnerability_report.json",
+      "title": "EXT1/EXT2/EXT4 opcodes cause analyzer crash and bypass security checks",
+      "vulnerability_type": "denial_of_service_security_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause: this finding describes an AttributeError crash when UnsafeImportsML.analyze() accesses node.module on ast.Import nodes (analysis.py:287), not the incomplete UNSAFE_IMPORTS blocklist in fickle.py. The advisory is about missing modules in UNSAFE_IMPORTS; this is about a parser crash in the analyzer.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "L"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:L"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "antigravity_module_bypass",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13/antigravity_module_bypass",
+      "status": "qualifying_vuln",
+      "title": "antigravity module not in UNSAFE_IMPORTS blocklist enabling SSRF and phishing attacks",
+      "vulnerability_type": "incomplete_blocklist_bypass"
+    },
+    "reason": "The antigravity_module_bypass finding identifies the same vulnerable code and root cause as the advisory: the UNSAFE_IMPORTS frozenset in fickling/fickle.py is an incomplete blocklist. The advisory describes missing uuid, _osx_support, and _aix_support; the finding identifies antigravity as another missing dangerous stdlib module. The PoC demonstrates that a properly-formed pickle importing antigravity passes check_safety() with LIKELY_SAFE severity, confirming the incomplete blocklist allows dangerous modules to bypass security screening.",
+    "evidence": [
+      "A properly-formed pickle (0x80048c0b616e7469677261766974798c04786b6364932e) importing antigravity passes check_safety() with Severity.LIKELY_SAFE",
+      "UNSAFE_IMPORTS contains 102 modules and does not include 'antigravity'",
+      "The advisory-specific modules (uuid, _osx_support, _aix_support) are blocked in the installed version (0.1.11), confirming the advisory fix",
+      "antigravity is a real Python stdlib module that executes webbrowser.open() on import, demonstrating code execution capability",
+      "webbrowser IS in UNSAFE_IMPORTS but antigravity (which wraps it) is NOT, showing the blocklist is still incomplete",
+      "Same vulnerable code location: UNSAFE_IMPORTS frozenset in fickling/fickle.py"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "antigravity_module_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13/antigravity_module_bypass",
+      "executed": true,
+      "command": "python3 -c '... corrected exploit constructing valid antigravity import pickle ...'",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13/.judge/poc_runs/antigravity_module_bypass",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13/.judge/poc_runs/antigravity_module_bypass/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13/.judge/poc_runs/antigravity_module_bypass/poc_execution.json",
+      "observed_effect": "A properly-formed pickle importing 'antigravity' (a stdlib module not in UNSAFE_IMPORTS) passes check_safety() with LIKELY_SAFE. The UNSAFE_IMPORTS frozenset has 102 modules and excludes antigravity. The antigravity module exists in Python stdlib and executes webbrowser.open() when imported. The advisory-specific modules (uuid, _osx_support, _aix_support) are blocked in the installed version, confirming the fix was applied for those modules while the blocklist remains incomplete for others.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13/ext_opcode_denial_of_service",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13/ext_opcode_denial_of_service/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_af304f13/ext_opcode_denial_of_service/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

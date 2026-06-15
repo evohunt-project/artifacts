@@ -1,0 +1,36 @@
+{
+  "status": "failed",
+  "vulnerability_type": "integer_overflow_dos",
+  "summary": "The integer overflow in StompDecoder.parseBody() was confirmed through a standalone Java proof that replicates the exact arithmetic. The full Docker-based end-to-end reproduction (building Artemis, starting a broker, sending the STOMP frame) could not be completed within this session due to network bandwidth constraints preventing Maven dependency resolution and Docker base image pulls.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The broker JVM should throw an OutOfMemoryError or the STOMP handler thread should crash, rendering the broker unavailable. The verification script confirms the broker stops responding on its acceptor port after the exploit is sent.",
+  "actual_observed_result": "Standalone integer overflow proof confirmed: the expression pos(40) + contentLength(2147483647) + 1 overflows to -2147483608 in Java int arithmetic, bypassing the guard at StompDecoder.java:216. The subsequent new byte[2147483647] causes OutOfMemoryError on a constrained heap (-Xmx64m). The full Docker-based ./reproduction/run.sh was not executed due to network/build time constraints.",
+  "verification_method": "A standalone Java program (IntegerOverflowProof.java) replicated the exact StompDecoder.parseBody() arithmetic: int sum = 40 + 2147483647 + 1 produces -2147483608 (overflow), the guard (-2147483608 > 42) evaluates false, and new byte[2147483647] throws OutOfMemoryError on a 64 MB heap. The full reproduction also uses verify.sh to check broker TCP port liveness before and after the exploit.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Standalone proof: pos(40) + contentLength(2147483647) + 1 = -2147483608 (32-bit integer overflow confirmed).",
+    "Standalone proof: new byte[2147483647] throws java.lang.OutOfMemoryError on -Xmx64m heap.",
+    "Code analysis: StompDecoder.java line 308 parses content-length header via Integer.parseInt() with no bounds check.",
+    "Code analysis: StompDecoder.java line 216 computes pos + contentLength + 1 in int arithmetic, which overflows.",
+    "Code analysis: StompDecoder.java line 219 executes new byte[contentLength] when the overflowed guard passes.",
+    "Code analysis: StompConnection.java line 420-422 confirms only CONNECT/STOMP frames are accepted pre-auth."
+  ],
+  "limitations_or_blockers": [
+    "Building Apache ActiveMQ Artemis from source via Maven requires downloading hundreds of dependencies; network bandwidth in this session was insufficient to complete the build.",
+    "Docker base image pull (maven:3.9-eclipse-temurin-17) also timed out due to network constraints.",
+    "The OutOfMemoryError may only crash the STOMP handler thread on JVMs with very large heaps, leaving the broker partially operational. The full reproduction constrains the heap to 256 MB to ensure a fatal crash.",
+    "The full end-to-end ./reproduction/run.sh was not executed; the poc status is 'failed' reflecting that the reproduction bundle was not run to completion."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the 2.44.0 tag, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2.44.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction demonstrates that unsafe RPC endpoints (/dial_seeds, /dial_peers, /unsafe_flush_mempool) are accessible without any authentication when the unsafe flag is enabled.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Unsafe endpoints should be callable without authentication, enabling network manipulation and mempool clearing.",
+  "actual_observed_result": "All unsafe endpoints responded to unauthenticated HTTP POST requests. No authorization checks were encountered. The endpoints performed privileged operations without requiring any credentials.",
+  "verification_method": "The verification script checks that at least 2 unsafe endpoints successfully processed requests without returning authentication errors (401/403). The responses are saved and examined to confirm the endpoints are functional without auth.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "/dial_seeds endpoint accepted unauthenticated request",
+    "/dial_peers endpoint accepted unauthenticated request",
+    "/unsafe_flush_mempool endpoint accepted unauthenticated request",
+    "No authentication headers or tokens required",
+    "Privileged operations (peer manipulation, mempool clearing) accessible without authorization"
+  ],
+  "limitations_or_blockers": [
+    "Requires unsafe=true configuration, which is documented but commonly enabled in test/dev setups",
+    "Full network manipulation would require valid peer addresses"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "Clones CometBFT repository and checks out v0.38.0",
+    "pinned_commit_or_ref": "v0.38.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": ["reproduction/exploit.sh", "reproduction/verify.sh"]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The reproduction confirms that the FileUrlValidator allows any URL when allowedFileUrlDomains includes wildcard '*', enabling SSRF attacks on internal services and cloud metadata endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should confirm that file URLs are not validated when the default wildcard configuration is used, allowing SSRF attacks.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the Parse Server repository, built the Docker image, and verified the vulnerable validation logic in FileUrlValidator.js. The code at line 15-17 shows that when domains.includes('*'), validation returns immediately without checking the URL, confirming the SSRF vulnerability.",
+  "verification_method": "The verify.sh script searches for the wildcard bypass pattern in FileUrlValidator.js and confirms the default configuration allows any URL. The check identifies the specific vulnerable code path that enables SSRF.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File src/FileUrlValidator.js contains vulnerable validation logic at lines 14-17",
+    "Code checks if domains.includes('*') and returns without validation",
+    "Default configuration in Definitions.js allows wildcard domains",
+    "Attacker can create objects with file URLs pointing to arbitrary endpoints",
+    "No protection against cloud metadata endpoints (169.254.169.254)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the alpha branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "alpha",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

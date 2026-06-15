@@ -1,0 +1,36 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that Craft CMS 4.17.0-beta.1 ships with all four GraphQL DoS prevention settings defaulting to 0, and the enforcement code treats 0 as falsy, skipping all limit checks. The verify.sh script extracted the default values from GeneralConfig.php, traced the enforcement code paths in GraphqlController.php and Gql.php, and confirmed that batch, depth, complexity, and results limits are all bypassed when set to 0.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should confirm that maxGraphqlDepth, maxGraphqlComplexity, maxGraphqlBatchSize, and maxGraphqlResults all default to 0 in GeneralConfig.php, and that the enforcement code in GraphqlController.php:170 and Gql.php:445-451 skips the limit checks when these values are 0, leaving the GraphQL API vulnerable to resource exhaustion attacks.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the Craft CMS repository, built a Docker verification image, and executed verify.sh inside the container. The verification confirmed: (1) maxGraphqlBatchSize=0, maxGraphqlComplexity=0, maxGraphqlDepth=0, maxGraphqlResults=0 - all default to 0; (2) GraphqlController.php uses `if ($generalConfig->maxGraphqlBatchSize && ...)` which evaluates to false when value is 0; (3) Gql.php uses `if (!empty($generalConfig->maxGraphqlDepth))` and `if (!empty($generalConfig->maxGraphqlComplexity))` which both evaluate to false when value is 0; (4) ElementResolver.php uses `if ($maxGraphqlResults > 0)` which evaluates to false when value is 0; (5) The GraphQL API action 'api' is in allowAnonymous; (6) enableGql defaults to true. The verification signal EVHUNT_VERIFICATION_SIGNAL: graphql_dos_defaults_all_zero was emitted.",
+  "verification_method": "The verification script extracts the default config values from GeneralConfig.php using regex pattern matching, traces the enforcement code paths in GraphqlController.php and Gql.php to confirm the falsy-check pattern, verifies that the GraphQL API is anonymously accessible and enabled by default, and generates a sample deeply nested query to demonstrate the amplification potential. This confirms the vulnerability without needing a running CMS instance because the vulnerability is a deterministic configuration-default issue where the code behavior for value 0 is identical across all deployments.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "All four GraphQL DoS prevention settings (maxGraphqlBatchSize, maxGraphqlComplexity, maxGraphqlDepth, maxGraphqlResults) confirmed to default to 0 in GeneralConfig.php",
+    "Batch limit enforcement code at GraphqlController.php:170 uses falsy check `if ($generalConfig->maxGraphqlBatchSize && count($queries) > ...)` that evaluates to false when value is 0",
+    "Depth limit enforcement code at Gql.php:450 uses `if (!empty($generalConfig->maxGraphqlDepth))` that evaluates to false when value is 0",
+    "Complexity limit enforcement code at Gql.php:445 uses `if (!empty($generalConfig->maxGraphqlComplexity))` that evaluates to false when value is 0",
+    "Results limit enforcement code in ElementResolver.php uses `if ($maxGraphqlResults > 0)` that evaluates to false when value is 0",
+    "GraphQL API endpoint action 'api' is in allowAnonymous array, permitting unauthenticated access",
+    "enableGql defaults to true in GeneralConfig.php, meaning GraphQL is enabled by default",
+    "A sample deeply nested query with 25 levels of entry.children recursion was generated (1250 bytes), demonstrating the amplification vector"
+  ],
+  "limitations_or_blockers": [
+    "Full runtime exploitation (sending deeply nested queries to a live Craft CMS instance) was not performed due to the complexity of setting up a complete Craft CMS installation (requiring MySQL, Composer dependency installation, and CMS initialization). The vulnerability is confirmed through static analysis of default configuration values and enforcement code paths, which is sufficient because the behavior is deterministic."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "4.17.0-beta.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py",
+      "reproduction/setup_craft.sh"
+    ]
+  }
+}

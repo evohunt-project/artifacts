@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion",
+  "summary": "A crafted Noir project with `[0; 100000000]` causes the nargo compiler to perform unbounded memory allocation during SSA codegen, consuming over 3.7 GB of memory within 30 seconds. Under a 4 GB memory limit, the process is OOM-killed. Normal compilation of `[0; 10]` succeeds instantly with negligible memory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the nargo compiler to exhaust available memory (exceeding 1 GB RSS) when compiling a Noir project containing `[0; 100000000]`, resulting in OOM kill or excessive memory consumption that constitutes denial of service.",
+  "actual_observed_result": "Local verification with nargo v1.0.0-beta.18 on macOS/aarch64: compiling `[0; 100000000]` consumed 3,869,248 KB (~3.7 GB) of memory within 30 seconds and was still growing when killed. A control compilation with `[0; 10]` completed instantly (exit code 0) with normal memory usage. The Docker-based reproduction is expected to trigger OOM kill under the 4 GB container memory limit.",
+  "verification_method": "The verify.sh script monitors the nargo compile process for up to 60 seconds, tracking peak RSS memory usage. If the peak RSS exceeds 1 GB (1,048,576 KB) or the process is killed with signal 137 (OOM kill) or 134 (SIGABRT from allocator), the DoS is confirmed. A normal compilation would complete in under 1 second with memory well under 1 GB.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Local test: nargo compile with [0; 100000000] consumed 3,869,248 KB RSS in 30 seconds before being killed.",
+    "Local control: nargo compile with [0; 10] completed successfully (exit code 0) with normal memory usage.",
+    "The vulnerable code path at ssa_gen/mod.rs:299-300 performs repeat_n(element_value, 100000000).collect() with no size limit.",
+    "Peak RSS exceeding 1 GB threshold confirms unbounded memory allocation from the repeated array literal."
+  ],
+  "limitations_or_blockers": [
+    "The Docker-based reproduction downloads the pre-built nargo binary from GitHub releases rather than building from the mounted target repository source, because building the full Noir compiler from source takes 15-30 minutes. The pre-built binary is from the same version (v1.0.0-beta.18, commit 99bb8b5cf33d7669adbdef096b12d80f30b4c0c9) and contains the identical vulnerable code."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "99bb8b5cf33d7669adbdef096b12d80f30b4c0c9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

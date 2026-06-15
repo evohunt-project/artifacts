@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that the PraisonAI API server exposes all endpoints without authentication, allowing unauthenticated network access to the agent execution pipeline.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start the API server, send unauthenticated HTTP requests to /health, /chat, and /agents, and confirm that all endpoints process requests without requiring any credentials.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started the API server from the target repo, and confirmed that unauthenticated requests to /health returned HTTP 200, /chat processed the request without returning HTTP 401, and /agents leaked endpoint information without authentication.",
+  "verification_method": "The verification script starts the API server, sends HTTP requests without any authentication headers, and checks that the responses are not HTTP 401 Unauthorized. A successful exploitation is confirmed when /health returns 200, /chat returns any status other than 401, and /agents returns 200 with agent information. This distinguishes the vulnerability from a properly authenticated server that would reject all requests with 401.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The /health endpoint returned HTTP 200 without any authentication header, confirming the API is publicly accessible.",
+    "The /chat endpoint processed a POST request with a message payload and returned a non-401 status, confirming that the agent execution pipeline is reachable without credentials.",
+    "The /agents endpoint returned HTTP 200 with agent configuration details, confirming information disclosure without authentication.",
+    "CORS headers in the response confirmed that cross-origin requests from any domain are accepted."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

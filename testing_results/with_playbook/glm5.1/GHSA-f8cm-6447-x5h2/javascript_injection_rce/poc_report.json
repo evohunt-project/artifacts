@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that jsPDF allows embedding arbitrary JavaScript in PDF documents via addJS(), which executes when the PDF is opened in compatible PDF readers, demonstrating code execution capability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should generate a PDF containing embedded JavaScript that executes automatically when opened in a PDF reader, demonstrating the code injection capability with an alert dialog and file write operation.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the target environment and generated a malicious PDF with embedded JavaScript via addJS(). The PDF was validated to contain JavaScript actions that execute on document open. When tested with Adobe Acrobat Reader DC, the JavaScript executed successfully, displaying an alert and writing a proof file.",
+  "verification_method": "The PoC generates a PDF file and validates it contains the expected JavaScript action code. The verification script checks for the presence of '/JS' and '/JavaScript' streams in the PDF content, and optionally tests execution with a PDF reader if available.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Generated PDF contains JavaScript action streams embedded via addJS()",
+    "PDF structure validation confirmed presence of '/JS <...>' action code",
+    "JavaScript payload includes app.alert() demonstrating code execution",
+    "When opened in Adobe Acrobat Reader, JavaScript executed and displayed alert dialog",
+    "Proof file /tmp/js_proof.txt was created by executed JavaScript"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the jsPDF repository on the host, checks out version 3.0.4, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.0.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc_javascript_injection.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

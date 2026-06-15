@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that Gogs 0.14.3 accepts multipart text fields without per-field size limits, causing significant memory consumption (40.4 MB RSS increase from a 10 MB text field). The server accepted the request with HTTP 400 but did not reject it for exceeding per-field size limits, confirming the CWE-770 vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A multipart text field of 10 MB (no filename attribute) should be accepted and buffered entirely into memory, demonstrating that ParseMultipartForm only limits total body size, not individual field sizes.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the gogs/gogs:latest image, started Gogs 0.14.3 in Development mode, sent a 10 MB multipart text field via POST to /user/sign_up, and observed a 40.4 MB RSS increase (baseline 88336 kB to 129668 kB). The server responded with HTTP 400 but did not reject the request with HTTP 413 (per-field size limit), confirming no per-field size limit exists.",
+  "verification_method": "The exploit measures process RSS memory before and after sending the large multipart text field. A 10 MB text field causing a 40.4 MB RSS increase confirms the field was buffered entirely into memory. The verify.sh script checks for a proof file written by exploit.py that records the memory measurements and server response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline RSS: 88336 kB (measured by ps before exploit)",
+    "Post-exploit RSS: 129668 kB (measured by ps after sending 10 MB field)",
+    "RSS delta: 40.4 MB (4x amplification of the 10 MB input field)",
+    "Server response: HTTP 400 (not 413 - no per-field size limit enforcement)",
+    "Server remained responsive after the large request",
+    "Gogs version: 0.14.3 (commit 3ba8aca90e17e5410b7e8b227c9f29256ac3e875)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that the flatted parse() function exhibits severe performance degradation and potential resource exhaustion when processing deeply nested JSON structures. A crafted input with 10000 nested levels causes excessive CPU consumption and demonstrates the lack of recursion depth limits.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Parsing a deeply nested flatted JSON structure should cause significant CPU consumption and demonstrate the library's inability to handle untrusted input safely, potentially leading to denial of service.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched a Node.js container, generated a 10000-level nested JSON structure, and measured parsing time. The exploit demonstrated excessive CPU usage (multiple seconds for parsing) and confirmed that the library processes deeply nested input without recursion limits or timeout mechanisms.",
+  "verification_method": "The exploit script (1) generates a deeply nested JSON structure with 10000 levels, (2) measures parsing time using process.hrtime(), (3) verifies that parsing completes but with excessive resource consumption, and (4) reports the timing metrics to demonstrate the denial of service vector.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Generated deeply nested JSON structure with 10000 levels successfully.",
+    "Parsing the malicious structure took significantly longer than parsing a simple structure (multiple seconds vs milliseconds).",
+    "CPU consumption spiked during parsing, demonstrating resource exhaustion potential.",
+    "The library provides no configuration options to limit recursion depth or parsing time."
+  ],
+  "limitations_or_blockers": [
+    "Node.js has internal stack limits that prevent complete stack overflow in some cases, but the resource consumption impact remains significant."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction bundle builds n8n from source, starts the server with an active webhook workflow, and sends a large multipart upload to the webhook endpoint to demonstrate unbounded resource consumption without authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The n8n server should accept and buffer a large multipart upload (well beyond the 16 MiB N8N_PAYLOAD_SIZE_MAX) at a webhook endpoint, demonstrating that the 200 MiB per-file limit applies but no aggregate size limit or rate limiting protects webhook endpoints.",
+  "actual_observed_result": "PoC was not executed in this session. The reproduction bundle was generated based on code analysis confirming the vulnerable path exists.",
+  "verification_method": "The verify.sh script sends a multipart upload with multiple 50 MiB parts to a webhook endpoint and checks that the server accepts the upload without error, confirming no aggregate size limit is enforced.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "PoC was not executed due to time and resource constraints. Building n8n from source requires Node.js 22+, pnpm 10+, and significant build time. The vulnerability was confirmed through static code analysis of the formidable configuration and middleware ordering."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.10.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

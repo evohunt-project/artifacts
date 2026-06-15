@@ -1,0 +1,88 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T15:36:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e17a9356",
+  "advisory_path": "/Users/mac/ResearchSpace/EvoHunt/dataset/advisory/testing/2026-01/GHSA-h4rm-mm56-xf63/GHSA-h4rm-mm56-xf63.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "missing_loads_hook",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e17a9356/missing_loads_hook",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e17a9356/missing_loads_hook/vulnerability_report.json",
+      "title": "Missing pickle.loads hook in run_hook() allows bypass of always_check_safety protection",
+      "vulnerability_type": "missing_security_hook",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes a builtins import blindness issue in fickling/fickle.py Global.run() that prevents AST generation for builtins modules, blinding static analysis. This finding describes a different vulnerability: run_hook() in fickling/hook.py failing to hook pickle.loads() at runtime. The root cause, code location, and vulnerability class differ from the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "pickle_import_analysis_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e17a9356/pickle_import_analysis_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e17a9356/pickle_import_analysis_bypass/vulnerability_report.json",
+      "title": "Static analysis bypass via pickle.loads import allows arbitrary code execution",
+      "vulnerability_type": "analysis_bypass_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes builtins import blindness where Global.run() skips AST node emission for builtins modules, preventing detection of unsafe builtins imports. This finding describes a different bypass: pickle module being absent from unsafe_imports() blocklist and likely_safe_imports whitelisting loads from stdlib modules. The advisory root cause is builtins AST omission; this finding's root cause is pickle blocklist omission.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code/root cause. The advisory describes a builtins import blindness vulnerability in fickling/fickle.py Global.run() (lines 1106-1108) where AST import nodes are not emitted for builtins, __builtin__, or __builtins__ modules, preventing static analysis from detecting unsafe builtins usage. The two qualifying findings describe different vulnerabilities: (1) missing_loads_hook describes a runtime hook coverage gap in fickling/hook.py where run_hook() fails to intercept pickle.loads(), and (2) pickle_import_analysis_bypass describes a blocklist omission where pickle is missing from unsafe_imports() and gets whitelisted via likely_safe_imports. Neither matches the advisory's root cause of builtins AST node omission.",
+    "evidence": [
+      "Advisory CVE-2026-22612 identifies fickling/fickle.py Global.run() lines 1106-1108 as the vulnerable code where builtins imports are not emitted to AST",
+      "Advisory shows UNSAFE_MODULES in analysis.py marks builtins as dangerous, but AST blindness prevents detection",
+      "Finding 'missing_loads_hook' identifies fickling/hook.py run_hook() omission of pickle.loads hook, not Global.run() builtins AST omission",
+      "Finding 'pickle_import_analysis_bypass' identifies pickle module blocklist omission, not builtins AST omission",
+      "Both findings describe real vulnerabilities but neither matches the advisory's specific builtins blindness root cause"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e17a9356/missing_loads_hook",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e17a9356/missing_loads_hook/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e17a9356/missing_loads_hook/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e17a9356/pickle_import_analysis_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e17a9356/pickle_import_analysis_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e17a9356/pickle_import_analysis_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

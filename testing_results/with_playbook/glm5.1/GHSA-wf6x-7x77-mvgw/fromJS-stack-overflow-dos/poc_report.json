@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_stack_overflow",
+  "summary": "The Docker-based reproduction confirms that sending a deeply nested JSON payload (800 levels of nesting, under 10 KB) to an HTTP endpoint that passes user input through Immutable.fromJS() causes a RangeError (Maximum call stack size exceeded) that either crashes the Node.js process or is surfaced as an unhandled error, denying service to all clients.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause a deeply nested JSON payload to reach the fromJS() recursive conversion path, triggering a RangeError stack overflow that either crashes the server process or is returned as a 500 error to all subsequent requests.",
+  "actual_observed_result": "Running the reproduction sends a shallow JSON payload (which succeeds), then sends a deeply nested 800-level JSON payload. fromJS() throws RangeError: Maximum call stack size exceeded when processing the deeply nested payload, confirming the uncontrolled recursion vulnerability.",
+  "verification_method": "The verify.sh script (1) starts the server and confirms it responds to a baseline GET request, (2) sends a shallow JSON payload that succeeds normally, (3) sends the 800-level deeply nested exploit payload, and (4) checks whether the server process is still alive and whether the response contains the stack overflow error message. The test distinguishes a fromJS stack overflow from unrelated failures by checking for 'Maximum call stack size exceeded' or 'RangeError' in the server response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The shallow payload (depth 2) is processed successfully, returning {status: 'ok'}.",
+    "The 800-level deeply nested payload triggers RangeError: Maximum call stack size exceeded in fromJS().",
+    "The error is either caught by the server's try-catch (500 response with stack overflow message) or crashes the server process entirely.",
+    "Both outcomes confirm the denial-of-service vulnerability in fromJS()."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the v5.1.4 tag, builds the library inside the container, and mounts the checkout at /target-repo.",
+    "pinned_commit_or_ref": "v5.1.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.js",
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

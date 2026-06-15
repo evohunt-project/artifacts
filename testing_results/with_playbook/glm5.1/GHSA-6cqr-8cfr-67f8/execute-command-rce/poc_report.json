@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the Execute Command node executes arbitrary shell commands without any validation, sanitization, or access controls, leading to complete system compromise.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Executing a workflow with the Execute Command node should result in arbitrary command execution on the host system. The proof of concept creates a file /tmp/pwned.txt containing evidence of command execution (user ID, username, and a marker string).",
+  "actual_observed_result": "The Execute Command node successfully executed the command 'echo PWNED_BY_EVOUNT > /tmp/pwned.txt && id >> /tmp/pwned.txt && whoami >> /tmp/pwned.txt', creating /tmp/pwned.txt with the output. This demonstrates full command execution capability with the privileges of the n8n process.",
+  "verification_method": "The reproduction creates a workflow with an Execute Command node that writes a proof file to /tmp/pwned.txt. After workflow execution, the verification script checks for the existence and content of this file. Successful file creation with expected content confirms unrestricted command execution.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File /tmp/pwned.txt created by Execute Command node",
+    "File contains output of 'id' command showing user/group IDs of the n8n process",
+    "File contains output of 'whoami' command showing the username running n8n",
+    "Proof marker string 'PWNED_BY_EVOUNT' present in the file",
+    "No command validation, sanitization, or whitelisting was applied"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_rce.sh",
+      "reproduction/exploit_workflow.json",
+      "reproduction/setup_and_run.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "auth_bypass",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can change the admin user's password by sending a POST request directly to /modules/utenti/actions.php, which sets $skip_permissions=true and bypasses all authentication checks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated POST request to /modules/utenti/actions.php with op=update_user&id_utente=1&change_password=1&password=EVOHUNT_PWNED&username=admin&email=attacker@evil.com should change the admin password without requiring any authentication, and the attacker should subsequently be able to log in with the new password.",
+  "actual_observed_result": "The reproduce.sh script installed OpenSTAManager from the target source, created an admin user with a known password, sent an unauthenticated POST to /modules/utenti/actions.php changing the admin password to EVOHUNT_PWNED, and verified that login succeeds with the new password and fails with the original password, confirming complete authentication bypass.",
+  "verification_method": "The verification script performs two checks: (1) attempts login via curl with the attacker-chosen password EVOHUNT_PWNED and checks for a successful redirect (302 to controller.php), and (2) attempts login with the original password and confirms it fails. The combination proves the password was changed by the unauthenticated exploit request. The EVOHUNT_PROOF_TOKEN string is used as a marker in the exploit to distinguish this from any other password change mechanism.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated POST to /modules/utenti/actions.php with op=update_user returned HTTP 200, confirming the script executed without authentication.",
+    "Login attempt with the attacker-chosen password 'EVOHUNT_PWNED' succeeded (HTTP 302 redirect to controller.php).",
+    "Login attempt with the original password 'admin123' failed (no redirect, remained on login page).",
+    "The password change was performed entirely without authentication cookies or session tokens."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/supervisord.conf"
+    ]
+  }
+}

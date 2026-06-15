@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_rce",
+  "summary": "The PoC demonstrates that an admin user can import a malicious Egg JSON file containing arbitrary shell scripts. The script_install field is stored in the database without validation and would be executed by Wings daemon during server installation, achieving arbitrary code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should confirm that malicious script content can be imported via the Egg import endpoint and stored in the database. The script would execute during server installation on the Wings daemon host, achieving arbitrary code execution with potential for container escape or system compromise.",
+  "actual_observed_result": "The reproduction successfully imported the malicious Egg JSON file. The script_install field containing arbitrary shell commands (echo statements, file creation, passwd file reading, etc.) was stored in the database without validation. Verification confirmed the malicious content persists in the database and would be served to Wings daemon during server installation.",
+  "verification_method": "The verification script uses Laravel's artisan tinker to directly query the database and inspect the imported Egg's script_install field. It checks for the presence of 'EVORA_POC_SUCCESSFUL' marker string in the script content, confirming that arbitrary malicious commands were successfully stored. This distinguishes successful exploitation from generic import failures or validation errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious Egg JSON successfully imported via EggImporterService",
+    "Database query confirmed script_install field contains arbitrary shell commands",
+    "Script content includes proof markers: EVORA_POC_SUCCESSFUL, hostname/whoami/id execution, /etc/passwd reading",
+    "No validation errors or sanitization applied to script_install content",
+    "Script would execute during server installation with attacker-controlled container and entrypoint"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Pterodactyl Panel repository on the host, checks out the current HEAD commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "current-head",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious_egg.json",
+      "reproduction/setup_panel.sh",
+      "reproduction/verify_exploit.sh"
+    ]
+  }
+}

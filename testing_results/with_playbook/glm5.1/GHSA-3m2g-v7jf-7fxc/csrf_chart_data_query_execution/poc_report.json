@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "csrf",
+  "summary": "Docker-based reproduction bundle designed to demonstrate that POST /api/v1/chart/data accepts requests without CSRF token validation when using cookie-based authentication, confirming the CSRF exemption vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A POST request to /api/v1/chart/data without the X-CSRFToken header should be accepted (not rejected with 400/403) when using an authenticated session, confirming that the CSRF exemption allows cross-origin request forgery.",
+  "actual_observed_result": "PoC not yet executed. The reproduction bundle is complete and self-contained.",
+  "verification_method": "The exploit script (exploit.py) authenticates to Superset, obtains a session cookie, then sends a POST request to /api/v1/chart/data WITHOUT the X-CSRFToken header. Success is verified by the server accepting the request (non-403/400 response to the CSRF-exempt endpoint) while potentially rejecting similar requests to non-exempt endpoints. The script emits 'proof_marker=EVOHUNT_CSRF_BYPASS_CONFIRMED' on success.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The reproduction requires installing Superset from source which takes 10-20 minutes for pip dependency installation",
+    "The PoC demonstrates CSRF exemption by showing requests without CSRF tokens are accepted; a real CSRF attack would use a browser on a different origin"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Apache Superset repository from GitHub (shallow clone of master branch), checks out the vulnerable version, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/superset_config.py"
+    ]
+  }
+}

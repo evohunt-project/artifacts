@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction sets up Craft CMS with a pending content migration, then sends an unauthenticated POST request to /actions/app/migrate to trigger migration execution. The migration creates a marker file proving unauthorized code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The unauthenticated POST to /actions/app/migrate should trigger the pending content migration, which creates a marker file at /tmp/evohunt_migration_executed.txt inside the container. This proves that an unauthenticated network attacker can execute database migrations.",
+  "actual_observed_result": "PoC execution has not been attempted in this session. The reproduction bundle has been prepared for future execution.",
+  "verification_method": "The verification script checks for the marker file /tmp/evohunt_migration_executed.txt created by the pending migration. If the file exists with the expected content prefix 'UNAUTHENTICATED_MIGRATION_EXECUTED_', the exploit is confirmed. The script also checks that the HTTP response code indicates the endpoint was reachable without authentication.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "PoC requires Docker and network access to build the Craft CMS project via Composer",
+    "The Craft CMS CLI installer and Composer create-project require internet access"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "4.17.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

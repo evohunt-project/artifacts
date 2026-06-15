@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthorized_configuration_injection",
+  "summary": "The Docker-based reproduction confirms that the unauthenticated REST provider PUT endpoint accepts arbitrary routing configuration and injects it into the live Traefik routing table. The exploit sends a PUT request to /api/providers/rest with a frontend pointing to an attacker-controlled backend, then verifies that subsequent HTTP traffic through Traefik is redirected to the attacker backend.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated PUT request to the REST provider endpoint should allow injection of arbitrary routing configuration. After injection, traffic sent to the HTTP entrypoint should be forwarded to the attacker-controlled backend, which returns a proof string confirming traffic interception.",
+  "actual_observed_result": "The PUT request to /api/providers/rest returned HTTP 200 with the accepted configuration. Subsequent requests to the HTTP entrypoint were redirected to the attacker-controlled backend, which returned the proof string confirming successful traffic interception.",
+  "verification_method": "The verify.sh script starts a simple HTTP server that returns a unique proof string, injects a routing configuration pointing to that server via the unauthenticated REST API, then sends a request through Traefik and checks for the proof string in the response. The proof string is a unique timestamped marker that distinguishes a successful exploit from a generic error, startup failure, or default response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The PUT /api/providers/rest endpoint returned HTTP 200, confirming the configuration was accepted without authentication.",
+    "Traffic sent to the HTTP entrypoint was forwarded to the attacker-controlled backend, confirming the injected configuration was applied to the live routing table.",
+    "The response contained the unique proof string, confirming that the attacker backend received and responded to the redirected request."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the v1.7 branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/traefik.toml"
+    ]
+  }
+}

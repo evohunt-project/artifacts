@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_file_write",
+  "summary": "The Docker-based reproduction successfully demonstrates that Poetry's extractall function allows path traversal in tar archives, enabling arbitrary file writes outside the intended extraction directory. A malicious package with path traversal sequences in file paths can write files to arbitrary locations on the victim's system during package installation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The malicious tarball should write files outside the extraction directory to /tmp/poetry_path_traversal_proof.txt and /tmp/pwned.txt, demonstrating arbitrary file write capability through path traversal in tarfile extraction.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image with Python 3.10 (vulnerable version), created a malicious tarball with path traversal sequences, extracted it using Poetry's extractall function, and successfully wrote files to /tmp/poetry_path_traversal_proof.txt outside the extraction directory, confirming the vulnerability.",
+  "verification_method": "The verify.sh script checks for the existence of files written outside the extraction directory (/tmp/poetry_path_traversal_proof.txt and /tmp/pwned.txt). If these files exist, it confirms the path traversal succeeded. The test uses Python 3.10 which is within the vulnerable version range and demonstrates the exploit working as expected.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious tarball created with path traversal sequences (../../../tmp/pwned.txt and ../../../tmp/poetry_path_traversal_proof.txt)",
+    "Poetry's extractall function called on the malicious tarball",
+    "Files successfully written to /tmp/poetry_path_traversal_proof.txt outside the extraction directory",
+    "Content of proof file matches expected malicious content",
+    "Python version 3.10 confirmed vulnerable to tarfile path traversal"
+  ],
+  "limitations_or_blockers": [
+    "Vulnerability only affects specific Python versions: < 3.8.17, 3.9.0-3.9.16, 3.10.0-3.10.11, 3.11.0-3.11.3, and broken tarfile.data_filter versions 3.9.17, 3.10.12, 3.11.4",
+    "Newer Python versions (3.8.17+, 3.9.18+, 3.10.13+, 3.11.5+) have tarfile.data_filter working correctly",
+    "ZIP files (including wheels) remain vulnerable on ALL Python versions as they have no validation in helpers.py:414"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2.3.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_package.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

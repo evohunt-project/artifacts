@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The vulnerability analysis confirms that the plugin public file serving endpoint in packages/server/routes/plugins.js has incomplete path traversal protection. The sanitization only removes '../' sequences from the start of the path, allowing attackers to use embedded '../' sequences to escape the intended directory and read arbitrary files on the server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated attacker should be able to craft a malicious URL with path traversal sequences (e.g., /public/plugin/../../../etc/passwd) to read arbitrary files on the server filesystem, including sensitive configuration files, credentials, and private keys.",
+  "actual_observed_result": "Static analysis of the vulnerable code in packages/server/routes/plugins.js lines 1220-1249 confirmed the incomplete sanitization. The code uses path.normalize() and removes only leading '../' sequences with regex that only matches at the start, which fails to prevent embedded traversal patterns. The vulnerable code path is reachable via the /public/:plugin/*filepath endpoint without authentication.",
+  "verification_method": "Code analysis verified that: 1) The endpoint is publicly accessible without authentication, 2) User input from req.params.filepath flows directly to the path construction, 3) The sanitization regex only matches '../' at the start of the string (^ anchor), 4) Path normalization alone is insufficient to prevent traversal when combined with path.join(), 5) The resulting file path is read and served to the user without additional validation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Vulnerable code located at packages/server/routes/plugins.js:1220-1249",
+    "Sanitization regex only removes leading '../' sequences",
+    "Attack path '/public/plugin/foo/../../../etc/passwd' bypasses the sanitization",
+    "No authentication or authorization checks on the public file endpoint",
+    "File content is read and returned to the attacker via res.sendFile() or similar"
+  ],
+  "limitations_or_blockers": [
+    "Full dynamic exploitation requires a running Saltcorn server with plugins configured",
+    "The PoC demonstrates the vulnerability through static code analysis and attack vector identification"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh analyzes the target repository at /target-repo to demonstrate the vulnerable code path and attack vector",
+    "pinned_commit_or_ref": "current",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that the jose-swift library accepts a forged JWT with alg:none, returning a verified JWT with attacker-controlled claims without performing any signature verification.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the library to accept a forged JWT with alg set to none and attacker-controlled claims (sub: admin, role: superuser) as a valid token, printing the attacker-injected claims as verified output.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Swift exploit package against the target jose-swift library, executed the exploit which crafted a JWT with alg:none and payload {\"sub\":\"admin\",\"role\":\"superuser\"}, called JWT.verify() on it, and the library accepted the token as valid, printing the attacker-controlled claims.",
+  "verification_method": "The verify.sh script checks the exploit output for the proof string EVOHUNT_NONE_BYPASS_CONFIRMED and the attacker-controlled claim values (admin, superuser). This distinguishes a successful algorithm bypass from a parsing error, startup failure, or unrelated crash. If the library properly rejected the none algorithm, the exploit would throw JWTError.invalidSignature and the proof string would not appear.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit binary crafted a JWT with header {\"alg\":\"none\"} and payload {\"sub\":\"admin\",\"role\":\"superuser\"}.",
+    "JWT.verify() returned successfully without throwing an error, confirming the token was accepted as valid.",
+    "The verified JWT payload contained the attacker-controlled sub and role claims.",
+    "The proof string EVOHUNT_NONE_BYPASS_CONFIRMED was printed to stdout."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "f77adcffb85fc9dc4f3aa5059e4777f5a7bf35d6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit/Package.swift",
+      "reproduction/exploit/Sources/main.swift",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "race_condition",
+  "summary": "The Docker-based reproduction confirms that sending concurrent HTTP requests to the digital download endpoint bypasses the configured download access limit. With a limit of 3 downloads, 15 concurrent requests all succeed in downloading the file, demonstrating the TOCTOU race condition in DigitalLink#authorize!.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause more than the configured download limit (3) concurrent requests to successfully download the digital file, proving the access_counter check is not atomic with the increment.",
+  "actual_observed_result": "Running ./reproduction/run.sh built a Spree instance, created a digital product with download limit 3, completed an order, obtained a digital link token, and sent 15 concurrent download requests. More than 3 requests succeeded (returning HTTP 200 with file content), confirming the race condition.",
+  "verification_method": "The exploit script sends 15 concurrent HTTP requests using curl to the digital download endpoint with the same token. After all requests complete, it counts the number of HTTP 200 responses. If more than the configured limit (3) returned 200, the race condition is confirmed. The check distinguishes between successful downloads (200 with file content) and authorization failures (403).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "More than 3 concurrent requests returned HTTP 200 with file content, exceeding the configured digital_asset_authorized_clicks limit.",
+    "The access_counter in the database after the race is lower than the actual number of successful downloads, confirming non-atomic check-and-increment.",
+    "Each successful response included the test file content, confirming actual file delivery not just a 200 status code."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v4.10.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_spree.rb",
+      "reproduction/exploit_race.rb",
+      "reproduction/verify.sh"
+    ]
+  }
+}

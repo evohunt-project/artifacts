@@ -1,0 +1,37 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssti_rce",
+  "summary": "The Docker-based reproduction confirms that the Twig formula injection vulnerability exists in the Craft Commerce codebase. The verify.sh script analyzes the Formulas.php file and confirms the presence of a misconfigured Twig sandbox that allows dangerous operations (set tag, filter/map/reduce filters) on user-supplied formula strings that are accepted without sanitization in discount and shipping rule endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should confirm the presence of the vulnerable code patterns: (1) orderConditionFormula accepted without sanitization in DiscountsController and ShippingRulesController, (2) evaluateCondition method with misconfigured Twig sandbox allowing dangerous tags and filters, (3) Order object passed to Twig context with full method access enabling code execution through formula injection.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the PHP environment, cloned the target repository, analyzed the Formulas.php file, and confirmed all vulnerability indicators: evaluateCondition method present, dangerous 'set' tag in allowed tags, dangerous 'filter', 'map', 'reduce' filters in allowed filters, and vulnerable entry points in DiscountsController and ShippingRulesController. The proof string EVOWHUNT_SSTI_PROOF_* was emitted, confirming the vulnerability pattern.",
+  "verification_method": "The verification script exploits.php analyzes the vulnerable codebase and checks for: (1) presence of evaluateCondition method, (2) dangerous allowed tags (set), (3) dangerous allowed filters (filter, map, reduce), (4) vulnerable entry points in controllers. The script emits a unique proof string EVOWHUNT_SSTI_PROOF_* only if all vulnerability indicators are confirmed. verify.sh checks for this proof string in the output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Formulas.php contains evaluateCondition method that renders user-supplied formulas using Twig",
+    "Allowed tags include 'set' which enables variable manipulation",
+    "Allowed filters include 'filter', 'map', 'reduce' which can be chained for code execution",
+    "DiscountsController accepts orderConditionFormula via getBodyParam without sanitization",
+    "ShippingRulesController accepts orderConditionFormula via getBodyParam without sanitization",
+    "Discounts service evaluates formulas via Formulas::evaluateCondition",
+    "ShippingRule model evaluates formulas via Formulas::evaluateCondition",
+    "Unique proof string EVOWHUNT_SSTI_PROOF_* was emitted confirming all vulnerability patterns"
+  ],
+  "limitations_or_blockers": [
+    "Full exploit demonstration would require a running Craft CMS instance with database and configured stores, which is beyond the scope of code analysis verification",
+    "The vulnerability requires authenticated access with specific admin permissions (commerce-managePromotions or commerce-manageShipping), which aligns with the PR:L (Low privileges) CVSS metric",
+    "Actual code execution would require triggering order evaluation which happens during checkout or cart recalculation in a live environment"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

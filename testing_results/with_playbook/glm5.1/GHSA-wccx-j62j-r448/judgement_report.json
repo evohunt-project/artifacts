@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T06:07:06.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_3be2d1c3",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-wccx-j62j-r448/GHSA-wccx-j62j-r448.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "pickle_loads_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_3be2d1c3/pickle_loads_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_3be2d1c3/pickle_loads_bypass/vulnerability_report.json",
+      "title": "always_check_safety() fails to hook pickle.loads and _pickle APIs, allowing bypass of pickle safety analysis",
+      "vulnerability_type": "protection_mechanism_failure",
+      "advisory_match": true,
+      "advisory_match_reason": "Same Fickling run_hook()/always_check_safety() root cause as the advisory: pickle.loads, _pickle.loads, and _pickle.load remain unhooked while pickle.load is hooked.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "pickle_loads_bypass",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_3be2d1c3/pickle_loads_bypass",
+      "status": "qualifying_vuln",
+      "title": "always_check_safety() fails to hook pickle.loads and _pickle APIs, allowing bypass of pickle safety analysis",
+      "vulnerability_type": "protection_mechanism_failure"
+    },
+    "reason": "The selected qualifying finding identifies the advisory-described Fickling hook coverage bypass in run_hook()/always_check_safety(). The copied PoC executed against v0.1.8 and showed attacker-controlled payload execution through pickle.loads and _pickle.loads after the hook was activated, while pickle.load on the same payload was blocked with UnsafeFileError.",
+    "evidence": [
+      "Advisory root cause: run_hook() patches pickle.load, pickle.Unpickler, and _pickle.Unpickler but not pickle.loads, _pickle.load, or _pickle.loads.",
+      "Finding report lists the same affected entrypoints and exploit path: always_check_safety() -> run_hook() -> unhooked pickle.loads/_pickle.loads execute malicious pickle payload.",
+      "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_3be2d1c3/.judge/poc_runs/pickle_loads_bypass/run.log shows hook activation followed by 'RESULT: pickle.loads() EXECUTED without safety check!' and proof string 'PWNED_BY_PICKLE_LOADS_BYPASS'.",
+      "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_3be2d1c3/.judge/poc_runs/pickle_loads_bypass/run.log shows 'BLOCKED: UnsafeFileError (expected)' for pickle.load on the same malicious data and '_pickle.loads() EXECUTED without safety check!'."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "pickle_loads_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_3be2d1c3/pickle_loads_bypass",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_3be2d1c3/.judge/poc_runs/pickle_loads_bypass/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_3be2d1c3/.judge/poc_runs/pickle_loads_bypass/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_3be2d1c3/.judge/poc_runs/pickle_loads_bypass/poc_execution.json",
+      "observed_effect": "After fickling.always_check_safety()/run_hook() was activated, pickle.loads() and _pickle.loads() executed the malicious pickle payload and emitted PWNED_BY_PICKLE_LOADS_BYPASS; pickle.load() on the same payload raised UnsafeFileError.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

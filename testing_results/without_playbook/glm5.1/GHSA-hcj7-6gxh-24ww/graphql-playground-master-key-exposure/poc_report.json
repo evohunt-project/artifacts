@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "credential_exposure",
+  "summary": "The Docker-based reproduction confirms that the GraphQL Playground endpoint exposes the masterKey in client-side HTML without authentication. The reproduction starts Parse Server with GraphQL playground enabled, queries the playground URL, and extracts the embedded masterKey from the unauthenticated HTML response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Accessing the playground URL without any authentication should return HTML containing the server's masterKey embedded in a <script> tag. The extracted key should match the configured masterKey exactly, demonstrating that any network attacker can steal administrative credentials.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started Parse Server with GraphQL playground enabled, sent an unauthenticated GET request to the playground URL, and successfully extracted the masterKey from the HTML response. The extracted key matches the configured masterKey, confirming complete credential exposure.",
+  "verification_method": "The verify script extracts the masterKey from the playground HTML using regex matching, then uses the extracted key to call a master-key-only API endpoint (e.g., GET /classes with masterKey header). Success is determined by both: (1) the extracted key exactly matching the configured masterKey, and (2) the master-key-only API call succeeding with the extracted key.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The playground HTML response contains JSON.stringify(masterKey) output in a <script> block.",
+    "The extracted masterKey string exactly matches the configured masterKey value.",
+    "A REST API call using the extracted masterKey successfully accessed a master-key-only endpoint, confirming the credential is valid and usable."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.16",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.js"
+    ]
+  }
+}

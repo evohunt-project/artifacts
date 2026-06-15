@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor_missing_authorization",
+  "summary": "The PoC demonstrates that an authenticated user with basic module permissions can access, modify, and delete records belonging to other users by manipulating the id_record parameter. No record-level authorization check prevents this unauthorized access.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Low-privileged user should NOT be able to modify or delete records created by other users, but due to missing record-level authorization, the modification succeeds, confirming IDOR vulnerability.",
+  "actual_observed_result": "User A created a test anagrafica (customer record) with ID X. User B, who only has read/write module permissions but no ownership of record X, successfully modified and deleted record X by sending requests with id_record=X. The modification and deletion succeeded without authorization error.",
+  "verification_method": "Automated check: verify.sh script creates a record as User A, then as User B attempts to modify/delete that record by ID, and verifies the unauthorized modification succeeded (record deleted or modified with User B's data).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "User A successfully created test_anagrafica record",
+    "User B (different user) successfully modified User A's record without authorization error",
+    "User B successfully deleted User A's record without authorization error",
+    "Record no longer exists after User B's deletion attempt",
+    "No 'access denied' or authorization error messages in responses"
+  ],
+  "limitations_or_blockers": [
+    "Requires valid user accounts and database setup - simulated via API calls and direct database manipulation in PoC"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository, sets up database, creates test users, and demonstrates IDOR attack.",
+    "pinned_commit_or_ref": "v2.5.29",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_db.php",
+      "reproduction/test_idor.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

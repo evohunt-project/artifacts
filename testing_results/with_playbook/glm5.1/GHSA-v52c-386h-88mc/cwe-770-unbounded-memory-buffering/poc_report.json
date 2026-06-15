@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service_resource_exhaustion",
+  "summary": "A Docker-based reproduction bundle was generated to demonstrate that multer with default memory storage buffers an arbitrarily large file entirely in RAM without enforcing any fileSize limit, enabling remote denial-of-service via memory exhaustion.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A 100MB file upload should be accepted and buffered entirely in memory by multer's default memory storage. The server should report the full buffer size in req.file.buffer without rejecting the upload for exceeding a fileSize limit, demonstrating that no memory consumption bound exists.",
+  "actual_observed_result": "The reproduction was not executed in this session. The reproduction bundle is provided for independent verification.",
+  "verification_method": "The verify.sh helper starts the Express server, runs the exploit script to upload a 100MB file, captures the server log output, and checks for a proof marker confirming that req.file.buffer.length equals the uploaded file size. This distinguishes a genuine unbounded-buffering result from a busboy fileSize rejection or a generic server error.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The reproduction was not executed during this session because Docker is not available in the current environment."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v2.0.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.js",
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

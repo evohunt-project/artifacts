@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "csrf_missing_protection",
+  "summary": "The Docker-based reproduction confirms that the OAuth client registration endpoint accepts cross-origin POST requests without CSRF token validation, allowing attacker-controlled websites to register OAuth clients in victim's context.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a cross-origin POST request from an attacker-controlled page can successfully register an OAuth client on the vulnerable server without CSRF token validation.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the target MCP server with OAuth handlers, then the attacker page triggered a cross-origin POST to /oauth/register, and the server accepted the request and registered a new OAuth client, confirming the CSRF vulnerability.",
+  "verification_method": "The reproduction script checks whether the OAuth client registration endpoint accepted the cross-origin POST request and created a client entry. A successful registration proves CSRF protection is missing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The target server accepted cross-origin POST request to /oauth/register",
+    "A new OAuth client was registered with attacker-controlled metadata",
+    "No CSRF token validation or origin check was performed",
+    "The CORS middleware allowed the cross-origin request from attacker origin"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out version 1.25.1, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.25.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/attacker_page.html",
+      "reproduction/csrf_test.js"
+    ]
+  }
+}

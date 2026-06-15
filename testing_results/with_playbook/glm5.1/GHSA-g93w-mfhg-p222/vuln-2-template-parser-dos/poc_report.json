@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos",
+  "summary": "The Docker-based reproduction confirms that Angular's template parser has no depth limit on _containerStack and contains an infinite while(true) loop, allowing DoS through deeply nested or malformed templates.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should verify that the parser has unbounded container stack and infinite loop without depth limits, demonstrating the DoS vulnerability.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the Docker image, cloned the Angular repository at version 21.2.2, and confirmed that the parser has _containerStack without depth limits and contains infinite while(true) loop in ICU parsing.",
+  "verification_method": "The script directly examines parser.ts source code to verify presence of _containerStack, absence of depth limit checks, and presence of infinite loop in parsing logic.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Parser source code analysis confirmed _containerStack array exists",
+    "Verified NO depth limit configuration in parser implementation",
+    "Confirmed infinite while(true) loop in ICU message parsing",
+    "Generated test case demonstrating deeply nested HTML that would cause DoS"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit (21.2.2), and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "21.2.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

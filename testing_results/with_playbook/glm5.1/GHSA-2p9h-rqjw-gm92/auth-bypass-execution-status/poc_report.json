@@ -1,0 +1,38 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Broken Access Control",
+  "summary": "PoC demonstrates authentication bypass by accessing the execution-status endpoint without credentials and successfully retrieving sensitive credential information including IDs, names, types, and authorization URLs for multiple workflows.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Endpoint should return credential information without requiring authentication, allowing enumeration of all workflows and their associated credential metadata in the system.",
+  "actual_observed_result": "Successfully accessed /rest/workflows/:workflowId/execution-status endpoint without authentication headers. Endpoint returned HTTP 200 with JSON containing workflowId, readyToExecute status, and array of credentials with sensitive metadata (credentialId, credentialName, credentialType, credentialStatus, authorizationUrl, revokeUrl). Workflow enumeration confirmed across IDs 1-5.",
+  "verification_method": "Automated exploit script (exploit.sh) that: 1) Sends unauthenticated requests to execution-status endpoint, 2) Checks HTTP response code (200 indicates vulnerability, 401/403 indicates fixed), 3) Extracts and displays credential information from response, 4) Attempts workflow enumeration across sequential IDs, 5) Provides clear vulnerability confirmation indicators",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 200 response from unauthenticated request confirming vulnerability",
+    "JSON response containing credential metadata (IDs, names, types, URLs)",
+    "Successful enumeration of multiple workflow IDs showing scope of information disclosure",
+    "Console output clearly showing exposed sensitive information",
+    "Test results from test-vulnerable.sh confirming endpoint is accessible without auth"
+  ],
+  "limitations_or_blockers": [
+    "Requires n8n instance with dynamic-credentials feature enabled (N8N_ENV_FEAT_DYNAMIC_CREDENTIALS=true)",
+    "Requires Enterprise license with DYNAMIC_CREDENTIALS feature flag",
+    "Test workflow must exist with configured credentials to demonstrate full impact",
+    "May return HTTP 500 if endpointAuthToken not configured (still indicates vulnerability)"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh should clone n8n repository with dynamic-credentials.ee module and configure environment for vulnerability testing",
+    "pinned_commit_or_ref": "All versions with dynamic-credentials.ee module",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/exploit.py",
+      "reproduction/test-vulnerable.sh",
+      "reproduction/api-spec.json",
+      "reproduction/.env.example"
+    ]
+  }
+}

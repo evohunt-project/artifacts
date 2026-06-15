@@ -1,0 +1,62 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T16:47:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_42d16e51",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-p2gh-cfq4-4wjc/GHSA-p2gh-cfq4-4wjc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "stack_overflow_nested_message",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_42d16e51/stack_overflow_nested_message",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_42d16e51/stack_overflow_nested_message/vulnerability_report.json",
+      "title": "Stack overflow via deeply nested protobuf messages during parsing",
+      "vulnerability_type": "stack_overflow_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes a stack overflow vulnerability in the C++ Protobuf parsing implementation (libprotobuf), while the advisory describes denial-of-service vulnerabilities in the PHP Protobuf library (Packagist: google/protobuf). The advisory root causes are: (1) negative varints accepted without validation causing infinite loops in PHP CodedInputStream, and (2) recursion limit bypass in PHP due to a logic bug in incrementRecursionDepthAndPushLimit. The finding describes a C++ issue where recursive parsing exhausts stack despite recursion_budget_ limit. These are different language implementations with different vulnerable code, different root causes (PHP input validation bug vs C++ stack depth management), and different attack vectors (negative varints/deep recursion in PHP vs deep nesting in C++).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding matches the advisory-described vulnerable code or root cause. The advisory describes denial-of-service vulnerabilities in the Protobuf PHP library (Packagist: google/protobuf) caused by (1) negative varints accepted without validation leading to infinite loops/worker exhaustion, and (2) deep recursion limit bypass due to a logic bug in PHP CodedInputStream. The stack_overflow_nested_message finding describes a C++ stack overflow issue in libprotobuf's recursive parsing, which is a different language implementation with different vulnerable code locations and different root cause. The finding does not identify the PHP-specific vulnerable code (php/src/Google/Protobuf/Internal/CodedInputStream.php) or the PHP-specific root causes (negative varint validation, recursion_limit decrement bug).",
+    "evidence": [
+      "Advisory package: google/protobuf (Packagist/PHP ecosystem)",
+      "Advisory patches: 5.34.0-RC1 and 4.33.6 (PHP library versions)",
+      "Advisory references: GitHub issues #24159 and #25067 (PHP-specific issues)",
+      "Issue #24159 root cause: PHP CodedInputStream::readVarint32() accepts negative varints without validation",
+      "Issue #25067 root cause: PHP incrementRecursionDepthAndPushLimit() has logic bug preventing recursion limit enforcement",
+      "PHP vulnerable code locations: php/src/Google/Protobuf/Internal/CodedInputStream.php, php/src/Google/Protobuf/Internal/GPBWire.php",
+      "stack_overflow_nested_message finding: C++ implementation (src/google/protobuf/io/coded_stream.h, parse_context.h, wire_format_lite.h)",
+      "stack_overflow_nested_message PoC: builds C++ library (cmake, g++, libprotobuf.a)",
+      "Different language implementations: PHP vs C++ protobuf libraries",
+      "Different root causes: PHP input validation bug and recursion limit logic bug vs C++ stack depth management"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_42d16e51/stack_overflow_nested_message",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_42d16e51/stack_overflow_nested_message/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_42d16e51/stack_overflow_nested_message/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

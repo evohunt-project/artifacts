@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "integer_overflow",
+  "summary": "The Docker-based reproduction confirms that an integer overflow occurs at line 95 when processing a maliciously crafted protobuf message, resulting in a panic and denial of service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate a panic triggered by integer overflow when processing a message with a crafted length field near usize::MAX. In debug mode, Rust panics on the overflow at line 95. In release mode, the overflow wraps around, passes the safety check, but panics on subsequent buffer operations.",
+  "actual_observed_result": "The exploit successfully triggered a panic with message 'attempt to add with overflow' in debug mode at line 95, confirming the integer overflow vulnerability. In release mode with overflow-checks enabled, the same panic occurs. The vulnerability allows any network attacker to crash the application by sending a single malformed message.",
+  "verification_method": "The verify.sh script builds and runs the exploit in both debug and release modes. The exploit uses std::panic::catch_unwind to capture and confirm the panic. Success is indicated by the panic message 'attempt to add with overflow' or a panic in the buffer split operation, demonstrating the vulnerability is exploitable.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Panic triggered with message 'attempt to add with overflow' in debug mode",
+    "The panic occurs at the exact vulnerable line (line 95) where message_length + varint_length is computed",
+    "The attack requires only a single network message with crafted varint-encoded length",
+    "Both debug and release builds with overflow-checks are affected"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (https://github.com/libp2p/rust-libp2p.git) on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo. Alternatively, if /repo exists, it uses that mounted directory directly.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.rs"
+    ]
+  }
+}

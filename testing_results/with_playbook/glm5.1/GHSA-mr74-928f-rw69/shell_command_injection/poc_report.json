@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that when filebrowser is configured with Shell=['sh','-c'], a user with Execute permission and 'ls' in their allowed commands can execute arbitrary OS commands by sending 'ls ; cat /etc/passwd' via the WebSocket endpoint, causing the server to leak /etc/passwd contents.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted WebSocket command 'ls ; cat /etc/passwd' to be executed by the shell, with the output containing the contents of /etc/passwd (including the line starting with 'root:x:0:0'), confirming that the allowlist bypass allows arbitrary command execution beyond the allowed 'ls' command.",
+  "actual_observed_result": "Running the exploit script logged in via the noauth endpoint, configured the shell to ['sh','-c'], added 'ls' to the user's allowed commands, connected to the WebSocket, and sent 'ls ; cat /etc/passwd'. The output contained both the directory listing from 'ls' and the full contents of /etc/passwd, confirming arbitrary command execution via the allowlist bypass.",
+  "verification_method": "The exploit script checks whether the string 'root:x:0:0' appears in the WebSocket command output. This string is the standard root entry in /etc/passwd on Unix systems. Its presence confirms that the 'cat /etc/passwd' command executed successfully, proving the allowlist bypass allows command injection beyond the allowed 'ls' command. This distinguishes real command injection from a mere 'ls' output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "WebSocket output contains 'root:*:0:0:System Administrator' confirming /etc/passwd was read via the injected 'cat /etc/passwd' command.",
+    "The allowlist only permits 'ls', but the semicolon-separated 'cat /etc/passwd' command also executed, proving the bypass.",
+    "The server logged 'WARNING: Command Runner feature enabled!' confirming EnableExec was true, and Shell was configured to ['sh','-c'] via the API."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned v2.60.0 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.60.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

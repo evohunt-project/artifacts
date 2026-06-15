@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that the filter parameter in ajaxcompanies.php is vulnerable to boolean-based blind SQL injection. An authenticated low-privilege user can inject filter=1=1 (returns company rows) versus filter=1=2 (returns no rows), proving the attacker controls the SQL WHERE clause.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending filter=1=1 should return all companies from the database, while filter=1=2 should return none. The difference confirms the injected SQL modifies the query behavior, and an attacker can use this to extract the entire database via blind SQL injection techniques.",
+  "actual_observed_result": "The reproduction container set up Dolibarr 8.0.4, created a low-privilege test user with societe read permission, inserted test company records, and then sent two requests to ajaxcompanies.php. The request with filter=1=1 returned company data while filter=1=2 returned an empty result set, confirming the SQL injection.",
+  "verification_method": "The exploit script sends two HTTP requests: one with filter=1=1 and one with filter=1=2. It compares the JSON responses. If filter=1=1 returns at least one company record and filter=1=2 returns zero records, the SQL injection is confirmed. This distinguishes the injection from normal query behavior or error responses.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The JSON response to filter=1=1 contains company records (Acme Corporation, Beta Industries, Gamma Solutions).",
+    "The JSON response to filter=1=2 contains an empty array, confirming the injected SQL changed the WHERE clause.",
+    "The proof file /tmp/sqli_proof.txt was created with the confirmed injection evidence.",
+    "Both requests were made using a low-privilege test user account, not an admin account."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Dolibarr repository on the host, checks out the 8.0.4 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.0.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/supervisord.conf"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that an attacker can forge a valid JWT token using the publicly-known hardcoded default secret and use it to access all protected API endpoints, bypassing authentication entirely.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a locally-forged JWT token (not obtained through login or registration) is accepted by the server's authentication middleware and grants access to protected endpoints including user data retrieval and settings access.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the target service, registered a legitimate user, then used the hardcoded secret to forge a new JWT token locally. The forged token was accepted by the protected /api/auth/user and /api/settings/api-keys endpoints, returning the impersonated user's data.",
+  "verification_method": "The exploit script registers a legitimate user to create a database entry, then independently forges a JWT token using the hardcoded secret and arbitrary payload claims. It sends the forged token to protected endpoints and checks that the server returns HTTP 200 with user data, confirming the authentication bypass. The proof string EVOHUNT_AUTH_BYPASS_CONFIRMED is emitted only when all verification checks pass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The forged JWT token (signed with the hardcoded secret) was accepted by the authenticateToken middleware.",
+    "Protected endpoint /api/auth/user returned HTTP 200 with the impersonated user's data.",
+    "Protected endpoint /api/settings/api-keys returned HTTP 200, confirming full API access.",
+    "The proof string EVOHUNT_AUTH_BYPASS_CONFIRMED was emitted by the exploit script."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

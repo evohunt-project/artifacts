@@ -1,0 +1,30 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The session-info endpoint was identified as leaking CSRF tokens and user data to anonymous requesters through code analysis. Docker-based reproduction was not completed due to base image download timeout, but the vulnerability is confirmed by direct inspection of the source code.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A GET or POST request with Accept: application/json to /actions/users/session-info should return a JSON response containing csrfTokenName and csrfTokenValue fields without requiring authentication.",
+  "actual_observed_result": "Docker build did not complete within the session time limit due to network-layer image pull timeouts. Code analysis confirms the vulnerability: UsersController.php lines 172-173 allow anonymous access, and lines 570-573 unconditionally return CSRF token data.",
+  "verification_method": "The reproduction bundle verifies the vulnerability by: (1) setting up Craft CMS in Docker, (2) sending an unauthenticated request to /actions/users/session-info with Accept: application/json, and (3) checking the JSON response for csrfTokenName and csrfTokenValue keys. A successful exploit returns both values.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Source code analysis confirms actionSessionInfo() is in $allowAnonymous (UsersController.php:172-173).",
+    "Source code confirms csrfTokenName and csrfTokenValue are returned unconditionally when enableCsrfProtection is true (UsersController.php:570-573).",
+    "Source code confirms id, uid, username, email are returned for logged-in users (UsersController.php:576-579).",
+    "Docker build timed out during base image pull; reproduction was not executed."
+  ],
+  "limitations_or_blockers": [
+    "Docker base image pull (php:8.2-cli, composer:2) did not complete within the session timeout due to network speed constraints."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5.x",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

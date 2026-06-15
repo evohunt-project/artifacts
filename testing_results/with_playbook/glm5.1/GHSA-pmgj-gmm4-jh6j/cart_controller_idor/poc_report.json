@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "idor_cart_takeover",
+  "summary": "A Docker-based reproduction bundle was created to install Craft CMS with the vulnerable Commerce plugin, create a cart as one session, and demonstrate that a second anonymous session can fully modify that cart by supplying the cart number. The reproduction has not been executed in this session.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An anonymous HTTP request to POST /commerce/cart/update-cart with number=<victim_cart_number> and email=attacker@example.com should return the victim's cart with the email changed, demonstrating full cart takeover without authentication.",
+  "actual_observed_result": "The reproduction bundle was not executed during this session. The vulnerability was identified through static code analysis of CartController.php:604-617 which shows that _getCart() returns any cart matching the supplied number parameter with no ownership verification.",
+  "verification_method": "The reproduction creates a cart via the anonymous update-cart endpoint, records the cart number, then sends a second request from a separate cookie jar with number=<cart_number> and email=attacker@example.com. It checks whether the response contains the attacker-controlled email, confirming the cart was modified without ownership verification.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The reproduction requires Docker to build a Craft CMS + Commerce environment with MariaDB, PHP 8.2, Apache, and Composer, which involves significant setup time and network access for dependency downloads.",
+    "The target repository has no git history, so run.sh copies the local source tree instead of cloning from a remote URL."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the local target repository tree (no git history available) and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "source-snapshot-no-git-history",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

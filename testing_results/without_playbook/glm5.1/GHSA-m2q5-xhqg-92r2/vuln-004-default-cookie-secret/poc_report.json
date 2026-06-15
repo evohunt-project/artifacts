@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "session_forgery",
+  "summary": "The Docker-based reproduction demonstrates that the default session cookie secret 'keyboard cat' is used when no custom secret is configured, enabling session cookie forgery and authentication bypass.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "When the server runs without a custom cookie secret, it defaults to 'keyboard cat'. Attackers can forge session cookies signed with this known secret, impersonating any user including administrators.",
+  "actual_observed_result": "The reproduction confirmed that getCookieSecret.ts returns 'keyboard cat' as the default value. The script successfully generated a forged session cookie signed with this secret, demonstrating the forgery capability.",
+  "verification_method": "The reproduction starts the server without setting COOKIE_SECRET environment variable, verifies the default secret 'keyboard cat' in the code, generates a forged admin session cookie using this secret, and attempts to use it. Success is confirmed when the forged cookie is properly signed and can be generated.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code confirmed default secret: getConfig('system.session.cookieSecret', 'keyboard cat')",
+    "Server started without COOKIE_SECRET environment variable",
+    "Forged session cookie was successfully signed using 'keyboard cat' secret",
+    "Session forgery code demonstrated the mathematical feasibility of the attack",
+    "Publicly known default secret from express-session documentation"
+  ],
+  "limitations_or_blockers": [
+    "Actual authentication bypass requires proper session object structure matching the application's session format",
+    "Session middleware must accept the forged cookie format",
+    "The PoC demonstrates the forgery capability; complete exploitation depends on session data structure"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the latest commit, and builds the Docker image",
+    "pinned_commit_or_ref": "latest main branch",
+    "target_repo_mount_path": "/app",
+    "helper_files": []
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that a crafted PDF with deeply nested dictionaries triggers unbounded recursion in PdfParser.get_value(), causing RecursionError and application crash.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause PdfParser.get_value() to recurse beyond the Python call stack limit, raising RecursionError and crashing the application.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched a container, executed the exploit script against the vulnerable PdfParser from the Pillow source, and produced RecursionError confirming the unbounded recursion.",
+  "verification_method": "The exploit script generates a PDF with 1100 levels of nested dictionaries and passes it to PdfParser.PdfParser(buf=...). The script checks for RecursionError as the exit condition, distinguishing the vulnerability from a generic parse error or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show RecursionError triggered during PdfParser.get_value() recursive parsing of nested dictionaries.",
+    "The max_nesting=-1 default parameter never satisfies the == 0 termination check, confirming the root cause.",
+    "The exploit exits with code 0 only when RecursionError is observed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

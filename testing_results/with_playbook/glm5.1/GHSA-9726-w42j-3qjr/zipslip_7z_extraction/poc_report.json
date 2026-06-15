@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The PoC demonstrates that a malicious 7z archive with path traversal in filenames causes files to be written outside the temporary directory, persisting after scanner cleanup.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause a file to be written outside the intended temporary directory when extracting a malicious 7z archive.",
+  "actual_observed_result": "The PoC successfully demonstrated ZipSlip. A file with path traversal sequence '../../../tmp/payload.pkl' was written to /tmp/payload.pkl outside the temporary directory and persisted after scanner exit.",
+  "verification_method": "The run.sh script creates a malicious 7z archive with path traversal, runs picklescan on it, and verifies the escaped file exists at the unintended location after scanner completion.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File was written to /tmp/payload.pkl outside the temporary extraction directory",
+    "File persisted after scanner process exited",
+    "TemporaryDirectory cleanup did not remove the escaped file",
+    "File content matches the malicious payload from the archive"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_7z.py",
+      "reproduction/run_test.sh"
+    ]
+  }
+}

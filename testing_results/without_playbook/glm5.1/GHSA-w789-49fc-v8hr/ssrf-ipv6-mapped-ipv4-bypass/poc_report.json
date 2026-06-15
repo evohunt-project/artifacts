@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the CORS proxy's IP-address blacklist can be bypassed using IPv6-mapped IPv4 addresses. A secret-bearing HTTP server was started on loopback port 9999, and the proxy successfully fetched its content when the target URL used the ::ffff:127.0.0.1 notation, bypassing all blacklist checks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proxy should return the internal server's secret response body when accessed via http://[::ffff:127.0.0.1]:9999/, confirming that the IPv6-mapped IPv4 address evades both the proxyAllowedHost check and the socket-level DNS lookup check.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the TerriaJS-Server repository at commit 08869d9, built a Docker image, and launched the terriajs-server alongside an internal HTTP server on loopback. The exploit script confirmed that the proxy returned status 200 with the EVOHUNT_POC_SECRET response body when the target was http://[::ffff:127.0.0.1]:9999/, proving the blacklist bypass.",
+  "verification_method": "The exploit script (exploit.js) sends an HTTP GET through the proxy targeting the internal server via the IPv6-mapped loopback address. It checks that the response body contains the exact proof string EVOHUNT_POC_SECRET emitted by the internal server. This distinguishes a real SSRF bypass from a proxy error, startup failure, or unrelated response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show the internal server started and is listening on [::]:9999.",
+    "Container logs show terriajs-server started with warning 'ALL proxy requests will be accepted' confirming proxyAllDomains=true.",
+    "The exploit script received status 200 with body EVOHUNT_POC_SECRET from the proxy when targeting http://[::ffff:127.0.0.1]:9999/.",
+    "Direct access via 127.0.0.1:9999 also returned 200, confirming the IP:port parsing gap in proxyAllowedHost combined with proxyAllDomains=true."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "08869d9ee10aacd97a78ce851b7434dab18c064f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/internal_server.js",
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

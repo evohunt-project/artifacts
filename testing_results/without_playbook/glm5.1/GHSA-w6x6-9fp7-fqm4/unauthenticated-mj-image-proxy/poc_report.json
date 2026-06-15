@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that GET /mj/image/:id is accessible without any authentication. A mock Midjourney task was inserted into the database with an image_url pointing to a simulated internal service on port 8888. An unauthenticated HTTP GET request to /mj/image/evohunt-ssrf-test-001 returned HTTP 200 with the secret content EVOHUNT_POC_SECRET from the mock internal service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The unauthenticated request to /mj/image/{task_id} should return HTTP 200 with the content fetched from the task's stored image_url, proving that no authentication is required to access private task images.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the application, started it with SQLite, inserted a mock Midjourney task with image_url http://127.0.0.1:8888/secret-endpoint, and an unauthenticated GET request to /mj/image/evohunt-ssrf-test-001 returned HTTP 200 with EVOHUNT_POC_SECRET. The Gin router log confirmed the request was processed without any authentication middleware.",
+  "verification_method": "The verification script starts a mock HTTP server on port 8888 that returns EVOHUNT_POC_SECRET, inserts a Midjourney task with image_url pointing to that server, and makes an unauthenticated GET request to /mj/image/{id}. Success is confirmed when the response body contains EVOHUNT_POC_SECRET, proving: (1) the endpoint was reached without authentication, (2) the server fetched from the stored image URL, and (3) the internal resource content was returned to the unauthenticated caller.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated HTTP request to /mj/image/evohunt-ssrf-test-001 returned HTTP 200 (not 401 or 403).",
+    "The response body contains EVOHUNT_POC_SECRET, the secret string from the simulated internal service.",
+    "No Authorization header, session cookie, or API token was provided in the request.",
+    "The Gin router logged the request as GET /mj/image/evohunt-ssrf-test-001 with status 200, confirming it bypassed the TokenAuth middleware.",
+    "The channel lookup for channel_id=0 returned record not found, but the handler continued with the default HTTP client, fetching from the stored image_url."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the session directory into the Docker build context, builds the full application with backend and a stub frontend, and runs the verification inside the container.",
+    "pinned_commit_or_ref": "source-snapshot-no-git",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

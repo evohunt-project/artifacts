@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that sending a 200MB PUT request body to a goshs instance running in a 256MB cgroup causes the server process to be OOM-killed, resulting in complete denial of service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the goshs process to be killed by the OOM killer after io.ReadAll accumulates enough data to exceed the container memory limit, making the HTTP service completely unavailable.",
+  "actual_observed_result": "Running ./reproduction/run.sh built goshs, started it in a 256MB Docker container, and sent a 200MB PUT request body via the exploit script. The server accepted and buffered the entire body (progress logged at 20MB intervals up to 200MB). After the upload completed, the connection was reset and the goshs process was killed (PID 8 Killed), confirming OOM termination. A post-exploitation check confirmed the process no longer exists and the server does not respond.",
+  "verification_method": "The verify script checks goshs availability before and after the exploit. Before the exploit, goshs responds to HTTP GET with status 200. After the 200MB PUT, the goshs process is verified to no longer exist (kill -0 fails) and curl fails to connect, confirming the OOM kill. The exploit script also detects connection reset during or after the upload as an additional signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "goshs started successfully with PID 8 and initial RSS of ~17MB.",
+    "The exploit script sent 200MB in 1MB chunks, with progress logged every 20MB.",
+    "After the full 200MB upload, the connection was reset by the server (connection reset after full upload).",
+    "The goshs process was killed by the OOM killer (PID 8 Killed signal in verify.sh output).",
+    "Post-exploitation check confirmed the process no longer exists and the server does not respond."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned v1.1.4 tag, builds the goshs binary in a Go container, copies it into the reproduction image, and runs the verification container with a 256MB memory limit.",
+    "pinned_commit_or_ref": "v1.1.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

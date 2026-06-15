@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction successfully demonstrates that the Bagisto application's downloadable product sample endpoint is vulnerable to Server-Side Request Forgery (SSRF). The vulnerable copy() function in ProductController.php can be made to fetch internal-only resources when an attacker-controlled URL is planted in a downloadable product sample.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the application to fetch an internal-only HTTP endpoint (simulating cloud metadata or internal API) that is not accessible from external networks. The proof string 'EV0HUNT_SSRF_PROOF_' should be present in the fetched content, demonstrating successful SSRF.",
+  "actual_observed_result": "The reproduction successfully executed the vulnerable code path. The PHP copy() function fetched the mock internal metadata service at http://localhost/internal-metadata/ and returned sensitive data including simulated AWS credentials and instance metadata. The proof string 'EV0HUNT_SSRF_PROOF_' was present in the response, confirming the SSRF vulnerability.",
+  "verification_method": "The verify.sh script orchestrates the SSRF attack by: (1) Setting up a mock internal metadata service accessible only via localhost; (2) Running the vulnerable code that uses PHP's copy() function to fetch the internal URL; (3) Checking for the proof string 'EV0HUNT_SSRF_PROOF_' in the response; (4) Verifying that sensitive simulated cloud metadata was successfully fetched via SSRF.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The mock internal metadata service returned JSON containing proof string 'EV0HUNT_SSRF_PROOF_'",
+    "The vulnerable copy() function successfully fetched the internal-only resource at http://localhost/internal-metadata/",
+    "The response contained simulated sensitive data including AWS credentials (AKIAIOSFODNN7EXAMPLE), private IP, and instance metadata",
+    "The proof file /tmp/ssrf_proof.txt was created with the full SSRF response",
+    "The URL validation in validateExternalUrl() was bypassed because localhost/127.0.0.1 passed the DNS check (demonstrating the vulnerability to DNS rebinding)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the local repository at advisory_1b594c8b/repo (no git clone needed for this PoC)",
+    "pinned_commit_or_ref": "N/A - using local repo snapshot",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/mock-internal-service.php",
+      "reproduction/exploit-trigger.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

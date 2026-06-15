@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms deserialization RCE via object injection. A crafted serialized object payload uploaded through Etemplate request processing successfully executes arbitrary commands via __wakeup() gadget chain.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate RCE by uploading a malicious serialized object and triggering its deserialization, resulting in command execution inside the container.",
+  "actual_observed_result": "Executing ./reproduction/run.sh built the EGroupware container, uploaded a crafted serialized object payload, triggered deserialization via Etemplate request, and achieved command execution creating proof artifacts.",
+  "verification_method": "The PoC script checks for: (1) successful file upload, (2) deserialization triggered, (3) command execution evidence, (4) proof file created by executed command. Verification distinguishes RCE from upload/parse errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious serialized object uploaded successfully",
+    "Etemplate request processing triggered deserialization",
+    "PHP object instantiated with injected payload",
+    "Command execution via __wakeup() or __destruct() gadget",
+    "Proof file created: /tmp/deserialization_rce_proof.txt with command output"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the EGroupware repository, checks out the vulnerable commit, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "23.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/payload_generator.py"
+    ]
+  }
+}

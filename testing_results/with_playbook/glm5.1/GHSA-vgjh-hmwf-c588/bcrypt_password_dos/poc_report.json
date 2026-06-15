@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that user signup with an oversized password causes CPU-bound bcrypt hashing that takes orders of magnitude longer than a normal signup, enabling denial of service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A signup request with a 100 KB password should take significantly longer (multiple seconds) compared to a normal signup (milliseconds), demonstrating that the server processes the entire password through bcrypt without length validation.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the target service, performed a normal signup (completed quickly), then performed a signup with a 100 KB password. The oversized password signup took significantly longer than the normal signup, confirming the bcrypt CPU exhaustion vulnerability.",
+  "verification_method": "The exploit script measures the response time of two signup requests: one with a normal-length password and one with a 100 KB password. It verifies that the oversized password request takes at least 5x longer than the normal request. This timing differential confirms that bcrypt processes the entire password without length validation, proving the DoS vector.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Normal signup request completed successfully with a short password.",
+    "Oversized password signup request took significantly longer to complete.",
+    "The timing differential exceeds the 5x threshold, confirming unbounded bcrypt processing.",
+    "Both requests returned successful responses, confirming the server processed them through the full bcrypt path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.13",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/setup.sh"
+    ]
+  }
+}

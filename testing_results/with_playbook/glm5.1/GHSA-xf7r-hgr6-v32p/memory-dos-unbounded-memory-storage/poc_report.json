@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that multer v2.0.2 with default MemoryStorage buffers entire file uploads in memory without any file size limit. A 20MB multipart upload was fully buffered in RAM (buffer size matched payload size), demonstrating that an unauthenticated attacker can exhaust server memory by sending arbitrarily large file uploads.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that multer's default MemoryStorage buffers the entire uploaded file (20MB) in memory as a Buffer object without enforcing any file size limit, proving that an attacker can cause unbounded memory allocation.",
+  "actual_observed_result": "The Express server using multer with default settings received the 20MB multipart upload and reported req.file.buffer.length = 20971520 (20MB), confirming that the entire payload was buffered in memory. No LIMIT_FILE_SIZE error was triggered because busboy's default fileSize limit is Infinity and multer injects no safe defaults.",
+  "verification_method": "The exploit sends a 20MB multipart file upload and checks that the server's response bufferSize equals the payload size (20971520 bytes). This proves that (1) no file size limit was enforced, (2) the entire file was buffered in RAM by MemoryStorage, and (3) the vulnerability allows unbounded memory allocation from network input without authentication.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The server response confirmed bufferSize: 20971520, exactly matching the 20MB payload size.",
+    "No MulterError with code LIMIT_FILE_SIZE was returned, proving no file size limit was enforced.",
+    "The multer() constructor was called with no options, using default MemoryStorage and no limits, which is the documented basic usage pattern."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref v2.0.2, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.0.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.js",
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

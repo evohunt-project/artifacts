@@ -1,0 +1,73 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e9e9e951",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-hf2r-9gf9-rwch/GHSA-hf2r-9gf9-rwch.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "CVE-2026-33863_loadfile_prototype_pollution",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e9e9e951/CVE-2026-33863_loadfile_prototype_pollution",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e9e9e951/CVE-2026-33863_loadfile_prototype_pollution/vulnerability_report.json",
+      "title": "Prototype pollution via loadFile() and load() allows attacker-controlled Object.prototype manipulation",
+      "vulnerability_type": "prototype_pollution",
+      "advisory_match": true,
+      "advisory_match_reason": "Same CVE-2026-33863, same package (convict), same vulnerable function (overlay() in main.js), same attack vectors (load()/loadFile()/schema initialization with __proto__/constructor.prototype), and same root cause (unguarded recursive merge in overlay() allows __proto__ and constructor.prototype keys to reach Object.prototype).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "CVE-2026-33863_loadfile_prototype_pollution",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e9e9e951/CVE-2026-33863_loadfile_prototype_pollution",
+      "status": "qualifying_vuln",
+      "title": "Prototype pollution via loadFile() and load() allows attacker-controlled Object.prototype manipulation",
+      "vulnerability_type": "prototype_pollution"
+    },
+    "reason": "The PoC was executed against convict v6.2.4 and confirmed Object.prototype pollution: after loading a malicious JSON config via config.loadFile(), freshly created empty objects {} inherited attacker-controlled properties ({}.polluted === \"yes\", {}.isAdmin === true, {}.polluted_array[0] === \"owned\"). This directly demonstrates the advisory-described vulnerability: the overlay() function in main.js recursively merges config data without checking for __proto__ keys, allowing Object.prototype pollution via load()/loadFile().",
+    "evidence": [
+      "PoC cloned convict v6.2.4 and installed dependencies",
+      "malicious_config.json with __proto__ containing polluted, isAdmin, and polluted_array properties was loaded via config.loadFile()",
+      "After loadFile(), {}.polluted === \"yes\" confirmed Object.prototype pollution",
+      "{}.isAdmin === true confirmed security-sensitive property injection",
+      "{}.polluted_array[0] === \"owned\" confirmed array prototype pollution",
+      "Object.prototype was verified clean before the exploit (testObj1.polluted === undefined)",
+      "PoC exited with code 0 (success)"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "CVE-2026-33863_loadfile_prototype_pollution",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e9e9e951/CVE-2026-33863_loadfile_prototype_pollution",
+      "executed": true,
+      "command": "bash run_direct.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e9e9e951/.judge/poc_runs/CVE-2026-33863_loadfile_prototype_pollution",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e9e9e951/.judge/poc_runs/CVE-2026-33863_loadfile_prototype_pollution/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e9e9e951/.judge/poc_runs/CVE-2026-33863_loadfile_prototype_pollution/poc_execution.json",
+      "observed_effect": "After loading malicious_config.json via config.loadFile(), Object.prototype was polluted: {}.polluted === \"yes\", {}.isAdmin === true, {}.polluted_array[0] === \"owned\". The PoC exited with code 0 confirming successful exploit.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

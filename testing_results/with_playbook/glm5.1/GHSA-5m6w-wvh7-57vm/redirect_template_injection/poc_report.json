@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "template_injection",
+  "summary": "The Docker-based reproduction confirms that Go template expressions in redirect replacement strings can extract sensitive HTTP headers, which are leaked in redirect Location URLs.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Request with Cookie header should trigger redirect with template expression {{.Request.Header.Get \"Cookie\"}} evaluated, resulting in Location header containing the leaked cookie value.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built Traefik, configured malicious redirect with template injection via traefik.toml, sent test request with Cookie header, and verified the redirect Location contained the exact leaked cookie value.",
+  "verification_method": "The verification script sends a request with Cookie header 'SECRET_SESSION_TOKEN_12345' to the malicious redirect endpoint, then checks if the Location header in the 302 redirect response contains 'leaked=SECRET_SESSION_TOKEN_12345', confirming the template evaluated and extracted the header.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Traefik started with malicious redirect configuration containing template expression",
+    "Request sent with Cookie header to redirect endpoint",
+    "302 redirect response received with Location header",
+    "Location header contained 'leaked=SECRET_SESSION_TOKEN_12345' (exact cookie value)",
+    "Template injection successfully evaluated {{.Request.Header.Get \"Cookie\"}}"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the existing target repository at /Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1e3057f9/repo and mounts it read-only at /target-repo during build.",
+    "pinned_commit_or_ref": "master branch (v1.7.x)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/traefik.toml"
+    ]
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T09:21:59.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-rf6f-7fwh-wjgh/GHSA-rf6f-7fwh-wjgh.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "prototype-pollution-via-keys",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/prototype-pollution-via-keys",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/prototype-pollution-via-keys/vulnerability_report.json",
+      "title": "Prototype pollution via unvalidated object property keys in parse()",
+      "vulnerability_type": "prototype_pollution",
+      "advisory_match": true,
+      "advisory_match_reason": "Same vulnerable function (parse/resolver in flatted), same root cause (unvalidated property values used as array indices without numeric coercion, allowing __proto__ to access Array.prototype via the prototype chain), same CWE-1321, same affected component (flatted < 3.4.2). The finding described Object.prototype pollution via __proto__ key assignment while the advisory describes Array.prototype leak via __proto__ value-as-index, but both stem from the same missing validation in the resolver function at cjs/index.js:30.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "resource-exhaustion-deep-nesting",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/resource-exhaustion-deep-nesting",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/resource-exhaustion-deep-nesting/vulnerability_report.json",
+      "title": "Resource exhaustion via uncontrolled recursion in parse()",
+      "vulnerability_type": "resource_exhaustion",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerability class (resource exhaustion/DoS vs prototype pollution), different root cause (unbounded recursion vs unvalidated property access as array index), and different security consequence (CPU consumption vs prototype chain pollution).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "type-confusion-string-wrapping",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/type-confusion-string-wrapping",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/type-confusion-string-wrapping/vulnerability_report.json",
+      "title": "Type confusion via String object wrapping in parse()",
+      "vulnerability_type": "type_confusion",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerability class (type confusion vs prototype pollution), different root cause (String object wrapping/unwrapping vs unvalidated property access as array index), and different security consequence (typeof/strict equality bypass vs prototype chain pollution).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "prototype-pollution-via-keys",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/prototype-pollution-via-keys",
+      "status": "qualifying_vuln",
+      "title": "Prototype pollution via unvalidated object property keys in parse()",
+      "vulnerability_type": "prototype_pollution"
+    },
+    "reason": "The finding identifies the same prototype pollution vulnerability in flatted parse() described in the advisory. The advisory root cause (using __proto__ as an unvalidated array index into the input buffer at cjs/index.js:30, leaking Array.prototype) was confirmed via PoC execution. The PoC demonstrated that parse('[{\"x\":\"__proto__\"}]') returns an object where parsed.x === Array.prototype, and writing to parsed.x pollutes Array.prototype globally, confirmed by [].polluted_advisory === 'pwned'.",
+    "evidence": [
+      "PoC run.log line 8: parsed.x === Array.prototype: true",
+      "PoC run.log line 10: EXPLOIT SUCCESS: Array.prototype polluted via advisory mechanism",
+      "PoC run.log line 11: [].polluted_advisory: pwned",
+      "Advisory root cause (input[value] without +coercion at cjs/index.js:30) confirmed exploitable after reverting the v3.4.2 fix",
+      "Same CWE-1321 (Prototype Pollution), same affected function (parse/resolver), same affected component (flatted < 3.4.2)"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "prototype-pollution-via-keys",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/prototype-pollution-via-keys",
+      "executed": true,
+      "command": "node exploit.js",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/.judge/poc_runs/prototype-pollution-via-keys",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/.judge/poc_runs/prototype-pollution-via-keys/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/.judge/poc_runs/prototype-pollution-via-keys/poc_execution.json",
+      "observed_effect": "Parsed '[{\"x\":\"__proto__\"}]' via flatted.parse(). Result property parsed.x === Array.prototype confirmed. Writing parsed.x.polluted_advisory = 'pwned' polluted Array.prototype globally, verified by [].polluted_advisory === 'pwned'.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/resource-exhaustion-deep-nesting",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/resource-exhaustion-deep-nesting/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/resource-exhaustion-deep-nesting/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/type-confusion-string-wrapping",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/type-confusion-string-wrapping/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_ff8b5e7f/type-confusion-string-wrapping/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

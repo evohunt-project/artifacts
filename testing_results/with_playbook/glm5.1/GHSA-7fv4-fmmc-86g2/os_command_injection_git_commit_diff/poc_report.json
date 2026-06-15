@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "os_command_injection",
+  "summary": "The Docker-based reproduction confirms that the git commit-diff endpoint passes the unsanitized commit query parameter into a shell command via exec(), allowing an unauthenticated attacker to execute arbitrary operating system commands on the server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a crafted GET request to /api/git/commit-diff with a commit parameter containing shell metacharacters should cause the server to execute the injected command and include its output in the HTTP response body.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the target service, registered a user, created a project, and sent a crafted request with commit=;echo EVOHUNT_RCE_PROOF. The response body contained the proof string EVOHUNT_RCE_PROOF in the diff field, confirming arbitrary command execution.",
+  "verification_method": "The exploit script injects a unique proof marker (EVOHUNT_RCE_PROOF) via the echo command and checks whether the marker appears in the HTTP response body. This distinguishes real command execution from a generic git error or unrelated server behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The HTTP response to the crafted commit-diff request contains the injected proof marker in the diff field.",
+    "The proof marker appears in the response only when shell metacharacter injection succeeds, confirming exec() interprets the injected command.",
+    "The server remained operational after the exploit, ruling out a startup failure or unrelated crash."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh"
+    ]
+  }
+}

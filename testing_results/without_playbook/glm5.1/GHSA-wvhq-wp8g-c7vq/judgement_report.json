@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T09:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_121b233f",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-wvhq-wp8g-c7vq/GHSA-wvhq-wp8g-c7vq.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "vulnerability-001-unauth-prediction-rce",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_121b233f/vulnerability-001-unauth-prediction-rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_121b233f/vulnerability-001-unauth-prediction-rce/vulnerability_report.json",
+      "title": "Unauthenticated code execution via public prediction endpoint and custom function chatflow nodes",
+      "vulnerability_type": "unauthenticated_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "Finding 001 identifies a whitelisted prediction endpoint (/api/v1/prediction/ in WHITELIST_URLS) that skips authentication entirely. The advisory root cause is the x-request-from: internal header branch that bypasses authorization (not authentication) for already-authenticated tenants. These are different vulnerable branches (whitelist vs. x-request-from header check) with different root causes (missing authentication on a specific endpoint vs. missing authorization on the internal-header path).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "vulnerability-002-hardcoded-default-secrets",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_121b233f/vulnerability-002-hardcoded-default-secrets",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_121b233f/vulnerability-002-hardcoded-default-secrets/vulnerability_report.json",
+      "title": "Hardcoded default secrets for JWT, session, and token encryption allow authentication bypass",
+      "vulnerability_type": "hardcoded_credentials_auth_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "Finding 002 identifies hardcoded default secrets (JWT_AUTH_TOKEN_SECRET='auth_token', EXPRESS_SESSION_SECRET='flowise', TOKEN_HASH_SECRET='Secre$t') as the root cause, which is CWE-798 (Hard-coded Credentials). The advisory root cause is CWE-863 (Incorrect Authorization): the x-request-from: internal header branch in the auth middleware skips authorization checks for authenticated tenants. While Finding 002 references the x-request-from header as a secondary exploit-path component, its primary root cause is credential forgery via hardcoded secrets, not the authorization bypass via header spoofing described in the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The advisory describes an authorization bypass (CWE-863) via the spoofable x-request-from: internal header in the auth middleware at packages/server/src/index.ts:214, which allows any authenticated tenant to bypass all /api/v1/** authorization checks. Finding 001 identifies an unauthenticated RCE via a whitelisted prediction endpoint (different vulnerable branch: WHITELIST_URLS, not x-request-from header). Finding 002 identifies hardcoded default secrets (CWE-798) as the root cause; while it references the x-request-from header as a secondary exploit component, the primary root cause is credential forgery via hardcoded secrets, not the missing authorization check on the internal-header path. Neither finding identifies the advisory-described vulnerable code/root cause.",
+    "evidence": [
+      "Advisory root cause: x-request-from: internal header branch at packages/server/src/index.ts:214 calls verifyToken without authorization checks (CWE-863).",
+      "Finding 001 root cause: /api/v1/prediction/ is in WHITELIST_URLS at packages/server/src/utils/constants.ts:12, causing auth middleware to skip entirely via the isWhitelisted branch (different branch from advisory).",
+      "Finding 002 root cause: Hardcoded default secrets for JWT, session, and token encryption at packages/server/src/enterprise/middleware/passport/index.ts:33,55 and packages/server/src/enterprise/utils/tempTokenUtils.ts:33 (CWE-798, different root cause from advisory)."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_121b233f/vulnerability-001-unauth-prediction-rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_121b233f/vulnerability-001-unauth-prediction-rce/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_121b233f/vulnerability-001-unauth-prediction-rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_121b233f/vulnerability-002-hardcoded-default-secrets",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_121b233f/vulnerability-002-hardcoded-default-secrets/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_121b233f/vulnerability-002-hardcoded-default-secrets/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

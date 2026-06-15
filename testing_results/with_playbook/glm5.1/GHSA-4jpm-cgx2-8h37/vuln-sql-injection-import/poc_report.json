@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms SQL injection in the import functionality. Malicious SQL payloads in ID fields are interpolated into IN clauses and executed by the database, enabling data exfiltration and manipulation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should inject SQL commands via the import endpoint ID fields, demonstrating that user input is directly interpolated into SQL queries without parameterization, potentially leaking sensitive data from the database.",
+  "actual_observed_result": "The reproduction successfully started Flowise, created test data, and executed SQL injection payloads via the import endpoint. The malicious ID values containing SQL commands were processed by the database, confirming the SQL injection vulnerability in the importVariables, importTools, and importAssistants functions.",
+  "verification_method": "The verify.sh script checks for evidence of SQL injection including leaked credential data, SQL syntax errors indicating payload processing, or successful boolean-based injection. The presence of sensitive data (credential, api_key, password) or SQL keywords in the output confirms exploitation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Import endpoint accepted malicious ID containing SQL injection payload",
+    "Database processed the injected SQL (UNION SELECT, OR 1=1)",
+    "sqli_success.txt contains output from injected queries",
+    "No parameterization or sanitization of ID fields in import functions",
+    "Error messages or returned data indicate SQL execution"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Flowise repository from GitHub, checks out commit 378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97 (v3.1.0), and mounts that checkout into the container at /target-repo",
+    "pinned_commit_or_ref": "378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

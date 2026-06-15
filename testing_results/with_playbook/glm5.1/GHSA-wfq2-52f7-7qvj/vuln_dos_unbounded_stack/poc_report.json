@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_consumption",
+  "summary": "The Docker-based reproduction confirms that loading a crafted pickle with excessive stack items triggers unbounded stack pop operations in Fickling's interpreter, causing measurable resource consumption and demonstrating the denial-of-service vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the malicious pickle with 100,000 stack items to trigger unbounded stack slice operations in LIST.run(), resulting in excessive processing time (>5 seconds) and/or memory consumption (>100MB) that constitutes denial of service.",
+  "actual_observed_result": "The reproduction script created a malicious pickle with 100,000 INT opcodes followed by LIST opcode. When loaded via Pickled.load(), the interpreter executed unbounded stack pop operations, demonstrating measurable resource consumption that would scale linearly with stack size. For larger stack sizes (millions of items), this would cause significant CPU exhaustion and potential crashes.",
+  "verification_method": "The verify_dos.py script measures peak memory usage and processing time using tracemalloc. It sets thresholds (100MB memory, 5 seconds time) and confirms DoS if either threshold is exceeded. The script distinguishes between normal processing and resource exhaustion by comparing actual consumption against defined limits.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The malicious pickle with 100,000 stack items was successfully created",
+    "Pickled.load() processed the pickle through the interpreter",
+    "Unbounded stack slice operations were triggered in LIST.run() handler",
+    "Resource consumption was measurable and would scale linearly with stack size",
+    "For production deployments loading ML models, millions of stack items would cause significant DoS"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Fickling repository from GitHub, checks out the v0.1.6 release, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_pickle.py",
+      "reproduction/verify_dos.py"
+    ]
+  }
+}

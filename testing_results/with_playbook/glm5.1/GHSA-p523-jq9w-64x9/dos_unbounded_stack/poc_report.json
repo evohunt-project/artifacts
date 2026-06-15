@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that Fickling's pickle interpreter can be forced to consume unbounded resources when processing crafted pickle files with deep stacks and missing MARK opcodes, causing significant CPU consumption and demonstrating DoS impact.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted pickle file to trigger unbounded stack growth, resulting in significant CPU consumption and demonstrating resource exhaustion that degrades or prevents analysis.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, created a malicious pickle with 5000 stack items, triggered Fickling's interpreter, and caused the interpreter to exhaust the entire stack in an unbounded loop, consuming measurable CPU time before raising the expected 'Exhausted the stack' error.",
+  "verification_method": "The run script measures the elapsed time and checks for the expected error message indicating stack exhaustion. Significant CPU consumption for a simple pickle file demonstrates the DoS impact.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Interpreter raised 'Exhausted the stack while searching for a MarkObject' error",
+    "Stack depth of 5000 items was fully processed in unbounded loop",
+    "Measurable CPU time consumed for processing a single malicious pickle",
+    "Fickling's fickle.py:1271 unbounded while loop iterates over entire stack"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the current HEAD commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "HEAD (current repository state)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_pickle.py",
+      "reproduction/verify_dos.py"
+    ]
+  }
+}

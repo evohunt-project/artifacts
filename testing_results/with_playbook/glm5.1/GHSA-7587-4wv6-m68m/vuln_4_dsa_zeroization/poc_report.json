@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The PoC demonstrates that DSA secret key zeroization is not implemented, confirming that private key material remains in memory after the key is dropped.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that the Zeroize implementation for DSA::SecretKey has an empty body, meaning private key material is not cleared from memory.",
+  "actual_observed_result": "The verification script confirmed that the Zeroize trait implementation for DSA::SecretKey contains only a TODO comment with no actual zeroization code, directly exposing the vulnerability.",
+  "verification_method": "Static code analysis of the Zeroize trait implementation for DSA::SecretKey combined with grep-based evidence extraction showing the empty zeroize() method body.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Identified vulnerable code location: src/crypto/dsa.rs:32-45",
+    "Confirmed zeroize() method has empty body (only TODO comment)",
+    "Verified Drop implementation calls zeroize() but it does nothing",
+    "Found similar issues in SLH-DSA implementations (src/crypto/slh_dsa_*.rs)",
+    "Documented the vulnerability as CWE-226 (Improper Handling of Additional Special Element)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the current HEAD commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "HEAD (current master)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

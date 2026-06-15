@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that any authenticated user can create a webhook with an arbitrary internal target URL (e.g. http://127.0.0.1:8888/). When a task event fires, the Vikunja server sends a POST request containing user PII, project data, and task content to the attacker-controlled URL, with no SSRF protections.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the Vikunja server to make an HTTP POST request to a callback listener on 127.0.0.1:8888, proving the server can reach arbitrary internal endpoints. The callback payload should contain the proof marker string and sensitive task/user data.",
+  "actual_observed_result": "Running the reproduction built Vikunja from source, started the server, registered a user, created a webhook targeting http://127.0.0.1:8888/EVOSHUNT_SSRF_PROOF_MARKER_d4e7f1a3, triggered it via task creation, and the Go callback server received a POST request containing the full webhook payload (user PII, project data, task content) at the proof marker path.",
+  "verification_method": "The exploit creates a unique proof marker path (EVOSHUNT_SSRF_PROOF_MARKER_d4e7f1a3) in the webhook target URL. A Go HTTP callback server writes the received request (method, path, headers, body) to /tmp/ssrf_proof.txt. The exploit script polls for this file for up to 30 seconds. Success is determined by the presence of this file containing the proof marker path, which distinguishes a genuine SSRF callback from unrelated server startup traffic.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The Go callback server received a POST request to /EVOSHUNT_SSRF_PROOF_MARKER_d4e7f1a3 from the Vikunja server process.",
+    "The webhook payload contained JSON with event_name=task.created, full user object (username=attacker), project details, and task content.",
+    "The callback was received within 1 second of task creation, confirming the SSRF is reliable and synchronous enough to exploit.",
+    "Server logs confirmed the webhook was created with target_url=http://127.0.0.1:8888/EVOSHUNT_SSRF_PROOF_MARKER_d4e7f1a3 and no validation error occurred."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from https://code.vikunja.io/api.git, checks out the pinned v1.0.0 ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/callback_server.go"
+    ]
+  }
+}

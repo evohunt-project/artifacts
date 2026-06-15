@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the /rest/workflows/from-url endpoint makes an unvalidated server-side HTTP GET request to an attacker-controlled URL. A mock internal service running inside the container receives the request from the n8n server, proving the SSRF without any SSRF protection applied.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The n8n server should make an HTTP GET request to the mock internal service at http://127.0.0.1:9999/ssrf-proof, and the internal service should record the incoming request with its headers, proving that the server can reach internal network resources.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started n8n, initialized an owner account, created a project, and then called GET /rest/workflows/from-url?url=http://127.0.0.1:9999/ssrf-proof. The mock internal service received the request from the n8n server process and wrote a proof marker file. The endpoint returned the mock response data (a fake workflow JSON) confirming data exfiltration from the internal service.",
+  "verification_method": "The verify.sh script starts a mock HTTP server that listens on port 9999 and writes a proof marker file (/tmp/ssrf-proof-marker) containing the request details when it receives any request to /ssrf-proof. After triggering the SSRF, the script checks for the existence and content of the proof marker file. This distinguishes a real SSRF from a failed startup or network error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The mock internal service received an HTTP GET request to /ssrf-proof from the n8n server process.",
+    "The proof marker file /tmp/ssrf-proof-marker was created with the request timestamp and source IP.",
+    "The /rest/workflows/from-url endpoint returned the response body from the internal service (a crafted workflow JSON), confirming data exfiltration."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.17.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/internal-server.js",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

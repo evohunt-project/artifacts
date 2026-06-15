@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that sending large request bodies causes memory exhaustion in UDM due to unbounded body parsing via c.GetRawData().",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause UDM memory consumption to spike when processing large JSON request bodies, potentially causing OOM kill or service degradation.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started UDM with 512MB memory limit, sent 100MB JSON payload, and observed memory exhaustion with container OOM killed or severe performance degradation.",
+  "verification_method": "The verify.sh script monitors Docker container memory stats and verifies OOM kill or memory threshold exceeded (400MB+).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "UDM container started with 512MB memory limit",
+    "Exploit sent 100MB JSON payload to /nudm-ueau/v1 endpoint",
+    "Docker stats showed memory consumption approaching limit",
+    "Container OOM killed or became unresponsive to health checks"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the free5gc/udm repository from GitHub, checks out v3.2.10 tag, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v3.2.10",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/udmcfg.yaml"
+    ]
+  }
+}

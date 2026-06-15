@@ -1,0 +1,30 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "php_object_injection",
+  "summary": "The reproduction bundle sets up WordPress with My Calendar, configures mc_add_events for low-privilege users, and injects a serialized PHP gadget object via the ghost event_access_hidden POST parameter to trigger the unserialize() sink and produce an observable side effect via __destruct().",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted serialized object injected via event_access_hidden to be deserialized by unserialize() at line 2424, instantiating the EvoHunt_Gadget class and triggering its __destruct() method, which writes a proof marker file to /tmp/evohunt_poc_success inside the container.",
+  "actual_observed_result": "The reproduction bundle was generated but not executed in this session. The Docker-based environment setup, exploit trigger, and verification scripts are included for independent reproduction.",
+  "verification_method": "The verify.sh helper checks for the existence and content of /tmp/evohunt_poc_success inside the container. The marker file is written only by the EvoHunt_Gadget::__destruct() method, which fires only when the injected serialized object is successfully deserialized by unserialize(). The check distinguishes successful deserialization from a generic PHP error, startup failure, or unrelated crash.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The reproduction requires Docker and network access to clone the target repository and download WordPress.",
+    "The PoC uses a custom gadget class (EvoHunt_Gadget) injected via auto_prepend_file to demonstrate deserialization with an observable side effect. Real-world exploitation would use WordPress core or third-party plugin gadget chains.",
+    "The exploit requires a valid WordPress user account with mc_add_events capability. The reproduction automates user creation as part of the setup."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3.7.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/evohunt_gadget.php",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup.sh"
+    ]
+  }
+}

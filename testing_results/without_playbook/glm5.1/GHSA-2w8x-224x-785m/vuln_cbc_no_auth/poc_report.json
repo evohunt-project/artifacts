@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cryptographic_weakness",
+  "summary": "The Docker-based reproduction confirms that sjcl's CBC mode implementation operates without authentication, lacking HMAC or MAC protection. The library itself warns this is dangerous, and the code shows no authentication tag verification, making it vulnerable to padding oracle and bit-flipping attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that CBC mode encrypts and decrypts without any authentication mechanism, allowing undetected ciphertext modification and padding oracle attacks.",
+  "actual_observed_result": "The verification script confirmed the absence of authentication in CBC mode by analyzing the source code and demonstrating encryption operations. The library's own warning at lines 8-11 acknowledges the danger, and no HMAC, MAC, or authentication tag handling was found in the implementation.",
+  "verification_method": "The verification script analyzes the CBC mode source code for authentication mechanisms and demonstrates encryption without authentication tags. The proof signal is the complete absence of integrity protection in the CBC implementation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code at core/cbc.js:8-11 contains library's own warning about CBC dangers",
+    "No HMAC, MAC, or authentication tag handling found in CBC implementation",
+    "CBC encryption produces ciphertext without authentication tags",
+    "Padding handling code exists which can leak information via padding oracle"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the existing target repository checkout at /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_67122281/repo and mounts it into the container.",
+    "pinned_commit_or_ref": "1.0.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

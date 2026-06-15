@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that Orval's mock generator interpolates the unescaped OpenAPI `pattern` field into generated TypeScript code, allowing arbitrary code execution when the generated mock function is called.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted OpenAPI spec's `pattern` field to be interpolated into the generated mock code as executable JavaScript. When the mock function is called, the injected `console.log('EVOHUNT_POC_CODE_INJECTION')` should execute, printing the proof string.",
+  "actual_observed_result": "Running orval@7.17.2 with a malicious spec containing `pattern: \"'+console.log('EVOHUNT_POC_CODE_INJECTION')+\\\"` produced a generated file containing `faker.helpers.fromRegExp(''+console.log('EVOHUNT_POC_CODE_INJECTION')+'')`. When the generated `getGetTestResponseMock()` function was called, the injected `console.log` executed and printed `EVOHUNT_POC_CODE_INJECTION` to stdout.",
+  "verification_method": "Two-stage verification: (1) grep for the proof string `EVOHUNT_POC_CODE_INJECTION` in the generated TypeScript file confirms code injection into the generated output. (2) Compiling and executing the generated mock function with tsx confirms the injected code actually runs at call time, printing the proof string to stdout.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The generated endpoints.ts file contains the line: `getGetTestResponseMock = (overrideResponse: Partial< GetTest200 > = {}): GetTest200 => ({status: faker.helpers.fromRegExp(''+console.log('EVOHUNT_POC_CODE_INJECTION')+''), ...overrideResponse})`",
+    "Calling `getGetTestResponseMock()` prints `EVOHUNT_POC_CODE_INJECTION` to stdout, confirming the injected `console.log` executed as a side effect of string concatenation evaluation.",
+    "The mock function returned `{status: 'undefined'}` confirming the `fromRegExp` call completed with the concatenated string result after the side effect."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Orval repository from GitHub, checks out the v7.17.2 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v7.17.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious-spec.json",
+      "reproduction/orval.config.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

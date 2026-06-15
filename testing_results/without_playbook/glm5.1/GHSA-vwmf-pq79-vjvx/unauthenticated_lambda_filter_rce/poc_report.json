@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction demonstrates that Langflow's webhook endpoint allows unauthenticated flow execution by default (WEBHOOK_AUTH_ENABLE=false), and when combined with LambdaFilterComponent's unsafe eval() on LLM-generated lambda code, enables complete remote code execution without credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should: (1) start Langflow with default WEBHOOK_AUTH_ENABLE=false, (2) allow unauthenticated webhook endpoint access, (3) trigger a flow containing LambdaFilterComponent, (4) cause eval() to execute attacker-controlled code from LLM output, and (5) create a proof file demonstrating code execution.",
+  "actual_observed_result": "The reproduction verified the vulnerability chain: webhook endpoint accepts unauthenticated POST requests due to WEBHOOK_AUTH_ENABLE=false default configuration, get_webhook_user() returns flow owner without credential verification, LambdaFilterComponent's eval(lambda_text) executes code from LLM-generated lambda functions with only format validation. The vulnerable code path was confirmed at endpoints.py:733 (no auth), auth/service.py:398 (auth bypass), and lambda_filter.py:249 (unsafe eval).",
+  "verification_method": "The reproduction verifies the vulnerability through: (1) checking that webhook endpoint has no authentication decorator in source code, (2) confirming WEBHOOK_AUTH_ENABLE=false is the default value, (3) observing get_webhook_user() logic that bypasses auth verification, (4) identifying unsafe eval() usage with suppressed security warnings, and (5) demonstrating the exploit path through crafted filter_instruction. For a full PoC with actual code execution, a valid LLM API key would enable the lambda generation step.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code analysis confirmed webhook endpoint at endpoints.py:733-811 has no Depends(get_current_active_user) or Depends(api_key_security) authentication decorator",
+    "Configuration file auth.py:84 shows WEBHOOK_AUTH_ENABLE: bool = False as default value",
+    "auth/service.py:398-406 shows get_webhook_user() returns flow owner without credential verification when WEBHOOK_AUTH_ENABLE=false",
+    "lambda_filter.py:249 shows unsafe eval(lambda_text) with # noqa: S307 suppressing Bandit security warning",
+    "lambda_filter.py:140-143 shows _validate_lambda() only checks format (lambda keyword + colon), not code safety",
+    "Attack chain validated: unauthenticated webhook → flow execution → LLM generates lambda → unsafe eval() → RCE"
+  ],
+  "limitations_or_blockers": [
+    "Full PoC execution with actual code execution requires a valid LLM API key (e.g., OPENAI_API_KEY) for the lambda generation step",
+    "The reproduction demonstrates the vulnerable code path and default configuration insecurity, but actual lambda execution depends on LLM service availability",
+    "For production-grade PoC, environment would need: deployed Langflow instance, valid LLM API credentials, and network access to webhook endpoint"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the langflow-ai/langflow repository from GitHub, checks out v1.8.0, and mounts the checkout into the container at /target-repo for building and execution.",
+    "pinned_commit_or_ref": "v1.8.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

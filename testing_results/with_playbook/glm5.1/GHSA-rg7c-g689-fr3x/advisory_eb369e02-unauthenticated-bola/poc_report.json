@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication_bola",
+  "summary": "The Docker-based reproduction confirms that the ADK API server exposes session management endpoints without authentication, allowing any network caller to create, read, modify, and delete sessions for arbitrary user IDs.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated HTTP client should be able to create a session with sensitive state for a victim user, then read that session's state including the secret value, modify the session state, and delete the session, all without providing any credentials.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the ADK environment, started the API server, created a session for victim_user with a secret value in its state, and confirmed that an unauthenticated HTTP client could read the secret from the session, modify the session state with an injected key, and delete the session entirely.",
+  "verification_method": "The exploit script creates a session with a known secret value (a unique API key string), then sends an unauthenticated GET request to the session endpoint using the victim's user_id. The script checks whether the response contains the secret value, confirming the attacker can read the victim's confidential session state. It then sends PATCH and DELETE requests to verify write and delete access. The proof signal is the presence of the secret value in the unauthenticated GET response, the persistence of the injected state key after PATCH, and a 404 status after DELETE.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated GET response contains the secret_api_key value that was stored in the victim's session state.",
+    "The unauthenticated PATCH request successfully injected an attacker-controlled key into the victim's session state.",
+    "The unauthenticated DELETE request successfully removed the victim's session, confirmed by a subsequent GET returning 404."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.0.0-alpha.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

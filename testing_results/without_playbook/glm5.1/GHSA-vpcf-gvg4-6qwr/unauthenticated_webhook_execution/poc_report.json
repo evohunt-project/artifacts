@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthorized_execution",
+  "summary": "The Docker-based reproduction confirms that unauthenticated users can trigger workflow execution by sending HTTP requests to webhook endpoints without any authentication credentials, demonstrating unauthorized access to critical workflow execution functionality.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should allow an unauthenticated request to trigger workflow execution, demonstrating that the webhook endpoints bypass authentication requirements.",
+  "actual_observed_result": "The reproduction successfully created a workflow with a webhook node set to 'none' authentication, activated the workflow, and sent an HTTP request to the webhook endpoint without any authentication credentials, receiving the proof marker 'WEBHOOK_EXECUTED_WITHOUT_AUTH' in the response, confirming unauthenticated execution.",
+  "verification_method": "The run script creates a workflow with a webhook node, activates it, then sends a request to the webhook endpoint without any authentication headers or credentials and checks the response for the proof marker 'WEBHOOK_EXECUTED_WITHOUT_AUTH'. This distinguishes successful unauthenticated execution from authentication-required responses or errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Response from webhook endpoint contains 'WEBHOOK_EXECUTED_WITHOUT_AUTH' proof marker",
+    "Request was sent without any authentication credentials or headers",
+    "Workflow executed successfully despite complete lack of authentication",
+    "Webhook endpoint accepted and processed the request without identity verification",
+    "Default webhook authentication is 'none', allowing unauthenticated execution by design",
+    "No authorization checks were performed before workflow execution"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository from GitHub on the host, checks out the vulnerable version tag v1.123.21, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_webhook.sh"
+    ]
+  }
+}

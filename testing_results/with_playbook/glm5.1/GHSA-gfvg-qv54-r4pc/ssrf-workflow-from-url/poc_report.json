@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the GET /rest/workflows/from-url endpoint passes a user-supplied URL directly to axios.get() with zero restrictions, enabling the n8n server to fetch arbitrary internal URLs and return the response body to the attacker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the n8n server to fetch a URL pointing to an internal HTTP server (127.0.0.1:8888) and return the full response body including proof-of-concept exfiltration data to the authenticated attacker.",
+  "actual_observed_result": "Running the reproduction caused the n8n server to fetch http://127.0.0.1:8888/secret-internal-endpoint via the from-url endpoint. The server returned HTTP 200 with the full internal response body containing the proof signal 'EVOHUNT_SSRF_PROOF_INTERNAL_DATA_EXFILTRATED' and simulated secret metadata 'aws-access-key:AKIAIOSFODNN7EXAMPLE'. The internal server confirmed it received the GET request.",
+  "verification_method": "The exploit starts a fake internal HTTP server that serves a JSON response containing a unique proof signal string 'EVOHUNT_SSRF_PROOF_INTERNAL_DATA_EXFILTRATED'. After triggering the SSRF, the exploit checks if the proof signal appears in the from-url endpoint response. The internal server also logs the incoming request, providing a secondary confirmation that the server made the outbound request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The n8n server returned HTTP 200 from the from-url endpoint with the full internal server response body.",
+    "The proof signal 'EVOHUNT_SSRF_PROOF_INTERNAL_DATA_EXFILTRATED' was present in the response, confirming data exfiltration through SSRF.",
+    "The internal server log confirmed that n8n made a GET request to /secret-internal-endpoint.",
+    "Simulated secret metadata 'aws-access-key:AKIAIOSFODNN7EXAMPLE' was exfiltrated through the SSRF response."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub at the n8n@2.4.0 tag and mounts it read-only at /target-repo. The exploit runs against the official n8n Docker image at the same version.",
+    "pinned_commit_or_ref": "n8n@2.4.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/exploit.js",
+      "reproduction/internal-server.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

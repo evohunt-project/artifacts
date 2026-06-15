@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_rce",
+  "summary": "The Docker-based reproduction confirms that LocalExecutor.run_code() from the target repository executes arbitrary code via exec() with full Python builtins, demonstrating complete server compromise through the default code execution path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the vulnerable LocalExecutor.run_code() to execute attacker-controlled code via exec() and emit the proof marker string EVOHUNT_POC_RCE_PROOF_7f3a9b2c from inside the container, confirming arbitrary code execution with full system access.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository, built the Docker image, and executed the exploit script. The LocalExecutor.run_code() method executed the proof payload via exec() and produced the expected proof marker, confirming arbitrary code execution through the vulnerable code path.",
+  "verification_method": "The exploit script loads the actual LocalExecutor class from the mounted target repository, calls run_code() with a proof payload, and checks for the exact proof marker string EVOHUNT_POC_RCE_PROOF_7f3a9b2c in the output. The script also verifies that the vulnerable exec() pattern exists in the source file. Exit code 0 indicates successful reproduction; exit code 1 indicates failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit script confirmed that openchatbi/code/local_executor.py contains exec(code, safe_globals, safe_globals) with {\"__builtins__\": __builtins__}.",
+    "LocalExecutor.run_code() returned success=True with the proof marker EVOHUNT_POC_RCE_PROOF_7f3a9b2c in its output, proving arbitrary code execution.",
+    "The proof payload also executed os.getuid() and os.listdir('/') through the exec() path, confirming full system access via the unrestricted __builtins__.",
+    "The container process exited with code 0, confirming the vulnerability was successfully reproduced."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

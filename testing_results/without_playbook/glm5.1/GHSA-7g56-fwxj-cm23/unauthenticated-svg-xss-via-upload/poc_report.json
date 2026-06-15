@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stored_xss",
+  "summary": "The Docker-based reproduction starts a stock FUXA server with default settings, uploads a crafted SVG file containing an embedded JavaScript proof payload via the unauthenticated POST /api/upload endpoint, retrieves the uploaded SVG from the static file URL, and verifies that the JavaScript payload is present in the served content.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The SVG file served at /resources/evohunt-xss-test.svg must contain the JavaScript payload with the EVOHUNT-XSS-PROOF marker, confirming that an unauthenticated attacker can inject and serve arbitrary JavaScript to FUXA users.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the FUXA repository, built the reproduction image, started the FUXA server, uploaded the crafted SVG without authentication, and retrieved it from the static URL. The served SVG file contained the unmodified JavaScript payload with the proof marker.",
+  "verification_method": "The verify.sh script uploads a crafted SVG containing the string EVOHUNT-XSS-PROOF as a JavaScript variable value, then fetches the uploaded file from the static /resources/ URL and checks for the presence of the proof marker. This distinguishes a successful stored XSS injection from a generic upload failure or file-not-found error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The crafted SVG was uploaded successfully via POST /api/upload without any authentication token.",
+    "The server returned a 200 response with a location URL confirming the file was stored.",
+    "The SVG was retrievable at the static /resources/ URL.",
+    "The retrieved SVG contained the unmodified EVOHUNT-XSS-PROOF JavaScript payload, confirming no server-side sanitization."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction requires npm install which can take several minutes due to native dependencies like sqlite3."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

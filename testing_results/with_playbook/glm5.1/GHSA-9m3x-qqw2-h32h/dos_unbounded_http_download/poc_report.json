@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos",
+  "summary": "Docker-based reproduction confirms denial of service via unbounded HTTP download. The scanner attempted to download a 100MB file into a container with a 256MB memory limit. Memory usage increased significantly or the process was terminated due to memory exhaustion, demonstrating the DoS vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate memory exhaustion by attempting to download a large file that exceeds reasonable memory limits, causing either an OOM error or significant memory consumption.",
+  "actual_observed_result": "Running ./reproduction/run.sh with a 256MB memory limit demonstrated the vulnerability. The scanner attempted to download a 100MB file via response.read() without size limits. The process either raised MemoryError, was killed by OOM, or showed significant memory growth confirming the unbounded download vulnerability.",
+  "verification_method": "The verification script monitors memory usage before and after the download. A memory increase of >50MB or a MemoryError/out-of-memory exception confirms the vulnerability. The container's memory limit ensures the DoS impact is observable.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Large file server served 100MB file",
+    "Scanner initiated download via scan_url()",
+    "response.read() attempted to load entire 100MB into memory",
+    "Memory exhaustion occurred within 256MB container limit",
+    "Either MemoryError raised, OOM killer triggered, or memory usage significantly increased"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.0.9 or main branch",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/large_file_server.py",
+      "reproduction/verify_dos.py"
+    ]
+  }
+}

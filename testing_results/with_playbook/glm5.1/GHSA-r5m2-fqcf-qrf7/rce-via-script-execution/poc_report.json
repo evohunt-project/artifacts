@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_rce",
+  "summary": "The Docker-based reproduction confirms that the unauthenticated script execution endpoint compiles and executes attacker-controlled JavaScript on the server. The exploit writes a proof file containing the output of the OS 'id' command, demonstrating full remote code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted script payload to be compiled by Module._compile() and executed server-side, writing a proof file to /tmp/evohunt-rce-proof containing 'EVOHUNT-RCE-CONFIRMED-' followed by the output of the 'id' command, proving arbitrary OS command execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the FUXA server, waited for it to become ready, sent the unauthenticated POST /api/runscript request with the test script payload, and the server compiled and executed the attacker JavaScript. The proof file was created at /tmp/evohunt-rce-proof with content 'EVOHUNT-RCE-CONFIRMED-uid=0(root) gid=0(root) groups=0(root)', confirming arbitrary OS command execution as root inside the container.",
+  "verification_method": "The verify.sh script checks for the existence of /tmp/evohunt-rce-proof and verifies its content starts with 'EVOHUNT-RCE-CONFIRMED-'. It also checks the HTTP response for 'uid=' output from the id command. This distinguishes genuine code execution from a generic parser error, startup failure, or unrelated crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/evohunt-rce-proof was created by the exploited script with content 'EVOHUNT-RCE-CONFIRMED-uid=0(root) gid=0(root) groups=0(root)'.",
+    "The HTTP response from POST /api/runscript contained the output of the 'id' command, confirming the server executed attacker-controlled OS commands.",
+    "No authentication was required - the request was sent without any JWT token or credentials."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the v1.2.7 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.2.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

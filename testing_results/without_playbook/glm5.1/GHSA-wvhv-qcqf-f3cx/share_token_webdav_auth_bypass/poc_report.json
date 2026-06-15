@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that a share token intended for single-file sharing bypasses basic authentication on the WebDAV endpoint, granting full PROPFIND, GET, PUT, and DELETE access to the entire webroot without credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an unauthenticated WebDAV PROPFIND request with a valid share token returns the full directory listing of the webroot (HTTP 207 Multi-Status), and that the same token permits writing and deleting files via WebDAV PUT and DELETE methods without any credentials.",
+  "actual_observed_result": "Running ./reproduction/run.sh built goshs from source, started it with basic auth and WebDAV enabled, created a share link as the authenticated user, and confirmed that the share token alone (with no Authorization header) successfully authenticated WebDAV PROPFIND, PUT, and DELETE requests against the WebDAV port, returning HTTP 207 Multi-Status with the full directory listing and permitting file creation and deletion.",
+  "verification_method": "The verify.sh script performs three checks: (1) WebDAV PROPFIND with the share token but no credentials — expects HTTP 207 Multi-Status with the webroot listing, (2) WebDAV PUT with the share token to create a new file — expects HTTP 201/204 success, (3) WebDAV GET without token and without credentials — expects HTTP 401 Unauthorized to confirm that the bypass is specifically due to the share token. The script outputs EVOHUNT_VERIFY_OK if all checks pass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "PROPFIND request with share token and no credentials returned HTTP 207 Multi-Status with full webroot directory listing in XML.",
+    "PUT request with share token and no credentials created a new file in the webroot, confirming write access.",
+    "GET request without token and without credentials returned HTTP 401 Unauthorized, confirming the share token is the specific bypass mechanism.",
+    "The goshs server logs confirmed that the WebDAV requests were processed without authentication when the token was present."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.0.0-beta.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

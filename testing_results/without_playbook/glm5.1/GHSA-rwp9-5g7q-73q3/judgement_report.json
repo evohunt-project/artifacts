@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T07:45:19.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_692d0267",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-rwp9-5g7q-73q3/GHSA-rwp9-5g7q-73q3.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated-management-api-access",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_692d0267/unauthenticated-management-api-access",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_692d0267/unauthenticated-management-api-access/vulnerability_report.json",
+      "title": "Unauthenticated full management API access and database exfiltration in default deployment",
+      "vulnerability_type": "missing_authentication",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding tests default disabled authentication (JWTAuthEnabled=false, BasicAuthEnabled=false, etc.), not the path traversal authentication bypass described in CVE-2026-0650. The advisory describes a specific vulnerability in the whitelist logic where strings.HasPrefix() without path normalization allows crafted requests like '/api/v1/health/../export/sqlite' to bypass authentication when it IS enabled. The finding's PoC does not enable authentication and does not test path traversal bypass. These are two distinct vulnerabilities: (1) default disabled auth vs (2) path traversal bypass when auth is enabled.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerability. CVE-2026-0650 describes an authentication bypass via path traversal in the HTTP middleware whitelist logic. The vulnerable code uses strings.HasPrefix() without path normalization, allowing crafted requests like '/api/v1/health/../export/sqlite' to bypass authentication when authentication IS enabled. The 'unauthenticated-management-api-access' finding tests a different vulnerability: default disabled authentication configuration, not path traversal bypass. This finding demonstrates access without credentials due to disabled auth, not bypassing enabled auth via path traversal.",
+    "evidence": [
+      "Advisory CVE-2026-0650: Authentication bypass via path traversal in pkg/config/middleware.go whitelist logic",
+      "Advisory patch (commit fe83dc87aa40): Replaces strings.HasPrefix() with util.HasSafePrefix() that normalizes paths and blocks '..' traversal",
+      "Advisory reference: https://dreyand.rs/code%20review/golang/2026/01/03/0day-speedrun-openflagr-less-1118-authentication-bypass demonstrates bypass via /api/v1/health/../export/sqlite",
+      "Finding 'unauthenticated-management-api-access': Tests default disabled auth (JWTAuthEnabled=false, BasicAuthEnabled=false), does not enable auth or test path traversal"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_692d0267/unauthenticated-management-api-access",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_692d0267/unauthenticated-management-api-access/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_692d0267/unauthenticated-management-api-access/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

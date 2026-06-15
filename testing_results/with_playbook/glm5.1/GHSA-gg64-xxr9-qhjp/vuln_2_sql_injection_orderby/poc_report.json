@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction demonstrates SQL injection via the order parameter in the repository search API, allowing extraction of database schema and user data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a crafted order parameter with SQL injection payload should allow the attacker to execute arbitrary SQL queries and extract sensitive data from the database.",
+  "actual_observed_result": "The reproduction successfully injected SQL commands via the order parameter and extracted user credentials and database schema information from the database.",
+  "verification_method": "The run script sends a request with SQL injection payload in the order parameter and checks whether the response contains extracted database data. The verification distinguishes successful SQL injection from normal search responses.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Database table names extracted via SQL injection",
+    "User credential hashes extracted from database",
+    "Database schema information leaked in API response",
+    "SQL error messages indicating successful injection"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable version, and mounts the checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

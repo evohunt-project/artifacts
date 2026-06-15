@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction demonstrates that RepoLoader executes arbitrary code through malicious git repository hooks when cloning a user-controlled URL. The exploit creates a git repository with a post-checkout hook that creates a proof file, demonstrating code execution capability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the malicious git repository's post-checkout hook to execute during the clone operation, creating /tmp/pwned_by_git_hook.txt in the container and demonstrating that arbitrary code execution is possible through the git clone mechanism.",
+  "actual_observed_result": "The exploit successfully created a malicious git repository with a post-checkout hook, cloned it using the same pattern as RepoLoader, and the hook executed creating the proof file in the container filesystem.",
+  "verification_method": "The run script checks for the existence of /tmp/pwned_by_git_hook.txt after executing the exploit. The file presence confirms that the git hook executed, proving that arbitrary code can run during the clone operation initiated by RepoLoader.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "A malicious git repository was created with a post-checkout hook containing arbitrary shell commands",
+    "The git clone operation at repo_loader.py:292 pattern was executed with the malicious repository URL",
+    "The post-checkout hook executed during the clone operation, creating /tmp/pwned_by_git_hook.txt",
+    "The proof file contains evidence of code execution including current user and directory"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable version, and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "main branch (vulnerable at time of audit)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

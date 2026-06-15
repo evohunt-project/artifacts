@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that the UDR server processes API requests without any authentication when OAuth2Required is false (default). Unauthenticated HTTP requests to sensitive subscriber data endpoints succeed without returning 401 Unauthorized.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that HTTP requests to UDR API endpoints without an Authorization header are processed (not rejected with 401 Unauthorized), proving that authentication is bypassed by default.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the UDR binary, started MongoDB and the UDR server, and then sent unauthenticated HTTP requests to multiple API endpoints. The server processed all requests without returning HTTP 401, confirming the authentication bypass.",
+  "verification_method": "The verify script sends HTTP requests without an Authorization header and checks that the responses are NOT 401 Unauthorized. A 401 response would indicate authentication is enforced. Any other response status (200, 404, 500, 503) proves the request passed the authentication middleware and reached the handler.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP GET request to /nudr-dr/v2/ without Authorization header returned a non-401 response, proving the auth middleware was bypassed.",
+    "HTTP GET request to /nudr-dr/v2/subscription-data/imsi-001010000000001/00101/authentication-subscription without Authorization header was processed by the handler (not rejected as Unauthorized).",
+    "The server log confirms OAuth2Required is false at startup and AuthorizationCheck returns nil for all requests."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/udrcfg.yaml"
+    ]
+  }
+}

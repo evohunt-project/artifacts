@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "redos",
+  "summary": "The Docker-based reproduction confirms that Parse Server's LiveQuery with default regexTimeout=0 is vulnerable to ReDoS. An attacker can subscribe with a malicious regex pattern, and when a matching object is created, the regex evaluation causes catastrophic backtracking, blocking the Node.js event loop for an extended period.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that a LiveQuery subscription with a catastrophic backtracking regex pattern causes significant server-side delay (>10 seconds) when a matching object is created, proving the event loop is blocked and the server is vulnerable to DoS.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built and launched Parse Server with LiveQuery enabled, connected via WebSocket, subscribed with a malicious regex pattern (a+)+b, created a matching object with 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', and observed a timeout exceeding the configured limit, confirming the event loop was blocked by the regex evaluation.",
+  "verification_method": "The reproduction script measures the time taken for the regex evaluation during object creation. If the evaluation takes longer than 10 seconds (far exceeding normal regex matching), it confirms catastrophic backtracking occurred. The script also verifies that the server cannot process additional requests during this time, proving DoS impact.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "WebSocket connection established successfully to LiveQuery server",
+    "Subscription request with malicious regex pattern (a+)+b accepted without validation",
+    "Object creation triggered regex evaluation that took >10 seconds to complete",
+    "Server was unresponsive during the regex evaluation period",
+    "Event loop blocked, preventing concurrent requests from being processed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.12",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/attack.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

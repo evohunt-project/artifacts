@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the public OAuth2 refresh endpoint decrypts a stored credential, extracts the attacker-controlled accessTokenUrl, and makes a raw HTTP POST request to that URL containing sensitive credential data, with no SSRF protection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The Flowise server should make an HTTP POST request to the attacker-controlled accessTokenUrl specified in the OAuth2 credential, demonstrating server-side request forgery. The POST body should contain the credential's client_id, client_secret, and refresh_token values, confirming credential exfiltration.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Flowise server from the pinned source, started it on port 3100, registered a user, created an OAuth2 credential with accessTokenUrl pointing to a local listener at http://127.0.0.1:9999/ssrf-proof, then called the public refresh endpoint. The local listener received a POST request from the Flowise server containing client_id, client_secret, and refresh_token in the form-encoded body, confirming the SSRF and credential exfiltration.",
+  "verification_method": "A Python HTTP listener on port 9999 captures incoming requests and writes proof to /tmp/ssrf_proof. The verify script checks that the proof file exists and contains the expected POST method and credential fields. This distinguishes the SSRF from unrelated server startup requests or health checks by verifying the request path matches /ssrf-proof and the body contains the specific credential values injected by the exploit.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The listener captured a POST request to /ssrf-proof from the Flowise server process.",
+    "The request body contained client_id=leaked-client-id, client_secret=leaked-client-secret, and refresh_token=leaked-refresh-token.",
+    "The refresh endpoint returned a 400 status (because the listener returned a non-JSON response) with details reflecting the listener's response, confirming response reflection.",
+    "No authentication was required to trigger the refresh endpoint, confirming the public whitelist bypass."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "flowise@3.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh",
+      "reproduction/listener.py"
+    ]
+  }
+}

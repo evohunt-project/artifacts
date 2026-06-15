@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_rce",
+  "summary": "The Docker-based reproduction confirms that the nocode instrumentation module evaluates JEXL expressions from YAML configuration with unrestricted permissions, enabling arbitrary Java code execution inside the instrumented JVM.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the malicious JEXL expression in the nocode YAML config to be evaluated during method instrumentation, creating the proof file /tmp/evohunt-rce-proof inside the container via java.io.File.createNewFile(), demonstrating arbitrary code execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the splunk-otel-javaagent from source, launched a test Java application with the agent using a malicious nocode YAML config containing a JEXL expression that calls new('java.io.File', '/tmp/evohunt-rce-proof').createNewFile(), and the proof file was created inside the container, confirming the JEXL expression executed arbitrary Java code.",
+  "verification_method": "The verify.sh script checks for the existence of the proof file /tmp/evohunt-rce-proof after running the instrumented application. The file is created as a side effect of the JEXL expression evaluation. The script removes any pre-existing proof file before the test to ensure a clean state. The presence of the file after execution confirms that the JEXL expression was evaluated with sufficient permissions to instantiate arbitrary Java classes and call methods on them.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/evohunt-rce-proof was created inside the container as a direct result of JEXL expression evaluation.",
+    "The JEXL expression new('java.io.File', '/tmp/evohunt-rce-proof').createNewFile() was loaded from the malicious YAML config and evaluated on a matched method call.",
+    "The agent successfully loaded the nocode module, parsed the YAML config, matched the test class, and evaluated the JEXL expression with UNRESTRICTED permissions."
+  ],
+  "limitations_or_blockers": [
+    "Building the agent from source requires internet access to download Gradle dependencies, which may take several minutes."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.26.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.yml"
+    ]
+  }
+}

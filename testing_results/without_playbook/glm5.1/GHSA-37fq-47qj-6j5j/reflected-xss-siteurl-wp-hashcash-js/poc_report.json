@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "reflected_xss",
+  "summary": "The Docker-based reproduction confirms that the siteurl GET parameter is reflected unsanitized in the JavaScript response body. A crafted curl request to wp-hashcash-js.php with an attacker-controlled siteurl value causes the injected proof string to appear verbatim in the server response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The server response to /tools/security/wp-hashcash-js.php?siteurl=<payload> should contain the attacker-controlled payload reflected verbatim in the JavaScript output, demonstrating that an attacker can inject arbitrary JavaScript that auto-executes in victim browsers.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started the PHP built-in server serving the vulnerable file, sent a curl request with the injected proof string EVOHUNT_XSS_PROOF_9a3f as the siteurl parameter, and the response body contained the proof string verbatim inside the loadHashCashKey() JavaScript call.",
+  "verification_method": "The verify.sh helper sends a crafted HTTP request with a unique proof string (EVOHUNT_XSS_PROOF_9a3f) as the siteurl parameter value, then uses grep to confirm the exact proof string appears in the response body. This distinguishes successful XSS reflection from generic server errors, missing files, or unrelated output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response body contains the literal string EVOHUNT_XSS_PROOF_9a3f injected via the siteurl parameter.",
+    "The response Content-Type is application/x-javascript, confirming browsers would execute the response as JavaScript.",
+    "The injected string appears inside a loadHashCashKey('...') call, confirming the attacker can break out of the string literal and inject arbitrary code."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "doryphore",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

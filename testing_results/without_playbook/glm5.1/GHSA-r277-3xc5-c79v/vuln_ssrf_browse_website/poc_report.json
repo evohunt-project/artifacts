@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that the browse_website function accesses internal URLs without validation. The PoC simulates an internal metadata service, accesses it through the vulnerable code path, and exfiltrates simulated AWS credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the simulated SSRF attack to access an internal metadata endpoint and exfiltrate credentials to ssrf_proof.txt, demonstrating internal network access capability.",
+  "actual_observed_result": "The PoC successfully accessed the simulated internal metadata service at http://localhost:9999/metadata.json and exfiltrated simulated AWS credentials, which were saved to /app/ssrf_proof.txt.",
+  "verification_method": "The verify_ssrf.sh script checks for the presence of ssrf_proof.txt containing exfiltrated credentials, distinguishing successful SSRF from connection failures or unrelated behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Internal metadata service was accessed through the vulnerable code path",
+    "Simulated AWS credentials were exfiltrated and saved to ssrf_proof.txt",
+    "The attack path demonstrates no URL validation in web_selenium.py"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out v0.2.2, and mounts it read-only at /target-repo.",
+    "pinned_commit_or_ref": "v0.2.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_internal_service.sh",
+      "reproduction/trigger_ssrf.py",
+      "reproduction/verify_ssrf.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that a crafted socket.io BINARY_EVENT packet with 5000 levels of JSON object nesting causes an uncaught RangeError in _reconstructPacket, crashing the Node.js process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the parser's _reconstructPacket function to recurse beyond the V8 call stack limit when processing a deeply nested JSON payload inside a BINARY_EVENT packet. The resulting uncaught RangeError (Maximum call stack size exceeded) crashes the Node.js process.",
+  "actual_observed_result": "Running ./reproduction/run.sh set up the vulnerable socket.io-parser@3.4.3 package, built the Docker image, and ran the exploit container. The exploit generated a BINARY_EVENT packet with 5000 levels of nested JSON, fed it and a binary buffer to the Decoder. The _reconstructPacket function exhausted the call stack and produced an uncaught RangeError, crashing the process as expected.",
+  "verification_method": "The verification script runs the exploit inside the container and captures its combined stdout/stderr output and exit code. It checks that the exit code is non-zero (crash) and that the output contains the string 'Maximum call stack size exceeded'. This distinguishes a genuine stack overflow crash from a normal exit, a startup failure, or an unrelated error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit process exited with a non-zero exit code, confirming an unhandled exception crashed the Node.js process.",
+    "The process output contained 'Maximum call stack size exceeded', confirming the RangeError from _reconstructPacket's unbounded recursion.",
+    "The vulnerability was triggered by a single BINARY_EVENT packet string followed by one binary buffer, confirming low attack complexity."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh creates a temporary Node.js project on the host, installs socket.io-parser@3.4.3 via npm, and mounts that directory into the container at /target-repo.",
+    "pinned_commit_or_ref": "3.4.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

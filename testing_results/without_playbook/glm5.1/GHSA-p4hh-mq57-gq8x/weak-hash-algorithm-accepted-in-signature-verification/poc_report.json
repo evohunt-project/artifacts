@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "weak_hash_algorithm",
+  "summary": "The Docker-based reproduction confirms that the signify library accepts MD5 and SHA-1 as valid digest algorithms for Authenticode signature verification. The verification script demonstrated that both broken algorithms are in ACCEPTED_DIGEST_ALGORITHMS and that _get_digest_algorithm successfully returns the corresponding hashlib functions for MD5 and SHA-1 without warning or rejection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should confirm that the library's ACCEPTED_DIGEST_ALGORITHMS includes 'md5' and 'sha1', and that _get_digest_algorithm accepts these broken algorithms for use in signature verification, enabling collision-based signature forgery.",
+  "actual_observed_result": "Running the Docker container with verify_weak_hash.py confirmed that ACCEPTED_DIGEST_ALGORITHMS = ('md5', 'sha1', 'sha256', 'sha384', 'sha512') and that both md5 and sha1 are accepted by _get_digest_algorithm, returning hashlib.md5 and hashlib.sha1 respectively. The EVOHUNT_VERIFICATION_PASSED proof string was emitted.",
+  "verification_method": "The verification script imports the signify library from the mounted target repo, checks the ACCEPTED_DIGEST_ALGORITHMS tuple for the presence of md5 and sha1, and calls _get_digest_algorithm with each to confirm they are accepted without error. The script emits EVOHUNT_VERIFICATION_PASSED only when both weak algorithms are confirmed accepted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "ACCEPTED_DIGEST_ALGORITHMS tuple contains 'md5' and 'sha1' as the first two entries",
+    "_get_digest_algorithm('md5') returned hashlib.md5 - confirmed the algorithm is accepted for signature verification",
+    "_get_digest_algorithm('sha1') returned hashlib.sha1 - confirmed the algorithm is accepted for signature verification",
+    "EVOHUNT_VERIFICATION_PASSED proof string emitted by the verification script"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.9.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_weak_hash.py"
+    ]
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T03:57:56.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-5qw5-wf2q-f538/GHSA-5qw5-wf2q-f538.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "arbitrary_java_class_loading",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/arbitrary_java_class_loading",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/arbitrary_java_class_loading/vulnerability_report.json",
+      "title": "Arbitrary Java class loading via java_import in JdbcDriver allows code execution",
+      "vulnerability_type": "code_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets lib/arjdbc/jdbc/driver.rb java_import(driver_class_name) class loading, not the advisory-described lib/arjdbc/jdbc/adapter.rb sql.gsub() SQL sanitization flaw.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "H",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:H/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "jndi_injection",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/jndi_injection",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/jndi_injection/vulnerability_report.json",
+      "title": "Unvalidated JNDI lookup in configure_jndi allows remote code execution",
+      "vulnerability_type": "jndi_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets lib/arjdbc/jdbc/connection.rb InitialContext.lookup(config[:jndi]) JNDI lookup behavior, not the advisory-described lib/arjdbc/jdbc/adapter.rb sql.gsub() SQL injection root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "H",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:H/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "sql_injection_rename_table",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/sql_injection_rename_table",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/sql_injection_rename_table/vulnerability_report.json",
+      "title": "SQL injection in PostgreSQL rename_table via unquoted table name interpolation",
+      "vulnerability_type": "sql_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "Although this is a SQL injection in the same package, it identifies lib/arjdbc/postgresql/adapter.rb rename_table identifier interpolation, not the advisory-described lib/arjdbc/jdbc/adapter.rb sql.gsub() bind-substitution sanitization flaw.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "H",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:H/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described vulnerable code or equivalent root cause. The advisory concerns SQL injection caused by sql.gsub() bind substitution in lib/arjdbc/jdbc/adapter.rb, while the final qualifying findings concern driver class loading, JNDI lookup, and a separate PostgreSQL rename_table interpolation issue.",
+    "evidence": [
+      "Advisory GHSA-5qw5-wf2q-f538 states the vulnerable component is lib/arjdbc/jdbc/adapter.rb and the root cause is sql.gsub() not properly sanitizing user-supplied input before SQL queries.",
+      "Local source contains the advisory-relevant sql.gsub('?') bind substitution paths in lib/arjdbc/jdbc/adapter.rb:380, :391, and :416.",
+      "sql_injection_rename_table/vulnerability_report.json identifies lib/arjdbc/postgresql/adapter.rb:730 execute \"ALTER TABLE #{name} RENAME TO #{new_name}\", a different function and source-to-sink condition.",
+      "arbitrary_java_class_loading and jndi_injection identify non-SQL-injection code execution paths in driver.rb and connection.rb."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/arbitrary_java_class_loading",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/arbitrary_java_class_loading/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/arbitrary_java_class_loading/poc_report.json",
+      "poc_report_status": "not_attempted"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/jndi_injection",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/jndi_injection/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/jndi_injection/poc_report.json",
+      "poc_report_status": "not_attempted"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/sql_injection_rename_table",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/sql_injection_rename_table/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e7debecf/sql_injection_rename_table/poc_report.json",
+      "poc_report_status": "not_attempted"
+    }
+  ]
+}

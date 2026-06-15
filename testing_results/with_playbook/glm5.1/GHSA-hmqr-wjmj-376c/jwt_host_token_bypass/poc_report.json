@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that VerifyHostToken in logic/jwts.go accepts forged JWT tokens because it checks only `if token != nil` without verifying `token.Valid`. A Python script crafts a JWT with arbitrary host claims signed with a wrong key, and the server processes the token without rejecting it, bypassing authentication on host-specific endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A forged JWT token with arbitrary host ID, MAC address, and network claims (signed with any key) should be accepted by VerifyHostToken and allow access to host-protected endpoints that use the Authorize middleware.",
+  "actual_observed_result": "The reproduction container starts the Netmaker server, then the exploit script crafts a forged JWT token with claims {id: forged-host-123, macaddress: aa:bb:cc:dd:ee:ff, network: test-network} signed with the key 'this-is-not-the-server-secret'. When sent to the /api/v1/host endpoint, the server processes the token rather than returning 401 Unauthorized. Source code verification confirms the vulnerable pattern at logic/jwts.go:264.",
+  "verification_method": "The verification script sends a forged JWT to a host-protected endpoint and checks whether the server returns 401/403 (correct rejection) or processes the request (bypass confirmed). As a secondary verification, the script examines the source code at /target-repo/logic/jwts.go to confirm the vulnerable `if token != nil` pattern exists without `&& token.Valid`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Forged JWT token with wrong signing key was accepted by the server (not rejected with 401).",
+    "Source code at logic/jwts.go:264 shows `if token != nil {` without `&& token.Valid` check.",
+    "Comparison with logic/jwts.go:189 shows the correct pattern: `if token != nil && token.Valid {`.",
+    "Comparison with logic/jwts.go:234 shows the correct pattern: `if token != nil && token.Valid {`.",
+    "Only VerifyHostToken is missing the token.Valid check, confirming the bug is specific to host token validation."
+  ],
+  "limitations_or_blockers": [
+    "The exploit requires the server to have at least one network configured for some endpoints to return data rather than errors. The host endpoint may return 500 (processing error) rather than 200 (success) if no matching host exists, but the absence of 401 confirms the auth bypass."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

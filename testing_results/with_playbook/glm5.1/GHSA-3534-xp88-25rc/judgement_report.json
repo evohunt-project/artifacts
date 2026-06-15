@@ -1,0 +1,149 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T04:39:11.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-02/GHSA-3534-xp88-25rc/GHSA-3534-xp88-25rc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "browser_control_auth_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/browser_control_auth_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/browser_control_auth_bypass/vulnerability_report.json",
+      "title": "Browser Control API Authentication Bypass",
+      "vulnerability_type": "Missing Authorization",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerable component and root cause: this finding concerns unauthenticated /browser-control/* routes mounted before dashboard authentication, not missing CSRF protection on POST /apps/:appId/agent.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "dev_mode_auth_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/dev_mode_auth_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/dev_mode_auth_bypass/vulnerability_report.json",
+      "title": "Development Mode Authentication Bypass",
+      "vulnerability_type": "authentication_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause: this finding requires the --dev deployment mode disabling authentication and exposing /parse-dashboard-config.json, not a CSRF gap on the agent endpoint.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "H",
+          "SI": "H",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H"
+      }
+    },
+    {
+      "finding_folder_name": "masterkey_exposure",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/masterkey_exposure",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/masterkey_exposure/vulnerability_report.json",
+      "title": "MasterKey Exposure via Configuration Endpoint",
+      "vulnerability_type": "information_disclosure",
+      "advisory_match": false,
+      "advisory_match_reason": "Different endpoint and root cause: this finding concerns authenticated disclosure of master keys from /parse-dashboard-config.json, not cross-site request submission to /apps/:appId/agent.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "H",
+          "SI": "H",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:H/SI:H/SA:H"
+      }
+    },
+    {
+      "finding_folder_name": "permissions_override",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/permissions_override",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/permissions_override/vulnerability_report.json",
+      "title": "Client-Controlled Permissions Override",
+      "vulnerability_type": "privilege_escalation",
+      "advisory_match": false,
+      "advisory_match_reason": "Same broad endpoint family but different root cause: this finding is about trusting a client-supplied permissions object after authentication, while the advisory is the absence of CSRF protection allowing a victim browser to submit POST /apps/:appId/agent.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "H",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:H/VA:H/SC:N/SI:H/SA:H"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described root cause: missing CSRF protection on the AI Agent API endpoint POST /apps/:appId/agent. The only qualifying finding involving the agent endpoint describes a server-side authorization flaw in client-controlled permissions, not CSRF middleware/token validation.",
+    "evidence": [
+      "Advisory GHSA-3534-xp88-25rc describes missing CSRF protection on POST /apps/:appId/agent and a patch adding CSRF middleware plus a dashboard CSRF token.",
+      "permissions_override/vulnerability_report.json identifies POST /apps/:appId/agent but attributes the flaw to req.body.permissions being trusted for authorization decisions.",
+      "permissions_override/reproduction/poc_exploit.py obtains and sends a CSRF token, so its exploit path does not demonstrate absent CSRF protection.",
+      "The remaining qualifying findings target /browser-control/*, --dev authentication bypass, and /parse-dashboard-config.json master key disclosure."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/browser_control_auth_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/browser_control_auth_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/browser_control_auth_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/dev_mode_auth_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/dev_mode_auth_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/dev_mode_auth_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/masterkey_exposure",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/masterkey_exposure/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/masterkey_exposure/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/permissions_override",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/permissions_override/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5c1b5934/permissions_override/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

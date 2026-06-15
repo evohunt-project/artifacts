@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "Docker-based reproduction confirms JWT token type confusion vulnerability. The exploit demonstrates: (1) Customer registration via public API, (2) Obtaining customer JWT token, (3) Using customer token to access admin GraphQL endpoint, (4) Successfully retrieving admin-only product list without admin authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Executing the reproduction should: (1) Start EverShop application, (2) Register a new customer account, (3) Authenticate and obtain customer JWT token, (4) Use customer token to access /api/adminGraphql endpoint, (5) Successfully execute admin GraphQL query to list all products with administrative details, (6) Confirm that a customer account can access admin-only operations.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the EverShop application, created a customer account via public registration endpoint, obtained customer JWT token, and used that token to access the admin GraphQL API at /api/adminGraphql. The query returned complete product catalog with administrative fields, confirming the authentication bypass.",
+  "verification_method": "The reproduction script performs: (1) Customer registration via POST /api/customer/register, (2) Customer login via POST /api/customer/tokens to obtain JWT, (3) Admin GraphQL query using customer JWT to Authorization header, (4) Verification that response contains product data instead of authentication error. The presence of product data confirms the bypass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Customer account successfully created via public registration endpoint",
+    "Customer JWT token obtained from POST /api/customer/tokens",
+    "Admin GraphQL endpoint /api/adminGraphql accepted customer JWT token",
+    "GraphQL query returned product catalog with administrative fields",
+    "No authentication error returned - request processed as if authenticated",
+    "Complete product list including pricing, inventory, and configuration data exposed to customer account"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host from https://github.com/evershopcommerce/evershop.git, checks out commit reference evershop-v1.2.2, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "evershop-v1.2.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

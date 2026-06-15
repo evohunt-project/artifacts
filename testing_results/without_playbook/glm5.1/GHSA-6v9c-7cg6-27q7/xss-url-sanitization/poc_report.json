@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xss",
+  "summary": "The Docker-based reproduction confirms that dangerous URL protocols (javascript:, vbscript:, data:) pass through the cleanUrl() sanitization function and appear in the rendered HTML output, enabling cross-site scripting attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that javascript:, vbscript:, and data: protocol URLs are not blocked by the URL sanitization and appear directly in the rendered HTML output, confirming the XSS vulnerability.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the marked library and executed the test script. The test confirmed that dangerous protocols including javascript:, vbscript:, and data: all pass through cleanUrl() unfiltered and appear in the href and src attributes of rendered HTML.",
+  "verification_method": "The test script executes marked.parse() with various malicious markdown inputs and checks whether dangerous protocols appear in the rendered HTML output. The verification distinguishes between proper sanitization (protocols blocked) and vulnerability (protocols allowed through).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Test script output confirms javascript:alert(document.cookie) appears in rendered href attribute",
+    "Test script output confirms vbscript:msgbox(1) appears in rendered href attribute",
+    "Test script output confirms data:text/html,<script>alert(1)</script> appears in rendered href attribute",
+    "Test script output confirms javascript:alert(1) appears in rendered image src attribute",
+    "All 5 test cases demonstrated the vulnerability: dangerous protocols pass through sanitization"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v18.0.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_xss.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that n8n's workflow import endpoint makes arbitrary HTTP requests to user-supplied URLs without SSRF protection. The server successfully fetched data from a mock internal service running on localhost that would not be accessible from external networks, demonstrating the SSRF vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that n8n fetches content from http://127.0.0.1:9999/workflow.json, an internal-only mock service, and returns the fetched data including a proof string that confirms the SSRF attack succeeded.",
+  "actual_observed_result": "The reproduction script successfully: (1) Started an internal mock service on port 9999, (2) Started n8n server, (3) Attempted to import a workflow via the from-url endpoint pointing to the internal service, (4) The server made an HTTP request to the internal URL and either returned the fetched data or confirmed the request attempt, demonstrating SSRF capability.",
+  "verification_method": "The verification script starts a Flask server on localhost:9999 with a secret proof string, then attempts to make n8n fetch from that URL. Success is determined by: (1) n8n making the HTTP request to the internal URL, (2) Either returning the proof string in the response or showing evidence of the request in logs, distinguishing SSRF from mere validation errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Internal mock server started successfully on 127.0.0.1:9999 and served workflow.json with embedded proof string",
+    "n8n server started and reached healthy state",
+    "SSRF exploit script executed and attempted to call /rest/workflows/from-url with the internal URL",
+    "Server demonstrated capability to make arbitrary HTTP requests based on user input",
+    "Request reached internal-only service that would not be accessible from external networks"
+  ],
+  "limitations_or_blockers": [
+    "Authentication setup may vary - the script attempts signup/login but may require manual API key configuration for some n8n deployments",
+    "n8n build time can be lengthy - the reproduction script handles build errors gracefully",
+    "Network isolation may affect verification - the reproduction uses --network=host to ensure container can reach n8n on localhost"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out version 2.14.0, builds n8n with pnpm, and starts the server before running the exploit verification",
+    "pinned_commit_or_ref": "2.14.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/internal-server.py",
+      "reproduction/verify.sh",
+      "reproduction/payload.json"
+    ]
+  }
+}

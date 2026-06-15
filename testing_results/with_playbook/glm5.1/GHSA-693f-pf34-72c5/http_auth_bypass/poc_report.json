@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authorization",
+  "summary": "The PoC demonstrates that agent HTTP endpoints accept unauthenticated requests and execute queries with full tool access. An unauthenticated HTTP POST request triggers tool execution that creates a proof-of-concept marker file, confirming complete absence of authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should create a marker file at /tmp/http_pwned via unauthenticated HTTP POST request to the agent endpoint, demonstrating that attackers can execute any tool or query without authentication.",
+  "actual_observed_result": "Running ./reproduction/run.sh launched an agent HTTP server, sent an unauthenticated POST request to the endpoint, and the agent executed a tool that created /tmp/http_pwned, confirming missing authentication on HTTP endpoints.",
+  "verification_method": "The run script checks for the existence of /tmp/http_pwned after sending an unauthenticated HTTP request. File existence confirms the agent executed the tool without any authentication, distinguishing real authorization bypass from network errors or server startup failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Marker file /tmp/http_pwned created via unauthenticated HTTP POST request",
+    "No authentication headers, API keys, or session tokens required",
+    "Agent executed tool with full capabilities despite missing auth",
+    "HTTP endpoint accessible on network interface (0.0.0.0)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

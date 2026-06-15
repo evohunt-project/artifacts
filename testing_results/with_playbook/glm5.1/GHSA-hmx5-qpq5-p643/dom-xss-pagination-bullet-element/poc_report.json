@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dom_xss",
+  "summary": "The Docker-based reproduction confirms that setting the pagination-bullet-element HTML attribute on a <swiper-container> custom element to a value containing an img tag with an onerror handler results in arbitrary JavaScript execution during Swiper initialization. The attacker-controlled attribute value flows unsanitized from HTML attribute parsing through to innerHTML injection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted pagination-bullet-element attribute value to be parsed by get-element-params.mjs, flow into the pagination render() template literal, be injected into the DOM via setInnerHTML, and execute the attacker-controlled onerror JavaScript handler inside the page context.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Swiper library, served an exploit page with a malicious pagination-bullet-element attribute in a headless browser, and confirmed that the attacker-controlled JavaScript executed. The onerror handler set a proof-of-compromise variable (window.__xss_proof), and the verification script confirmed the variable was set to true after Swiper initialized.",
+  "verification_method": "The verify.js script uses Puppeteer to load the exploit page in headless Chromium, waits for Swiper initialization and pagination rendering, then checks the DOM for the injected img element with an onerror attribute and evaluates whether the window.__xss_proof variable was set by the onerror handler. This distinguishes a real XSS from a failed parse or unrelated DOM change.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The headless browser loaded the exploit page containing <swiper-container pagination pagination-bullet-element=\"img src=x onerror=proof()\">.",
+    "Swiper initialized and the pagination render() function generated HTML containing the malicious img element.",
+    "The img element's onerror handler executed the proof() function, setting window.__xss_proof to true.",
+    "The verification script confirmed window.__xss_proof === true, proving arbitrary JavaScript execution."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref (v12.1.1), builds the Swiper library, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v12.1.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js",
+      "reproduction/exploit.html",
+      "reproduction/package.json"
+    ]
+  }
+}

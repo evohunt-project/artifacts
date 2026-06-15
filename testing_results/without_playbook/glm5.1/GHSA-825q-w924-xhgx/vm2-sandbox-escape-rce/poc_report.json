@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sandbox_escape_rce",
+  "summary": "The Docker-based reproduction confirms that n8n uses @n8n/vm2 by default for Code node execution (N8N_RUNNERS_ENABLED defaults to false), and a known vm2 sandbox escape payload achieves code execution outside the sandbox, writing a proof file to disk.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A workflow containing a Code node with a vm2 escape payload should execute arbitrary code outside the sandbox, creating a proof file at /tmp/evohunt-vm2-escape-proof on the host filesystem.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched n8n with default configuration, created an owner account, created and executed a workflow with a Code node containing a vm2 escape payload, and the proof file was created, confirming the sandbox escape.",
+  "verification_method": "The verify.sh script checks for the existence and content of the proof file /tmp/evohunt-vm2-escape-proof after workflow execution. The file contains the output of a command that should only be reachable outside the vm2 sandbox, distinguishing a real escape from a sandbox-internal error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/evohunt-vm2-escape-proof was created with content EVOHUNT_VM2_ESCAPED, confirming code execution outside the vm2 sandbox.",
+    "The n8n server started with N8N_RUNNERS_ENABLED=false (the default), confirming VM2 is the default execution path.",
+    "The workflow execution completed without n8n reporting a sandbox violation, indicating the escape was transparent to the application."
+  ],
+  "limitations_or_blockers": [
+    "Building n8n from source inside the Docker container requires significant time (approximately 5-15 minutes).",
+    "The specific vm2 escape payload may need to be adjusted for future versions of @n8n/vm2 if the maintainers patch individual escape vectors, though the vm2 architecture remains fundamentally vulnerable.",
+    "The escape payload used targets @n8n/vm2 3.9.25; different payloads may be needed for other versions."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository from GitHub, checks out the pinned commit n8n@1.123.1, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@1.123.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/escape-code.js"
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the UDM server sends an HTTP POST request to an attacker-controlled DeregCallbackUri when a re-registration with a different GUAMI occurs. The mock infrastructure (NRF, UDR) enables the full registration flow, and the exploit triggers the SSRF by first registering with a malicious callback URL then re-registering with a different GUAMI.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The UDM server should make an outbound HTTP POST request to the attacker-controlled URL (http://ssrf-listener:9999/ssrf-callback) stored as DeregCallbackUri during the first AMF registration. This request should arrive at the listener, proving the server-side request forgery.",
+  "actual_observed_result": "Running the reproduction pipeline caused the UDM to send an HTTP POST to the attacker-controlled callback URL. The listener received the deregistration notification request containing the UdmUecmDeregistrationData payload, confirming the SSRF.",
+  "verification_method": "A Python HTTP listener on port 9999 captures all incoming requests. The exploit script checks whether the listener received a POST request to /ssrf-callback after the second AMF registration. The verification distinguishes the SSRF callback from the initial registration responses and unrelated traffic by checking the exact request path and method.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The SSRF listener received an HTTP POST request to /ssrf-callback after the second AMF registration with different GUAMI.",
+    "The POST body contained a JSON payload with DeregReason and AccessType fields matching the expected UdmUecmDeregistrationData structure.",
+    "The first AMF registration returned HTTP 201 with the DeregCallbackUri reflected in the response, confirming the attacker-controlled URL was stored.",
+    "The second AMF registration returned HTTP 200, indicating the old registration was replaced and the deregistration notification was triggered."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction requires mock NRF and UDR services because the UDM depends on these for NF discovery and data storage. In a real deployment, these services would already be running.",
+    "The SendOnDeregistrationNotification is called asynchronously in a goroutine, so there may be a brief delay between the second registration response and the SSRF callback arrival."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/mock_services.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

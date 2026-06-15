@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "security_bypass",
+  "summary": "A crafted pickle file uses pickle.loads() for nested deserialization. Fickling's static analysis incorrectly reports LIKELY_SAFE severity because the pickle module is missing from the unsafe_imports denylist and the OBJ opcode avoids creating intermediate variables. When the pickle is loaded, the nested inner payload executes os.system(), demonstrating arbitrary code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause fickling to report LIKELY_SAFE for a malicious pickle file, and then the pickle should execute os.system('echo EVOHUNT_POC_CONFIRMED') via nested deserialization, printing EVOHUNT_POC_CONFIRMED to stdout.",
+  "actual_observed_result": "Fickling reported severity LIKELY_SAFE with analysis message 'Warning: Fickling failed to detect any overtly unsafe code'. The malicious pickle was then loaded with pickle.loads(), which executed the nested inner payload calling os.system('echo EVOHUNT_POC_CONFIRMED'). The string EVOHUNT_POC_CONFIRMED was printed to stdout, confirming arbitrary code execution. The pickle load returned 0 (the exit code of the echo command).",
+  "verification_method": "The exploit script creates the bypass pickle, checks fickling's severity (asserting LIKELY_SAFE), then loads the pickle with pickle.loads(). Verification checks for the string EVOHUNT_POC_SUCCESS in the combined output, which is only printed after fickling confirms LIKELY_SAFE AND the nested payload executes (printing EVOHUNT_POC_CONFIRMED).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Fickling analysis severity: LIKELY_SAFE",
+    "Fickling analysis message: 'Warning: Fickling failed to detect any overtly unsafe code, but the pickle file may still be unsafe.'",
+    "Fickling detailed_results: {} (empty - no analysis flagged anything)",
+    "Nested payload output: EVOHUNT_POC_CONFIRMED printed to stdout",
+    "Pickle load return value: 0 (exit code of echo command)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

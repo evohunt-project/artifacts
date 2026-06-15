@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sandbox_escape_rce",
+  "summary": "The Docker-based reproduction confirms that the LuaRuntime attribute_filter security boundary is bypassed via python.eval() and python.builtins.getattr(), allowing arbitrary Python code execution and OS command execution from Lua code despite the filter being active.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that (1) attribute_filter blocks direct attribute access like obj.__class__, (2) python.builtins.getattr() bypasses the filter to retrieve __class__, and (3) python.eval() executes arbitrary OS commands emitting the proof-of-concept marker string EVOHUNT_POC_SUCCESS_99679a28.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds lupa from source, creates a LuaRuntime with attribute_filter blocking dunder attributes, confirms the filter blocks direct __class__ access, then bypasses the filter via python.builtins.getattr() to retrieve __class__, and executes an OS command via python.eval() that emits the proof-of-concept marker.",
+  "verification_method": "The verify.sh script runs the exploit.py Python script inside the container and checks for the exact marker string EVOHUNT_POC_SUCCESS_99679a28 in the output. The marker is only emitted when python.eval() successfully executes an arbitrary OS command (echo), proving that the attribute_filter security boundary was bypassed and arbitrary code execution was achieved.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The attribute_filter successfully blocked direct obj.__class__ access from Lua (AttributeError raised).",
+    "python.builtins.getattr(obj, '__class__') bypassed the filter and returned the Python class object.",
+    "python.eval(\"__import__('os').system('echo EVOHUNT_POC_SUCCESS_99679a28')\") executed the OS command and emitted the proof marker.",
+    "Container logs contain the proof-of-concept marker string confirming arbitrary code execution."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the lupa-2.6 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "lupa-2.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

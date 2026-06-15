@@ -1,0 +1,58 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T08:24:45.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_da38f58a",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-5gg9-5g7w-hm73/GHSA-5gg9-5g7w-hm73.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "proxy-auth-header-spoofing",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_da38f58a/proxy-auth-header-spoofing",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_da38f58a/proxy-auth-header-spoofing/vulnerability_report.json",
+      "title": "Authentication bypass via proxy auth header spoofing allows full admin impersonation",
+      "vulnerability_type": "authentication_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerable code location (auth/proxy.go vs http/auth.go signup handler), different root cause (missing trusted-proxy validation for header origin vs missing guard to strip admin from self-registered accounts), and different attack path (spoofing proxy auth header when proxy auth is enabled vs exploiting signup endpoint when defaults.perm.admin=true). The proxy-auth-header-spoofing finding targets the proxy authentication mechanism, while the advisory describes a vulnerability in the signup handler that blindly applies default permissions including admin privileges.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The qualifying finding does not identify the advisory-described vulnerable code/root cause. The advisory describes a privilege escalation vulnerability in the signup handler (http/auth.go) where default permissions including admin are blindly applied to self-registered accounts when signup is enabled and defaults.perm.admin is true. The proxy-auth-header-spoofing finding targets a different authentication mechanism (proxy auth in auth/proxy.go) with a different root cause (missing trusted-proxy validation). The finding is a legitimate vulnerability but does not match the advisory-described signup/permission-inheritance issue.",
+    "evidence": [
+      "Advisory specifies vulnerable code location: http/auth.go signup handler applying d.settings.Defaults.Apply(user) without stripping admin",
+      "Advisory requires preconditions: signup=true AND defaults.perm.admin=true",
+      "Advisory attack vector: unauthenticated visitor registers account via public signup endpoint",
+      "proxy-auth-header-spoofing finding targets auth/proxy.go with vulnerable code reading r.Header.Get(a.Header) without trusted-proxy verification",
+      "proxy-auth-header-spoofing finding requires auth.method=proxy configured, different precondition from advisory",
+      "proxy-auth-header-spoofing finding exploits proxy authentication mechanism, not signup permission inheritance"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_da38f58a/proxy-auth-header-spoofing",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_da38f58a/proxy-auth-header-spoofing/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_da38f58a/proxy-auth-header-spoofing/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

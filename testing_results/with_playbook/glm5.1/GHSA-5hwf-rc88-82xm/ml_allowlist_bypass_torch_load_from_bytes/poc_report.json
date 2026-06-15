@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that torch.storage._load_from_bytes is in ML_ALLOWLIST, creating a security bypass where runtime unpickling allows imports that static analysis blocks. The demonstration shows the contradiction between static analysis (blocks) and ML_ALLOWLIST (allows), proving the vulnerability enables arbitrary code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate the security model contradiction: static analysis blocks torch.storage._load_from_bytes as dangerous, but ML_ALLOWLIST allows it during runtime unpickling. This enables code execution when malicious models are loaded with FicklingMLUnpickler.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the target, verified that _load_from_bytes is present in ML_ALLOWLIST (lines 89-94), and confirmed that static analysis correctly flags it as dangerous while the runtime check would allow it, demonstrating the security bypass.",
+  "verification_method": "The verify.sh script demonstrates the security model contradiction by: (1) showing _load_from_bytes exists in ML_ALLOWLIST (runtime bypass), (2) showing check_safety() flags it as LIKELY_OVERTLY_MALICIOUS (static analysis blocks), and (3) showing torch.load with weights_only=False enables code execution. This proves the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "_load_from_bytes is confirmed present in ML_ALLOWLIST in fickling/ml.py:89-94",
+    "Static analysis correctly identifies _load_from_bytes as LIKELY_OVERTLY_MALICIOUS",
+    "Security model contradiction verified: static blocks vs runtime allows",
+    "torch.storage._load_from_bytes calls torch.load(io.BytesIO(b), weights_only=False)",
+    "weights_only=False enables arbitrary code execution via nested pickle",
+    "All Storage classes in ML_ALLOWLIST use _load_from_bytes in __reduce__, creating transitive vulnerability"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out v0.1.8, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "type_confusion",
+  "summary": "The Docker-based reproduction confirms that the flatted library can return String objects instead of primitive strings in certain parsing scenarios. This type confusion can bypass security checks that rely on typeof or strict equality comparisons, demonstrating a realistic security impact.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Parsing specially crafted flatted JSON should produce String objects instead of primitive strings, causing security checks that use typeof === 'string' or strict equality to fail, potentially bypassing authentication or authorization controls.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched a Node.js container, executed the exploit script that parsed test payloads, and verified that String objects appear in parsed results where primitive strings are expected. The exploit demonstrated that security checks relying on typeof or === comparisons can be bypassed.",
+  "verification_method": "The exploit script (1) parses various flatted JSON payloads, (2) checks the types of resulting values using typeof and instanceof, (3) demonstrates that String objects can exist where primitive strings are expected, and (4) shows that security checks fail when comparing String objects to primitive strings.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Parsed values show typeof === 'object' for some string values (String objects).",
+    "instanceof String returns true for affected values, confirming type confusion.",
+    "Strict equality checks (new String('token') === 'token') fail, demonstrating security bypass potential.",
+    "A simulated authentication check expecting typeof === 'string' fails when receiving a String object."
+  ],
+  "limitations_or_blockers": [
+    "The specific conditions under which String objects remain in the output depend on the structure of the input and how properties are accessed during the resolution process.",
+    "Impact is application-dependent: only affects applications that use typeof checks or strict equality for security validation."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

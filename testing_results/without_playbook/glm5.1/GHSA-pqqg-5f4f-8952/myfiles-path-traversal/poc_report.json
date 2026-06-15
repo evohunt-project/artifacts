@@ -1,0 +1,25 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction sends a crafted URL-encoded path traversal request to /MyFiles/Public/..%2f..%2fcomposer.json and verifies that the application returns the contents of composer.json from the repository root without requiring authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The HTTP response should contain the contents of composer.json from the application root, including the string 'facturascripts/facturascripts', proving that URL-encoded path traversal sequences bypass the /MyFiles/ prefix check and allow reading arbitrary files with safe extensions.",
+  "actual_observed_result": "PoC not executed in this session. The reproduction bundle is prepared and self-contained for future execution.",
+  "verification_method": "The verify.sh script sends a GET request to http://127.0.0.1:8888/MyFiles/Public/..%2f..%2fcomposer.json and checks that the response body contains the string 'facturascripts/facturascripts', which is the name field in composer.json. This distinguishes a successful traversal from error pages or redirect responses.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "PoC not executed in this session; requires Docker runtime to build and run the reproduction container."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

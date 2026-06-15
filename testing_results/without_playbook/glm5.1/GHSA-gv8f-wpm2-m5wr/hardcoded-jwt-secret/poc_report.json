@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that a JWT forged with the hardcoded default secret is accepted by the authentication middleware, granting access to protected API endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A forged JWT signed with the default secret should be accepted by the authenticateToken middleware, allowing access to protected endpoints such as GET /api/auth/user which normally requires a valid session.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the target service, registered the first user, forged a JWT with the known default secret, and successfully accessed GET /api/auth/user. The server returned the registered user object, confirming the forged token was accepted as valid authentication.",
+  "verification_method": "The exploit script registers the first user to ensure the database has a user record, then independently signs a JWT with the hardcoded default secret and calls GET /api/auth/user. The verification checks that the response HTTP status is 200 and the response body contains the expected user fields. This distinguishes a successful authentication bypass from a generic server error or a startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show the forged JWT was accepted and GET /api/auth/user returned 200 with the user object.",
+    "The verification helper confirmed the response contained the expected username field.",
+    "The server started successfully and processed both the legitimate registration and the forged-token request."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

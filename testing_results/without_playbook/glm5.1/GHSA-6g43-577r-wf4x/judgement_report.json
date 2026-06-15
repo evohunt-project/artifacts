@@ -1,0 +1,93 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T16:30:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_992e1973",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-6g43-577r-wf4x/GHSA-6g43-577r-wf4x.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "dos-via-unsafe-split",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_992e1973/dos-via-unsafe-split",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_992e1973/dos-via-unsafe-split/vulnerability_report.json",
+      "title": "Denial of service via panic from unsafe string split operation",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": true,
+      "advisory_match_reason": "Identifies the same vulnerable function (RechargePut), same vulnerable code location (internal/sbi/api_convergedcharging.go:175-178), same root cause (unsafe strings.Split without bounds checking causing index out of range panic), and same security consequence (DoS through service panic) as the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "hardcoded-ftp-credentials",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_992e1973/hardcoded-ftp-credentials",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_992e1973/hardcoded-ftp-credentials/vulnerability_report.json",
+      "title": "Hardcoded FTP credentials allow unauthorized access to CDR files",
+      "vulnerability_type": "hardcoded_credentials",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerability class (hardcoded credentials vs out-of-bounds slice access), different affected component (FTP server in internal/cgf/cgf.go vs RechargePut handler in internal/sbi/api_convergedcharging.go), and different security consequence (unauthorized data access vs denial of service).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier3",
+    "target_match": "match",
+    "runtime_evidence": "failed_or_none",
+    "selected_finding": {
+      "folder_name": "dos-via-unsafe-split",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_992e1973/dos-via-unsafe-split",
+      "status": "qualifying_vuln",
+      "title": "Denial of service via panic from unsafe string split operation",
+      "vulnerability_type": "denial_of_service"
+    },
+    "reason": "The dos-via-unsafe-split finding identifies the same vulnerable code and root cause as the advisory: the RechargePut handler in internal/sbi/api_convergedcharging.go performs an unsafe strings.Split operation on the rechargingInfo parameter and directly accesses ueIdRatingGroup[1] without checking the slice length, causing an index out of range panic when the input lacks an underscore delimiter. This matches the advisory's description of the out-of-bounds slice access vulnerability leading to denial of service. Tier3 because the PoC reproduction bundle exists but cannot be executed: the run.sh script requires a target repository checkout mounted at /target-repo, which is not present in the session folder, preventing runtime verification of the exploit.",
+    "evidence": [
+      "Finding code_location matches advisory: internal/sbi/api_convergedcharging.go:175-178",
+      "Finding identifies same vulnerable endpoint: PUT /nchf-convergedcharging/v3/recharging/:rechargingInfo",
+      "Finding describes same root cause: strings.Split(rechargingInfo, \"_\") followed by direct ueIdRatingGroup[1] access without bounds check",
+      "Finding describes same security consequence: index out of range panic causing denial of service",
+      "Advisory references align: finding matches the vulnerability described in GHSA-6g43-577r-wf4x, CVE-2026-32937, and free5gc/chf/pull/61",
+      "No runtime execution possible: session folder lacks repository checkout required by reproduction/run.sh"
+    ],
+    "blockers_to_higher_tier": [
+      "Missing repository checkout: reproduction/run.sh requires target repo mounted at /target-repo but session has no repo directory",
+      "No runtime evidence available to distinguish Tier1/Tier2: cannot verify actual panic behavior or service crash",
+      "Static analysis only: finding relies on source code pattern matching without executable PoC demonstration"
+    ]
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_992e1973/hardcoded-ftp-credentials",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_992e1973/hardcoded-ftp-credentials/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_992e1973/hardcoded-ftp-credentials/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

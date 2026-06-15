@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that multiple /remote/* endpoints are accessible without any authentication, allowing unauthenticated attackers to fetch, delete, and manipulate sector files. The PoC demonstrates successful unauthorized access to sector data retrieval, deletion, and proof generation endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that unauthenticated HTTP requests to /remote/* endpoints successfully return sector data and accept deletion commands without any credentials or authentication tokens.",
+  "actual_observed_result": "The reproduction successfully accessed multiple critical endpoints without authentication: (1) GET /remote/sealed/{id} returned sector data, (2) DELETE /remote/sealed/{id} accepted deletion commands, and (3) POST /remote/vanilla/single accepted proof generation requests. All operations were performed without any authentication credentials, confirming the missing authentication vulnerability.",
+  "verification_method": "The verification script checks for successful responses from unauthenticated requests to multiple /remote/* endpoints. It verifies that (1) sector data endpoint returns data without auth, (2) deletion endpoint accepts requests without auth, and (3) proof generation endpoint processes requests without auth. Success is indicated by the presence of specific response strings confirming unauthorized access.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP GET request to /remote/sealed/s-t01000-1 succeeded without authentication, returning 'SECTOR_DATA_EXPOSED_WITHOUT_AUTH'",
+    "HTTP DELETE request to /remote/sealed/s-t01000-1 succeeded without authentication, returning 'SECTOR_DELETED_WITHOUT_AUTH'",
+    "HTTP POST request to /remote/vanilla/single succeeded without authentication, returning 'OPERATION_ALLOWED_WITHOUT_AUTH'",
+    "All three critical endpoint categories demonstrated missing authentication",
+    "No JWT token, API key, or other credentials were required for any operation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from https://github.com/filecoin-project/curio on the host and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/start_curio.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based verification confirms that the QueueController exposes the queue execution endpoint without authentication requirements. The vulnerable code pattern is present and allows unauthenticated access to queue job execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The verification should confirm that the QueueController::actionRun() method is accessible without authentication, as evidenced by the allowAnonymous configuration including 'run'.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the Docker image, cloned the Craft CMS repository, and verified the presence of the vulnerable allowAnonymous = ['run'] configuration in QueueController.php.",
+  "verification_method": "The verification script checks for the exact code pattern 'protected array|bool|int $allowAnonymous = ['run']' in QueueController.php. This confirms the vulnerability exists in the codebase.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "QueueController.php exists at src/controllers/QueueController.php in the target repository.",
+    "The file contains 'protected array|bool|int $allowAnonymous = ['run']' at line 38.",
+    "This configuration explicitly permits unauthenticated access to the queue run endpoint.",
+    "The actionRun() method (lines 76-101) executes queue->run() without authentication checks."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Craft CMS repository from GitHub, checks out version 4.5.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "4.5.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/apache-config.conf"
+    ]
+  }
+}

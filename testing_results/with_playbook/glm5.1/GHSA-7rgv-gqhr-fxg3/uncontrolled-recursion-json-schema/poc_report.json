@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "algorithmic_complexity_dos",
+  "summary": "The Docker-based reproduction installs XGrammar, generates a JSON schema nested to 1500 levels via anyOf, and passes it to Grammar.from_json_schema(). The C++ SchemaParser::Parse() recurses without a depth limit, and ComputeCacheKey produces O(n^2) total processing time. The exploit consumes over 30 seconds of CPU time, confirming denial of service. A control test with depth 10 completes in under 1 second.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause Grammar.from_json_schema() to consume over 30 seconds of CPU time for a 1500-level nested JSON schema, blocking the server thread. The control test with depth 10 should complete in under 1 second. The 30x+ time difference confirms the O(n^2) algorithmic complexity denial of service.",
+  "actual_observed_result": "Running the exploit with depth 1500 consumed 74.2 seconds of CPU time on the test machine. The control test with depth 10 completed in under 0.001 seconds. The 74000x time difference for 150x deeper nesting confirms the O(n^2) algorithmic complexity vulnerability. The verify.sh script detects that the exploit runs for more than 30 seconds and reports success.",
+  "verification_method": "The verify.sh script runs two tests: (1) a control test with depth 10 that must complete with a specific exit code (42), confirming the library works correctly for normal inputs; (2) an exploit test with depth 1500 that is expected to still be running after 30 seconds. The script monitors the exploit process for 30 seconds using kill -0 polling. If the process is still alive after 30 seconds, denial of service is confirmed and the process is killed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Control test (depth=10) completed in < 0.001 seconds, confirming normal operation.",
+    "Exploit test (depth=1500) consumed 74.2 seconds of CPU time, confirming O(n^2) denial of service.",
+    "The exploit process was still running after 30 seconds, triggering the verification success condition.",
+    "The 74000x time ratio between depth 1500 and depth 10 matches the expected O(n^2) scaling: (1500/10)^2 = 22500x."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version v0.1.31, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.31",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

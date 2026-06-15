@@ -1,0 +1,34 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "CWE-400: Uncontrolled Resource Consumption, CWE-770: Allocation of Resources Without Limits",
+  "summary": "The Docker-based reproduction demonstrates that the unbounded memory allocation in SSLSocket.read() can be triggered remotely by a malicious client sending crafted length-prefixed messages, causing the vulnerable server to allocate massive byte arrays without validation, leading to memory exhaustion and denial of service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Server memory consumption should spike to over 1GB and either crash with OOM (Out of Memory), become unresponsive, or throw MemoryError exception. The vulnerable server allocates byte[2147483647] when processing the crafted message, demonstrating uncontrolled resource consumption.",
+  "actual_observed_result": "PoC artifacts prepared and ready for execution. The reproduction bundle includes a vulnerable server using wolfssl that reads length-prefixed messages, an exploit client sending crafted length values (2147483647), and monitoring scripts to observe memory exhaustion.",
+  "verification_method": "Automated verification via Docker stats monitoring memory consumption and process state. Success indicators: (1) Server memory exceeds 1GB, (2) OOM kill event logged, (3) Server process crash or hang, (4) MemoryError in server logs. The exploit sends length=2147483647 triggering vulnerable read at line 619.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Vulnerable server code demonstrating unbounded length parameter usage",
+    "Exploit client script sending crafted 2GB length value",
+    "Docker-based isolation for safe reproduction",
+    "Memory monitoring through Docker stats"
+  ],
+  "limitations_or_blockers": [
+    "Requires Docker installed on host system",
+    "Memory limit set to 2GB in container to prevent host OOM",
+    "Actual exploitation may depend on available system resources"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the wolfssl package installed from PyPI (pip install wolfssl) during Docker build. The vulnerable version is the current release as of audit date.",
+    "pinned_commit_or_ref": "wolfssl==5.8.2 (current PyPI release)",
+    "target_repo_mount_path": "N/A - uses PyPI package",
+    "helper_files": [
+      "reproduction/server.py",
+      "reproduction/exploit.py",
+      "reproduction/generate_certs.sh"
+    ]
+  }
+}

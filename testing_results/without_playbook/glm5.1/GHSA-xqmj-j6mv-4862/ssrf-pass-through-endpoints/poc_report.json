@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that an authenticated attacker can create a pass-through endpoint targeting an internal service and access it without proper authorization. The PoC demonstrates SSRF by creating a malicious endpoint and successfully fetching data from a simulated internal metadata service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Creating a pass-through endpoint with a target URL pointing to an internal service should allow unauthorized access to that service. The PoC will demonstrate fetching sensitive data from a simulated AWS metadata endpoint (169.254.169.254) via the pass-through mechanism.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully started the LiteLLM proxy, created a pass-through endpoint targeting the simulated metadata service, and retrieved the secret data through the SSRF vulnerability. The attack required only a valid API key with no admin privileges.",
+  "verification_method": "The reproduction script creates a simulated internal metadata service, configures a pass-through endpoint via the management API, and verifies that the endpoint successfully returns data from the internal service. The check distinguishes successful SSRF from proxy startup failures or configuration errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Pass-through endpoint creation succeeded with target=http://169.254.169.254/latest/meta-data/.",
+    "HTTP GET request to the created endpoint successfully returned simulated metadata content.",
+    "No URL validation or authentication prevented the SSRF attack.",
+    "The proxy processed the request and forwarded it to the simulated internal service without blocking."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the LiteLLM repository on the host, checks out the vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_proxy.py",
+      "reproduction/exploit_ssrf.py",
+      "reproduction/verify.sh",
+      "reproduction/internal_metadata_server.py"
+    ]
+  }
+}

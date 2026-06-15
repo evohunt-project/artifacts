@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the legacy file resource performs direct HTTP downloads from user-supplied URLs using only strings.HasPrefix for validation, with no IP address blocklist, metadata endpoint protection, or network-level access controls.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the fileIsURL function only checks for http:// or https:// prefix and the legacy file resource makes direct HTTP GET requests to user-supplied URLs without SSRF protection.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the container, mounted the target repository, and verified that fileIsURL uses only strings.HasPrefix for URL validation, http.Client.Get() is called with the user-supplied URL directly, no IP/network validation exists, and TLS verification bypass is user-controllable.",
+  "verification_method": "The verify.sh script checks the target repository source code for the fileIsURL prefix-only validation, the direct HTTP GET call, the absence of IP validation functions, and the user-controllable InsecureSkipVerify. Success requires at least 3 SSRF vectors confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "fileIsURL() uses only strings.HasPrefix(sourceFilePath, \"http://\") for URL validation",
+    "Direct http.Client.Get(sourceFilePath) call found in file.go",
+    "No IP blocklist, allowlist, or network validation in the legacy file resource",
+    "User-controllable InsecureSkipVerify enables TLS bypass for file downloads",
+    "Proof file /tmp/EVOHUNT_SSRF_LEGACY_PROOF created upon successful verification"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.73.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

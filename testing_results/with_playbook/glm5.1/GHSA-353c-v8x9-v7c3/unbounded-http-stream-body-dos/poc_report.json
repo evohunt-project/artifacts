@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that the HTTP Stream transport reads arbitrarily large request bodies into memory without enforcing the configured maxMessageSize limit. A constrained-heap server process is killed by V8 OOM when a large body is sent to the /mcp endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After the attack, the MCP server process should be killed by V8 out-of-memory or become completely unresponsive, and the /health endpoint should no longer return 200 OK.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched a minimal MCP server with HTTP Stream transport on a 64 MB heap limit. The server responded to GET /health with {\"ok\":true} before the attack. An 8 MB body (exceeding the 4 MB maxMessageSize config) was accepted without rejection, proving the limit is dead. A subsequent 128 MB body caused V8 to terminate the process with an OOM error. The post-attack health check confirmed the server was no longer reachable.",
+  "verification_method": "The run script checks (1) server health returns 200 OK before the attack, (2) the 8 MB oversized body is accepted rather than rejected with a size-limit error, confirming maxMessageSize is not enforced, and (3) server health fails after the large body attack, confirming the DoS impact. The script uses a 64 MB heap limit via --max-old-space-size=64 to make the OOM deterministic within the Docker container.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GET /health returned {\"ok\":true} before the attack, confirming the server was operational.",
+    "POST /mcp with an 8 MB body completed without a size-limit rejection, proving maxMessageSize is dead configuration.",
+    "POST /mcp with a 128 MB body caused the Node.js process to exit with a FATAL ERROR: Reached heap limit or CALL_AND_RETRY_LAST allocation failure OOM signal.",
+    "GET /health after the attack failed to connect, confirming the server was terminated."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.2.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/test-server.mjs"
+    ]
+  }
+}

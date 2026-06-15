@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor",
+  "summary": "Docker reproduction confirms that an API token holder can delete appointments belonging to other providers without any ownership verification, demonstrating complete IDOR vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that an authenticated API user can delete Provider B's appointment by specifying the appointment ID in a DELETE request, without any verification that the user should have access to that provider's data.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the environment, created two appointments (one for Provider A, one for Provider B), and the exploit script deleted Provider B's appointment using only the API token. The verification confirmed the appointment was removed from the database.",
+  "verification_method": "The exploit script attempts deletion with HTTP status code check, then the verify script queries the database to confirm the target appointment (ID 2, Provider B's appointment) no longer exists. This distinguishes successful unauthorized deletion from authorization errors or unrelated failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 204 status code returned from DELETE request indicating successful deletion",
+    "Database query confirmed appointment ID 2 no longer exists in the appointments table",
+    "API token authentication succeeded without establishing user context for authorization",
+    "The vulnerable endpoint accepted the appointment ID without checking provider ownership"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Easy!Appointments repository from GitHub, builds the Docker image, and mounts the checkout at /target-repo",
+    "pinned_commit_or_ref": "latest_main_branch_commit",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

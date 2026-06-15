@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor",
+  "summary": "Docker reproduction confirms that a provider can modify another provider's working plan exceptions by specifying the target provider_id without ownership verification.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that Provider A can delete Provider B's working plan exception by specifying Provider B's ID in the provider_id parameter, without any verification that Provider A should have access to Provider B's schedule.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the environment, created working plan exceptions for both providers, and the exploit script deleted Provider B's working plan exception. The verification confirmed the exception was removed from the database.",
+  "verification_method": "The exploit script attempts deletion with HTTP status code check, then the verify script queries the database to confirm the target working plan exception no longer exists. This distinguishes successful unauthorized deletion from authorization errors or unrelated failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 200 status code returned from POST request indicating successful deletion",
+    "Database query confirmed working plan exception for Provider B no longer exists",
+    "Provider authentication succeeded but endpoint failed to verify provider ownership",
+    "The vulnerable endpoint accepted the provider_id without checking the authenticated provider's ownership"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Easy!Appointments repository from GitHub, builds the Docker image, and mounts the checkout at /target-repo",
+    "pinned_commit_or_ref": "latest_main_branch_commit",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

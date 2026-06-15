@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that sending a multipart request with 5000 small files followed by one file exceeding the configured fileSize limit triggers a synchronous recursive stack overflow in removeUploadedFiles, crashing the Node.js process with RangeError: Maximum call stack size exceeded.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted multipart payload to trigger the synchronous recursion in removeUploadedFiles via MemoryStorage._removeFile, producing a RangeError: Maximum call stack size exceeded that crashes the server process.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the multer v2.0.2 repository, built the Docker image, installed dependencies, started the Express server, sent 5000 small files plus one oversized file via multipart/form-data, and the server process crashed with RangeError: Maximum call stack size exceeded at lib/remove-uploaded-files.js:7, confirming the synchronous recursion in the error cleanup path.",
+  "verification_method": "The verify.sh script starts the server, runs the exploit, then checks whether the server process is still alive and whether the proof string EVOHUNT_STACK_OVERFLOW_CONFIRMED appears in the logs. It also checks for the Maximum call stack size exceeded error message in the server output. The combination of a dead server process and the stack overflow error distinguishes a genuine exploit from a normal error response or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs contain 'RangeError: Maximum call stack size exceeded' at /target-repo/lib/remove-uploaded-files.js:7.",
+    "Stack trace shows recursive call chain: handleFile -> MemoryStorage._removeFile -> remove -> handleFile.",
+    "The proof string 'EVOHUNT_STACK_OVERFLOW_CONFIRMED' was emitted by the exploit script after detecting the server crash.",
+    "The server process exited with a non-zero status, confirming the crash was caused by the exploit payload."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "e5db9caf5da30b61e90ad56db5f6821d36ce2de9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.js",
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

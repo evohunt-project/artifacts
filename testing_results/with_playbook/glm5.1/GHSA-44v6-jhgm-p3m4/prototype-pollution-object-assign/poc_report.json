@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution",
+  "summary": "The PoC successfully verified that multiple nodes use Object.assign(JSON.parse(userInput)) without filtering dangerous keys, confirming the prototype pollution vulnerability pattern exists in production code.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The verification should confirm that Object.assign + JSON.parse patterns exist in multiple nodes without __proto__ filtering, demonstrating the prototype pollution attack vector.",
+  "actual_observed_result": "Verification confirmed vulnerable Object.assign + JSON.parse patterns in Zulip, Zendesk, Paddle, and CustomerIo nodes without proper key filtering for __proto__, constructor, and prototype keys.",
+  "verification_method": "Static code analysis searching for Object.assign(JSON.parse()) patterns and checking for presence of __proto__ key filtering. Runtime demonstration of prototype pollution in JavaScript.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Zulip.node.ts contains Object.assign(body, JSON.parse(additionalFieldsJson)) without key filtering",
+    "Zendesk.node.ts contains Object.assign(body, JSON.parse(additionalFieldsJson)) without key filtering",
+    "Paddle.node.ts contains Object.assign + JSON.parse patterns at multiple locations without key filtering",
+    "CustomerIo.node.ts contains Object.assign + JSON.parse patterns at multiple locations without key filtering",
+    "Runtime test demonstrated that Object.assign with __proto__ in parsed JSON pollutes Object.prototype",
+    "Vulnerability confirmed: Attack vector exists for prototype pollution"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit": "HEAD of n8n repository at time of audit",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_pollution.js",
+      "reproduction/test_pollution.js"
+    ]
+  }
+}

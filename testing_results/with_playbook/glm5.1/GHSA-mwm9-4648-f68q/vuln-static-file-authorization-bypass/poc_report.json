@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The PoC successfully demonstrates unauthorized access to sensitive files through Django's static file serving without authentication. The reproduction shows that an unauthenticated attacker can access files containing secrets and sensitive configuration by accessing the static file endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated remote attacker should be able to access sensitive files in the configured document_root directory, demonstrating authorization bypass and potential exposure of secrets, credentials, and private data.",
+  "actual_observed_result": "The PoC successfully accessed /static/sensitive.txt without any authentication. The file contained sensitive information including SECRET_API_KEY, DATABASE_PASSWORD, and AWS_SECRET_KEY. The server returned HTTP 200 with the complete file content, confirming the authorization bypass.",
+  "verification_method": "The exploit script makes an unauthenticated HTTP GET request to the static file endpoint and verifies the response contains sensitive keywords (SECRET_API_KEY, DATABASE_PASSWORD). The presence of these keywords confirms successful unauthorized access to sensitive data.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 200 response received for unauthenticated request to /static/sensitive.txt",
+    "File content includes sensitive credentials: SECRET_API_KEY, DATABASE_PASSWORD, AWS_SECRET_KEY",
+    "No authentication headers or session cookies were required to access the file",
+    "django.views.static.serve() function was invoked without any authentication middleware"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "Dockerfile installs Django 6.1a1 from PyPI. No target repository checkout needed as the vulnerability exists in the Django framework itself.",
+    "pinned_commit_or_ref": "N/A - vulnerability exists in Django 6.1a1 package on PyPI",
+    "target_repo_mount_path": "N/A",
+    "helper_files": [
+      "reproduction/setup_project.py",
+      "reproduction/trigger_exploit.py"
+    ]
+  }
+}

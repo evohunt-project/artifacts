@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf_file_read",
+  "summary": "The standalone Docker-based reproduction verifies the SSRF vulnerability by directly testing the validateHostname() logic from Craft CMS 4.16.17's Asset.php:281. The function correctly blocks cloud metadata IPs (169.254.169.254) and domains (metadata.google.internal) but allows file://localhost URLs through because it never checks the URL scheme. PHP's file_get_contents successfully reads /etc/passwd and a marker file via file://localhost, confirming the SSRF vector. Guzzle 7.x blocks file:// at the transport level by default, but the vulnerability in validateHostname() is real — the defense is incomplete.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The validateHostname() function should block all SSRF vectors but allows file://localhost URLs. PHP file_get_contents and any HTTP client that supports file:// can read arbitrary local files through this bypass.",
+  "actual_observed_result": "Step 1: Confirmed vulnerable code exists in target repo (no PHP_URL_SCHEME check). Step 2: validateHostname() correctly blocks cloud metadata IPs/domains and localhost IP, but ALLOWS file://localhost URLs. Step 3: file_get_contents('file://localhost/tmp/evohunt-marker.txt') successfully reads marker file with exact content match. Step 4: file_get_contents('file://localhost/etc/passwd') reads 19 lines of /etc/passwd.",
+  "verification_method": "The PoC creates a file with a unique random marker string, validates that file://localhost passes the hostname checks, and reads the file back via file://localhost confirming the SSRF. It also reads /etc/passwd as a real-world demonstration.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "validateHostname() blocks 169.254.169.254 (cloud metadata IP) — BLOCKED",
+    "validateHostname() blocks metadata.google.internal (cloud metadata domain) — BLOCKED",
+    "validateHostname() blocks 127.0.0.1 (localhost IP) — BLOCKED",
+    "validateHostname() allows file://localhost/etc/passwd — ALLOWED (bypass confirmed)",
+    "file_get_contents('file://localhost/tmp/evohunt-marker.txt') returns exact marker content — file read confirmed",
+    "file_get_contents('file://localhost/etc/passwd') returns 19 lines of system password file — arbitrary file read confirmed"
+  ],
+  "limitations_or_blockers": [
+    "Guzzle 7.x (used by Craft CMS) blocks file:// scheme at the client level via the 'protocols' request option, so direct exploitation through the GraphQL endpoint requires either a custom Guzzle config that enables file:// protocol, or a different HTTP handler that doesn't enforce protocol restrictions.",
+    "The core vulnerability in validateHostname() is confirmed — it does not validate URL scheme. This is a defense-in-depth failure that would be exploitable with any HTTP client that supports file:// URLs or if Guzzle's protocol restriction were relaxed.",
+    "In production, an attacker would need an API token with volumes.<uid>:create permission (PR:L)."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref 4.16.17, and mounts that checkout read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "4.16.17",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/standalone-poc.php"
+    ]
+  }
+}

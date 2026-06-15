@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that user-controlled filenames flow into filepath.Join() without sanitization, allowing path traversal via ../ sequences and absolute paths to write files to arbitrary locations on Proxmox nodes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that filenames containing ../ sequences or absolute paths escape the intended upload directory when processed by the vulnerable filepath.Join code in NodeUpload and NodeStreamUpload.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the container, mounted the target repository, and verified that multiple path traversal vectors (../../../etc/passwd, /etc/shadow, ../../root/.ssh/authorized_keys, ../../../../etc/cron.d/payload) escape the base directory. The source_raw.file_name attribute was confirmed to have no validation.",
+  "verification_method": "The verify.sh script checks the target repo for the vulnerable filepath.Join pattern, tests multiple traversal payloads via Python os.path.join (matching Go filepath.Join behavior), and confirms that file_name attributes lack validation. Success requires at least 3 traversal vectors confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The vulnerable filepath.Join(remoteFileDir, d.FileName) pattern found at proxmox/ssh/client.go",
+    "Four path traversal vectors confirmed: ../../../etc/passwd, /etc/shadow, ../../root/.ssh/authorized_keys, ../../../../etc/cron.d/payload",
+    "source_raw.file_name attribute confirmed to have no ValidateDiagFunc",
+    "Proof file /tmp/EVOHUNT_PATH_TRAVERSAL_PROOF created upon successful verification"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.73.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

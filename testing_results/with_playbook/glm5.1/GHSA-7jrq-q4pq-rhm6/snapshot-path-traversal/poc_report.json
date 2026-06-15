@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that a file can be written outside the intended database directory by exploiting the unsanitized SnapshotChunk.Name field in the SendSnapshot RPC. The exploit connects to the internal gRPC port (6649) without authentication, triggers a leader-to-follower conversion, and writes a proof file using path traversal in the chunk name.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted SendSnapshot request to write a proof file at /tmp/evohunt-path-traversal-proof on the container filesystem, outside the intended database directory (./data/db/default/shard-0/).",
+  "actual_observed_result": "The Oxia standalone server was started, the exploit connected to the internal port without authentication, sent a crafted SnapshotChunk with a Name containing ../../../ sequences, and the target file was created outside the database directory via the unsanitized filepath.Join in kv_pebble.go:809.",
+  "verification_method": "The run script checks for the existence and content of the proof file at /tmp/evohunt-path-traversal-proof inside the container. This distinguishes a successful path traversal write from a normal database operation or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "A proof file exists at /tmp/evohunt-path-traversal-proof inside the container with the expected content.",
+    "The file was created by the SendSnapshot RPC handler through the vulnerable filepath.Join at kv_pebble.go:809.",
+    "The proof file is located outside the intended database directory (data/db/default/shard-0/)."
+  ],
+  "limitations_or_blockers": [
+    "The exploit requires the server to accept the leader-to-follower conversion via GetOrCreateFollower with term=-1. If the server rejects this, the snapshot installation may not proceed.",
+    "The path traversal depth (../../../) assumes a specific relative directory structure. Different deployments may require adjusted traversal depth."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "42be7c29268f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit/main.go"
+    ]
+  }
+}

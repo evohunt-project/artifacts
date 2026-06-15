@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the console command endpoint accepts unsanitized input and forwards it to the Wings daemon, allowing shell metacharacter injection that results in arbitrary command execution on the game server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a malicious command payload through the console API should execute arbitrary commands on the server, demonstrated by writing a proof file to the filesystem and capturing command output.",
+  "actual_observed_result": "The exploit successfully injected shell commands through the console API endpoint. The injected commands executed on the target server, creating a proof file and capturing the output of arbitrary commands (id, whoami, uname).",
+  "verification_method": "The exploit writes a unique proof file (/tmp/pwned_*.txt) containing command execution output and timestamps. The verify.sh script checks for the existence and content of this file to distinguish successful command injection from API errors or startup failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof file created at /tmp/pwned_CONSOLE-INJECTION-PROOF.txt on the target container",
+    "File contains output from id, whoami, and uname commands proving RCE",
+    "API returned 204 No Content indicating successful command delivery to Wings daemon",
+    "Command injection payload ;id > /tmp/pwned_CONSOLE-INJECTION-PROOF.txt executed successfully"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3780664977726641fd7b4ef90c94687233901129",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup_panel.sh"
+    ]
+  }
+}

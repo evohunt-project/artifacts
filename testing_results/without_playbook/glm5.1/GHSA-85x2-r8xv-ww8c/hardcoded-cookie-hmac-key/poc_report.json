@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cryptographic_failure",
+  "summary": "The Docker-based reproduction confirms that the Cookie class HMAC key is hardcoded as 'KirbyHttpCookieKey'. A cookie forged using this known key passes the Cookie::get() integrity verification, while a tampered cookie without the correct HMAC is rejected.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a cookie forged with the known HMAC key 'KirbyHttpCookieKey' is accepted by Cookie::get(), proving the cookie integrity mechanism is bypassed.",
+  "actual_observed_result": "Cookie::$key matched the hardcoded value 'KirbyHttpCookieKey'. A cookie forged with hash_hmac('sha1', $value, 'KirbyHttpCookieKey') was accepted by Cookie::get() and returned the attacker-chosen value. A tampered cookie with an invalid HMAC was correctly rejected.",
+  "verification_method": "The forge_cookie.php script (1) verifies Cookie::$key equals the known hardcoded value, (2) forges a cookie with a computed HMAC using the known key, (3) sets it in $_COOKIE and calls Cookie::get() to confirm it passes verification, and (4) confirms a tampered cookie without the correct HMAC returns null.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Cookie::$key matched the known hardcoded value 'KirbyHttpCookieKey'.",
+    "A cookie forged with hash_hmac('sha1', $value, 'KirbyHttpCookieKey') was accepted by Cookie::get() and returned the forged value.",
+    "A cookie with an incorrect HMAC was rejected (Cookie::get() returned null)."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "4.9.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/forge_cookie.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

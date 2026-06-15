@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that unauthenticated attackers can access sensitive infrastructure information via API endpoints, discovering internal backend URLs and routing configurations.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Unauthenticated GET requests to /api/* endpoints should return JSON containing backend URLs with internal IP addresses and routing rules, enabling infrastructure mapping.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built Traefik with backend services configured using internal IPs (192.168.1.10, 10.0.0.50, 172.16.0.100), started the API on port 8080 without authentication, and verified that unauthenticated GET requests returned complete configuration details including sensitive internal IP addresses.",
+  "verification_method": "The verification script makes unauthenticated GET requests to multiple API endpoints (/api, /api/providers, /api/providers/*/backends) and extracts backend URLs to confirm internal IPs (192.168.x.x, 10.x.x.x, 172.16.x.x) are exposed in the JSON responses.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "API endpoints accessible without authentication on port 8080",
+    "GET /api returned complete routing configuration",
+    "GET /api/providers/*/backends exposed backend URLs with internal IPs",
+    "Backend URLs showing: http://192.168.1.10:8080, http://10.0.0.50:3000, http://172.16.0.100:9000",
+    "No authentication header or credentials required for access"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the existing target repository at /Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1e3057f9/repo and mounts it read-only at /target-repo during build.",
+    "pinned_commit_or_ref": "master branch (v1.7.x)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/traefik.toml"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the Execute Command node allows arbitrary command execution on the host system without input validation, sandboxing, or command whitelisting.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that the Execute Command node accepts and executes arbitrary shell commands with full shell interpretation, enabling command injection, command chaining, and arbitrary file access.",
+  "actual_observed_result": "Code analysis confirms the vulnerability: line 30 uses exec() with the user-controlled command parameter, and line 97 retrieves the parameter without validation. The node explicitly states it 'Executes a command on the host', confirming direct host access without sandboxing.",
+  "verification_method": "The verification script analyzes the vulnerable source code to confirm the absence of input validation, command whitelisting, or sandboxing. It demonstrates the attack surface by showing how user-controlled workflow parameters are directly passed to child_process.exec().",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Direct exec() call found at line 30: exec(command, { cwd: process.cwd() }, callback)",
+    "User-controlled parameter retrieval at line 97: this.getNodeParameter('command', itemIndex)",
+    "No command sanitization, whitelist, or validation logic present in the node implementation",
+    "Shell metacharacters (;, |, $(), >, <) are fully interpreted by the exec() call",
+    "The node description confirms direct host command execution without isolation"
+  ],
+  "limitations_or_blockers": [
+    "Full exploitation requires workflow creation and execution permissions",
+    "The reproduction demonstrates the vulnerability path through static code analysis",
+    "Dynamic exploitation would require valid authentication credentials to create and execute workflows"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@1.123.15",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

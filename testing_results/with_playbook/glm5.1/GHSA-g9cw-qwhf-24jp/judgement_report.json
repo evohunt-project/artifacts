@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T06:25:30.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_02024d9b",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-g9cw-qwhf-24jp/GHSA-g9cw-qwhf-24jp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unbounded_subscription_map_dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_02024d9b/unbounded_subscription_map_dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_02024d9b/unbounded_subscription_map_dos/vulnerability_report.json",
+      "title": "Unbounded in-memory subscription map growth enables unauthenticated denial-of-service via memory exhaustion",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns unauthenticated creation of unbounded subscription map entries and concurrent map access crashes. The advisory root cause is a missing return after a 404 in HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdDelete that lets an invalid influenceId path still delete an existing Traffic Influence Subscription.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described vulnerable code or root cause. The only final qualifying finding is a separate UDR denial-of-service issue involving unbounded in-memory subscription maps and concurrent map access, not the DELETE influenceData invalid-path missing-return bug that causes unauthorized subscription deletion.",
+    "evidence": [
+      "Advisory GHSA-g9cw-qwhf-24jp describes DELETE /nudr-dr/v2/application-data/influenceData/{influenceId}/{subscriptionId}, where HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdDelete sends a 404 for influenceId != subs-to-notify but continues into ApplicationDataInfluenceDataSubsToNotifySubscriptionIdDeleteProcedure.",
+      "Finding unbounded_subscription_map_dos reports POST subscription-creation endpoints writing to SubscriptionDataSubscriptions and PolicyDataSubscriptions without bounds, rate limits, or synchronization, leading to memory exhaustion or concurrent map access panic.",
+      "The final finding's reported code locations are context maps, subscription creation processors, notification callbacks, and router auth checks; it does not identify the advisory's DELETE handler missing return or unauthorized deletion control flow."
+    ],
+    "blockers_to_higher_tier": [
+      "No advisory-matched qualifying finding was present, so Tier1, Tier2, and Tier3 are not applicable."
+    ]
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_02024d9b/unbounded_subscription_map_dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_02024d9b/unbounded_subscription_map_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_02024d9b/unbounded_subscription_map_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

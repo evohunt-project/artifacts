@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that the /cron endpoint is accessible without any authentication. An unauthenticated HTTP GET request to /cron triggers execution of administrative scheduled tasks including log deletion, receipt updates, plugin cron jobs, and work queue processing.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Accessing /cron without authentication should trigger administrative task execution, demonstrated by the presence of 'starting-cron' and task execution messages in the response. The vulnerability allows any unauthenticated attacker to trigger privileged operations.",
+  "actual_observed_result": "The reproduction successfully accessed the /cron endpoint via HTTP GET without any authentication token, session cookie, or credentials. The response contained 'starting-cron' message and evidence of cron task execution, confirming that administrative tasks can be triggered by any unauthenticated user.",
+  "verification_method": "The exploit script sends an HTTP GET request to /cron without any authentication headers or cookies, then checks the response for cron execution messages ('starting-cron', 'finished-cron', 'updating', 'removing'). The verification confirms that the endpoint is accessible and executes tasks without authorization.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 200 OK response from /cron endpoint without authentication",
+    "Response body contains 'starting-cron' message confirming cron execution started",
+    "Response body contains task execution messages (e.g., 'updating', 'removing', 'finished-cron')",
+    "No authentication token, session cookie, or credentials were required to trigger execution"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub (https://github.com/NeoRazorX/facturascripts.git) and checks out the main branch.",
+    "pinned_commit_or_ref": "main (latest development version)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

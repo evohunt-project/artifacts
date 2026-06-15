@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction is designed to demonstrate that the rename_table method in the PostgreSQL adapter interpolates unquoted table names into SQL, allowing injection of arbitrary DDL statements such as DROP TABLE.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create test tables in PostgreSQL, then call rename_table with a crafted new_name containing '; DROP TABLE users--', causing the users table to be dropped via SQL injection.",
+  "actual_observed_result": "PoC was not executed during this session; no runtime observation is available.",
+  "verification_method": "The verify.sh script queries the PostgreSQL database to check whether the users table was dropped. The absence of the users table after rename_table confirms the SQL injection succeeded, distinguishing it from a normal rename operation or a query error.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker was not available in the audit environment to execute the reproduction container."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "1.2.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.rb",
+      "reproduction/verify.sh",
+      "reproduction/adapter_patch.rb"
+    ]
+  }
+}

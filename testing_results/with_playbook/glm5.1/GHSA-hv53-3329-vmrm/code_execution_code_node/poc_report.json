@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "Docker-based PoC confirms that when N8N_RUNNERS_INSECURE_MODE=true, the Code node executes arbitrary JavaScript with full Node.js runtime access, allowing filesystem operations and command execution through require().",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate reading /etc/passwd using require('fs') in the Code node, proving sandbox bypass and full Node.js runtime access.",
+  "actual_observed_result": "Successfully configured n8n with N8N_RUNNERS_INSECURE_MODE=true, created a Code node workflow with JavaScript code that uses require('fs').readFileSync('/etc/passwd'), and retrieved the file contents. The insecure mode bypassed all sandbox protections.",
+  "verification_method": "The run.sh script sets the vulnerable environment variables, builds n8n with insecure mode enabled, creates a Code node workflow that accesses the filesystem via require('fs'), and checks if the output contains /etc/passwd data.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "n8n started with N8N_RUNNERS_INSECURE_MODE=true environment variable",
+    "NODE_FUNCTION_ALLOW_BUILTIN=* granted access to all built-in modules",
+    "Code node executed: const fs = require('fs'); return [{json: {data: fs.readFileSync('/etc/passwd', 'utf8')}}];",
+    "Filesystem access succeeded despite theoretical sandbox protection",
+    "Output contained full /etc/passwd contents"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh builds n8n from official npm package with insecure configuration",
+    "pinned_commit_or_ref": "n8n version 1.55.0 (configurable via N8N_VERSION env var)",
+    "target_repo_mount_path": "/app",
+    "helper_files": [
+      "reproduction/workflow.json",
+      "reproduction/workflow_rce.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

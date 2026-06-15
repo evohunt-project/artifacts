@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_stack_overflow",
+  "summary": "The Docker-based reproduction confirms that a ~40KB ASN.1 payload with 10000 nesting levels triggers StackOverflowError in ASN1InputStream.readVector(), crashing the parsing thread.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should trigger StackOverflowError when ASN1InputStream parses deeply nested DER-encoded SEQUENCE structures, confirming the parser has no recursion depth limit.",
+  "actual_observed_result": "Running the exploit locally confirmed that a 39829-byte payload with 10000 ASN.1 SEQUENCE nesting levels triggers StackOverflowError in the parsing thread with a 256KB stack, exiting with code 0 (success signal). The parser never reached a normal return; the thread stack was exhausted by unbounded recursion in readVector().",
+  "verification_method": "The exploit program catches StackOverflowError specifically and exits with code 0 on success. Exit code 1 indicates parsing succeeded (no vulnerability). The run.sh script checks for the SUCCESS marker string in the exploit output and the correct exit code.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Exploit output: '[evohunt] SUCCESS: StackOverflowError confirmed at depth 10000'",
+    "Exploit output: '[evohunt] A 39829-byte ASN.1 payload causes denial of service'",
+    "Exploit output: '[evohunt] via unbounded recursion in ASN1InputStream.readVector()'",
+    "Process exited with code 0 (vulnerability confirmed)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/ExploitASN1DeepNesting.java",
+      "reproduction/verify.sh"
+    ]
+  }
+}

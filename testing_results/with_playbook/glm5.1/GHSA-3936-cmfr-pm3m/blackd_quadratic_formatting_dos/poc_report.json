@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_resource_consumption",
+  "summary": "The Docker-based reproduction confirms that blackd's formatting engine has quadratic (O(n^2)) complexity for parenthetical nesting depth. A crafted Python expression with depth=1500 (a ~3KB payload) causes the server to spend over 13 seconds formatting a single request with no timeout. The time scales quadratically: depth=500 takes ~0.5s while depth=1500 takes ~13.5s (9x time for 3x depth). Worker processes are blocked for the full duration with no timeout or concurrency limit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a POST request with a deeply nested Python expression (depth=1500, ~3KB payload) to blackd should cause the formatting worker to consume CPU for over 10 seconds with no timeout, demonstrating that a single small request can block a worker process. The quadratic scaling should be evident: 3x depth increase results in ~9x time increase.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started blackd, sent probe and attack requests. The baseline request (depth=500) completed in ~0.5s. The attack request (depth=1500) completed in ~13.5s with HTTP 200. The time ratio was ~27x for 3x depth increase, confirming super-linear (quadratic) scaling. The worker was blocked for 13.5 seconds with no timeout.",
+  "verification_method": "The exploit sends two requests with different nesting depths (500 and 1500) and measures response times. It checks: (1) the attack request takes over 10 seconds (proving no timeout), (2) the time ratio exceeds 1.5x the depth ratio (proving super-linear scaling). This distinguishes the O(n^2) DoS from normal linear processing. The X-Fast-Or-Safe: fast header is used to get successful 200 responses, confirming the code path is fully exercised.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Probe request (depth=100) succeeded with HTTP 200, confirming blackd is operational.",
+    "Baseline request (depth=500) completed in ~0.5 seconds with HTTP 200.",
+    "Attack request (depth=1500) completed in ~13.5 seconds with HTTP 200, blocking a worker for the full duration.",
+    "Time scaling is super-linear: 3x depth increase caused ~27x time increase (ratio > 4.5x), confirming O(n^2) complexity.",
+    "No timeout was enforced: the worker process ran for 13.5 seconds without being interrupted."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

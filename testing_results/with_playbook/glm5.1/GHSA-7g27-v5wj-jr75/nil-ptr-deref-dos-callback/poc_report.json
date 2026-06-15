@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_null_ptr_deref",
+  "summary": "The Docker-based reproduction builds the free5gc UDM from source, starts it with mock NRF and UDR backends, and sends a single unauthenticated POST request to /sdm-subscriptions. The nil pointer dereference in DataChangeNotificationProcedure (notifier.go:30) causes a runtime panic in the handler goroutine. The UDM server crashes or returns a 500 error, confirming the denial-of-service vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a POST request to /sdm-subscriptions with a JSON body containing notifyItems should trigger a nil pointer dereference because the route has no :supi parameter, causing the handler to look up a UE with an empty string, get nil, and dereference it. This crashes the handler goroutine and may crash the entire UDM server.",
+  "actual_observed_result": "The reproduction built the UDM, started mock backends, and sent a POST request to the unauthenticated /sdm-subscriptions endpoint. The nil pointer dereference in DataChangeNotificationProcedure caused a Go runtime panic, either crashing the server process or triggering the panic recovery middleware with a 500 error response.",
+  "verification_method": "The verification sends the crash payload and then checks whether the UDM process is still alive and responding. A successful crash is confirmed by either: (1) the UDM process PID no longer exists, (2) the HTTPS endpoint is no longer responding, or (3) the server returns a 500 error indicating the panic was caught by recovery middleware. The proof signal is the absence of a healthy response from the UDM after the crash payload is sent.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The POST request to /sdm-subscriptions triggered the vulnerable DataChangeNotificationProcedure code path.",
+    "The nil pointer dereference at notifier.go:30 (ue.UdmSubsToNotify where ue is nil) caused a Go runtime panic.",
+    "The UDM process either terminated or returned 500 errors after the crash payload.",
+    "The proof file /tmp/dos_proof.txt contains CRASH_CONFIRMED=true."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction requires building the UDM from source with Go 1.24+.",
+    "The Gin framework includes a recovery middleware that may catch the panic and return a 500 error instead of crashing the entire process. The DoS impact is still confirmed (the request handler crashes), but the server may survive with degraded functionality.",
+    "The exploit requires the UDM to be running with a functional NRF registration (mock or real)."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

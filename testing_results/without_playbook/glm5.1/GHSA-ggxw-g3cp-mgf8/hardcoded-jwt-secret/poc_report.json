@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that a JWT forged with the hardcoded secret 'frangoteam751' from server/api/jwt-helper.js:6 is accepted by a FUXA server running with security enabled. The forged admin token grants full access to admin-only endpoints, including user credential retrieval.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the forged admin JWT (signed with hardcoded secret 'frangoteam751') to be accepted by the FUXA server, granting access to the admin-only GET /api/users endpoint and returning the full user list including password hashes.",
+  "actual_observed_result": "With FUXA running (secureEnabled=true), a request to GET /api/users without authentication correctly returned HTTP 401. A second request with a JWT signed using the hardcoded secret 'frangoteam751' and admin claims {id:'admin', groups:[-1]} returned HTTP 200 with the admin user record including the bcrypt password hash. Server logs confirmed both the 401 (unauthenticated) and 200 (forged token accepted) responses.",
+  "verification_method": "Two-step verification: (1) confirm that without a token the admin endpoint returns 401, proving security is active; (2) confirm that the same endpoint returns 200 with user data when presented with a JWT signed using the hardcoded secret, proving the secret enables token forgery. The distinct HTTP status codes (401 vs 200) distinguish a real exploit from a misconfiguration or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GET /api/users without token returned HTTP 401 with body {\"error\":\"unauthorized_error\",\"message\":\"Unauthorized!\"}, confirming security is enabled.",
+    "GET /api/users with forged JWT (signed with 'frangoteam751') returned HTTP 200 with admin user data: [{\"username\":\"admin\",\"fullname\":\"Administrator Account\",\"password\":\"$2a$10$...\",\"groups\":-1}].",
+    "FUXA server logs show: GET /api/users 401 (no token) followed by GET /api/users 200 (forged token accepted).",
+    "The proof string EVOHUNT_PROOF:hardcoded_jwt_secret was emitted upon successful exploitation."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction was verified locally using the FUXA server started from the target repository source with npm install. The Docker-based reproduction bundle (./reproduction/run.sh) follows the same flow but was not executed via Docker in this session."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b873cdf32a63bcfaa6de8b724781f63c6f977c69",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/setup-and-exploit.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that Gotenberg's downloadFrom feature fetches an arbitrary HTTP URL from a simulated internal service without authentication, using attacker-supplied URLs and headers.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause Gotenberg to download a file from a simulated internal HTTP server via the downloadFrom form field, process it, and return the converted result, proving the server can be used as an SSRF proxy.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Gotenberg Docker image, started the service with default settings, started a mock internal HTTP server, sent a POST request with downloadFrom pointing to the internal server, and received a PDF containing the internal server's proof content.",
+  "verification_method": "The run script checks that Gotenberg successfully processed the downloaded file by verifying the response is a valid PDF and the internal server received the GET request from Gotenberg. The proof string in the downloaded content confirms the SSRF data flow.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The mock internal server received a GET request from the Gotenberg container with User-Agent: Gotenberg, confirming server-side URL fetching.",
+    "Gotenberg returned a valid PDF response after processing the downloaded file, confirming the SSRF data flow end-to-end.",
+    "No authentication was required to trigger the download, confirming the default unauthenticated SSRF."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version, and uses the source to build the Gotenberg Docker image.",
+    "pinned_commit_or_ref": "snapshot",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/internal_server.py"
+    ]
+  }
+}

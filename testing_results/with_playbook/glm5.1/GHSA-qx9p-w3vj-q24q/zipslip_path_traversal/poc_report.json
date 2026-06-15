@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The ZipSlip vulnerability was successfully reproduced. A malicious ZIP file containing path traversal sequences was extracted using the vulnerable Zip::extract() method, resulting in arbitrary file write outside the intended extraction directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Arbitrary file write outside extraction directory, potentially leading to remote code execution by overwriting PHP files or configuration tampering.",
+  "actual_observed_result": "The test script created a ZIP file with '../../../tmp/pwned.txt' entry. When extracted via Zip::extract(), the file was written to /tmp/pwned.txt (outside the extraction directory), confirming the path traversal vulnerability. The file contained the expected test content, proving that file write location can be controlled by the attacker.",
+  "verification_method": "Automated check verifies that the file /tmp/pwned.txt was created outside the extraction directory after ZIP extraction. The test script uses exit code 1 to indicate vulnerability confirmation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious ZIP created with '../../../tmp/pwned.txt' entry",
+    "Zip::extract() method called on malicious ZIP",
+    "File /tmp/pwned.txt created outside extraction directory",
+    "File content matches attacker-controlled payload",
+    "Exit code 1 returned indicating vulnerability confirmed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/var/www/html",
+    "helper_files": [
+      "reproduction/test_zipslip.php"
+    ]
+  }
+}

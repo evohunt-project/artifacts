@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The credential exposure in the login response was confirmed through code review but a Docker-based reproduction was not built because the primary SQL injection finding was prioritized for PoC development.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A successful login request should return a JSON response containing the encrypted password hash token (pass field) and PHP session ID (PHPSESSID field) in the response body.",
+  "actual_observed_result": "Not attempted. The vulnerability is confirmed through static code analysis: login.json.php:243 calls User::getUserPass() which returns an encrypted blob containing the raw DB password hash, and line 349 exposes session_id() in the response.",
+  "verification_method": "Code review confirms the login response includes User::getUserPass() (encrypted password hash with raw DB hash embedded) at line 243 and session_id() at line 349. The exploit requires only a standard login request to observe the credential material in the JSON response.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Code review: objects/login.json.php:243 sets $object->pass = User::getUserPass() which returns encrypted password hash token.",
+    "Code review: objects/User.php:1892-1900 getUserHash() embeds raw DB password hash in the token.",
+    "Code review: objects/login.json.php:349 exposes session_id() in JSON response body."
+  ],
+  "limitations_or_blockers": [
+    "PoC reproduction not attempted; primary SQL injection finding was prioritized for PoC development."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "N/A - reproduction not built",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

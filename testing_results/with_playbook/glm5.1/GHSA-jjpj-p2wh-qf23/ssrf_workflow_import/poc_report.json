@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the GET /rest/workflows/from-url endpoint makes an unrestricted server-side HTTP request to a user-supplied URL. A mock metadata server simulates a cloud metadata endpoint, and the n8n server fetches content from it, demonstrating SSRF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The n8n server should make an HTTP request to the mock metadata server's internal address, proving it fetches arbitrary URLs without internal IP blocklisting or domain restrictions. The response from the internal server should be returned to the attacker.",
+  "actual_observed_result": "The reproduction starts a mock metadata server and n8n in a shared Docker network. After authenticating as a basic user and obtaining a project ID, the exploit calls GET /rest/workflows/from-url with the mock server's internal URL. The server fetches the URL and returns the response, confirming SSRF.",
+  "verification_method": "The mock metadata server returns a JSON response containing a unique proof string (EVOHUNT_SSRF_METADATA_EXFILTRATED). The verification script checks for this proof string in the exploit output file, confirming the server-side request was made and the internal data was exfiltrated.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The n8n server made an HTTP request to the mock metadata server's internal IP address.",
+    "The response from the internal server was returned through the from-url endpoint.",
+    "No IP blocklist or domain restriction prevented the internal request.",
+    "The exploit required only basic user authentication (workflow:create on personal project)."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction uses a mock metadata server instead of a real cloud metadata endpoint (169.254.169.254). In a real cloud deployment, the same exploit would return actual IAM credentials.",
+    "The n8n build step takes time; the reproduction environment must have sufficient resources."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/mock_metadata_server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

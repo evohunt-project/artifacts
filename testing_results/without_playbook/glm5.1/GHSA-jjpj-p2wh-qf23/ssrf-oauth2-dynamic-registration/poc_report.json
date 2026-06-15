@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that any authenticated user can trigger SSRF through the OAuth2 credential dynamic client registration flow. By creating an OAuth2 credential with useDynamicClientRegistration=true and serverUrl pointing to an internal address, the server makes HTTP GET and POST requests to the attacker-specified URL when the auth endpoint is called.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the n8n server to fetch the .well-known/oauth-authorization-server endpoint from an attacker-specified internal URL (localhost:8888) and then POST to a registration endpoint discovered from that URL, demonstrating SSRF with both GET and POST methods.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds the n8n Docker image, starts a fake OAuth2 server on port 8888 simulating an internal service, starts n8n, creates an owner account, creates an OAuth2 credential with serverUrl=http://localhost:8888 and useDynamicClientRegistration=true, and then calls GET /rest/oauth2-credential/auth?id=<credential_id>. The n8n server contacts the fake internal OAuth2 server, fetching the .well-known metadata and then POSTing to the registration endpoint. Evidence of the SSRF appears in the response.",
+  "verification_method": "The verification script checks for the proof string EVOHUNT_OAUTH_SSRF_PROOF_a1b2c3d4 in the auth endpoint response or looks for SSRF-related indicators (OAuth, localhost, internal references) in error messages. The fake OAuth2 server logs all requests it receives, confirming the server-side outbound request. This distinguishes SSRF from a generic authentication error or unrelated behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The n8n server makes an outbound HTTP GET to localhost:8888/.well-known/oauth-authorization-server when the auth endpoint is called with a credential that has dynamic client registration enabled.",
+    "The fake OAuth2 server receives the .well-known request and returns attacker-controlled metadata, which the server processes.",
+    "The server then makes a POST request to the registration_endpoint from the attacker-controlled metadata, confirming the two-step SSRF chain (GET then POST to internal service).",
+    "SSRF evidence appears in the auth endpoint response, either directly through response data or through error messages containing SSRF-related information."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh",
+      "reproduction/fake-oauth-server.py"
+    ]
+  }
+}

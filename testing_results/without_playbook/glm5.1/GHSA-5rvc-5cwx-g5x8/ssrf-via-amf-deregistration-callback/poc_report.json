@@ -1,0 +1,29 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "The PoC sets up a mock HTTP server acting as NRF and UDR, starts the UDM configured to use the mock, then sends two AMF registration requests with different GUAMI values. The first registration stores an attacker-controlled DeregCallbackUri. The second registration triggers the deregistration notification, causing the UDM to POST to the attacker-controlled URL.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After the second AMF registration, the UDM should make an HTTP POST to the attacker-controlled callback URL (mock /ssrf-callback-target endpoint). The mock server writes a proof file when it receives the callback, confirming the SSRF.",
+  "actual_observed_result": "Not yet executed. The reproduction bundle is ready for execution via ./reproduction/run.sh.",
+  "verification_method": "The verify.sh script checks two indicators: (1) the mock SSRF target endpoint receives an HTTP POST from the UDM (evidenced by /tmp/ssrf_hit.txt being written), or (2) the UDM logs contain deregistration notification attempt messages. Either confirms the SSRF.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The mock NRF/UDR must respond correctly to NF discovery and data repository API calls for the AMF registration flow to complete.",
+    "The deregistration notification runs in a background goroutine, so there may be a timing delay between the second registration and the SSRF callback.",
+    "If the UDR mock does not return a valid NF instance for the UDR discovery, the CreateUDMClientToUDR call will fail and the AMF registration will not complete.",
+    "The Go toolchain version must match the go.mod requirement (go 1.25+)."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "630da428ecebf3ecb02c482333914078d9af96e7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/mock_services.py"
+    ]
+  }
+}

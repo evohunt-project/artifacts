@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction successfully demonstrates that the GraphQL endpoint accepts unbounded JSON payloads while the REST API enforces size limits. Sending large JSON payloads to the GraphQL endpoint causes unbounded memory allocation, confirming the denial-of-service vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The GraphQL endpoint should reject large JSON payloads similar to the REST API. Instead, it accepts payloads of unlimited size, allowing memory exhaustion attacks that can deny service to legitimate users.",
+  "actual_observed_result": "The REST API correctly rejected a 50MB JSON payload with an appropriate error. However, the GraphQL endpoint accepted the same 50MB payload, demonstrating unbounded JSON parsing. This confirms the vulnerability allows memory exhaustion attacks without authentication or rate limiting.",
+  "verification_method": "Comparison test: send identical large JSON payloads to both REST API and GraphQL endpoints. The REST API enforces maxUploadSize limits while GraphQL endpoint accepts unbounded payloads. Memory consumption and response times confirm the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "REST API endpoint correctly rejects 50MB JSON payload with size limit enforcement",
+    "GraphQL endpoint accepts 50MB JSON payload without size validation",
+    "No authentication required for GraphQL introspection endpoint",
+    "Memory allocation occurs before any size validation in the middleware chain",
+    "The maxUploadSize protection applied to REST API is bypassed for GraphQL endpoint"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out version 8.6.24, and runs the server in Docker with MongoDB backend",
+    "pinned_commit_or_ref": "8.6.24",
+    "target_repo_mount_path": "/app",
+    "helper_files": []
+  }
+}

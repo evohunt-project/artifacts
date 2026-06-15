@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can use path-traversal sequences in the /download/ endpoint to download the NocoDB SQLite meta database (noco.db), which contains all user credentials and application secrets.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the path traversal payload GET /download/../../noco.db to bypass the flawed startsWith() path boundary check in validateAndNormaliseLocalPath and return the complete SQLite meta database file containing the nc_users table with user credentials.",
+  "actual_observed_result": "Running ./reproduction/run.sh pulled and started the NocoDB Docker container, waited for the health endpoint to return 200, built the exploit container, and ran verify.sh which sent the path traversal request. The response was a valid SQLite database file containing the nc_users and nc_store tables, confirming the NocoDB meta database was downloaded without authentication.",
+  "verification_method": "The verify script downloads the file via the path traversal payload, checks that it is a valid SQLite database using the file command, and confirms it is the NocoDB meta database by querying for the nc_users and nc_store tables. This distinguishes the meta database download from a generic 404 error, an HTML error page, or an unrelated file.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The HTTP response to GET /download/../../noco.db returned status 200 with a file body.",
+    "The downloaded file was identified as SQLite 3.x database by the file command.",
+    "The SQLite database contains the nc_users table (user accounts with hashed passwords) and nc_store table (application configuration including JWT secret)."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh pulls the nocodb/nocodb:latest Docker image from Docker Hub as the target, builds the exploit container from the reproduction Dockerfile, and runs verification against the live NocoDB instance.",
+    "pinned_commit_or_ref": "nocodb/nocodb:latest (v0.300.0)",
+    "target_repo_mount_path": "N/A - uses pre-built Docker image",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

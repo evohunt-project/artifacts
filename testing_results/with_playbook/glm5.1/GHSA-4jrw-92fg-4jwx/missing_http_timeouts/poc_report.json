@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction demonstrates that the HTTP server accepts connections without enforcing timeouts, allowing slow request attacks to consume server resources indefinitely.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The server should timeout idle connections after a reasonable period. Without timeouts, connections remain open indefinitely, allowing resource exhaustion through Slowloris attacks.",
+  "actual_observed_result": "The reproduction script established multiple HTTP connections to the AUSF and held them open for extended periods without sending complete requests. The server did not terminate these connections, confirming the absence of ReadHeaderTimeout. The connections consumed resources until manually terminated or the test duration expired.",
+  "verification_method": "The reproduction initiates HTTP connections and measures whether the server enforces timeout by closing connections that do not complete header transmission within a reasonable period (12 seconds). The absence of timeout confirms vulnerability to Slowloris DoS. Additionally, the code is statically verified to contain no ReadHeaderTimeout, ReadTimeout, WriteTimeout, or IdleTimeout fields on the http.Server struct.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP connections remained open for 12+ seconds without timeout",
+    "Server did not send connection timeout or close idle connections",
+    "Multiple parallel connections were accepted and held open simultaneously",
+    "Static code analysis confirmed no timeout fields set on http.Server"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/slowloris_test.py",
+      "reproduction/verify_timeout.sh",
+      "reproduction/ausfcfg_test.yaml"
+    ]
+  }
+}

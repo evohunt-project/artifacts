@@ -1,0 +1,32 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "nosql_operator_injection",
+  "summary": "A Docker-based reproduction bundle was generated to demonstrate that the FeathersJS MongoDB adapter passes $-prefixed keys from the PATCH request body directly to MongoDB update operations. The exploit.mjs script uses mongodb-memory-server to create a test MongoDB instance, creates a document with a known balance of 100, then patches it with {\"$inc\": {\"balance\": 9999}} and verifies the balance becomes 10099.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the MongoDB adapter to execute the $inc operator on the target document, changing the balance from 100 to 10099, and the $unset operator to delete the secret field, proving that arbitrary MongoDB update operators are accepted without validation.",
+  "actual_observed_result": "The reproduction bundle was generated but not executed in this session. The vulnerability was confirmed through source code analysis of the exact data flow from the REST handler through MongoDBService.patch to MongoDbAdapter._patch, where $-prefixed keys in the request body are passed directly to MongoDB findOneAndUpdate at adapter.ts:482.",
+  "verification_method": "The exploit.mjs script creates a document with balance=100, patches with $inc balance+=9999, then checks if patched.balance === 10099. A second patch with $unset deletes the secret field and confirms it is undefined in the response. The script exits with code 0 only if both proofs succeed, printing PROOF_SIGNAL lines that verify.sh or run.sh can grep for.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static analysis confirms the vulnerable code path: adapter.ts:419-420 passes any $-prefixed key other than $set directly into the MongoDB update document.",
+    "The data flow from HTTP PATCH body through MongoDBService.patch (index.ts:55-62) to MongoDbAdapter._patch (adapter.ts:392) does not sanitize $-operators in the data body.",
+    "normalizeId (adapter.ts:199-203) with id='_id' only calls _.omit(data, '_id'), leaving all $-prefixed keys intact."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction requires Docker to build the image and run the container, which was not available in this session for execution.",
+    "Compilation of the FeathersJS TypeScript monorepo inside the container may take several minutes.",
+    "mongodb-memory-server needs to download a MongoDB binary at container runtime, requiring outbound network access."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v5.0.41",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.mjs"
+    ]
+  }
+}

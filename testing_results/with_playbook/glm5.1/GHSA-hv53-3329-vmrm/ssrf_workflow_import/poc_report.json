@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "Docker-based PoC demonstrates that the /workflows/import-from-url endpoint can fetch internal network resources by accessing a mock metadata server that simulates cloud IAM credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate accessing an internal metadata endpoint (simulating 169.254.169.254) through the workflow import URL parameter, proving SSRF capability.",
+  "actual_observed_result": "Successfully created an isolated Docker network with n8n and a mock metadata server. The workflow import endpoint was able to fetch data from the internal server at http://172.28.0.100:8080/latest/meta-data/iam/security-credentials/admin-role, demonstrating SSRF access to internal network resources.",
+  "verification_method": "The run.sh script sets up two containers on an isolated Docker network, attempts to import a workflow from an internal URL pointing to the mock metadata server, and checks if the response contains the simulated IAM credentials.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Mock metadata server started on isolated network (172.28.0.100:8080)",
+    "n8n container started on same network (172.28.0.10)",
+    "Workflow import endpoint accepted URL parameter pointing to internal IP",
+    "n8n fetched data from internal metadata server through the vulnerable endpoint",
+    "Response contained simulated AWS IAM credentials from the metadata endpoint"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh builds n8n from source using the Dockerfile that clones the repository",
+    "pinned_commit_or_ref": "master branch (current version)",
+    "target_repo_mount_path": "/app",
+    "helper_files": [
+      "reproduction/mock_metadata_server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

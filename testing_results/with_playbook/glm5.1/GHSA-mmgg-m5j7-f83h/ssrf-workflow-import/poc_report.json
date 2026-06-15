@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the GET /rest/workflows/from-url endpoint makes an unrestricted HTTP GET request to an attacker-supplied URL via axios.get() and returns the response body. A fake internal service was started on 127.0.0.1:9998 serving sensitive data disguised as a workflow JSON. The n8n server fetched this data and returned it to the attacker, demonstrating server-side request forgery with data exfiltration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause n8n to issue an HTTP GET request to a fake internal service (127.0.0.1:9998) and return the response body containing a proof-of-exfiltration string and simulated AWS credentials to the attacker.",
+  "actual_observed_result": "Running the PoC started n8n v1.123.21, created an owner account, obtained a project ID, then sent GET /rest/workflows/from-url?url=http://127.0.0.1:9998/secret-data&projectId=YM60OOBk5wzXnWO7. The server responded HTTP 200 with the full response body from the fake internal service, including the proof string EVOHUNT_SSRF_PROOF_1781070733 and the simulated AWS_SECRET_ACCESS_KEY.",
+  "verification_method": "The exploit script starts a fake internal HTTP server with a unique proof string, then sends the SSRF request. The verification checks that the exact proof string appears in the n8n API response, confirming the server fetched and returned content from the internal service. The proof string is generated dynamically to prevent false positives from cached data.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 200 response from GET /rest/workflows/from-url containing data fetched from 127.0.0.1:9998",
+    "The proof string EVOHUNT_SSRF_PROOF_1781070733 appeared in the response, confirming the server fetched content from the internal-only service",
+    "The response contained simulated AWS credentials (AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY) proving that internal service data was fully exfiltrated",
+    "The response was wrapped in n8n's standard {data: {...}} envelope, confirming it passed through the application's request processing pipeline"
+  ],
+  "limitations_or_blockers": [
+    "The PoC requires Docker or Node.js 22 with npm to build and run n8n, which takes several minutes for initial setup",
+    "The SSRF endpoint requires authentication (valid session cookie) and project-level workflow:create scope"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version tag n8n@1.123.21, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "n8n@1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/fake-internal-server.js",
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

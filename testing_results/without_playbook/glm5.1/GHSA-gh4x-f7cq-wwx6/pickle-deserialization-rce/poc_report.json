@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that a malicious pickle payload in the version cache file executes arbitrary code when the outdated module loads the cache.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The malicious pickle payload should execute during cache deserialization, creating a proof file that demonstrates arbitrary code execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the Docker image, created a malicious pickle payload with a __reduce__ method that executes a shell command, and confirmed that the payload executed during cache loading, creating the proof file with the expected marker.",
+  "verification_method": "The verify script creates a malicious pickle object with a __reduce__ method that executes a shell command writing a unique marker to a file. After the outdated module loads the cache via pickle.load(), it checks for the proof file and marker to confirm code execution.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious pickle payload was created with __reduce__ method for code execution",
+    "The payload was written to the expected cache file location",
+    "The outdated module loaded the cache file during initialization",
+    "The proof file was created at /tmp/evohunt_poc_proof.txt",
+    "The unique marker was found in the proof file, confirming arbitrary code execution"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh mounts the target repository from /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/repo as read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "current state of /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/repo",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

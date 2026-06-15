@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_memory_exhaustion",
+  "summary": "The Docker-based reproduction confirms that a crafted PNG with inflated IHDR dimensions (50000x50000) causes the jsPDF PNG decoder to attempt allocating approximately 7.5 GB of memory, resulting in a fatal out-of-memory error that crashes the Node.js process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A crafted PNG with large dimensions should trigger unbounded memory allocation in processPNG/processAlphaPNG, causing the Node.js process to crash with an out-of-memory error.",
+  "actual_observed_result": "Running ./reproduction/run.sh built a Docker image, crafted a PNG with 50000x50000 dimensions, loaded it into jsPDF via addImage(), and the Node.js process crashed with a fatal memory allocation error (OOM/SIGKILL).",
+  "verification_method": "The exploit script crafts a valid PNG with 50000x50000 pixel dimensions, writes it to disk, then runs a Node.js script that loads the PNG via jsPDF's addImage(). The script checks for OOM crashes (SIGKILL, SIGABRT, ENOMEM, fatal error) or RangeError exceptions from failed allocations. A successful verification is a process crash or caught allocation error, proving no dimension limits exist.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Node.js process crashed with out-of-memory when processing the crafted PNG.",
+    "The PNG decoder attempted to allocate buffers sized by width * height without bounds checking.",
+    "The crash was triggered by a 7.5 GB allocation attempt from a crafted 2.5 MB PNG file."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v4.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T05:24:11.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-02/GHSA-qwc3-h9mg-4582/GHSA-qwc3-h9mg-4582.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "regex_redos_agent_endpoint",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/regex_redos_agent_endpoint",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/regex_redos_agent_endpoint/vulnerability_report.json",
+      "title": "ReDoS vulnerability via regex injection in AI agent endpoint database queries",
+      "vulnerability_type": "regex_dos",
+      "advisory_match": true,
+      "advisory_match_reason": "Identifies the same POST /apps/:appId/agent handler and missing authentication guard before makeOpenAIRequest and executeDatabaseFunction; the finding's ReDoS sink is narrower, but the same unauthenticated agent database-operation path is the advisory root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unbounded_request_body_dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/unbounded_request_body_dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/unbounded_request_body_dos/vulnerability_report.json",
+      "title": "Unbounded JSON request body size enables denial of service via memory exhaustion",
+      "vulnerability_type": "dos_memory_exhaustion",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerable code and root cause: global express.json() body-size handling leading to memory exhaustion, not the missing authentication guard on the AI agent endpoint or master-key database operation path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier2",
+    "target_match": "match",
+    "runtime_evidence": "bug_activation",
+    "selected_finding": {
+      "folder_name": "regex_redos_agent_endpoint",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/regex_redos_agent_endpoint",
+      "status": "qualifying_vuln",
+      "title": "ReDoS vulnerability via regex injection in AI agent endpoint database queries",
+      "vulnerability_type": "regex_dos"
+    },
+    "reason": "The selected qualifying finding matches the advisory's vulnerable code/root cause because it identifies the unauthenticated AI agent endpoint and its database-operation execution path. The copied PoC activated that path: an unauthenticated request reached createObject and caused a Parse SDK request carrying the configured master key. This is Tier2 because the downstream Parse service was a local receiver used to observe the sink, not a real backing Parse Server database proving end-to-end database compromise.",
+    "evidence": [
+      "Advisory GHSA-qwc3-h9mg-4582 describes missing authentication on POST /apps/:appId/agent, allowing unauthenticated arbitrary database operations using the master key.",
+      "regex_redos_agent_endpoint/vulnerability_report.json identifies app.js:201-294 as the unauthenticated AI agent endpoint and app.js:516-590/app.js:981 as the executeDatabaseFunction path.",
+      "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/.judge/poc_runs/regex_redos_agent_endpoint/run.log shows an unauthenticated POST to /apps/TestApp/agent, dashboard stdout for createObject, and a downstream POST /parse/classes/EvoHuntProof containing _ApplicationId=testApp and _MasterKey=testMasterKey123."
+    ],
+    "blockers_to_higher_tier": [
+      "Runtime used mocked OpenAI and a local Parse-compatible receiver to drive and observe the sink; it did not demonstrate an unauthorized read or write against a real Parse Server backing database."
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "regex_redos_agent_endpoint",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/regex_redos_agent_endpoint",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/.judge/poc_runs/regex_redos_agent_endpoint/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/.judge/poc_runs/regex_redos_agent_endpoint/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/.judge/poc_runs/regex_redos_agent_endpoint/poc_execution.json",
+      "observed_effect": "The copied harness started parse-dashboard 9.0.0-alpha.7 with users and agent config, sent an unauthenticated POST to /apps/TestApp/agent, and observed createObject reaching the downstream Parse-compatible receiver as POST /parse/classes/EvoHuntProof with _ApplicationId=testApp and _MasterKey=testMasterKey123.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/unbounded_request_body_dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/unbounded_request_body_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f7a9358f/unbounded_request_body_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

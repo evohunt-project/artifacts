@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "hardcoded_credentials",
+  "summary": "The Docker-based reproduction confirms that the FTP server accepts the hardcoded credentials 'admin:free5gc' and allows authenticated access to the /tmp directory, enabling unauthorized file operations on CDR data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should successfully authenticate to the FTP server using hardcoded credentials, list files in the /tmp directory, and demonstrate write access by uploading a test file, proving unauthorized access to sensitive billing data storage.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built and launched the CHF FTP server, authenticated using hardcoded credentials admin:free5gc, connected to the FTP server, and demonstrated file listing and upload capabilities in the /tmp directory.",
+  "verification_method": "The PoC script attempts FTP authentication with hardcoded credentials and performs file operations (list and upload). Success is verified by checking that the authentication succeeds and a test file can be uploaded to the server's exposed directory.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "FTP authentication succeeded with credentials admin:free5gc",
+    "Directory listing of /tmp succeeded showing exposed file system",
+    "Test file upload to FTP server succeeded",
+    "Server logs confirm connection and authentication from test client"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the local repo directory mounted into the container at /target-repo.",
+    "pinned_commit_or_ref": "current repo state",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_ftp_auth.sh"
+    ]
+  }
+}

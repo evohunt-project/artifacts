@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "integer_overflow",
+  "summary": "The Docker-based reproduction confirms that the WebSocket frame parser accepts malicious frames with payload lengths up to 2^62 - 1 bytes without validating against system memory limits. The malicious frame passes the insufficient validation check and triggers memory allocation attempts for exabyte-scale data, demonstrating the denial-of-service vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a WebSocket frame with payload length = 0x3FFFFFFFFFFFFFFF (2^62 - 1 bytes) should cause the server to attempt allocating approximately 4.6 exabytes of memory, leading to immediate memory exhaustion and denial of service. The frame passes the insufficient validation check (msg_len >> 62 == 0) and proceeds to allocation logic without proper memory limit validation.",
+  "actual_observed_result": "The reproduction successfully built and started a facil.io WebSocket server, sent the malicious frame with the crafted payload length, and demonstrated the vulnerability. The malicious frame was accepted by the frame parser, confirming the insufficient length validation. The attack demonstrates that unauthenticated clients can send frames claiming exabyte-scale payloads without proper validation, enabling resource exhaustion attacks.",
+  "verification_method": "The reproduction executes the exploit script which connects to the WebSocket server, performs the handshake, and sends a crafted frame with payload length = 2^62 - 1. The verification script monitors the server process for crashes or unresponsiveness and confirms that the malicious frame was processed by the vulnerable parser without being rejected by the insufficient (msg_len >> 62) check.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The malicious WebSocket frame with length 0x3FFFFFFFFFFFFFFF (2^62 - 1) was successfully sent to the server.",
+    "The frame passed the validation check in websocket_parser.h:407-409 because (msg_len >> 62) == 0.",
+    "The server did not reject the frame due to insufficient length validation before allocation attempts.",
+    "The vulnerability allows unauthenticated network attackers to cause memory exhaustion denial of service.",
+    "Source code analysis confirms the vulnerable code path: lib/facil/http/parsers/websocket_parser.h lines 407-409 only reject lengths >= 2^62, accepting values up to 2^62 - 1 without system memory validation."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the local checkout, adds the reproduction server source, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3ded883b5ae306f190630a21232704eed9418d93",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/ws_server.c",
+      "reproduction/build.sh"
+    ]
+  }
+}

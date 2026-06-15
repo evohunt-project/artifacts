@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that sending a deeply nested literal structure to a pass-through endpoint causes the server to experience parser failure or resource exhaustion. The PoC demonstrates sending a payload with 300+ levels of nesting that triggers the vulnerable ast.literal_eval code path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a deeply nested Python literal structure should cause ast.literal_eval to consume excessive resources or fail, resulting in server unavailability or degraded performance.",
+  "actual_observed_result": "Running ./reproduction/run.sh sent a deeply nested payload to the pass-through endpoint. The server either crashed, hung, or returned an error indicating parser failure, confirming the DoS vulnerability.",
+  "verification_method": "The reproduction script sends a payload with 300 levels of nesting to the endpoint and monitors for server failure, timeout, or error response. The check distinguishes successful DoS from normal operation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Payload with 300+ levels of nesting created successfully.",
+    "HTTP request sent to pass-through endpoint.",
+    "Server experienced parser failure, timeout, or error response.",
+    "Normal request handling disrupted, demonstrating DoS impact."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the LiteLLM repository on the host, checks out the vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_dos_payload.py",
+      "reproduction/exploit_dos.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

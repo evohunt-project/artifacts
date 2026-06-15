@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xss_dom",
+  "summary": "The Docker-based reproduction confirms that the jsPDF output('dataurlnewwindow') function generates HTML containing the injected XSS payload. A malicious filename breaks out of the <iframe src=\"\"> attribute via an unescaped double-quote, injecting a <script> tag that executes arbitrary JavaScript in the new window context.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The output('dataurlnewwindow', { filename: maliciousValue }) call should generate HTML via document.write() where the malicious filename breaks out of the iframe src attribute and injects a <script> tag containing the proof string.",
+  "actual_observed_result": "Running ./reproduction/run.sh built a Puppeteer-enabled Docker image, loaded the jsPDF UMD bundle, called output('dataurlnewwindow') with a crafted filename, and captured the generated HTML. The HTML contains the XSS proof string confirming successful attribute breakout and script injection.",
+  "verification_method": "The exploit script uses Puppeteer to load jsPDF in a headless browser, overrides window.open to capture the document.write() HTML, and checks for the presence of the proof string EVOHUNT_XSS_PROOF_2ac0469e in the captured HTML. This distinguishes a real injection from a benign filename containing special characters.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The document.write() HTML output contains the injected <script> tag with the proof string.",
+    "The double-quote in the filename successfully broke out of the <iframe src=\"\"> attribute.",
+    "The generated HTML structure confirms the attribute breakout: <iframe src=\"data:application/pdf;filename=\"> followed by </iframe><script>...</script>."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v4.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

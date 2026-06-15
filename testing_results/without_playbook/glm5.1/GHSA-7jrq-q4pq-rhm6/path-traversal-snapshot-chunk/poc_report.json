@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated client can connect to the Oxia data server's internal gRPC port and send a crafted SendSnapshot RPC whose SnapshotChunk.Name contains path traversal sequences, causing the server to create a file outside the database directory at an arbitrary filesystem path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the data server to create a proof file at /tmp/evohunt-proof containing the string EVOHUNT-PATH-TRAVERSAL-PROOF. This file resides outside the configured database directory, demonstrating that path traversal in SnapshotChunk.Name allows arbitrary file write.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Oxia data server from the target repository, started it with default configuration (no authentication), sent a single-chunk SendSnapshot RPC with the Name field set to ../../../../evohunt-proof, and the proof file was created at /tmp/evohunt-proof outside the database directory.",
+  "verification_method": "The verify.sh helper checks for the existence and content of /tmp/evohunt-proof. It confirms the file exists outside the database directory tree (/tmp/oxia-data/db/) and contains the exact proof string EVOHUNT-PATH-TRAVERSAL-PROOF. This distinguishes a real path-traversal exploit from a normal database file write.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/evohunt-proof was created outside the database directory /tmp/oxia-data/db/.",
+    "The proof file contains the exact string EVOHUNT-PATH-TRAVERSAL-PROOF matching the attacker-controlled snapshot chunk content.",
+    "The database directory /tmp/oxia-data/db/default/shard-0 was cleaned and recreated by the snapshot loader but does not contain the proof file, confirming the write occurred via path traversal."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/exploit/main.go",
+      "reproduction/exploit/go.mod"
+    ]
+  }
+}

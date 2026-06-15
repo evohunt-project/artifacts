@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication_rce",
+  "summary": "The Docker-based reproduction confirms that the opencode server exposes an unauthenticated shell command execution endpoint on localhost. The exploit creates a session via POST /session, then executes an arbitrary command via POST /session/:id/shell, and verifies the proof string in the response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the opencode server to execute an arbitrary shell command (echo EVOREPROOF-<timestamp>) via the unauthenticated HTTP API and return the proof string in the response JSON at parts[0].state.output.",
+  "actual_observed_result": "Running ./reproduction/run.sh installed opencode 1.1.8, started the server on port 4096, created a session (ses_1578dd173ffeA30Y6n7qpClJfD), executed 'echo EVOREPROOF-1780942498' via POST /session/:id/shell, and the response contained the proof string 'EVOREPROOF-1780942498' at parts[0].state.output.",
+  "verification_method": "The exploit script generates a unique proof string (EVOREPROOF-<timestamp>), executes it as a shell command via the unauthenticated API, and checks whether the proof string appears in the command output returned at parts[0].state.output in the JSON response. This distinguishes successful command execution from generic server errors or unrelated responses.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "opencode 1.1.8 installed and server started on port 4096",
+    "Session created via unauthenticated POST /session with response containing id: ses_1578dd173ffeA30Y6n7qpClJfD",
+    "Shell command executed via unauthenticated POST /session/:id/shell with command: echo EVOREPROOF-1780942498",
+    "Response JSON at parts[0].state.output contained: EVOREPROOF-1780942498\\n",
+    "Response status field at parts[0].state.status was: completed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "dev",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

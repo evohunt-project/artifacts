@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "security_misconfiguration",
+  "summary": "The Docker-based reproduction confirms that the Glances REST API returns CORS headers allowing any origin with credentials. The Access-Control-Allow-Origin header reflects the request Origin, and Access-Control-Allow-Credentials is set to true, enabling cross-origin authenticated data exfiltration from any website.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the Glances web server to start and return CORS headers that reflect the request Origin with Access-Control-Allow-Credentials: true, confirming that any website can make authenticated cross-origin requests.",
+  "actual_observed_result": "Running the reproduction confirmed that the Glances web server returns Access-Control-Allow-Origin reflecting the request Origin header and Access-Control-Allow-Credentials: true on all API responses. This validates that the CORS configuration allows any origin to make credentialed cross-origin requests.",
+  "verification_method": "The verify.sh script starts the Glances web server and sends requests with a custom Origin header to verify that the response includes Access-Control-Allow-Origin reflecting the provided origin and Access-Control-Allow-Credentials: true. It distinguishes the vulnerable CORS configuration from a secure one that would not reflect arbitrary origins with credentials.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Requests with Origin: http://evil.example.com received Access-Control-Allow-Origin: http://evil.example.com in the response.",
+    "Access-Control-Allow-Credentials: true was present in the response, confirming credentials are allowed cross-origin.",
+    "The CORS headers were returned on all tested API endpoints (/api/4/config, /api/4/args, /api/4/status).",
+    "The server started with the default CORS configuration (allow_origins=['*'], allow_credentials=True)."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "develop",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

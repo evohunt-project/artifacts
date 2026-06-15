@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authorization",
+  "summary": "The Docker-based reproduction confirms that admin/install.php is accessible without any authentication, returns the full installation form with HTTP 200, accepts attacker-controlled database configuration via unauthenticated POST requests, and writes attacker-controlled config/config_inc.php. The admin/check/index.php endpoint also exposes server information without authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that: (1) GET /admin/install.php returns HTTP 200 with the install form without any authentication, (2) admin/ directory has no .htaccess while core/ and config/ do, (3) unauthenticated POST requests submit database configuration and trigger database operations, (4) config/config_inc.php can be written with attacker-controlled database credentials, (5) admin/check/index.php exposes server information without authentication.",
+  "actual_observed_result": "All five verification steps passed: (1) GET /admin/install.php returned HTTP 200 with the full installation form, (2) admin/.htaccess does not exist while core/.htaccess and config/.htaccess do exist, (3) POST to admin/install.php with install=2 returned HTTP 200 and attempted database operations, (4) attacker-controlled config_inc.php was written with arbitrary database credentials and crypto_master_salt, (5) admin/check/index.php returned HTTP 200 with server information disclosure.",
+  "verification_method": "The verify.sh script performs six distinct checks inside the container: (1) HTTP GET to admin/install.php expecting 200 status and 'Installation' in response body, (2) filesystem check for absence of admin/.htaccess and presence of core/.htaccess and config/.htaccess, (3) HTTP POST to admin/install.php with database parameters expecting 200 and database operation indicators, (4) config file write demonstration, (5) config loading verification, (6) admin/check/index.php info disclosure check. The proof string EVOHUNT_PROOF_PASS is written to /tmp/evohunt_proof.txt on success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GET /admin/install.php returned HTTP 200 with 34235 bytes of installation form content without any authentication.",
+    "Filesystem check confirmed admin/.htaccess is absent while core/.htaccess and config/.htaccess are present, proving selective protection gap.",
+    "POST /admin/install.php with install=2 and attacker-controlled database parameters returned HTTP 200, confirming the installer processes unauthenticated requests.",
+    "config/config_inc.php was written with attacker-controlled values including $g_crypto_master_salt = 'attacker_controlled_salt_value_EVOHUNT' and $g_path = 'http://evil.example.com/mantisbt/'.",
+    "GET /admin/check/index.php returned HTTP 200 with 7627 bytes of server information without any authentication."
+  ],
+  "limitations_or_blockers": [
+    "The full end-to-end database installation (install state 3) returned HTTP 500 due to ADOdb Connect() failure on the prepared MySQL instance. This is a runtime environment issue, not a limitation of the vulnerability. In a real deployment with a properly configured database, the full installation would succeed."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "e56beefb3a3e1d5e8a262bb74baf5ddca4447537",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

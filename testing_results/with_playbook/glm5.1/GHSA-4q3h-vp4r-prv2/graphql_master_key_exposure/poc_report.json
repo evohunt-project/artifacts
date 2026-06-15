@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The reproduction demonstrates that accessing the GraphQL playground endpoint returns HTML containing the embedded master key, which can be extracted from the page source and used to perform administrative operations that bypass all security controls.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Accessing the playground endpoint should return HTML containing the master key in JavaScript code. Extracting this key should allow administrative operations that are normally blocked without the master key.",
+  "actual_observed_result": "The playground endpoint returned HTML with the master key embedded in JavaScript. The key was successfully extracted and used to create an object with master privileges, bypassing normal ACL restrictions.",
+  "verification_method": "The reproduction script: (1) starts Parse Server with GraphQL enabled and a known master key, (2) accesses the playground endpoint without authentication, (3) extracts the master key from the HTML response, (4) uses the extracted key to perform a master-privileged operation (create object bypassing ACL), (5) verifies the operation succeeded with the extracted key but fails without it.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response from /playground contains 'X-Parse-Master-Key' with the actual master key value",
+    "Extracted master key matches the configured master key",
+    "Object creation succeeds with extracted master key (X-Parse-Master-Key header)",
+    "Object creation fails with only application ID (no master key)",
+    "The master key grants full administrative access as expected"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones parse-community/parse-server from GitHub on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_exploit.sh",
+      "reproduction/test_master_key.js"
+    ]
+  }
+}

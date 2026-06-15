@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "uncaught_exception",
+  "summary": "The Docker-based reproduction confirms that a crafted pickle importing a name called 'eval' from a non-flagged module (e.g., json) causes the entire check_safety() analysis pipeline to crash with AttributeError: 'ImportFrom' object has no attribute 'severity'.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause check_safety() to crash with AttributeError when processing a pickle that imports 'eval' from a non-flagged module, demonstrating the yield node bug at analysis.py:277-278.",
+  "actual_observed_result": "The reproduction confirmed that check_safety() crashes with AttributeError: 'ImportFrom' object has no attribute 'severity' when analyzing a pickle containing 'from json import eval'. The crash occurs because UnsafeImportsML.analyze() yields a raw ast.ImportFrom node instead of an AnalysisResult at analysis.py:278.",
+  "verification_method": "The exploit.py script creates a pickle that imports 'eval' from the 'json' module, runs check_safety() in a try/except block, and verifies that the crash is specifically an AttributeError with the message containing 'ImportFrom' and 'severity'. Exit code 0 confirms the crash occurred as expected.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "check_safety() crashed with AttributeError when processing 'from json import eval'",
+    "Error message: 'ImportFrom' object has no attribute 'severity'",
+    "Root cause: analysis.py:278 yields raw ast.ImportFrom node instead of AnalysisResult",
+    "The crash propagates through AnalysisContext.analyze() -> previous_results -> AnalysisResults.severity -> max(r.severity for r in self.results)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (trailofbits/fickling) on the host, checks out v0.1.6, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

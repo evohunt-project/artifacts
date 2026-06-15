@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that user-controlled matrix exclude values from .jervis.yml break out of single-quoted Groovy string literals and inject arbitrary code that is executed via GroovyShell.evaluate() on the controller.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted matrix exclude payload to break out of the Groovy expression string, inject a file-write operation, and create /tmp/evohunt-proof with content EVOHUNT_RCE_PROOF inside the container.",
+  "actual_observed_result": "Running ./reproduction/run.sh clones the Jervis repository, builds the library jar, and executes the exploit Groovy script. The script loads a malicious .jervis.yml with a matrix exclude value containing a single-quote breakout, calls matrixExcludeFilter() to generate the injected expression, evaluates it via GroovyShell.evaluate(), and the injected code creates the proof file at /tmp/evohunt-proof with the expected content.",
+  "verification_method": "The run script executes the exploit trigger and then checks for the exact proof file /tmp/evohunt-proof containing the string EVOHUNT_RCE_PROOF. This distinguishes genuine code execution from a parser error, startup failure, or unrelated crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The matrixExcludeFilter() output contains the injected payload string evohunt-proof, confirming the user-controlled value breaks out of the Groovy string literal.",
+    "GroovyShell.evaluate() executes the injected code, creating /tmp/evohunt-proof with content EVOHUNT_RCE_PROOF.",
+    "The verification script confirms the proof file exists with the expected content, ruling out false positives from parser errors or startup failures."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.groovy",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction demonstrates that FileBrowser follows symlinks without validating that resolved targets remain within the user's permitted directory scope. Attackers with filesystem access can create symlinks to sensitive system files and access them through the FileBrowser web interface.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that symlinks created within the user's accessible directory are resolved to their targets, allowing access to sensitive system files (/etc/passwd, .env secrets) that should be outside the user's scope.",
+  "actual_observed_result": "The reproduction successfully created symlinks pointing to sensitive system files and demonstrated that FileBrowser's resolvePathContext() function resolves these symlinks without scope validation. The symlink targets (/etc/passwd and .env secrets) were accessible through the symlink paths.",
+  "verification_method": "The verification script checks that symlink targets are resolved and their content is readable. It confirms that the passwd file content (root:x:0:0:root) and secret environment variables (SECRET_ADMIN_PASSWORD) are successfully read via symlink resolution, proving the access control bypass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Symlinks successfully created within user's directory structure",
+    "Symlink targets resolved to system file locations outside user scope",
+    "Sensitive file content (/etc/passwd) read via symlink path",
+    "Secret configuration (.env) accessed through symlink",
+    "No scope validation occurred after filepath.EvalSymlinks()",
+    "Access control applied to symlink path, not resolved target"
+  ],
+  "limitations_or_blockers": [
+    "Requires filesystem access to create symlinks (SSH, FTP, or shared folder)",
+    "Cannot create symlinks directly via FileBrowser API",
+    "Common in shared hosting, enterprise environments, and containerized deployments with shared volumes"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the FileBrowser repository from GitHub, checks out version v3.0.0-alpha.3, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.0.0-alpha.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

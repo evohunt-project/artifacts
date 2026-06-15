@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_917859ab",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-x234-x5vq-cc2v/GHSA-x234-x5vq-cc2v.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "node-secret-exposure-via-settings-api",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_917859ab/node-secret-exposure-via-settings-api",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_917859ab/node-secret-exposure-via-settings-api/vulnerability_report.json",
+      "title": "Node secret exposed via settings API enables full authentication bypass",
+      "vulnerability_type": "information_disclosure",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes disabled users retaining access because token-based authentication fails to re-check account status and there is no token revocation. This finding is a separate secret disclosure plus header-based authentication bypass (`GET /api/settings` discloses `node.secret`, which is then accepted by `X-Node-Secret`). Different auth mechanism, vulnerable code, and root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "ssrf-via-cluster-node-registration",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_917859ab/ssrf-via-cluster-node-registration",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_917859ab/ssrf-via-cluster-node-registration/vulnerability_report.json",
+      "title": "SSRF via cluster node registration allows authenticated users to probe internal services",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is an authorization/state-enforcement bug in bearer-token authentication for disabled users. This finding is an SSRF/reverse-proxy issue in cluster node registration and proxying. Different endpoint family, different security property, and different exploit path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described root cause. GHSA-x234-x5vq-cc2v is specifically about disabled users continuing to use previously issued bearer tokens because token-based authentication does not enforce the disabled-account status check and there is no token revocation. The two findings instead describe (1) disclosure of `node.secret` enabling `X-Node-Secret` authentication bypass and (2) SSRF via cluster node registration. Neither one involves stale bearer tokens, disabled-account enforcement, or the token-validation logic cited by the advisory.",
+    "evidence": [
+      "The advisory points to the login/status-check split in `internal/user/login.go` and `internal/user/user.go`, where login enforces disabled status but token-based authentication does not.",
+      "The `node-secret-exposure-via-settings-api` finding instead targets `api/settings/settings.go`, `settings/node.go`, and `internal/middleware/middleware.go`, where disclosing `node.secret` enables a separate header-based auth bypass.",
+      "The `ssrf-via-cluster-node-registration` finding targets cluster node creation and reverse proxying (`api/cluster/node.go`, `internal/middleware/proxy.go`), which is unrelated to user-disable enforcement or bearer-token revocation."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_917859ab/node-secret-exposure-via-settings-api",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_917859ab/node-secret-exposure-via-settings-api/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_917859ab/node-secret-exposure-via-settings-api/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_917859ab/ssrf-via-cluster-node-registration",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_917859ab/ssrf-via-cluster-node-registration/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_917859ab/ssrf-via-cluster-node-registration/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

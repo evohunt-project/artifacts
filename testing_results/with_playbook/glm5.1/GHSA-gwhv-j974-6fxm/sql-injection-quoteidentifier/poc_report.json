@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that a crafted filter key containing a dot (.) and a backtick character (\\x60) breaks out of identifier quoting in Platform.quoteIdentifier(), injecting 'OR 1=1' into the WHERE clause. The exploit returns all rows from the target table, bypassing the ORM's query filtering.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The crafted filter key should cause the generated SQL WHERE clause to include 'OR 1=1', making the query return all rows instead of none. This demonstrates SQL injection through the filter object key path, which can be escalated to arbitrary data exfiltration.",
+  "actual_observed_result": "Running the exploit script produced the SQL query: 'select `u0`.* from `user` as `u0` where `u0`.`name` OR 1=1 -- ` = ?' which returned all 3 rows from the table. A normal filter with {name: 'nonexistent'} correctly returned 0 rows, confirming the injection is the cause.",
+  "verification_method": "The exploit inserts 3 rows with secret data, then executes a query with a benign filter ({name: 'nonexistent'}) that returns 0 rows. It then sends the crafted filter key 'u0.name` OR 1=1 -- ' which returns all 3 rows. The verification checks that exactly 3 rows are returned with the proof string '[PROOF_OF_CONCEPT_VERIFIED=true]'.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Normal filter {name: 'nonexistent'} returned 0 rows, confirming expected behavior.",
+    "Exploit filter key 'u0.name` OR 1=1 -- ' generated SQL: select `u0`.* from `user` as `u0` where `u0`.`name` OR 1=1 -- ` = ?",
+    "Exploit query returned all 3 rows including secret data (SECRET_ALICE_12345, SECRET_BOB_67890, SECRET_CHARLIE_ABC).",
+    "The backtick in the filter key broke out of quoteIdentifier() quoting, allowing OR 1=1 injection."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v7.0.5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.mjs",
+      "reproduction/verify.sh",
+      "reproduction/package.json"
+    ]
+  }
+}

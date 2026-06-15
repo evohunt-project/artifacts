@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "rce",
+  "summary": "The Docker-based reproduction starts a stock FUXA server with default settings (security disabled), sends a single unauthenticated POST request to /api/runscript with a test script payload that calls require('child_process').execSync('id'), and verifies that the attacker-controlled command was executed server-side by checking the proof file written to disk.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proof file /tmp/evohunt-proof-rce must contain the marker EVOHUNT-RCE-CONFIRMED followed by the output of the system id command, confirming that arbitrary OS commands were executed by the unauthenticated script payload inside the FUXA server container.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the FUXA repository, built the reproduction image, started the FUXA server with default settings, waited for it to become ready, and sent the exploit payload. The server executed the attacker-controlled script code, which wrote the proof file containing EVOHUNT-RCE-CONFIRMED and the uid/gid information from the id command.",
+  "verification_method": "The verify.sh script checks for the existence and content of /tmp/evohunt-proof-rce inside the container. It greps for the exact proof marker EVOHUNT-RCE-CONFIRMED to confirm that the script engine executed the attacker's code rather than a startup failure or unrelated error. The id command output provides additional evidence that OS-level code execution was achieved.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/evohunt-proof-rce was created inside the container with the expected EVOHUNT-RCE-CONFIRMED marker.",
+    "The proof file contains the output of the id command, confirming OS-level code execution.",
+    "The FUXA server responded with HTTP 200 to the /api/runscript request, indicating the script was accepted and executed.",
+    "No authentication token was provided in the exploit request, confirming the zero-authentication attack path."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction requires npm install which can take several minutes due to native dependencies like sqlite3."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

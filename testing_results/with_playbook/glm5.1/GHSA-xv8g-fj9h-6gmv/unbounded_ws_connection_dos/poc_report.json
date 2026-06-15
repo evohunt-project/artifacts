@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction builds the Linkdave server from the target repository, opens 500 concurrent WebSocket connections without authentication, and verifies significant goroutine and memory growth via the /stats endpoint, confirming the unbounded resource allocation vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Opening 500 WebSocket connections should cause the server's goroutine count to increase by at least 1000 (2 goroutines per connection) and memory allocation to grow significantly, demonstrating that the server accepts unlimited connections without resource limits.",
+  "actual_observed_result": "The reproduction built the Linkdave server from /target-repo, started it, and ran the exploit script. The /stats endpoint showed baseline goroutines at approximately 10-15. After opening 500 WebSocket connections, goroutine count increased by over 1000 and memory allocation grew proportionally. The verification confirmed the goroutine increase met the expected threshold.",
+  "verification_method": "The exploit script queries the /stats endpoint before and after opening connections, extracts the num_goroutines and memory fields, and asserts that the goroutine increase meets or exceeds 2 times the number of opened connections. A separate health check confirms the server was responsive before the attack.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The /stats endpoint reported baseline goroutines in the range of 10-15 before the attack.",
+    "After opening 500 WebSocket connections, the /stats endpoint reported a goroutine increase exceeding 1000.",
+    "Memory allocation increased proportionally with the number of connections.",
+    "Each connection was confirmed as a valid WebSocket session with a session_id received from the OpReady message."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

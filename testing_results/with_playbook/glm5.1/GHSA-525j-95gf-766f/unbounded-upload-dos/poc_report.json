@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "Docker-based PoC confirms that server accepts client-controlled X-File-Total-Size claiming 1TB without validation, demonstrating unbounded resource consumption vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Server should accept chunked upload with claimed 1TB size despite sending only 1KB of actual data, demonstrating lack of size validation.",
+  "actual_observed_result": "Running ./reproduction/run.sh showed server accepted the claimed 1TB total size header and created temporary upload file without validation, confirming the DoS vulnerability.",
+  "verification_method": "verify.sh checks server response for acceptance of upload with claimed size and examines temporary file creation, distinguishing from size validation errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server accepted X-File-Total-Size header claiming 1TB",
+    "Temporary file created for upload without size validation",
+    "No error returned for claimed size exceeding reasonable limits",
+    "Upload proceeded despite minimal actual data (1KB)",
+    "Server did not validate claimed size against actual chunk data"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out HEAD, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

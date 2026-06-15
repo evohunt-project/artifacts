@@ -1,0 +1,32 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "privilege_escalation",
+  "summary": "The Docker-based reproduction builds Soft Serve from source, starts the server with an admin user, creates a repository, adds a collaborator with read-write access, and then demonstrates that the collaborator can escalate privileges by granting admin-access to a third user via the 'repo collab add' command.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a read-write collaborator successfully grants admin-access to a victim user on the target repository. The collaborator list should show the victim with admin-access, proving the privilege escalation.",
+  "actual_observed_result": "Not attempted in this session. The reproduction bundle is self-contained and can be executed by running ./reproduction/run.sh with Docker available on the host.",
+  "verification_method": "After the collaborator runs 'repo collab add target-repo victim admin-access', the admin lists collaborators on the repository. If the output contains 'admin-access' for the victim user, the privilege escalation is confirmed. This distinguishes the exploit from a failed authorization check that would reject the admin-access level.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The collaborator list output would show the victim user with admin-access level.",
+    "The admin's initial collaborator list shows only read-write for the collaborator.",
+    "The post-exploit collaborator list shows admin-access for the victim, confirming the escalation."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction was not executed in this session due to build time constraints. The bundle is complete and self-contained for future execution.",
+    "Building Go from source requires network access for module downloads on first run."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/build.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

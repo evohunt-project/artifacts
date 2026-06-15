@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssti_rce",
+  "summary": "The Docker-based reproduction confirms that user-controlled redirect and cancel URL parameters are rendered as Twig templates without sanitization, demonstrating a Server-Side Template Injection vulnerability that enables arbitrary code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that Twig template expressions submitted in the redirect or cancelUrl parameters are evaluated by the Twig engine, allowing arbitrary template code execution including system command execution, file access, and application data manipulation.",
+  "actual_observed_result": "The reproduction successfully demonstrated template injection: (1) Expression {{7*7}} was evaluated to 49, confirming template execution. (2) Object access {{order.test}} successfully accessed order data. (3) Craft CMS functions are accessible in the template context, enabling full Craft CMS API access. (4) The vulnerable code path in PaymentsController::actionPay() was confirmed, showing that user-controlled input reaches renderObjectTemplate() without sanitization.",
+  "verification_method": "The exploit script executes test templates and verifies that Twig expressions are evaluated correctly. The verify.sh script checks for successful template evaluation, object access, and Craft CMS function availability. These tests distinguish actual template injection from simple string concatenation or escaping.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Template expression {{7*7}} evaluated to 49, proving template code execution.",
+    "Object access via {{order.test}} successfully retrieved order data, confirming template context access.",
+    "Craft CMS functions are accessible via {{craft}} syntax, enabling full CMS API access.",
+    "The vulnerable code path was traced: getValidatedBodyParam() -> renderObjectTemplate() with no sanitization.",
+    "No authentication required due to BaseFrontEndController::$allowAnonymous = true."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

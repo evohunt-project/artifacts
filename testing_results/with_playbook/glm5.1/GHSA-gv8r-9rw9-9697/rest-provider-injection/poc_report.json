@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authorization",
+  "summary": "Unauthenticated REST provider endpoint allows injection of arbitrary routing configuration via PUT request to /api/providers/rest, enabling complete traffic takeover through malicious catch-all route",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Complete routing infrastructure compromise - attacker can redirect all HTTP traffic to attacker-controlled backends, intercept sensitive data, disrupt services, and perform lateral movement within infrastructure",
+  "actual_observed_result": "Malicious configuration successfully injected via unauthenticated PUT request. High-priority catch-all route (PathPrefix:/) created and activated, routing all traffic to attacker-specified backend (http://attacker.example.com:9999). Configuration immediately applied by Traefik without validation.",
+  "verification_method": "Automated verification via verify.sh checks API endpoints (/api/providers/rest and /api/frontends) to confirm malicious frontend and backend appear in active configuration",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "PUT request to /api/providers/rest accepted without authentication",
+    "Malicious frontend 'malicious-frontend' created with priority 9999",
+    "Catch-all route 'PathPrefix:/' injected and active",
+    "Backend 'malicious-backend' configured pointing to attacker URL",
+    "Configuration visible in API response confirming successful injection"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.7.34",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

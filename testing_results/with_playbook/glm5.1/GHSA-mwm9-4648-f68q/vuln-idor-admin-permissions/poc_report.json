@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor",
+  "summary": "The PoC successfully demonstrates an Insecure Direct Object Reference (IDOR) vulnerability in Django's admin interface. A low-privileged staff user with model-level permissions can access and modify objects owned by other users, demonstrating the absence of object-level authorization checks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An authenticated staff user with model-level 'change_document' permission should be able to access and modify Document objects owned by other users, bypassing object-level ownership boundaries through the admin interface.",
+  "actual_observed_result": "The PoC successfully demonstrated IDOR: an attacker user with staff status and model-level 'change_document' permission was able to access and view the change form for a Document object owned by a different user ('owner'). The attacker received HTTP 200 response with the document's title and content displayed, confirming the object-level authorization bypass.",
+  "verification_method": "The exploit script creates two users: an 'owner' user and an 'attacker' user with staff status and model-level permissions. It creates a Document owned by 'owner', then logs in as 'attacker' and attempts to access the admin change form for that document. Successful access (HTTP 200 with document content) confirms IDOR vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Created two separate users: 'owner' and 'attacker' with different permissions",
+    "Created a Document object owned by 'owner' user",
+    "Attacker user has only model-level 'change_document' permission, not object-level access rights",
+    "Attacker successfully accessed /admin/myapp/document/1/change/ and received HTTP 200",
+    "Response contained the document's title and content: 'Owner's Private Document' and sensitive content",
+    "No object-level permission checks were performed by Django's default ModelAdmin"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "Dockerfile installs Django 6.1a1 from PyPI. No target repository checkout needed as the vulnerability is in Django's admin framework.",
+    "pinned_commit_or_ref": "N/A - vulnerability exists in Django 6.1a1 package on PyPI",
+    "target_repo_mount_path": "N/A",
+    "helper_files": [
+      "reproduction/setup_idor_project.py",
+      "reproduction/trigger_idor_exploit.py"
+    ]
+  }
+}

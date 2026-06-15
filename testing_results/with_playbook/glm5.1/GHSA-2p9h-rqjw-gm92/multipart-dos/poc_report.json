@@ -1,0 +1,39 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Denial of Service",
+  "summary": "PoC demonstrates missing maxFiles limit by running mock servers comparing vulnerable config (no maxFiles) vs fixed config (maxFiles: 10). Vulnerable server accepts unlimited files while fixed server properly rejects requests exceeding the limit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Server should accept unlimited file uploads in multipart/form-data requests, leading to resource exhaustion and potential DoS. Fixed configuration should reject requests exceeding maxFiles limit.",
+  "actual_observed_result": "Mock server tests confirmed: 1) Vulnerable config accepts 5, 15, and 50 files without restriction, 2) Fixed config (maxFiles: 10) accepts 5 files but rejects 15 and 50 files with 413 error, 3) Memory and processing time increase with file count in vulnerable config, 4) formidable.options.maxFiles shows Infinity for vulnerable config and 10 for fixed config.",
+  "verification_method": "Automated test script (test_maxfiles_limit.js) that: 1) Creates two mock servers (vulnerable and fixed), 2) Sends multipart requests with varying file counts, 3) Compares acceptance/rejection behavior, 4) Measures memory consumption and processing time, 5) Outputs clear PASS/FAIL indicators for each test case",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console output showing vulnerable config maxFiles: Infinity",
+    "Console output showing fixed config maxFiles: 10",
+    "Test results: vulnerable server accepts 15 and 50 files (should fail), fixed server rejects them with 413",
+    "Memory usage measurements showing increased consumption with file count",
+    "Processing time measurements showing degradation with many files",
+    "Clear vulnerability confirmation messages in output"
+  ],
+  "limitations_or_blockers": [
+    "Uses mock server rather than actual n8n instance to avoid causing real DoS",
+    "Demonstrates vulnerability safely with artificial limits to prevent actual harm",
+    "Does not test against production n8n instance with real webhook endpoints",
+    "Requires Node.js environment to run mock server tests"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh creates a minimal test environment demonstrating the formidable configuration vulnerability without cloning full n8n repository",
+    "pinned_commit_or_ref": "n8n versions using formidable parser (all versions with webhook-form-data.ts)",
+    "target_repo_mount_path": "/app",
+    "helper_files": [
+      "reproduction/test_maxfiles_limit.js",
+      "reproduction/demonstrate_issue.js",
+      "reproduction/mock_server.js",
+      "reproduction/package.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

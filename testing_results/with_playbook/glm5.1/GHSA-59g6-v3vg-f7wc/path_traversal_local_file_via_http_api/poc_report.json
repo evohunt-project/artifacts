@@ -1,0 +1,29 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction demonstrates that the unauthenticated HTTP API evaluate_data endpoint passes user-controlled key parameters directly into the LocalFile source's get_value method, which constructs file paths via root_path.join(key) without canonicalization, allowing arbitrary file reads through ../ sequences.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending GET /cocoindex/api/flows/{flow}/data?field=documents&key[]=../sensitive/secret.txt should cause the server to read the file /app/test_sensitive/secret.txt (outside the configured source directory /app/test_data) and return its contents in the JSON response. The verify script checks for the proof string EVOHUNT_PATH_TRAVERSAL_PROOF in the response.",
+  "actual_observed_result": "PoC was not executed in this session. The reproduction bundle is self-contained and ready for execution via ./reproduction/run.sh.",
+  "verification_method": "The verify.sh script creates a sensitive file with a unique proof string (EVOHUNT_PATH_TRAVERSAL_PROOF) outside the LocalFile source directory, then sends a path traversal request via curl. It checks whether the HTTP response body contains the proof string, confirming that the server read a file outside the intended source directory through the key[] parameter. A grep for the proof string distinguishes a successful traversal from a 404, error response, or unrelated output.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Building CocoIndex from source requires Rust toolchain, Python 3.11+, and maturin, which increases Docker build time significantly.",
+    "The CocoIndex server requires a running PostgreSQL instance for internal storage and memoization.",
+    "The evaluate_data endpoint requires the flow to have been set up (database schema created) before evaluation requests succeed."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/flow_app.py"
+    ]
+  }
+}

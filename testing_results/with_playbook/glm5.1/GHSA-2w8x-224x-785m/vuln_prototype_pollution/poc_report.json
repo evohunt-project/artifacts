@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution",
+  "summary": "Docker-based reproduction confirms prototype pollution vulnerability in SJCL's convenience.js _add() function. Crafted JSON objects with __proto__ properties successfully pollute Object.prototype, affecting all JavaScript objects.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the PoC should demonstrate that Object.prototype is modified, causing all new objects to inherit polluted properties (polluted='yes', isAdmin=true), enabling privilege escalation in applications using SJCL.",
+  "actual_observed_result": "The PoC successfully created objects with __proto__ properties and demonstrated that sjcl.encrypt() processes these without validation, resulting in Object.prototype pollution where all subsequent objects inherit the malicious properties.",
+  "verification_method": "The verify.js script creates a new empty object after attempting pollution and checks if it has .polluted and .isAdmin properties. If these properties exist on an empty object, it confirms Object.prototype was modified. The script distinguishes real prototype pollution from local property assignment.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show empty objects having polluted properties after PoC execution",
+    "Object.prototype modification confirmed by checking {}.__proto__.polluted",
+    "All newly created objects inherit the malicious properties",
+    "No error was thrown during sjcl.encrypt() with polluted params",
+    "Vulnerability enables privilege escalation in real-world applications"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "1.0.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.js"
+    ]
+  }
+}

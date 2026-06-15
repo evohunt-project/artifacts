@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_panic",
+  "summary": "The Docker-based reproduction confirms that sending an AXFR request over DoH triggers the nil pointer dereference in DoHWriter.TsigTimersOnly(), causing a panic and denial of service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause CoreDNS to panic when processing the AXFR request over DoH, resulting in service crash or restart logs indicating the nil pointer dereference.",
+  "actual_observed_result": "The reproduction successfully triggers the vulnerability. CoreDNS logs show a panic with 'invalid memory address or nil pointer dereference' at DoHWriter.TsigTimersOnly(), followed by SIGSEGV and service disruption.",
+  "verification_method": "The verification script checks CoreDNS logs for panic messages containing 'DoHWriter.TsigTimersOnly' and 'nil pointer dereference', and confirms service unresponsiveness after the exploit.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs contain panic: runtime error: invalid memory address or nil pointer dereference",
+    "Stack trace shows DoHWriter.TsigTimersOnly() as the panic location",
+    "Transfer plugin appears in stack trace at plugin/transfer/transfer.go:119",
+    "Service becomes unresponsive after panic (health check fails)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the CoreDNS repository on the host, checks out the vulnerable v1.10.1 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.10.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/Corefile",
+      "reproduction/zone.db",
+      "reproduction/setup_certs.sh"
+    ]
+  }
+}

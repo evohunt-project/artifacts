@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "file_write_rce",
+  "summary": "The Docker-based reproduction confirms that the unauthenticated /payment/api/editable/update endpoint accepts arbitrary PHP content, writes it to an existing payment listener file, and the injected code executes when the file is loaded, demonstrating remote code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted PHP payload to be written to after_pay.php via the unauthenticated API endpoint, and the injected code should execute and create a proof marker file, confirming arbitrary code execution in the application context.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, created a fresh Laravel 10 application with pay-uz installed, published the editable payment files, sent an unauthenticated GET request to /payment/api/editable/update with a malicious PHP payload as the content parameter. The API returned {\"responseStatus\":\"success\",\"message\":\"Muvaffaqiyatli saqlandi\"}. The file on disk was confirmed to contain the attacker-injected PHP payload. Executing the modified file produced the proof marker /tmp/evohunt_rce_proof containing EVOHUNT_RCE_CONFIRMED.",
+  "verification_method": "The verification script checks three independent signals: (1) the API endpoint returns a JSON response containing 'success' confirming the file write was accepted, (2) the file on disk contains the attacker-controlled PHP payload confirming the write persisted, and (3) executing the modified PHP file produces a proof marker file at a known path with a known value, distinguishing real code execution from a generic error or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The /payment/api/editable/update endpoint returned a JSON success response, confirming the unauthenticated file write was processed.",
+    "The after_pay.php file on disk was verified to contain the attacker-injected PHP payload after the API call.",
+    "Executing the modified after_pay.php created a proof marker file at /tmp/evohunt_rce_proof containing EVOHUNT_RCE_CONFIRMED, confirming arbitrary PHP code execution."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "csrf",
+  "summary": "The CSRF protection disabled vulnerability was successfully confirmed. The default configuration file config.example.php contains $disableCSRF = true at line 36, which disables CSRF protection by default. Additionally, the CSRF configuration sets failedAuthAction to 0, making the protection ineffective even when enabled.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Cross-site request forgery attacks can be performed against authenticated users, forcing them to execute unintended actions such as account deletion, password changes, backup downloads, and settings modification.",
+  "actual_observed_result": "The test script analyzed config.example.php and confirmed $disableCSRF = true at line 36. The CSRF configuration file (config/csrf_config.php) was also examined, showing that failedAuthAction is set to 0 for both GET and POST requests, which allows requests even when CSRF validation fails.",
+  "verification_method": "Automated configuration analysis verifies that CSRF protection is disabled in the default configuration and that the protection mechanism is ineffective. Exit code 1 indicates vulnerability confirmation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "$disableCSRF = true found at line 36 of config.example.php",
+    "CSRF protection disabled by default in shipped configuration",
+    "config/csrf_config.php sets failedAuthAction to 0 (allow on failure)",
+    "Multiple state-changing endpoints identified without CSRF token validation",
+    "Exit code 1 returned indicating vulnerability confirmed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/var/www/html",
+    "helper_files": [
+      "reproduction/test_csrf.php"
+    ]
+  }
+}

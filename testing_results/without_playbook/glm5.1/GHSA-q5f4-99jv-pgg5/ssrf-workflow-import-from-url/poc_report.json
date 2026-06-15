@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the GET /rest/workflows/from-url endpoint in n8n makes an arbitrary server-side HTTP request to any URL provided by an authenticated user, including internal loopback addresses. The mock internal server's response containing a unique proof marker is returned verbatim to the caller, demonstrating full data exfiltration capability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause n8n's workflow import endpoint to fetch content from a mock internal HTTP service running on 127.0.0.1:9999 and return the response body (including a unique proof marker) to the authenticated caller, proving that the server makes arbitrary outbound requests without SSRF protection.",
+  "actual_observed_result": "The reproduction started n8n, created an owner account, obtained a personal project ID, and sent a GET request to /rest/workflows/from-url with url=http://127.0.0.1:9999/secret-data. The endpoint fetched the mock internal server's response and returned it including the proof marker EVOHUNT_SSRF_PROOF_<unique_hex>, confirming the SSRF vulnerability.",
+  "verification_method": "The verify.sh script starts a mock internal server that embeds a unique proof marker (EVOHUNT_SSRF_PROOF_<random_hex>) in its JSON response. After the SSRF request, the script checks whether the proof marker appears in the endpoint's response. This distinguishes a genuine SSRF (server fetched and returned internal data) from a startup failure, configuration error, or unrelated error response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The vulnerable code pattern axios.get<IWorkflowResponse>(query.url) was confirmed present in the mounted source at /target-repo/packages/cli/src/workflows/workflows.controller.ts.",
+    "The mock internal server received an HTTP GET request for /secret-data, proving the server initiated an outbound connection to the attacker-specified internal address.",
+    "The endpoint response contained the unique proof marker from the mock internal server, confirming full data exfiltration.",
+    "The response also contained the _exfiltrated object with path and secret fields, demonstrating that arbitrary internal service data can be returned to the attacker."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit n8n@2.18.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.18.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/mock-internal-server.py"
+    ]
+  }
+}

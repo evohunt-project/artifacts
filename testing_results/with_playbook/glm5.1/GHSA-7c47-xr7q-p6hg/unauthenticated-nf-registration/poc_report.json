@@ -1,0 +1,29 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "improper_access_control",
+  "summary": "The Docker-based reproduction bundle starts the free5gc NRF with default configuration (OAuth disabled, HTTP without TLS), registers a rogue AMF Network Function instance via the unauthenticated PUT endpoint, and verifies the rogue instance is discoverable through the NRF discovery API. The reproduction could not be executed during this run because the Docker base image pull (mongo:7.0, ~250MB) timed out due to network constraints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should register a rogue AMF instance with IP 10.0.0.99 without any authentication credentials. The NRF should accept the registration (HTTP 201 Created) and return the rogue AMF in subsequent discovery queries, confirming that any network attacker can impersonate a 5G core Network Function.",
+  "actual_observed_result": "The reproduction bundle was not executed. The Docker base image (mongo:7.0) pull timed out after multiple attempts due to network bandwidth constraints. The vulnerability was validated through comprehensive source code analysis tracing the unauthenticated registration path.",
+  "verification_method": "The exploit.sh script registers a rogue AMF at IP 10.0.0.99 via PUT /nnrf-nfm/v1/nf-instances/{UUID}, then queries GET /nnrf-disc/v1/nf-instances?target-nf-type=AMF&requester-nf-type=SMF. Success is confirmed if the discovery response contains the rogue IP 10.0.0.99. The verify.sh script orchestrates the full lifecycle: start MongoDB, build NRF from /target-repo, start NRF, run exploit, check exit code, and emit PROOF_STRING=EVOHUNT_ROGUE_NF_REGISTERED_WITHOUT_AUTH.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker base image (mongo:7.0) pull timed out due to slow network. Multiple attempts were made with up to 900 second timeouts but the 249MB MongoDB layer could not complete downloading.",
+    "The Go version on the host (1.19.2) is too old to build the NRF directly (requires Go 1.24+), preventing a local non-Docker reproduction.",
+    "MongoDB is not available on the host system, preventing local testing without Docker."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "958629e395951acae598c47122976839198b4dd1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/nrfcfg.yaml"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the PostgreSQL adapter's structure_dump method executes shell commands with unsanitized configuration values, allowing arbitrary command injection through malicious database.yml configuration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that shell commands can be injected through the database configuration's username parameter, creating a proof file that would not exist under normal operation.",
+  "actual_observed_result": "The reproduction successfully injected the command 'echo EV OHUNT_POC_SUCCESS > /tmp/evohunt_proof' through the malicious username parameter in database.yml, and the proof file was created, confirming arbitrary command execution.",
+  "verification_method": "The verify.sh script checks for the presence and content of /tmp/evohunt_proof file, which is only created if the command injection succeeds. This distinguishes successful injection from normal pg_dump errors or failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The /tmp/evohunt_proof file was created during execution, proving command injection succeeded",
+    "The malicious username 'admin\"; echo 'EV OHUNT_POC_SUCCESS' > /tmp/evohunt_proof; #' was injected into the shell command",
+    "The injected command executed independently of whether pg_dump itself succeeded or failed",
+    "This demonstrates the vulnerability can be exploited to execute arbitrary commands with the privileges of the Rails application process"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the existing target repository at /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/repo mounted read-only at /target-repo",
+    "pinned_commit_or_ref": "current state of repo directory (not a git repository)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

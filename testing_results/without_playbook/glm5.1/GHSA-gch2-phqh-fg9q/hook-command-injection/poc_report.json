@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the afterAllFilesWrite hook executes arbitrary shell commands from the orval configuration without validation. Running the PoC triggers command execution and produces the expected proof signal.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should execute a command that writes a proof file to demonstrate arbitrary command execution. The proof file '/tmp/evohunt-proof.txt' should be created with content 'EVOTHUNT-PWNED' to confirm successful exploitation.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the Docker image, ran orval with the malicious configuration, and the afterAllFilesWrite hook executed the command 'touch /tmp/evohunt-proof.txt && echo EVOTHUNT-PWNED > /tmp/evohunt-proof.txt', creating the proof file with the expected content.",
+  "verification_method": "The run.sh script checks for the existence of /tmp/evohunt-proof.txt and verifies its content matches 'EVOTHUNT-PWNED'. This confirms the hook executed arbitrary commands with the privileges of the orval process.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/evohunt-proof.txt was created by the malicious hook command",
+    "The file content matches the expected proof string 'EVOTHUNT-PWNED'",
+    "Orval logs show the hook execution message 'Running afterAllFilesWrite hook...'",
+    "The orval process completed successfully, demonstrating that the malicious hook does not prevent normal operation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "363ae55f3bd867b4f144559534a617493fe915cb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious-orval.config.ts",
+      "reproduction/petstore.yaml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

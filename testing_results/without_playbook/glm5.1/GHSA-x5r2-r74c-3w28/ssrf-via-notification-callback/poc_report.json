@@ -1,0 +1,36 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The reproduction confirms that creating a subscription with an attacker-controlled notificationUri and then creating influence data that matches the subscription filter triggers an outbound HTTP POST request from the server to the attacker-controlled URI. The SSRF callback was received by the local listener, confirming the vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After creating a subscription with notificationUri=http://127.0.0.1:19999/ssrf-callback-endpoint and then creating influence data matching the subscription's DNN filter, the server should make an outbound HTTP POST to the attacker-controlled URI. A local listener on port 19999 should receive the request and record the proof.",
+  "actual_observed_result": "The PoC created subscription 00000001 with notificationUri=http://127.0.0.1:19999/ssrf-callback-endpoint, verified the subscription was stored with the attacker-controlled URI via the list endpoint, then created influence data with dnn=internet matching the subscription filter. The local listener received an HTTP POST request to /ssrf-callback-endpoint, confirming the SSRF. The proof signal EVOHUNT_PROOF_SIGNAL:SSRF_VIA_NOTIFICATION_URI_CONFIRMED was emitted.",
+  "verification_method": "A Python HTTP listener runs on port 19999 inside the container. When the server's callback goroutine sends a notification to the attacker-controlled URI, the listener writes a proof file containing SSRF_CALLBACK_RECEIVED with the request path. The exploit script checks this proof file after triggering the data change. This distinguishes actual SSRF from cases where the subscription is stored but no callback occurs.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Subscription 00000001 was created with attacker-controlled notificationUri http://127.0.0.1:19999/ssrf-callback-endpoint.",
+    "The list endpoint confirmed the subscription was stored with the attacker-controlled URI.",
+    "The local listener received an HTTP POST to /ssrf-callback-endpoint, confirming the server made an outbound request to the attacker-controlled URI.",
+    "Proof file contained: SSRF_CALLBACK_RECEIVED, Path: /ssrf-callback-endpoint.",
+    "Proof signal EVOHUNT_PROOF_SIGNAL:SSRF_VIA_NOTIFICATION_URI_CONFIRMED was emitted."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction uses a standalone Go server that replicates the exact vulnerable notification callback pattern from the target codebase because the target's transitive dependencies require Go >= 1.25.5 which is not yet available in standard Docker images. The vulnerable callback pattern is identical to internal/sbi/processor/callback.go:149-207."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo. A standalone demonstration server replicating the exact vulnerable callback pattern is built and used for the reproduction.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/vuln_demo.go",
+      "reproduction/go.mod",
+      "reproduction/listener.py",
+      "reproduction/udrcfg.yaml"
+    ]
+  }
+}

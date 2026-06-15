@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms SQL injection via the searchPhrase parameter in the public videos.json.php API endpoint. The PoC demonstrates extraction of database version information through the vulnerable LIKE clause.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Executing the SQL injection payload should cause the application to return database version information in the JSON response, proving that arbitrary SQL can be injected through the searchPhrase parameter.",
+  "actual_observed_result": "The reproduction successfully injected SQL commands through the searchPhrase parameter. The application returned database information that would not be available through normal queries, confirming the SQL injection vulnerability.",
+  "verification_method": "The PoC uses a UNION-based SQL injection technique to extract database version information. The injected SQL modifies the LIKE clause to return a predictable proof string (database version). The verification checks for this proof string in the JSON response to confirm successful exploitation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "SQL injection payload successfully bypassed the xss_esc() sanitization",
+    "Database version information extracted through UNION SELECT",
+    "JSON response contains injected proof string confirming SQL execution",
+    "No authentication required to reach vulnerable endpoint"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the AVideo repository from GitHub, checks out the vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

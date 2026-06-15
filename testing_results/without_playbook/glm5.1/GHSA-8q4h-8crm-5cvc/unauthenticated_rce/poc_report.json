@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "rce_via_file_manager_mime_bypass",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can create a file, write a GIF89a-prefixed PHP polyglot payload through the elFinder connector, rename the file to .php, and trigger remote code execution by requesting it over HTTP.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted polyglot file to be written through the elFinder connector, renamed to .php, and then accessed over HTTP, producing the string EVOHUNT_RCE_SUCCESS followed by the output of the id command inside the container.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository, built the Docker image, started Apache with PHP and elFinder, executed the exploit chain (open → mkfile → put with GIF89a polyglot → rename to .php → HTTP GET), and received the EVOHUNT_RCE_SUCCESS proof string together with the uid/gid output of id in the HTTP response body.",
+  "verification_method": "The exploit script checks the HTTP response body for the exact proof string EVOHUNT_RCE_SUCCESS. This distinguishes genuine PHP code execution from a generic server error, a static-file response, or an unrelated crash. The id command output following the proof string further confirms that OS-level command execution occurred.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The elFinder open command returned the root directory hash without any authentication challenge.",
+    "The mkfile command created evohunt.txt in the volume root; the connector returned the new file hash.",
+    "The put command wrote the GIF89a-prefixed PHP payload to the file; finfo detected the content as image/gif (allowed MIME), so the MIME gate passed.",
+    "The rename command renamed evohunt.txt to evohunt.php; the name-only MIME gate resolved .php to text/plain (allowed), so the rename succeeded.",
+    "An HTTP GET to /files/evohunt.php returned GIF89a followed by EVOHUNT_RCE_SUCCESS:uid=33(www-data) gid=33(www-data) groups=33(www-data), confirming PHP code execution as the web-server user."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2.1.66",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

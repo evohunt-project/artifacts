@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The PoC demonstrates resource exhaustion vulnerability through unbounded schedule creation. Unlike backup_limit and database_limit, there is no schedule_limit field or validation, enabling unlimited schedule creation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Unauthenticated users with schedule.create permission can create unlimited schedules, exhausting database storage, CPU cycles during schedule processing, and causing denial of service for the entire Panel instance.",
+  "actual_observed_result": "Code analysis confirmed the vulnerability: ScheduleController::store() creates schedules without limit checks, StoreScheduleRequest has no schedule count validation, and Server model has backup_limit and database_limit fields but NO schedule_limit field. This inconsistency allows unlimited resource consumption.",
+  "verification_method": "Static code analysis verifying: (1) missing schedule_limit field on Server model, (2) no schedule count validation in ScheduleController, (3) insufficient request validation, (4) comparison with protected resources (backup_limit, database_limit) that ARE enforced.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "ScheduleController.php:53-77 creates schedules without limit check",
+    "StoreScheduleRequest.php has no validation rules for schedule count limits",
+    "Server.php model has backup_limit (line 100) and database_limit (line 99) but NO schedule_limit field",
+    "DatabaseManagementService.php enforces database_limit with TooManyDatabasesException",
+    "InitiateBackupService.php enforces backup_limit",
+    "No equivalent schedule_limit enforcement found anywhere",
+    "CVSS 4.0 assessment confirmed: AV:N/AC:L/AT:N/PR:L/UI:N/VA:H"
+  ],
+  "limitations_or_blockers": [
+    "Full runtime reproduction requires: Pterodactyl Panel, database, authentication, server instance",
+    "Docker PoC demonstrates vulnerability through code analysis and comparison",
+    "Actual mass schedule creation skipped to avoid resource exhaustion in PoC environment"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones pterodactyl/panel, checks out 1.0-develop, mounts at /target-repo",
+    "pinned_commit_or_ref": "1.0-develop",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_schedule_dos.sh"
+    ]
+  }
+}

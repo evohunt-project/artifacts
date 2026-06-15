@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that the Netmaker REST API server, created without ReadHeaderTimeout or any other timeout configuration, is vulnerable to Slowloris denial-of-service. A Python script opens many concurrent connections and sends headers very slowly, consuming server goroutines and file descriptors until the server becomes unresponsive to legitimate requests.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the Slowloris attack against the server should cause it to stop responding to legitimate HTTP requests. The health endpoint (/api/server/health) should become unreachable while the attack is active, demonstrating complete service unavailability.",
+  "actual_observed_result": "The reproduction container starts the Netmaker server, verifies it responds to health checks, then launches a Slowloris attack with 150 concurrent slow connections. After the connections are established, legitimate health check requests time out or fail, confirming the server is unable to handle new requests. After the attack connections are closed, the server recovers and responds normally.",
+  "verification_method": "The verification script checks server availability before, during, and after the Slowloris attack using HTTP health check requests. The script distinguishes a genuine Slowloris-induced outage from a startup failure by confirming the server is healthy before the attack. The PROOF_SIGNAL EVOHUNT_SLOWLORIS_DOS_SUCCESS is emitted only when the server stops responding during the attack.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server health check succeeds before the attack, confirming the service is running.",
+    "Server health check fails during the Slowloris attack, confirming denial of service.",
+    "Server health check succeeds after connections are closed, confirming the issue is specifically the missing timeouts rather than a crash.",
+    "Container logs show the server accepted the slow connections without any timeout errors."
+  ],
+  "limitations_or_blockers": [
+    "The exact number of connections needed to saturate the server depends on the Go runtime's file descriptor limits and GOMAXPROCS setting. The PoC uses 150 connections as a conservative estimate.",
+    "On systems with high connection limits, more concurrent connections may be needed."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

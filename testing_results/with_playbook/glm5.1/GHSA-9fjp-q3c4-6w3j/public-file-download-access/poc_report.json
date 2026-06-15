@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that uploaded files can be downloaded by unauthenticated users, demonstrating missing file download access control in Parse Server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "File uploaded by authenticated user should not be accessible via unauthenticated GET request to file URL. Expected 401 Unauthorized or 403 Forbidden response.",
+  "actual_observed_result": "File was successfully downloaded by unauthenticated request, returning the exact file content without any authentication check. This confirms the vulnerability that anyone with a file URL can access uploaded files.",
+  "verification_method": "Upload file as authenticated user, extract file URL, then attempt download without session token. Compare downloaded content with uploaded content. If content matches without auth, vulnerability is confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File uploaded successfully with session token",
+    "File URL generated: /parse/files/<random-hex>-sensitive-document.txt",
+    "Unauthenticated GET request returned exact file content",
+    "No 401 Unauthorized or 403 Forbidden response",
+    "File download handler does not check authentication",
+    "FilesController getHandler only validates appId, not user session"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from /Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e8d9a6dc/repo and builds Docker image",
+    "pinned_commit_or_ref": "8.6.54 (version from package.json)",
+    "target_repo_mount_path": "/parse-server",
+    "helper_files": [
+      "reproduction/test-file-upload.sh",
+      "reproduction/test-file-download.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction starts parse-server with the GraphQL playground enabled, fetches the playground HTML page, and confirms that the configured masterKey value appears verbatim in the response body inside a JavaScript <script> block.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The playground HTML page should contain the masterKey value embedded as a JSON string in client-side JavaScript, allowing any visitor to extract administrative credentials.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, started parse-server with GraphQL playground enabled, fetched GET /playground, and the response HTML contained the exact configured masterKey string inside the handleRequest callback in the EmbeddedSandbox script block.",
+  "verification_method": "The verification script curls the playground endpoint and uses grep to search the HTML response body for the exact configured masterKey string. A successful match confirms the key is exposed in client-side code. The check distinguishes masterKey exposure from generic HTML or error responses.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The HTTP response to GET /playground contains Content-Type: text/html.",
+    "The response body includes a <script> block containing 'X-Parse-Master-Key': '<masterKey_value>' where <masterKey_value> matches the server's configured masterKey.",
+    "No authentication headers were required to retrieve the playground page."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the 8.6.2 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/setup.sh"
+    ]
+  }
+}

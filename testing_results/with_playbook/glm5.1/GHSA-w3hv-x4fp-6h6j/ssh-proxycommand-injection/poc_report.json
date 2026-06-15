@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "command_injection",
+  "summary": "The reproduction bundle demonstrates SSH ProxyCommand injection through the Grackle server's environment provisioning pipeline. An authenticated user adds an SSH environment with sshOptions.ProxyCommand set to a command that creates a proof file, then triggers provisioning which causes the SSH binary to execute the ProxyCommand locally.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the Grackle server to call the SSH adapter's provision() method, which invokes buildSshFlags() with the injected ProxyCommand, resulting in SSH executing 'touch /tmp/evohunt-proof' on the server host. The verification step checks for the existence of this proof file.",
+  "actual_observed_result": "PoC was not executed during this audit session due to the complexity of building the Grackle monorepo from source (requires Rush, pnpm, Node.js 22, and protobuf code generation). The vulnerability is confirmed through static code analysis of the complete data flow from user input to the SSH execution sink.",
+  "verification_method": "The run.sh script builds the Grackle server from source, starts it in the background, reads the generated API key, uses a Node.js script to connect via WebSocket with the API key, sends add_environment with malicious sshOptions.ProxyCommand, triggers provision_environment, waits for the SSH connection attempt (which executes the ProxyCommand), then checks for the proof file at /tmp/evohunt-proof.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The Grackle monorepo requires Rush (npm install -g @microsoft/rush), pnpm, Node.js 22, and protobuf code generation (npx buf generate) to build from source.",
+    "The full build takes several minutes and requires network access for dependency installation.",
+    "The PoC was not executed during this session; the vulnerability assessment is based on static analysis of the complete data flow from user-controlled input through the WebSocket/gRPC handler to the SSH adapter's buildSshFlags() function."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "ae969c86bf52919ff9274a0e32ea4f83be2257de",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

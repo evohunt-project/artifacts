@@ -1,0 +1,89 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T06:06:40.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f6a0a693",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-xgxp-f695-6vrp/GHSA-xgxp-f695-6vrp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "collab-privilege-escalation",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f6a0a693/collab-privilege-escalation",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f6a0a693/collab-privilege-escalation/vulnerability_report.json",
+      "title": "Collaborator privilege escalation via collab add allows ReadWriteAccess user to grant AdminAccess",
+      "vulnerability_type": "privilege_escalation",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets repo collaborator authorization for granting AdminAccess, not the advisory's repo import source-remote authorization flaw that clones server-local private repositories.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "ssrf-via-repo-import",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f6a0a693/ssrf-via-repo-import",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f6a0a693/ssrf-via-repo-import/vulnerability_report.json",
+      "title": "Server-Side Request Forgery via repo import remote URL bypassing SSRF protection",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding shares the repo import to git.Clone sink, but it identifies an internal-network URL SSRF and missing SSRF validation rather than the advisory's server-local filesystem path import and missing source-repository authorization/private-repo boundary.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code/root cause: authenticated repo import of a server-local bare repository path, with authorization checked only for the attacker-controlled destination repository and not for the private source repository.",
+    "evidence": [
+      "The advisory describes pkg/ssh/cmd/import.go passing REMOTE to pkg/backend/repo.go git.Clone after destination-only authorization, allowing a low-privilege SSH user to import $DATA_PATH/repos/secret.git and read another user's private repository.",
+      "The referenced fix c147421caf234bcfc1570c79d728ecbbe5813e55 adds validateImportRemote() and ErrInvalidRemote: 'remote must be a network URL', with a regression test rejecting repo import of $DATA_PATH/repos/secret.git.",
+      "collab-privilege-escalation concerns repo collab add and privilege escalation from ReadWriteAccess to AdminAccess, a different command and authorization boundary.",
+      "ssrf-via-repo-import concerns git:// or http:// internal network remotes and bypassing SSRF protection; its report and PoC do not identify server-local filesystem path cloning or unauthorized disclosure of another user's private Soft Serve repository."
+    ],
+    "blockers_to_higher_tier": [
+      "No advisory-matched qualifying finding was present, so Tier1/Tier2/Tier3 do not apply."
+    ]
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f6a0a693/collab-privilege-escalation",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f6a0a693/collab-privilege-escalation/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f6a0a693/collab-privilege-escalation/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f6a0a693/ssrf-via-repo-import",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f6a0a693/ssrf-via-repo-import/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_f6a0a693/ssrf-via-repo-import/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

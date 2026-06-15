@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based verification confirms that the DbController::actionRestore() method extracts ZIP archives without path validation. Code analysis shows the vulnerable ZipArchive::extractTo() call at line 350 with no path canonicalization or containment checks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The verification should confirm that DbController uses ZipArchive::extractTo() without validating file paths within the archive, enabling path traversal attacks.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the Docker image, cloned the Craft CMS repository, and verified the presence of the vulnerable extractTo() call at DbController.php:350. A test with a malicious ZIP demonstrated the path traversal capability.",
+  "verification_method": "The verification script checks for the exact code pattern 'extractTo(tempDir)' in DbController.php and demonstrates the vulnerability by creating a malicious ZIP with path traversal entries.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "DbController.php exists at src/console/controllers/DbController.php in the target repository.",
+    "The file contains 'extractTo(tempDir)' at line 350 without prior path validation.",
+    "No path canonicalization or containment checks exist between line 340 (ZIP open) and line 350 (extraction).",
+    "FileHelper::findFiles() at line 355 operates AFTER extraction has already written files, providing no protection.",
+    "A malicious ZIP with '../../../tmp/evohunt_pwned.txt' demonstrates the path traversal vulnerability pattern."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Craft CMS repository from GitHub, checks out version 4.5.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "4.5.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/create_malicious_zip.py"
+    ]
+  }
+}

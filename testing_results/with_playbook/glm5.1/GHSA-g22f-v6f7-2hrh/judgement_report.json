@@ -1,0 +1,105 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T04:17:39.300Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-g22f-v6f7-2hrh/GHSA-g22f-v6f7-2hrh.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "auth_bypass_rce_via_auto_login",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f/auth_bypass_rce_via_auto_login",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f/auth_bypass_rce_via_auto_login/vulnerability_report.json",
+      "title": "Authentication bypass via AUTO_LOGIN default enables arbitrary code execution through custom components",
+      "vulnerability_type": "authentication_bypass_rce",
+      "advisory_match": true,
+      "advisory_match_reason": "Identifies the same POST /api/v1/validate/code surface and validate_code() exec(code_obj, exec_globals) sink described by the advisory, though the finding frames reachability around AUTO_LOGIN defaults.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "webhook_auth_bypass_rce",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f/webhook_auth_bypass_rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f/webhook_auth_bypass_rce/vulnerability_report.json",
+      "title": "Webhook authentication disabled by default allows unauthenticated flow execution with code execution",
+      "vulnerability_type": "authentication_bypass_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause: the finding concerns unauthenticated webhook-triggered flow execution and a preexisting or separately created malicious flow, not the validate endpoint exec_globals handling flaw.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier2",
+    "target_match": "match",
+    "runtime_evidence": "bug_activation",
+    "selected_finding": {
+      "folder_name": "auth_bypass_rce_via_auto_login",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f/auth_bypass_rce_via_auto_login",
+      "status": "qualifying_vuln",
+      "title": "Authentication bypass via AUTO_LOGIN default enables arbitrary code execution through custom components",
+      "vulnerability_type": "authentication_bypass_rce"
+    },
+    "reason": "The selected qualifying finding matches the advisory-described validate_code() exec_globals root cause. Runtime evidence from the copied PoC run did not reach the live /api/v1/validate/code endpoint because Docker failed resolving the python:3.12-slim base image, but the fallback harness invoked the vulnerable AST FunctionDef compile/exec branch and showed attacker-controlled default-argument code executing through exec(code_obj, exec_globals).",
+    "evidence": [
+      "Advisory GHSA-g22f-v6f7-2hrh describes unauthenticated RCE in Langflow through the exec_globals parameter handling provided to the validate endpoint.",
+      "auth_bypass_rce_via_auto_login/vulnerability_report.json lists POST /api/v1/validate/code and src/lfx/src/lfx/custom/validate.py:62-66, describing validate_code() calling exec(code_obj, exec_globals) on user-provided code.",
+      ".judge/poc_runs/auth_bypass_rce_via_auto_login/run.log shows Docker failed before server startup while resolving docker.io/library/python:3.12-slim, then the copied harness invoked the validate_code-like FunctionDef compile/exec branch.",
+      ".judge/poc_runs/auth_bypass_rce_via_auto_login/run.log and harness_validate_poc_success.txt show command output written by attacker-controlled default-argument code executed during the exec(code_obj, exec_globals) path.",
+      ".judge/poc_runs/auth_bypass_rce_via_auto_login/advisory_runtime_result.json records mode=harness, exploit_success=false, and bug_activation=true."
+    ],
+    "blockers_to_higher_tier": [
+      "The live endpoint PoC did not run because Docker could not resolve the python:3.12-slim base image from Docker Hub, so no runtime artifact proves command execution through an actual POST /api/v1/validate/code request."
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "auth_bypass_rce_via_auto_login",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f/auth_bypass_rce_via_auto_login",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f/.judge/poc_runs/auth_bypass_rce_via_auto_login/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f/.judge/poc_runs/auth_bypass_rce_via_auto_login/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f/.judge/poc_runs/auth_bypass_rce_via_auto_login/poc_execution.json",
+      "observed_effect": "Docker endpoint execution failed before vulnerable logic due to Docker Hub base-image resolution failure; the copied validate_code harness then activated the advisory root cause and created harness_validate_poc_success.txt with command output from attacker-controlled default-argument code.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f/webhook_auth_bypass_rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f/webhook_auth_bypass_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5d23450f/webhook_auth_bypass_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

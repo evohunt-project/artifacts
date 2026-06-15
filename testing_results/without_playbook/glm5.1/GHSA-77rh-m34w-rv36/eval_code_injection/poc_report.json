@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that the vulnerable UserInputField.from_dict method executes arbitrary code when processing a malicious field_type string containing Python code.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the malicious field_type value to be evaluated by eval(), triggering arbitrary command execution that creates a proof file in the container.",
+  "actual_observed_result": "The reproduction successfully created a malicious payload with crafted field_type, triggered eval() via UserInputField.from_dict, and verified that the arbitrary code executed, creating the proof file with the expected content.",
+  "verification_method": "The reproduction checks for the existence and content of /tmp/eval_exploit_proof file. The proof string 'EVOHUNT_EVAL_RCE_SUCCESSFUL' confirms that arbitrary code executed during eval() call.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious payload created at /tmp/malicious_input.json",
+    "Code execution triggered during UserInputField.from_dict call",
+    "Proof file /tmp/eval_exploit_proof created with expected content",
+    "Container logs show successful exploit execution"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

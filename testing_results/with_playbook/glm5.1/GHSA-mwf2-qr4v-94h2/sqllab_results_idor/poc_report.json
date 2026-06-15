@@ -1,0 +1,32 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "idor",
+  "summary": "Docker-based PoC designed to create two users (admin and alpha), execute a SQL query as admin, then use the alpha user to access the admin's query results using the results_key. The exploit demonstrates that SqlExecutionResultsCommand never verifies query ownership.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The alpha user should successfully retrieve the admin's query results by providing the results_key, demonstrating that the endpoint does not verify the requesting user owns the query.",
+  "actual_observed_result": "PoC not executed in this session due to Docker image build constraints. The vulnerability is confirmed through static code analysis showing the missing ownership check in SqlExecutionResultsCommand.validate().",
+  "verification_method": "The exploit creates a proof file at /tmp/idor_proof/idor_verified.txt when the alpha user successfully retrieves the admin's query data. The verify.sh script checks for the proof file and also verifies the missing user_id check in the target repo source code.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static code analysis confirms db.session.query(Query).filter_by(results_key=self._key).one_or_none() at results.py:65-67 with no user_id filter",
+    "Static code analysis confirms validate() at results.py:52-121 has zero ownership verification",
+    "Contrast with export.py:72-82 which correctly calls self._query.raise_for_access()"
+  ],
+  "limitations_or_blockers": [
+    "Docker image build requires installing apache-superset package which needs internet access",
+    "Results backend (Redis) may be needed for the full SQL Lab results flow"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_idor.py",
+      "reproduction/setup_superset.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

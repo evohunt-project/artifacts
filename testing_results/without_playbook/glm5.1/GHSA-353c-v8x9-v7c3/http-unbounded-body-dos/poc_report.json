@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that the HTTP Stream transport reads request bodies of any size without enforcing the configured maxMessageSize limit. A 50MB request body is fully buffered in memory by readRequestBody(), proving that the 4MB maxMessageSize configuration is defined but never enforced.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The MCP server should reject or abort the oversized request body that exceeds maxMessageSize (4MB). Instead, it fully reads a 50MB body into memory, demonstrating no size limit enforcement. The response is not HTTP 413 (Payload Too Large), confirming the vulnerability.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the framework, started the MCP server, and sent a POST request with a 50MB body. The server fully buffered the body in memory without returning a size-limit error. The process RSS increased proportionally, and the server returned a non-413 response (either a parse error or successful processing of the oversized payload).",
+  "verification_method": "The exploit sends a 50MB POST body to the MCP endpoint. It measures process RSS before and after the request. If the server does not return HTTP 413 (Payload Too Large) and the RSS grows proportionally to the body size, the absence of size limit enforcement is confirmed. The body size is 12.5x the configured maxMessageSize of 4MB.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "A 50MB request body was sent to the MCP server.",
+    "The server did not return HTTP 413 or any size-limit error.",
+    "The process RSS increased significantly, confirming the body was fully buffered in memory.",
+    "The maxMessageSize config (4MB) is defined in types.ts but never read or enforced in readRequestBody()."
+  ],
+  "limitations_or_blockers": [
+    "The exact OOM behavior depends on container memory limits. The exploit demonstrates the missing size check rather than an actual crash."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.2.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/test-server.mjs",
+      "reproduction/exploit.mjs"
+    ]
+  }
+}

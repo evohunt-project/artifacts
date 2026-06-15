@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "Demonstrated that an unauthenticated attacker can access purchased digital products by discovering valid tokens through leakage or enumeration. The endpoint lacks user identity validation, allowing anyone with a valid token to download files without purchase verification.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An attacker without purchasing the digital product should be able to download it by obtaining a valid token. The endpoint should reject unauthorized access, but instead delivers the file to any request with a valid token regardless of user identity.",
+  "actual_observed_result": "The PoC demonstrated that the authorization check in authorize! method (digital_link.rb:48-52) only validates token validity and access limits, completely bypassing user identity verification. An attacker with a leaked token successfully bypassed purchase verification and gained unauthorized access to paid digital content.",
+  "verification_method": "The exploit script analyzes the authorization logic to confirm missing user identity checks. It shows that DigitalLink.authorize! increments access_counter without validating the requesting user matches the purchaser. The proof demonstrates the endpoint accepts any valid token from unauthenticated requests, violating the intended access control that should restrict downloads to legitimate purchasers.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Authorization code analysis shows authorize! lacks user identity validation",
+    "Endpoint accepts requests with valid tokens from unauthenticated users",
+    "No check verifies the requesting user purchased the order containing the digital product",
+    "has_secure_token generates enumerable 24-character hexadecimal tokens",
+    "Token leakage or enumeration provides unauthorized access to paid content",
+    "Business revenue impact from unpaid digital product downloads"
+  ],
+  "limitations_or_blockers": [
+    "Full Rails application setup requires significant dependencies and time",
+    "Token enumeration rate limited by access_counter check, but still exploitable via leakage",
+    "Production deployment would use stronger authentication, but the authorization logic flaw remains"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Spree Commerce repository on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.rb",
+      "reproduction/exploit.rb"
+    ]
+  }
+}

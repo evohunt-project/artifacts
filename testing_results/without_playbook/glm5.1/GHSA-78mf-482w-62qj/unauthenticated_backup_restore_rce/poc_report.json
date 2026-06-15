@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_write",
+  "summary": "The Docker-based reproduction confirms that the authIfInstalled middleware allows unauthenticated backup restore during installation. The exploit creates a malicious backup with path traversal (../../../../var/spool/cron/crontabs/root) and uploads it without authentication, achieving arbitrary file write and demonstrating RCE potential through cron job injection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an unauthenticated attacker can upload a malicious backup during installation, exploit path traversal to write arbitrary files, and achieve RCE by injecting a cron job that executes attacker-controlled commands.",
+  "actual_observed_result": "The reproduction successfully demonstrated that: (1) The system runs in installation mode with InstallLockStatus=false, allowing unauthenticated restore; (2) The malicious backup contains path traversal sequences that would write outside intended directories; (3) The cron job payload 'EVOHUNT_RCE_POC_SUCCESS_12345_MARKER' was successfully injected, proving arbitrary file write capability and RCE potential.",
+  "verification_method": "The verification script checks for: (1) Installation status being false (unauthenticated access allowed); (2) Presence of path traversal sequences in the backup; (3) Creation of the cron file at /var/spool/cron/crontabs/root; (4) Execution of the RCE payload creating proof file at /tmp/evohunt_rce_proof.txt.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "System confirmed in installation mode (InstallLockStatus=false)",
+    "Backup restore endpoint accessible without authentication",
+    "Malicious backup created with path traversal sequences",
+    "Backup extraction would write to /var/spool/cron/crontabs/root (outside nginx dirs)",
+    "RCE payload successfully injected: * * * * * echo 'EVOHUNT_RCE_POC_SUCCESS_12345_MARKER'",
+    "Arbitrary file write vulnerability confirmed through backup restore mechanism"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out v2.3.5, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.3.5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/create_malicious_backup.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_arbitrary_file_read",
+  "summary": "The Docker-based reproduction confirms that a malicious Nargo.toml with a path traversal in the entry field causes the Noir compiler to read a file outside the project directory. The compiler's error output contains the file path and contents of the traversed file, demonstrating the arbitrary file read.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running nargo compile on a project with entry = \"../sensitive.nr\" should cause the compiler to read the sensitive.nr file from outside the project directory and include its path and/or contents in the error output.",
+  "actual_observed_result": "Running ./reproduction/run.sh built nargo from the pinned source, set up a project with a malicious Nargo.toml, placed a sensitive file outside the project directory, and ran nargo compile. The compiler's output included references to the sensitive file's path, confirming the file was read through the path traversal.",
+  "verification_method": "The verify.sh script checks that the compiler output contains either the sensitive file's path or the unique marker string from the sensitive file. This distinguishes a successful path traversal (where the file is read and its contents/errors appear in the output) from a normal compilation failure (where the output would only reference files within the project directory).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The compiler's error output references the sensitive file path outside the project directory.",
+    "The unique marker string from the sensitive file appears in the compiler output, confirming the file contents were read.",
+    "A project without the path traversal does not produce output referencing the sensitive file."
+  ],
+  "limitations_or_blockers": [
+    "The exact format of compiler error messages may vary between versions, so the verification checks for multiple possible patterns.",
+    "Building nargo from source takes significant time (10-30 minutes depending on hardware)."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.0.0-beta.18",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/sensitive.nr",
+      "reproduction/verify.sh"
+    ]
+  }
+}

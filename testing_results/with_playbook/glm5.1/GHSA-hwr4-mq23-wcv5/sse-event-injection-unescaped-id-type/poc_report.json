@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "injection",
+  "summary": "The Docker-based reproduction confirms that the Mercure hub's Event.String() method does not escape newlines in the 'id' field, allowing an authenticated publisher to inject forged SSE events into subscriber streams. The exploit publishes an update with a crafted id parameter containing newlines and verifies that the subscriber receives the injected event data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the subscriber to receive a forged SSE event containing the proof string 'EVOHUNT_SSE_INJECTION_PROOF_VIA_UNESCAPED_ID' and an attacker-controlled event type 'forged', injected through the unescaped 'id' POST parameter.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository, built the Mercure library, compiled and executed the exploit program. The exploit created a hub, connected a subscriber, published with a crafted id containing newlines, and the subscriber received the injected SSE event with event type 'forged' and data containing the proof string.",
+  "verification_method": "The exploit program checks the subscriber's SSE stream for the exact proof string 'EVOHUNT_SSE_INJECTION_PROOF_VIA_UNESCAPED_ID' and the forged event type 'event: forged'. The check distinguishes injected events from the legitimate publish response and from SSE comment/heartbeat lines.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The subscriber's SSE stream output contains 'event: forged' followed by 'data: EVOHUNT_SSE_INJECTION_PROOF_VIA_UNESCAPED_ID', confirming that the newline injection in the 'id' field created a separate forged SSE event.",
+    "The exploit program exited with code 0 (success), indicating the proof string was found in the subscriber output.",
+    "The real data ('real-publisher-data') was also present in a separate event with a different id, confirming the original event was split into multiple events by the injected newlines."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

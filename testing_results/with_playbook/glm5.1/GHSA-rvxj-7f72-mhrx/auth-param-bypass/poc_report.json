@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "credential_disclosure",
+  "summary": "The Docker-based reproduction confirms that credentials passed via the auth URL parameter are exposed in server access logs, demonstrating the credential disclosure vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that base64-encoded credentials in the auth URL parameter are logged in the web server access log, proving credential exposure.",
+  "actual_observed_result": "Executing ./reproduction/run.sh built the EGroupware container, sent a request with auth parameter containing base64-encoded credentials, and verified that the full URL including credentials appears in the Apache access log.",
+  "verification_method": "The PoC script generates a test request with auth parameter, then checks the Apache access log for the presence of the encoded credentials. Verification distinguishes log exposure from normal request logging.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Apache access log contains the full URL with auth parameter",
+    "Base64-decoded credentials visible in log analysis",
+    "Request logged with query string including encoded username:password",
+    "Proof file created at /tmp/auth_bypass_proof.txt with log excerpt"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the EGroupware repository, checks out the vulnerable commit, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "23.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_auth_param.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

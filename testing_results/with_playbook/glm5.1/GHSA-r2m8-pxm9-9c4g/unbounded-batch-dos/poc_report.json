@@ -1,0 +1,32 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction bundle was constructed but could not be executed in the audit environment due to Docker base image download timeout. The vulnerability is confirmed via static code analysis of src/batch.js:67,136,157.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the batch endpoint to accept and process an arbitrarily large number of sub-requests, demonstrating that there is no server-side limit on batch size.",
+  "actual_observed_result": "The Docker build stage timed out while downloading the node:22-bookworm base image. The vulnerability was confirmed via code review: batch.js:67 only checks that req.body.requests is an array (not its length), and batch.js:136-157 maps all entries into promises fired concurrently via Promise.all with no cap.",
+  "verification_method": "The exploit script (exploit.js) sends a batch of 5000 sub-requests to POST /batch and verifies that (1) the batch is accepted without a size-limit error, (2) all sub-requests are processed, confirming no cap on req.body.requests.length. The proof string EVOHUNT_BATCH_DOS_PROOF is emitted on success.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static analysis confirms src/batch.js:67 only checks Array.isArray(req.body.requests), not its length.",
+    "Static analysis confirms src/batch.js:136 maps all entries into promises: req.body.requests.map(restRequest => ...).",
+    "Static analysis confirms src/batch.js:157 fires all promises concurrently: Promise.all(promises).",
+    "No server-side configuration or constant exists to cap the batch array size.",
+    "The default rateLimit configuration (Definitions.js:521) is an empty array, providing no protection."
+  ],
+  "limitations_or_blockers": [
+    "The Docker base image download timed out in the audit environment, preventing actual runtime execution of the PoC."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.31",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

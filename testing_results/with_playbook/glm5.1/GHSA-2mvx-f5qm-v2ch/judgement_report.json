@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T06:08:33.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_32bf8eb6",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-2mvx-f5qm-v2ch/GHSA-2mvx-f5qm-v2ch.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "php_object_injection_unserialize",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_32bf8eb6/php_object_injection_unserialize",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_32bf8eb6/php_object_injection_unserialize/vulnerability_report.json",
+      "title": "PHP Object Injection via unsafe unserialize() on ghost event_access_hidden POST parameter",
+      "vulnerability_type": "php_object_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns authenticated event-editor POST handling of event_access_hidden reaching unserialize() in my-calendar-event-editor.php. The advisory concerns the unauthenticated mcjs_action AJAX loadupcoming path where args is parsed and a site value is passed to switch_to_blog(), causing multisite IDOR information disclosure or single-site DoS. The vulnerable entrypoint, function, sink, authorization model, and root-cause mechanism are different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or equivalent root cause. The only qualifying finding is PHP object injection via unsafe unserialize() of event_access_hidden in the authenticated event editor, while the advisory is an unauthenticated IDOR/DoS through mc_ajax_mcjs_action, parse_str() of args, and unchecked switch_to_blog() on the site argument.",
+    "evidence": [
+      "Advisory GHSA-2mvx-f5qm-v2ch describes add_action('wp_ajax_nopriv_mcjs_action', 'mc_ajax_mcjs_action'), behavior=loadupcoming, parse_str() over the args request parameter, and my_calendar_upcoming_events() calling switch_to_blog($args['site']) without authorization.",
+      "Finding php_object_injection_unserialize reports POST /wp-admin/admin.php?page=my-calendar, mc_admin_save() -> mc_insert_event() -> mc_check_data(), and unserialize($post['event_access_hidden']) in my-calendar-event-editor.php.",
+      "The finding requires an authenticated user with mc_add_events capability and targets PHP object injection; the advisory requires no authentication and targets cross-site event disclosure through multisite blog switching or single-site PHP worker failure."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_32bf8eb6/php_object_injection_unserialize",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_32bf8eb6/php_object_injection_unserialize/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_32bf8eb6/php_object_injection_unserialize/poc_report.json",
+      "poc_report_status": "not_attempted"
+    }
+  ]
+}

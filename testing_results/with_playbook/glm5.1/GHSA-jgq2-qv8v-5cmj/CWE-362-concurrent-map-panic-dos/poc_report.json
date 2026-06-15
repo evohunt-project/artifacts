@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "race_condition_dos",
+  "summary": "The Docker-based reproduction confirms that concurrent POST requests to the policy-data subscription endpoint trigger a Go runtime fatal panic (concurrent map writes) that crashes the UDR process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending concurrent POST requests to /nudr-dr/v2/policy-data/subs-to-notify should trigger a Go runtime panic due to concurrent map writes in PolicyDataSubscriptions, causing the UDR process to terminate.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the UDR, started the server, and sent 50 concurrent POST requests to the subscription endpoint. The UDR process terminated with a fatal panic (concurrent map writes) as expected.",
+  "verification_method": "The verify script starts the UDR, records its PID, sends concurrent subscription creation requests, then checks whether the process is still alive. A dead process after concurrent requests confirms the panic-induced crash. The exploit also attempts a follow-up HTTP request to confirm the server is no longer responding.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The UDR process PID was recorded before the exploit and confirmed dead after concurrent requests.",
+    "A follow-up HTTP request to the server returned connection refused, confirming the server crashed.",
+    "The concurrent requests were sent without authentication (confirming the auth bypass co-factor)."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/udrcfg.yaml"
+    ]
+  }
+}

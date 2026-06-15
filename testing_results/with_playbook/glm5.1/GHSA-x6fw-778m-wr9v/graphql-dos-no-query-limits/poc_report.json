@@ -1,0 +1,31 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The reproduction bundle was generated to demonstrate that the parse-server GraphQL API has no query depth, complexity, or field duplication limits, allowing unauthenticated attackers to cause exponential resource consumption through crafted GraphQL queries with Relation field nesting and alias duplication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate significant query amplification: a single GraphQL request with depth=3 and 50 aliases should take orders of magnitude longer than a simple baseline query, confirming uncontrolled resource consumption.",
+  "actual_observed_result": "The reproduction was not executed due to Docker infrastructure constraints in the audit environment (slow image pulls on ARM64). The vulnerability is confirmed through static code analysis showing Apollo Server has zero query depth, complexity, or field duplication limits configured.",
+  "verification_method": "The exploit sends a baseline simple GraphQL query and an amplified query with depth=3 and 50 aliases. The response times are compared. If the amplified query takes 5x or more longer than baseline, or exceeds 5 seconds, the vulnerability is confirmed.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static code analysis confirms ParseGraphQLServer.js:149-160 instantiates ApolloServer with no validationRules, depthLimit, or complexity analysis.",
+    "parseClassTypes.js:367-429 auto-generates recursive Relation field types enabling unlimited query depth.",
+    "parseClassTypes.js:378-424 shows each Relation resolver triggers a full rest.find() database query.",
+    "No matches for validationRules, maxDepth, depthLimit, queryComplexity, or fieldDuplication anywhere in the GraphQL codebase."
+  ],
+  "limitations_or_blockers": [
+    "Docker image pull timeouts on ARM64 prevented running the full reproduction in the audit environment."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "9.5.0-alpha.10",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

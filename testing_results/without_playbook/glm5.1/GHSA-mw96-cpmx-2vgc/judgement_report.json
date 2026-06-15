@@ -1,0 +1,103 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T08:11:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-02/GHSA-mw96-cpmx-2vgc/GHSA-mw96-cpmx-2vgc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "path-traversal-emitfile",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/path-traversal-emitfile",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/path-traversal-emitfile/vulnerability_report.json",
+      "title": "Path traversal via emitFile allows writing files outside the output directory",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": true,
+      "advisory_match_reason": "Finding identifies the same vulnerable code as the advisory: Rollup's isPathFragment() in src/utils/relativeId.ts performs prefix-only validation allowing embedded ../ sequences, and writeOutputFile() in src/rollup/rollup.ts resolves paths without boundary checking. The finding demonstrates the exact same path traversal mechanism (CWE-22) described in the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "H",
+          "SA": "L"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:H/VA:N/SC:N/SI:H/SA:L"
+      }
+    },
+    {
+      "finding_folder_name": "example",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/example",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/example/vulnerability_report.json",
+      "title": "Unsafe deserialization in import endpoint permits attacker-controlled code execution",
+      "vulnerability_type": "deserialization_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "Finding targets a different repository (example/vulnerable-repo.git) with a different vulnerability class (deserialization RCE). The advisory describes path traversal in Rollup via emitFile fileName sanitization bypass. This finding is unrelated to the advisory-described vulnerability.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "path-traversal-emitfile",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/path-traversal-emitfile",
+      "status": "qualifying_vuln",
+      "title": "Path traversal via emitFile allows writing files outside the output directory",
+      "vulnerability_type": "path_traversal"
+    },
+    "reason": "The path-traversal-emitfile finding matches the advisory root cause: Rollup's isPathFragment() function in src/utils/relativeId.ts only checks the first 1-2 characters of fileName, allowing embedded ../ sequences to bypass validation. The PoC successfully demonstrated arbitrary file write outside the designated output directory by calling emitFile with fileName 'subdir/../../evohunt-traversal-proof.txt', which wrote to the project root instead of dist/. This is the exact path traversal mechanism (CWE-22) described in the advisory GHSA-mw96-cpmx-2vgc.",
+    "evidence": [
+      "Advisory states vulnerable code is in src/utils/sanitizeFileName.ts (INVALID_CHAR_REGEX) and src/rollup/rollup.ts (path.resolve without boundary check). Finding identifies same vulnerable logic in src/utils/relativeId.ts:14 (isPathFragment prefix-only check) and src/rollup/rollup.ts:317 (resolve without boundary validation).",
+      "PoC executed with rollup@4.58.0 (vulnerable version matching advisory affected range) successfully wrote file evohunt-traversal-proof.txt to project root instead of dist/ output directory.",
+      "Proof file contents confirm path traversal: 'This file was written outside the output directory via isPathFragment bypass in Rollup emitFile.'",
+      "Verification shows dist/ contains only input.js, while evohunt-traversal-proof.txt exists one level above in project root.",
+      "Both advisory and finding describe same attack vector: malicious plugin calling emitFile with fileName containing ../ to write outside output directory."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "path-traversal-emitfile",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/path-traversal-emitfile",
+      "executed": true,
+      "command": "./node_modules/.bin/rollup -c",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/.judge/poc_runs/path-traversal-emitfile/workspace/test-project",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/.judge/poc_runs/path-traversal-emitfile/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/.judge/poc_runs/path-traversal-emitfile/poc_execution.json",
+      "observed_effect": "Rollup build completed successfully. Proof file evohunt-traversal-proof.txt was written to /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/.judge/poc_runs/path-traversal-emitfile/workspace/test-project/ (project root) instead of the expected dist/ output directory. The dist/ directory only contains input.js, confirming the file was written outside the designated output boundary via path traversal through the fileName 'subdir/../../evohunt-traversal-proof.txt'.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/example",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/example/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2f67491a/example/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

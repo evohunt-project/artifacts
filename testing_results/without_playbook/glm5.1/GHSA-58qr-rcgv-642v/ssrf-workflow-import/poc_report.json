@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the workflow import endpoint at GET /workflows/from-url allows SSRF by making server-side requests to arbitrary URLs without validation. The PoC demonstrates accessing a simulated internal metadata endpoint that should not be accessible from external requests.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should start a simulated internal metadata server, trigger the SSRF vulnerability via the workflow import endpoint, and successfully retrieve data from the internal-only endpoint, demonstrating unauthorized access to internal services.",
+  "actual_observed_result": "The reproduction successfully built the n8n environment, started a fake internal metadata server on port 9999, authenticated to n8n, and used the /workflows/from-url endpoint to fetch data from the internal URL. The server successfully retrieved the fake metadata, confirming SSRF vulnerability.",
+  "verification_method": "The run script starts a fake internal metadata server on port 9999, then checks if the SSRF exploit successfully accessed this internal-only endpoint and created a proof file. This distinguishes actual SSRF from connection errors or unrelated failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The internal metadata server received a request from the n8n backend",
+    "The workflow import endpoint successfully fetched data from http://localhost:9999/metadata",
+    "No SSRF protection (IP validation, allowlist, DNS rebinding check) prevented the request",
+    "The fake metadata containing sensitive-looking credentials was retrieved successfully"
+  ],
+  "limitations_or_blockers": [
+    "The PoC uses a local endpoint (localhost:9999) instead of cloud metadata endpoints for safety",
+    "In a real environment, this would work with actual internal services or cloud metadata APIs"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the session directory and mounts that copy into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n-2.14.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh",
+      "reproduction/internal-server.js"
+    ]
+  }
+}

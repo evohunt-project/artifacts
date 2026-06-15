@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction demonstrates OS command injection through the unsanitized file path in XML::decodeP7M(). A file with shell metacharacters in its name (double-quote pipe sequences) is created on disk, and the equivalent of the vulnerable exec() call is executed to show that the shell interprets the metacharacters as command separators, creating a proof file as evidence of arbitrary command execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that a filename containing shell metacharacters (e.g., test\"||touch /tmp/proof||\".xml.p7m) causes the PHP exec() call in XML::decodeP7M() to execute the injected touch command, creating /tmp/evohunt_cmd_injection_proof as observable evidence.",
+  "actual_observed_result": "The reproduction creates a file with a crafted filename containing shell metacharacters and simulates the exact exec() call from XML::decodeP7M(). The injected touch command executes successfully, creating the proof file. The vulnerability is confirmed through both direct shell execution and PHP-level exec() simulation.",
+  "verification_method": "The exploit creates a proof file (/tmp/evohunt_cmd_injection_proof) via an injected touch command embedded in the filename. The verification script checks for the existence of this proof file after the exec() call. This distinguishes actual command injection from a generic parsing error or file-not-found condition.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/evohunt_cmd_injection_proof is created by the injected touch command embedded in the filename.",
+    "The shell interprets the double-quote pipe metacharacters in the filename as command separators, confirming the injection.",
+    "The PHP exec() simulation produces the same result, confirming the vulnerability is exploitable through the application code path.",
+    "Alternative injection vectors (backticks, $()) also work, demonstrating multiple exploitation paths."
+  ],
+  "limitations_or_blockers": [
+    "The full end-to-end exploit through the importFE plugin upload endpoint requires a complete OpenSTAManager installation with database setup, which adds complexity to the Docker reproduction.",
+    "The proof-of-concept demonstrates the command injection at the exec() level directly, which is the exact vulnerable code path in XML::decodeP7M().",
+    "In the full application flow, the attacker would upload the file through the importFE plugin's save operation, which stores $_FILES['blob']['name'] verbatim."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag v2.9.8, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.9.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit_cmd_inj.sh",
+      "reproduction/verify.sh",
+      "reproduction/php.ini"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "bola_cwe_639",
+  "summary": "The Docker-based reproduction confirms that an authenticated user with BASIC role can download another user's encrypted budget file by supplying the victim's file ID, proving that the sync file download endpoint has no ownership authorization check.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An authenticated BASIC-role user (attacker) sends GET /sync/download-user-file with the victim owner's file ID. The server returns the victim's file content without checking ownership, demonstrating complete user isolation failure.",
+  "actual_observed_result": "The reproduction pipeline bootstraps the server, creates an owner user and a BASIC-role attacker user, uploads a file containing EVOHUNT_BOLA_PROOF_SECRET_DATA as the owner, and then downloads the same file using the attacker's session token. The downloaded content exactly matches the owner's uploaded secret data, confirming the BOLA vulnerability.",
+  "verification_method": "The verify script compares the content downloaded via the attacker's session against the known secret payload uploaded by the owner. A match proves the attacker accessed the victim's file. The script also confirms that the attacker's user ID differs from the file owner's user ID by querying the SQLite database directly.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The attacker's download response body matches EVOHUNT_BOLA_PROOF_SECRET_DATA.",
+    "The attacker's user ID (from users table) does not match the file's owner ID (from files table).",
+    "No user_access row exists granting the attacker access to the file."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

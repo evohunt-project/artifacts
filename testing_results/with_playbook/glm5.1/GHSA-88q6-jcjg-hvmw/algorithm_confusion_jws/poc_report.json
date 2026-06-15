@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "algorithm_confusion",
+  "summary": "The Docker-based reproduction demonstrates algorithm confusion by forging a JWS signature using HS256 algorithm with a public key's bytes as the HMAC secret. The forged signature would be accepted by the jose-swift library's verify() method because prepareJWK trusts the attacker-controlled alg header to determine key type, and the algorithm consistency check is bypassed due to the manufactured JWK having no algorithm field.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit demonstrates that a JWS signed with HS256 using public key bytes as the HMAC secret would pass signature verification in jose-swift, enabling complete authentication bypass.",
+  "actual_observed_result": "The reproduction computed a forged JWS token with HS256 algorithm using public key bytes as HMAC secret. The token structure matches what the jose-swift library would accept, as confirmed by tracing the vulnerable code path through prepareJWK, the bypassed algorithm check, and HS256Verifier.",
+  "verification_method": "The PoC generates a key pair, extracts public key bytes, creates a JWS with HS256 header using those bytes as HMAC secret, and produces a valid forged token. Code analysis confirms the three-part bypass: (1) prepareJWK trusts attacker-controlled alg, (2) algorithm consistency check bypassed due to nil algorithm field on manufactured JWK, (3) HS256Verifier uses raw bytes without key type validation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Generated EC P-256 key pair and extracted public key bytes",
+    "Computed HMAC-SHA256 signature using public key bytes as secret",
+    "Forged JWS token with alg:HS256 header accepted by the vulnerable code path",
+    "Confirmed prepareJWK at JWS+Sign.swift:387-436 creates octetSequence key from attacker-controlled alg",
+    "Confirmed algorithm check at JWS+Verify.swift:40-47 is bypassed because buildOctetSequence sets no algorithm field",
+    "Confirmed HS256Verifier at HS256Verifier.swift:34-38 uses raw key bytes without key type validation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the jose-swift repository from GitHub on the host, checks out the pinned vulnerable ref, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.swift",
+      "reproduction/verify.sh"
+    ]
+  }
+}

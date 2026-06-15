@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that the default allowPublicExplain=true configuration allows unauthenticated users to obtain raw MongoDB explain output. A query with explain=true to the Parse REST API returns complete MongoDB query planner information including server details, index definitions, and execution statistics.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A GET request to /parse/classes/<className>?explain=true with only the application ID header should return raw MongoDB explain output containing queryPlanner, serverInfo, and executionStats sections.",
+  "actual_observed_result": "The explain query returned a response containing MongoDB explain output with queryPlanner (including namespace, indexFilterSet, and parsedQuery details) and serverInfo (including host, port, and version information). No master key or session token was used.",
+  "verification_method": "The verification script creates a Parse class, inserts test data, then sends an explain query using only the application ID. It checks the response for MongoDB explain markers such as 'queryPlanner' and 'serverInfo' to confirm raw database internals are returned. This distinguishes real explain output from a normal query response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The query response contains 'queryPlanner' indicating raw MongoDB explain output was returned.",
+    "The response includes 'serverInfo' with MongoDB host and version details.",
+    "No master key or session token was provided, confirming unauthenticated access."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.54",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/start_server.js"
+    ]
+  }
+}

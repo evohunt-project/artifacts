@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T09:49:20.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8fe894f5",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-vc68-257w-m432/GHSA-vc68-257w-m432.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "htj2k_integer_overflow",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8fe894f5/htj2k_integer_overflow",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8fe894f5/htj2k_integer_overflow/vulnerability_report.json",
+      "title": "Integer overflow in HT/J2K decompression offset and stride calculations leads to heap buffer overflow",
+      "vulnerability_type": "integer_overflow_heap_overflow",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes an integer overflow vulnerability in HT/J2K decompression (internal_ht.cpp), while the advisory describes a heap information disclosure vulnerability in PXR24 decompression (internal_pxr24.c). These are different compression formats, different vulnerable functions, different root causes (integer overflow vs unchecked decompressed size), and different code locations.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code/root cause. The advisory describes a heap information disclosure vulnerability in PXR24 decompression (internal_pxr24.c:undo_pxr24_impl) where the decompressed size returned by exr_uncompress_buffer() is ignored and the scratch buffer is read based on header-derived expected size. The htj2k_integer_overflow finding describes a different vulnerability (integer overflow in HT/J2K decompression in internal_ht.cpp). The finding does not reference the PXR24 compression path, the undo_pxr24_impl function, the missing decompressed size check, or the LIBDEFLATE_SHORT_OUTPUT handling issue.",
+    "evidence": [
+      "Advisory CVE-2026-34543 describes vulnerability in internal_pxr24.c:undo_pxr24_impl function (lines 279-287) where outSize return value is ignored",
+      "Advisory root cause: PXR24 decompression reads uninitialized heap memory when exr_uncompress_buffer returns LIBDEFLATE_SHORT_OUTPUT",
+      "Advisory also identifies flaw in compression.c:202-205 where LIBDEFLATE_SHORT_OUTPUT is treated as success",
+      "htj2k_integer_overflow finding describes vulnerability in internal_ht.cpp (lines 186-189, 211, 215-216, 279-280) - different file, different compression format, different root cause (integer overflow vs unchecked size)"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8fe894f5/htj2k_integer_overflow",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8fe894f5/htj2k_integer_overflow/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8fe894f5/htj2k_integer_overflow/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

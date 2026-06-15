@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "dos_unbounded_multipart",
+  "summary": "A Docker-based reproduction was prepared to demonstrate that an unauthenticated multipart/form-data request with many file parts to a webhook endpoint consumes unbounded memory. The PoC was not executed in this session due to the build-time requirements of the n8n monorepo, but the reproduction bundle is self-contained and ready for execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a multipart request with hundreds of 1 MB file parts to an unauthenticated webhook endpoint should cause significant memory consumption growth in the n8n server process, demonstrating unbounded resource allocation without per-request limits.",
+  "actual_observed_result": "PoC was not executed in this session. The reproduction bundle was prepared and includes all necessary scripts for independent execution.",
+  "verification_method": "The verify.sh script measures RSS memory of the n8n process before and after sending the multipart payload. It confirms the DoS by checking that memory grew by more than 50 MB, indicating unbounded buffering of multipart data into memory.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Building n8n from source requires installing the full monorepo dependencies (~1 GB node_modules) and running the turbo build pipeline, which exceeds practical execution time limits for this session."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2.14.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/setup-webhook.sh"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction demonstrates that modifying the path.imagemagick configuration to a malicious value enables arbitrary command execution. The PoC sets the path to /bin/sh;-c;echo EVOHUNT_POC_SUCCESS and verifies the injected command executes successfully.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should inject a malicious command via the ImageMagick path configuration and execute it, producing the proof string EVOHUNT_POC_SUCCESS in /tmp/pwned.txt, demonstrating arbitrary command execution with application privileges.",
+  "actual_observed_result": "The PoC successfully demonstrated command injection. The malicious path /bin/sh;-c;echo EVOHUNT_POC_SUCCESS was processed by ProcessBuilder, which executed the shell command and created /tmp/pwned.txt containing the proof string EVOHUNT_POC_SUCCESS.",
+  "verification_method": "The verify.sh script checks for the existence of /tmp/pwned.txt and validates it contains the exact proof string EVOHUNT_POC_SUCCESS. This distinguishes successful command injection from build failures or unrelated errors. The proof string is unique to this PoC and cannot appear through normal application operation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof file /tmp/pwned.txt was successfully created by the injected command",
+    "The file contains the exact proof string EVOHUNT_POC_SUCCESS",
+    "The command executed with the privileges of the Docker container, simulating application-level access",
+    "No legitimate ImageMagick conversion was required - the injection occurred before any actual conversion",
+    "The exploit demonstrates that any file conversion trigger (image upload, profile picture, PDF, recording) would execute the injected command"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository to a temporary checkout and mounts it read-only at /target-repo in the container.",
+    "pinned_commit_or_ref": "HEAD (current repository state)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/test_image.png",
+      "reproduction/settings.xml"
+    ]
+  }
+}

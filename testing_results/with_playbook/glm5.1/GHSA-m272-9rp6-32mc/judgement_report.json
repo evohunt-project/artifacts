@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T05:31:01.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_61a15eaf",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-m272-9rp6-32mc/GHSA-m272-9rp6-32mc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "prototype-pollution-rpc-deserializer",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_61a15eaf/prototype-pollution-rpc-deserializer",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_61a15eaf/prototype-pollution-rpc-deserializer/vulnerability_report.json",
+      "title": "Prototype pollution via attacker-controlled meta path in RPC JSON deserializer",
+      "vulnerability_type": "prototype_pollution",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same @orpc/client StandardRPCJsonSerializer.deserialize() root cause as GHSA-m272-9rp6-32mc: attacker-controlled RPC JSON meta/maps path segments are traversed without filtering dangerous keys such as __proto__ or constructor, allowing writes onto Object.prototype before validation.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "prototype-pollution-rpc-deserializer",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_61a15eaf/prototype-pollution-rpc-deserializer",
+      "status": "qualifying_vuln",
+      "title": "Prototype pollution via attacker-controlled meta path in RPC JSON deserializer",
+      "vulnerability_type": "prototype_pollution"
+    },
+    "reason": "The selected finding matches the advisory root cause and the copied PoC demonstrated end-to-end prototype pollution in a vulnerable @orpc/server/@orpc/client 1.13.5 runtime by changing Object.prototype.hasOwnProperty(\"polluted\") from false to true after processing a crafted RPC meta path containing __proto__.",
+    "evidence": [
+      "Advisory GHSA-m272-9rp6-32mc identifies StandardRPCJsonSerializer.deserialize() in @orpc/client as failing to sanitize attacker-controlled meta/maps path segments before traversing and assigning into object paths.",
+      "The finding report names the same vulnerable deserializer and source-to-sink path through the RPC codec before validation or authorization.",
+      "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_61a15eaf/.judge/poc_runs/prototype-pollution-rpc-deserializer/run.log shows the copied PoC checked out middleapi/orpc v1.13.5 and executed the exploit harness.",
+      "The run log shows Object.prototype.hasOwnProperty(\"polluted\") was false before the crafted request and true after it, followed by PROTOTYPE_POLLUTION_CONFIRMED and [EVOHUNT_PP_CONFIRMED]."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "prototype-pollution-rpc-deserializer",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_61a15eaf/prototype-pollution-rpc-deserializer",
+      "executed": true,
+      "command": "./reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_61a15eaf/.judge/poc_runs/prototype-pollution-rpc-deserializer",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_61a15eaf/.judge/poc_runs/prototype-pollution-rpc-deserializer/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_61a15eaf/.judge/poc_runs/prototype-pollution-rpc-deserializer/poc_execution.json",
+      "observed_effect": "The copied PoC processed a crafted RPC meta payload with __proto__ and printed that Object.prototype.hasOwnProperty(\"polluted\") changed from false before the exploit to true after the exploit, followed by [EVOHUNT_PP_CONFIRMED].",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

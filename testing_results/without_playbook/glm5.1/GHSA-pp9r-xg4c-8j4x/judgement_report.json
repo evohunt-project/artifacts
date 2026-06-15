@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T08:48:17.986Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_c01d31e9",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-pp9r-xg4c-8j4x/GHSA-pp9r-xg4c-8j4x.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "proxy-header-smuggling",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_c01d31e9/proxy-header-smuggling",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_c01d31e9/proxy-header-smuggling/vulnerability_report.json",
+      "title": "Salvo proxy forwards all hop-by-hop headers to upstream servers enabling HTTP request smuggling",
+      "vulnerability_type": "http_request_smuggling",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes unbounded memory allocation in Salvo's form data parsing (Request::form_data() in the core crate) leading to OOM denial of service. This finding describes HTTP request smuggling via the salvo-proxy crate forwarding hop-by-hop headers. The vulnerable components differ (core form parser vs. proxy handler), the root causes differ (missing size limits on body reading vs. missing hop-by-hop header filtering), and the vulnerability classes differ (CWE-770 resource exhaustion vs. HTTP request smuggling).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerability. The advisory describes denial of service via unbounded memory allocation in Salvo's form data parsing (Request::form_data() and Extractible macro reading request bodies without size limits, CWE-770). The only qualifying finding (proxy-header-smuggling) describes a different vulnerability in a different component: HTTP request smuggling via the salvo-proxy crate's failure to filter hop-by-hop headers. These are distinct root causes, distinct vulnerable code paths, and distinct vulnerability classes.",
+    "evidence": [
+      "Advisory root cause: Request::form_data() calls BodyExt::collect(body) reading entire body into memory without size checking (core crate).",
+      "Advisory vulnerable component: form data parsing in salvo core, specifically form_data() method and Extractible macro.",
+      "Finding root cause: salvo-proxy forwards all headers except HOST to upstream without filtering hop-by-hop headers (proxy crate, lib.rs:420-424).",
+      "Finding vulnerable component: salvo-proxy reverse proxy handler (crates/proxy/src/lib.rs, hyper_client.rs, reqwest_client.rs).",
+      "No code overlap: the finding's code_locations (crates/proxy/src/) are entirely separate from the advisory's affected component (core form parsing)."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_c01d31e9/proxy-header-smuggling",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_c01d31e9/proxy-header-smuggling/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_c01d31e9/proxy-header-smuggling/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

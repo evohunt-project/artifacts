@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "csrf",
+  "summary": "CSRF attack successfully demonstrated by having victim browser automatically submit malicious configuration to REST endpoint when visiting attacker-controlled page.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "When victim visits attacker's malicious HTML page while authenticated to Traefik API, the page should automatically send PUT request with attacker-controlled configuration, and Traefik should accept and apply the malicious routing rules.",
+  "actual_observed_result": "Running ./reproduction/run.sh started Traefik with API enabled, served attacker HTML page, simulated victim visit, and observed Traefik configuration change to route traffic to attacker-controlled backend. Verification confirmed malicious frontend/backend were added to active configuration.",
+  "verification_method": "The PoC sets up: (1) Traefik with REST API, (2) Attacker HTML page with auto-submitting form, (3) Simulated victim browser visit. Verification queries Traefik API to confirm malicious configuration was accepted and applied. Success is confirmed when attacker backend appears in /api response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Traefik started with REST provider enabled on port 8080.",
+    "Attacker HTML page created with JavaScript fetch() to PUT /api/providers/rest.",
+    "Malicious configuration included backend pointing to attacker server (http://evil.example.com).",
+    "Simulated victim visit triggered automatic form submission.",
+    "Traefik API response after attack showed new frontend 'attacker-frontend' in configuration.",
+    "Backend 'attacker-backend' with URL http://evil.example.com confirmed in active config.",
+    "Original configuration was overwritten, demonstrating full control via CSRF."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones Traefik v1.7 and mounts into container.",
+    "pinned_commit_or_ref": "v1.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/attacker_page.html",
+      "reproduction/malicious_config.json",
+      "reproduction/verify_csrf.sh",
+      "reproduction/simulate_victim.py"
+    ]
+  }
+}

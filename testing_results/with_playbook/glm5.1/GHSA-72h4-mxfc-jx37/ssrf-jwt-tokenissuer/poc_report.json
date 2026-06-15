@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that heimdall's JWT authenticator makes outbound HTTP requests to attacker-controlled URLs by injecting the unverified JWT iss claim into the metadata endpoint URL template. The metadata response's jwks_uri is then fetched without validation, completing a two-hop SSRF chain.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Heimdall should make an outbound HTTP request to the attacker-controlled metadata URL (controlled via JWT iss claim), then fetch the jwks_uri from the metadata response (controlled by the attacker's server), reaching an internal service that would not be directly accessible to the attacker.",
+  "actual_observed_result": "Running the reproduction confirmed: (1) the attacker server received a GET request to /127.0.0.1:8888/.well-known/openid-configuration from heimdall, proving the unverified iss claim was injected into the outbound URL; (2) the SSRF target server received a GET request to /ssrf-probe from heimdall, proving the jwks_uri from the attacker-controlled metadata response was fetched without validation.",
+  "verification_method": "The reproduction starts two Python HTTP servers (attacker_server on port 8888 and ssrf_target on port 9999). The attacker server returns OIDC metadata with jwks_uri pointing to the ssrf_target server. After sending a crafted JWT to heimdall, the exploit script checks both servers' request logs. The presence of requests in both logs confirms the two-hop SSRF chain. The exploit script exits with code 0 on success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "attacker_server received GET /127.0.0.1:8888/.well-known/openid-configuration from heimdall (127.0.0.1:51244), confirming the unverified JWT iss claim controlled the outbound metadata request URL.",
+    "ssrf_target received GET /ssrf-probe from heimdall (127.0.0.1:33020), confirming the jwks_uri from the attacker-controlled metadata response was fetched without URL validation.",
+    "Heimdall returned HTTP 401 for the original request (expected: the JWT signature is invalid, but the SSRF already occurred during authentication processing before signature verification failed)."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, builds heimdall inside a golang:alpine Docker container, and mounts the built binary into the reproduction container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/usr/local/bin/heimdall",
+    "helper_files": [
+      "reproduction/attacker_server.py",
+      "reproduction/ssrf_target.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/heimdall_config.yaml",
+      "reproduction/rules.yaml"
+    ]
+  }
+}

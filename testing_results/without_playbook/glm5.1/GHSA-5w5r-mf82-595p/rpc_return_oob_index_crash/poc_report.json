@@ -1,0 +1,32 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction is designed to send a crafted Return message with an out-of-range answer_id to a capnp-rpc server, triggering an index-out-of-bounds panic that terminates the RPC session handler and drops the TCP connection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The server's RPC session handler should panic with an index-out-of-bounds error immediately after receiving and parsing the crafted Return message with answer_id=0xFFFFFFFF. The TCP connection to the server should be dropped. The server process itself survives due to tokio's panic catching.",
+  "actual_observed_result": "Reproduction has not been executed in this session. The exploit binary format and code path analysis confirm the vulnerability is reachable and the crafted message correctly encodes a Return message with answer_id=0xFFFFFFFF that would trigger the unchecked Vec index at rpc.rs:1070.",
+  "verification_method": "The verify.sh script starts the server in the background, waits for it to accept TCP connections, sends the crafted message via exploit.py, and then checks: (1) that the exploit detects the TCP connection being closed or reset by the server, confirming the RPC handler crashed, and (2) that the server process is still alive, confirming the crash was isolated to the RPC session task. The combination of these two signals distinguishes the targeted RPC handler crash from a benign connection close or a full process crash.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static analysis confirms the Cap'n Proto wire format in exploit.py correctly encodes a Return message (discriminant=3) with answer_id=0xFFFFFFFF.",
+    "The root pointer at segment word 0 is a valid struct pointer (type=0, data=1, ptr=1) pointing to the Message struct at word 1.",
+    "The Message struct at word 1 has union discriminant 3 (Return), and pointer 0 at word 2 is a valid struct pointer (type=0, data=2, ptr=1) pointing to the Return struct at word 3.",
+    "The Return struct at word 3 has answerId=0xFFFFFFFF at data field offset 0, which will be read by ret.get_answer_id() at rpc.rs:1067.",
+    "The unchecked index questions.slots[0xFFFFFFFF] at rpc.rs:1070 will panic for any questions table smaller than 4GB."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction has not been executed in this session. Docker-based execution is required to verify the end-to-end exploit flow."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

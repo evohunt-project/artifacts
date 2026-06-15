@@ -1,0 +1,36 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that authenticated users can exploit the workflow import endpoint to perform Server-Side Request Forgery (SSRF). The PoC demonstrates n8n making HTTP requests to internal-only services, simulating access to cloud metadata endpoints or internal network resources.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an authenticated attacker can force the n8n server to make HTTP requests to arbitrary URLs, including internal-only services. The expected success signal is: (1) n8n makes HTTP request to a mock internal metadata service running on localhost, (2) the metadata service receives and logs the request from n8n, (3) attacker can observe that the SSRF request reached the internal-only endpoint.",
+  "actual_observed_result": "The PoC successfully executed the SSRF exploit. The reproduction pipeline: (1) built n8n from source, (2) started n8n with authentication enabled, (3) created an authenticated session with low-privilege user, (4) created a project with workflow:create permission, (5) started a mock internal metadata service on localhost:8080, (6) sent SSRF request via GET /rest/workflows/from-url?url=http://localhost:8080/index.html, (7) verified that n8n made HTTP request to the internal service. The metadata service log confirmed receiving a GET request from the n8n server process, demonstrating successful SSRF.",
+  "verification_method": "Automated verification checks: (1) Mock metadata service (Python HTTP server) logs all incoming requests to /tmp/metadata-server.log, (2) After executing the SSRF exploit, verification script checks the log file for entries showing 'GET /index.html' requests, (3) The presence of such requests in the metadata server log confirms that n8n made the request to the internal service, (4) This distinguishes real SSRF from simple error messages or connection failures, as it proves the request actually reached the target internal endpoint.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Metadata server log file /tmp/metadata-server.log contains 'GET /index.html HTTP/1.1' request entry from n8n server process",
+    "Docker container logs show n8n processing the workflow import request and making outbound HTTP connection to localhost:8080",
+    "Authenticated session was successfully created with low-privilege user demonstrating PR:L (low privileges required)",
+    "Project creation with workflow:create permission demonstrates that any user with minimal permissions can exploit the vulnerability",
+    "n8n server made HTTP request to http://localhost:8080/index.html which simulates an internal-only service not accessible from external networks",
+    "The SSRF request was successful even though localhost:8080 represents a service that would only be accessible from within the server's internal network context"
+  ],
+  "limitations_or_blockers": [
+    "The PoC uses a simulated internal metadata service on localhost rather than a real cloud metadata endpoint (AWS/GCP/Azure) because the Docker test environment does not have access to real cloud infrastructure",
+    "In a real cloud deployment (AWS EC2, GCP Compute Engine, Azure VM), the same exploit technique could access real cloud metadata endpoints at http://169.254.169.254 (AWS/Azure) or http://metadata.google.internal (GCP) to steal IAM credentials",
+    "The PoC demonstrates the SSRF vulnerability mechanism; in a production environment with real cloud metadata or internal services, the impact would be much higher (credential theft, internal network scanning, access to internal-only databases/APIs)"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_946611af/repo to a temporary workspace, builds the Docker image from that source, and runs the container with n8n built from the vulnerable version 1.123.21",
+    "pinned_commit_or_ref": "version 1.123.21 (no git commit available in repository snapshot)",
+    "target_repo_mount_path": "N/A - repository is copied into Docker image during build rather than mounted at runtime",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/start.sh"
+    ]
+  }
+}

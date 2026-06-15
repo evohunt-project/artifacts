@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution",
+  "summary": "The Docker-based reproduction confirms that a malicious plugin can use extendContext to pollute the Object prototype via Object.assign, causing newly created objects to inherit polluted properties that could enable privilege escalation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that empty objects created after the malicious plugin executes inherit properties from the polluted Object prototype, specifically isAdmin=true and polluted='PROTOTYPE_POLLUTED'.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, executed the malicious plugin, and confirmed that empty objects (testObject, anotherObject) inherit the polluted isAdmin=true and polluted='PROTOTYPE_POLLUTED' properties from the Object prototype.",
+  "verification_method": "The exploit script checks: (1) empty objects inherit polluted properties, (2) Object.prototype shows the polluted properties, (3) specific values isAdmin=true and polluted='PROTOTYPE_POLLUTED' match the payload. This distinguishes prototype pollution from normal property assignment.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "testObject.isAdmin === true confirms newly created objects inherit polluted isAdmin property",
+    "testObject.polluted === 'PROTOTYPE_POLLUTED' confirms pollution propagation",
+    "Object.prototype.isAdmin === true confirms Object prototype is directly polluted",
+    "Malicious plugin successfully used extendContext hook to inject __proto__ keys",
+    "Object.assign in orchestrator.ts did not filter dangerous keys (__proto__, constructor)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and builds the Docker image.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js"
+    ]
+  }
+}

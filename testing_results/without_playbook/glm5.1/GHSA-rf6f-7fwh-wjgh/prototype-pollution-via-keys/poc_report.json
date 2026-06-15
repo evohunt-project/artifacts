@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution",
+  "summary": "The Docker-based reproduction confirms that the flatted parse() function allows prototype pollution via untrusted JSON input containing __proto__ property keys. After parsing malicious input, all JavaScript objects inherit the polluted property.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Parsing a crafted flatted JSON string containing __proto__ property should pollute Object.prototype, causing all subsequently created JavaScript objects to inherit the malicious property, demonstrating successful prototype pollution.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched a Node.js container, executed the exploit script that parsed malicious JSON with __proto__ property, and verified that Object.prototype was polluted, as shown by {}.polluted === 'yes' returning true for all new objects.",
+  "verification_method": "The exploit script (1) parses malicious flatted JSON containing __proto__ property, (2) creates a new empty object {}, (3) checks if the empty object has the polluted property, and (4) exits with success code if pollution is confirmed. This distinguishes prototype pollution from normal property assignment.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The parsed JSON successfully polluted Object.prototype.",
+    "Empty objects created after parsing inherited the malicious property: {}.polluted === 'yes'.",
+    "All objects in the JavaScript environment are affected, demonstrating the severity of prototype pollution."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

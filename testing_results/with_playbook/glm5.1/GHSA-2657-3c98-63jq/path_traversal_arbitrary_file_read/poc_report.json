@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Path Traversal",
+  "summary": "Successfully demonstrated arbitrary file read via path traversal in esm.sh server. By crafting URLs with '../' sequences in the SubPath parameter, an attacker can escape the intended npm store directory and read arbitrary files from the server's filesystem. The PoC creates a test file with sensitive content at /tmp/test_secret.txt and successfully retrieves it using the URL /react@18.2.0/../../../tmp/test_secret.txt.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate that a file created at /tmp/test_secret.txt with sensitive content 'SECRET_DATA_EXPOSED' can be read by the server via path traversal, proving that the server does not properly validate that the resolved file path remains within the intended directory structure.",
+  "actual_observed_result": "The PoC successfully created a test file with sensitive content and demonstrated that the esm.sh server returned this file content via a path traversal attack. The file '/tmp/test_secret.txt' containing 'SECRET_DATA_EXPOSED' was successfully retrieved using a crafted URL with '../' sequences, confirming the arbitrary file read vulnerability.",
+  "verification_method": "Automated verification checks: (1) Test file creation with unique marker string, (2) HTTP request with path traversal payload, (3) Response content validation to confirm the secret marker is present, (4) Exit code 0 for success or non-zero for failure. The verify.sh script uses grep to search for the marker string in the HTTP response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response containing 'SECRET_DATA_EXPOSED' marker from /tmp/test_secret.txt",
+    "Successful file read outside the intended npm store directory",
+    "Demonstrated that path traversal bypasses directory restrictions",
+    "Confirmed that os.Open() follows the normalized path outside the store directory"
+  ],
+  "limitations_or_blockers": [
+    "None - the vulnerability was successfully reproduced"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_file_read.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

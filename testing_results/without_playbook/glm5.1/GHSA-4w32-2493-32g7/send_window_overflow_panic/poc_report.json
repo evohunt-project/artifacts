@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_panic",
+  "summary": "The Docker-based reproduction confirms that two crafted yamux WindowUpdate frames cause a panic in the target process via an integer overflow in FlowController::increase_send_window_by.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the target yamux connection to panic with a message containing 'send window not to exceed u32' when processing the second crafted WindowUpdate frame.",
+  "actual_observed_result": "The exploit program creates a mock socket feeding two crafted yamux frames into a server-mode Connection. The first frame (WindowUpdate SYN) creates an inbound stream with send_window = u32::MAX. The second frame (WindowUpdate) triggers increase_send_window_by(1), causing u32::MAX.checked_add(1) to return None and expect to panic. The panic is caught by std::panic::catch_unwind and the success signal is printed.",
+  "verification_method": "The exploit wraps the connection processing in std::panic::catch_unwind and checks that the panic message contains 'send window'. This distinguishes the target vulnerability from unrelated panics, startup failures, or compilation errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The first poll_next_inbound successfully creates an inbound stream, confirming the malicious WindowUpdate SYN was accepted.",
+    "The second poll_next_inbound triggers a panic with a message referencing the send window overflow.",
+    "The panic is caught by catch_unwind and the [evohunt] SUCCESS marker is printed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.13.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/build_and_run.sh",
+      "reproduction/src/main.rs"
+    ]
+  }
+}

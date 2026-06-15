@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "The reproduction bundle builds n8n from source, starts the server, creates an authenticated user with workflow:create scope, starts a mock internal HTTP server, and calls the vulnerable GET /rest/workflows/from-url endpoint targeting the internal service to demonstrate SSRF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The n8n server should fetch the mock internal service URL via the from-url endpoint and return the response body to the attacker, demonstrating that an authenticated user can use the n8n server as an SSRF proxy to reach internal network resources.",
+  "actual_observed_result": "PoC was not executed in this session. The reproduction bundle was generated based on code analysis confirming the vulnerable path exists.",
+  "verification_method": "The verify.sh script checks that the response from the from-url endpoint contains data served by the mock internal HTTP service, confirming the n8n server fetched the internal URL and returned the contents.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "PoC was not executed due to time and resource constraints. Building n8n from source requires Node.js 22+, pnpm 10+, and significant build time. The vulnerability was confirmed through static code analysis."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.10.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/mock-internal-server.py"
+    ]
+  }
+}

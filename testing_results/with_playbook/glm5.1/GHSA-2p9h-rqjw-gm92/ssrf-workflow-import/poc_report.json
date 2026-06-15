@@ -1,0 +1,36 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Server-Side Request Forgery (SSRF)",
+  "summary": "PoC demonstrates SSRF vulnerability by deploying n8n v2.9.2 in Docker, authenticating as a user with workflow creation permissions, and making the server fetch content from a mock cloud metadata endpoint, successfully retrieving simulated IAM credentials",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Server should fetch and return content from attacker-controlled URL, including internal services and cloud metadata endpoints that should be blocked",
+  "actual_observed_result": "Successfully demonstrated SSRF by making n8n fetch content from mock metadata server at http://host.docker.internal:8080/metadata, which simulated AWS metadata endpoint. Server returned the metadata content without any validation or blocking.",
+  "verification_method": "Automated verification via verify.sh script that checks: 1) n8n service is running, 2) mock metadata server is accessible, 3) SSRF request successfully retrieves metadata from mock endpoint, 4) Response contains expected simulated credentials",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Docker logs showing n8n startup and request handling",
+    "Curl output demonstrating successful metadata retrieval via SSRF",
+    "Response from /rest/workflows/from-url endpoint containing mock metadata content",
+    "Verification script output confirming vulnerability presence",
+    "API authentication and workflow project creation logs"
+  ],
+  "limitations_or_blockers": [
+    "Requires Docker environment with host network access",
+    "Requires manual n8n setup (user creation, API key generation) if not using automated exploit script",
+    "Demonstrates SSRF via mock server rather than real cloud metadata service for safety"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses docker-compose which builds from Dockerfile that clones n8n@2.9.2 from GitHub and builds the vulnerable version",
+    "pinned_commit_or_ref": "n8n@2.9.2",
+    "target_repo_mount_path": "/app",
+    "helper_files": [
+      "reproduction/mock_metadata_server.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/docker-compose.yml"
+    ]
+  }
+}

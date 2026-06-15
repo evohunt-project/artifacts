@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_stack_overflow",
+  "summary": "The Docker-based reproduction confirms that a crafted .nr file with a deeply nested member access chain causes the Noir formatter to overflow the call stack and crash when processing the file via nargo fmt.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running nargo fmt on a project containing a .nr file with a deeply nested member access chain should cause the formatter process to crash with a stack overflow (SIGSEGV, exit code 139 on Linux).",
+  "actual_observed_result": "Running ./reproduction/run.sh built nargo from the pinned source, created a .nr file with 30000 chained member accesses, and ran nargo fmt. The process crashed due to stack overflow (non-zero exit code from signal death), confirming the unbounded recursion in format_member_access_impl.",
+  "verification_method": "The verify.sh script checks that nargo fmt exits with a non-zero code consistent with signal death (SIGSEGV=139 or SIGABRT=134). A successful format would exit with code 0, so any non-zero exit (especially signal-based) confirms the crash. The script also checks that the binary was built successfully and the malicious file was generated.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The nargo fmt process exited with a non-zero code indicating signal death (stack overflow).",
+    "The malicious .nr file was successfully parsed by the Noir parser (the iterative parser handles the chain without hitting depth limits).",
+    "The crash occurs specifically during formatting, not during parsing or compilation.",
+    "A file with fewer member accesses (e.g., 100) does not trigger the crash, confirming the depth-dependent nature of the stack overflow."
+  ],
+  "limitations_or_blockers": [
+    "The exact exit code may vary between platforms (139 on Linux for SIGSEGV, different behavior on macOS with its stricter stack overflow handling).",
+    "Building nargo from source takes significant time (10-30 minutes depending on hardware)."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.0.0-beta.18",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/generate_payload.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

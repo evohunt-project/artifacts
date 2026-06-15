@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that the GET /api/system endpoint returns server configuration information (system health status, installation state, available login methods) without requiring any authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an unauthenticated HTTP GET request to /api/system returns a JSON response containing sensitive server configuration details.",
+  "actual_observed_result": "The GET /api/system endpoint responded with a 200 status code and a JSON body containing isOk, isInstalled, isInstallable, loginMethods, and other server configuration fields, all without any authentication.",
+  "verification_method": "The verification script sets up a minimal Kirby CMS instance, starts a PHP built-in server, sends an unauthenticated GET request to /api/system via curl, and checks for the presence of sensitive fields (isOk, isInstalled, isInstallable, loginMethods) in the JSON response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The /api/system endpoint responded with HTTP 200 without requiring authentication.",
+    "The response JSON contains 'isOk' revealing system health status.",
+    "The response JSON contains 'isInstalled' revealing installation state.",
+    "The response JSON contains 'isInstallable' revealing whether the Panel installer is accessible.",
+    "The response JSON contains 'loginMethods' disclosing available authentication mechanisms."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "4.9.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/setup_site.php"
+    ]
+  }
+}

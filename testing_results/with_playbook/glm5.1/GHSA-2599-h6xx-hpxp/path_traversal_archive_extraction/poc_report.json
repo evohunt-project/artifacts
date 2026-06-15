@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that Poetry's extractall() function writes files outside the extraction directory when processing archives containing path traversal sequences. A malicious ZIP archive with ../../../tmp/poc-output/exploit_successful.txt successfully writes outside /tmp/test-extraction to /tmp/poc-output/",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate arbitrary file write outside the intended extraction directory by extracting a malicious ZIP archive containing path traversal sequences (../../../). The exploit file should appear outside the safe extraction location.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully created a malicious ZIP archive, used Poetry's extractall() function to extract it, and the file exploit_successful.txt appeared at /tmp/poc-output/ outside the extraction directory /tmp/test-extraction/, confirming the path traversal vulnerability.",
+  "verification_method": "The verification script checks for the existence of exploit_successful.txt at /tmp/poc-output/ and validates its content matches the expected payload. This distinguishes actual path traversal from normal extraction behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious ZIP archive created with path traversal payload ../../../tmp/poc-output/exploit_successful.txt",
+    "Poetry extractall() function successfully invoked and extracted the archive",
+    "File exploit_successful.txt appeared at /tmp/poc-output/ outside the safe extraction directory /tmp/test-extraction/",
+    "File content confirms vulnerability: \"PATH TRAVERSAL VULNERABILITY CONFIRMED\"",
+    "Extraction directory /tmp/test-extraction/ does not contain the traversal path"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Poetry repository from GitHub, checks out version 2.3.2, and mounts it into the container at /target-repo",
+    "pinned_commit_or_ref": "2.3.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_path_traversal.sh"
+    ]
+  }
+}

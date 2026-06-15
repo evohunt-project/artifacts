@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_rce",
+  "summary": "Successfully demonstrated arbitrary code execution through the /api/v1/custom_component endpoint. The exploit submits a malicious Python component that uses subprocess to execute system commands and writes a proof file, confirming complete control over the server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should execute arbitrary Python code on the Langflow server by submitting a malicious custom component. The component will execute a shell command that writes a proof file to /tmp/evohunt_poc_proof.txt containing the marker 'EVOHUNT_POC_SUCCESS_<username>'. This demonstrates the ability to execute arbitrary system commands with the privileges of the Langflow process.",
+  "actual_observed_result": "The exploit successfully created the proof file at /tmp/evohunt_poc_proof.txt containing the EVOHUNT_POC_SUCCESS marker followed by the username running the Langflow process. This confirms that the attacker-controlled Python code was executed on the server with full access to system resources.",
+  "verification_method": "The PoC verification checks for the existence of /tmp/evohunt_poc_proof.txt and validates it contains the expected EVOHUNT_POC_SUCCESS marker. The presence of this file proves that the malicious component code was executed, as only the exploited vulnerability could have created it with that specific content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof file /tmp/evohunt_poc_proof.txt created on the target system",
+    "File contains the EVOHUNT_POC_SUCCESS marker followed by the current username",
+    "Custom component API returned HTTP 200, confirming code was processed",
+    "No errors or exceptions during the attack flow"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.5.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

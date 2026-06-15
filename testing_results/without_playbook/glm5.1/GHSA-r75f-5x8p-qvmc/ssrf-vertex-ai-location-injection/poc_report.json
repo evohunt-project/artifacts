@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the Vertex AI pass-through endpoint's URL construction allows an attacker-controlled location value to redirect outbound HTTPS connections to an arbitrary host. By injecting a fragment character (#) via the URL-encoded path, the regex-extracted vertex_location causes httpx to parse the constructed URL with an attacker-controlled host and port. A TCP listener on the attacker port received the connection, proving the SSRF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the vulnerable URL construction code to produce a URL pointing to 127.0.0.1:18888 (an attacker-controlled host), and an actual TCP connection should be received by a listener on that port, confirming the proxy would make an outbound request to the attacker host.",
+  "actual_observed_result": "Running the reproduction demonstrated: (1) vertex_location extracted as '127.0.0.1:18888#' from the crafted URL path, (2) base URL constructed as 'https://127.0.0.1:18888#-aiplatform.googleapis.com/', (3) httpx parsed host=127.0.0.1 port=18888, (4) copy_with(path=...) preserved the attacker host, (5) TCP listener on port 18888 received a connection from 127.0.0.1:50680, confirming the SSRF.",
+  "verification_method": "The exploit starts a TCP socket listener on port 18888 before making an HTTPS request to the crafted URL. If the SSRF works, the listener accepts the TCP connection from the httpx client (proving the outbound connection goes to the attacker host). The proof is written to /tmp/ssrf_proof.txt and checked by the verification script. This distinguishes a real SSRF connection from a DNS-only or rejected request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "vertex_location extracted from crafted endpoint: '127.0.0.1:18888#'",
+    "Constructed base URL: 'https://127.0.0.1:18888#-aiplatform.googleapis.com/'",
+    "httpx parsed: host=127.0.0.1, port=18888 (attacker-controlled)",
+    "final_url preserved attacker host via copy_with(path=...)",
+    "TCP listener received connection from 127.0.0.1:50680 confirming SSRF",
+    "Connection was reset by peer after TLS handshake failure (expected - no TLS on listener)"
+  ],
+  "limitations_or_blockers": [
+    "The PoC demonstrates the SSRF at the URL construction and HTTP client level using the same functions as the proxy. Running the full litellm proxy with database and authentication would provide end-to-end confirmation but the vulnerable code path is identical."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (BerriAI/litellm) on the host, checks out the pinned v1.83.7 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.83.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

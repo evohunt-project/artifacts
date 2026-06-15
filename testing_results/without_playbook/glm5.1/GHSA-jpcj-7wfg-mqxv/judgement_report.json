@@ -1,0 +1,82 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T17:35:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3bc96a4e",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-jpcj-7wfg-mqxv/GHSA-jpcj-7wfg-mqxv.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "command-injection-via-help-tool",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3bc96a4e/command-injection-via-help-tool",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3bc96a4e/command-injection-via-help-tool/vulnerability_report.json",
+      "title": "Command injection in MCP 'help' tool permits arbitrary Stata command execution",
+      "vulnerability_type": "command_injection",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same vulnerable repository (stata-mcp), same vulnerability class (command injection via insufficient validation of user-supplied content), and same root cause (unsanitized input concatenated into Stata commands). The finding's code locations (mcp_servers.py:204-215, stata_help.py:17-23) align with the advisory description and references (GitHub issue #20, PR #21, commit 52413ce). The attack path through the 'help' MCP tool demonstrates how attacker-controlled input reaches the vulnerable command construction, enabling arbitrary Stata command execution including the 'shell' command for system command execution.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "L",
+          "SI": "H",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:L/SI:H/SA:H"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier3",
+    "target_match": "match",
+    "runtime_evidence": "failed_or_none",
+    "selected_finding": {
+      "folder_name": "command-injection-via-help-tool",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3bc96a4e/command-injection-via-help-tool",
+      "status": "qualifying_vuln",
+      "title": "Command injection in MCP 'help' tool permits arbitrary Stata command execution",
+      "vulnerability_type": "command_injection"
+    },
+    "reason": "The 'command-injection-via-help-tool' finding identifies the advisory-described vulnerability: insufficient validation of user-supplied content in stata-mcp's 'help' MCP tool leading to command execution. The finding correctly identifies the vulnerable code path (mcp_servers.py → stata_help.py → StataController), the injection mechanism (unsanitized 'cmd' parameter concatenated into 'help {cmd}' command string), and the security impact (arbitrary Stata command execution including 'shell' for system commands). However, PoC execution failed due to network connectivity issues preventing repository cloning from GitHub. No runtime evidence of exploit success or bug activation was captured. The static analysis and code-level evidence support the vulnerability claim, but without runtime demonstration, this qualifies as Tier3 (speculative advisory-matched finding).",
+    "evidence": [
+      "Finding identifies the same repository (stata-mcp) and package (PyPI: stata-mcp) as the advisory",
+      "Finding describes the same vulnerability class: command injection through insufficient validation of user-supplied Stata command content",
+      "Finding identifies the same root cause: unsanitized input concatenated into Stata commands without validation or sanitization",
+      "Code locations align with advisory: mcp_servers.py:204-215 (MCP tool definition), stata_help.py:23 (vulnerable concatenation), controller.py:81-119 (command execution)",
+      "Finding demonstrates the attack path: MCP client → help tool → unsanitized cmd parameter → Stata command construction → shell command execution",
+      "Finding aligns with advisory references: GitHub issue #20, PR #21, commit 52413ce",
+      "PoC execution attempted but failed due to network connectivity (cannot clone https://github.com/sepinetam/stata-mcp.git)",
+      "No runtime evidence captured: no proof file created, no Docker container execution, no exploit success demonstrated",
+      "Static analysis and vulnerability report remain valid, but runtime verification unavailable"
+    ],
+    "blockers_to_higher_tier": [
+      "Network connectivity failure prevented repository cloning from GitHub",
+      "Missing local repository checkout at /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3bc96a4e/repo",
+      "No runtime execution of the vulnerable code path",
+      "No proof file or exploit artifact created",
+      "Cannot satisfy exploit_success_predicate (no observable security consequence demonstrated)",
+      "Cannot satisfy bug_activation_predicate (no runtime evidence of vulnerable logic trigger)"
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "command-injection-via-help-tool",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3bc96a4e/command-injection-via-help-tool",
+      "executed": true,
+      "command": "bash run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3bc96a4e/.judge/poc_runs/command-injection-via-help-tool/reproduction",
+      "exit_code": 1,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3bc96a4e/.judge/poc_runs/command-injection-via-help-tool/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3bc96a4e/.judge/poc_runs/command-injection-via-help-tool/poc_execution.json",
+      "observed_effect": "PoC execution failed due to network connectivity. The run.sh script attempted to clone the target repository from GitHub (https://github.com/sepinetam/stata-mcp.git) but failed with: 'Failed to connect to github.com port 443 after 75045 ms: Couldn't connect to server'. No proof file was created. No bug activation or exploit success could be demonstrated.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    }
+  ],
+  "open_world_findings": []
+}

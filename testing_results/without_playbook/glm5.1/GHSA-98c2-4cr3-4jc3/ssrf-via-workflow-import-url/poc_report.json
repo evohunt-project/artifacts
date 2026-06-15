@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the workflow import URL endpoint can be used to make the n8n server fetch content from an internal-only HTTP service and return it through the API response, demonstrating server-side request forgery.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the n8n server to fetch content from the internal metadata server at http://127.0.0.1:9999 and return it through the API response body, demonstrating that the server will make arbitrary outbound requests to internal addresses on behalf of an authenticated user.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started n8n, created an owner account, logged in, and then called GET /rest/workflows/from-url with an internal-only URL. The n8n server fetched the response from the internal server at 127.0.0.1:9999 and returned its content through the API, confirming the SSRF.",
+  "verification_method": "The verify script starts a mock internal HTTP server on 127.0.0.1:9999 that returns a JSON response containing the proof string EVOHUNT_SSRF_PROOF_7f3a9b2c embedded in a valid n8n workflow node. The script then calls the from-url endpoint with http://127.0.0.1:9999/metadata as the URL parameter. If the proof string appears in the API response body, the SSRF is confirmed. This check distinguishes real server-side request forgery from a generic error, a cached response, or a client-side request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The API response body contains the proof string EVOHUNT_SSRF_PROOF_7f3a9b2c embedded in the workflow node data, confirming the server fetched content from the internal-only service.",
+    "The internal server log shows an incoming GET request from the n8n server process, proving the request originated server-side.",
+    "The endpoint returned HTTP 200 with the internal server's full response data, not a connection error, validation failure, or redirect."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.14.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/internal-server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

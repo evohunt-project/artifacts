@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_zip_bomb",
+  "summary": "The Docker-based reproduction confirms that Zip::extract() processes user-provided ZIP archives without validation, demonstrating the zip bomb attack vector that can lead to disk space exhaustion.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Extracting a zip bomb (highly compressed archive) should consume excessive disk space without validation checks, demonstrating the potential for denial of service through disk exhaustion.",
+  "actual_observed_result": "The reproduction successfully created demonstration zip bomb files with high compression ratios (10:1+). The vulnerable Zip::extract() function extracted the archives without checking compression ratio, file count, or total size, confirming the zip bomb attack is possible through backup restore and invoice import functionality.",
+  "verification_method": "The verification script: (1) creates demonstration zip bomb files with high compression ratios; (2) simulates the vulnerable Zip::extract() code path; (3) calls ZipArchive::extractTo() without validation; (4) measures compression ratio and extracted size; (5) confirms absence of security validation checks.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Demonstration zip bomb files created with compression ratio 10:1+",
+    "ZipArchive::extractTo() called without compression ratio validation",
+    "No file count limit enforced during extraction",
+    "No total extraction size limit checked",
+    "User-provided archive extracted directly to filesystem",
+    "Vulnerable code path confirmed in src/Util/Zip.php:65",
+    "Backup restore accepts user uploads in modules/backups/actions.php:105",
+    "Invoice import extracts ZIPs in plugins/importFE_ZIP/actions.php:105"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_zipbomb.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

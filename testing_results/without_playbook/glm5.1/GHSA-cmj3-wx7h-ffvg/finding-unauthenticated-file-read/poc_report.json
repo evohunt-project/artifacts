@@ -1,0 +1,25 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction is designed to upload a file with master key credentials and then download it without any authentication, demonstrating the missing access control on the file download endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A file uploaded with master key authentication should be downloadable via a simple GET request to /files/:appId/:filename without any authentication headers.",
+  "actual_observed_result": "Reproduction was not executed. Docker image pull exceeded the runtime environment's available time budget.",
+  "verification_method": "The verify.sh script starts MongoDB, builds parse-server from /target-repo, uploads a file containing a unique secret string using the master key, then downloads the same file without any authentication, and checks if the secret content is returned in the response.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker base image pull (node:22-bookworm) exceeded the runtime environment's network and time constraints. The reproduction bundle is self-contained and should run successfully in an environment with Docker and internet access."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the 8.6.14 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.14",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

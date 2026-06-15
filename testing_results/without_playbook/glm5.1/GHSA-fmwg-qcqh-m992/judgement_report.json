@@ -1,0 +1,59 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T17:35:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_092ad076",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-fmwg-qcqh-m992/GHSA-fmwg-qcqh-m992.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "ssrf-via-download-from",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_092ad076/ssrf-via-download-from",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_092ad076/ssrf-via-download-from/vulnerability_report.json",
+      "title": "Server-Side Request Forgery via downloadFrom with arbitrary header injection",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes SSRF via the downloadFrom feature allowing arbitrary URL fetching. The advisory describes a ReDoS vulnerability via the extraHttpHeaders scope feature using crafted regex patterns in pkg/modules/chromium/routes.go:200. These are different features with different root causes: the finding addresses unrestricted outbound HTTP requests via downloadFrom, while the advisory addresses catastrophic backtracking in regex pattern matching for scope validation.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "H",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N/SC:H/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described ReDoS vulnerability. The advisory describes a ReDoS vulnerability in Gotenberg's extraHttpHeaders scope feature where user-supplied scope patterns are compiled using dlclark/regexp2 without a MatchTimeout set, allowing attackers to hang workers indefinitely with crafted regex patterns containing nested quantifiers. The only qualifying finding describes SSRF via the downloadFrom feature, which is a completely different feature and vulnerability class. The advisory root cause is in pkg/modules/chromium/routes.go:200 where scope patterns are compiled, while the finding's root cause is in the downloadFrom URL processing in pkg/modules/api/context.go.",
+    "evidence": [
+      "Advisory states: 'Gotenberg uses dlclark/regexp2 to compile user-supplied scope patterns (gotenberg/pkg/modules/chromium/routes.go:200) with no MatchTimeout set'",
+      "Advisory vulnerability class: CWE-1333 (Inefficient Regular Expression Complexity)",
+      "Advisory impact: Denial of service via worker hang from catastrophic regex backtracking",
+      "Finding vulnerability class: SSRF (Server-Side Request Forgery)",
+      "Finding code locations: pkg/modules/api/context.go (downloadFrom processing), pkg/modules/api/api.go (URL filter configuration)",
+      "Finding root cause: Empty allow/deny lists for downloadFrom URLs and unrestricted extraHttpHeaders injection",
+      "No overlap in vulnerable code paths: Advisory targets scope regex compilation in chromium routes; finding targets downloadFrom URL fetching in API context middleware"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_092ad076/ssrf-via-download-from",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_092ad076/ssrf-via-download-from/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_092ad076/ssrf-via-download-from/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

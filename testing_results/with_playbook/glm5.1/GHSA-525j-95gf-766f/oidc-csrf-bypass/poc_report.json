@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "csrf",
+  "summary": "Source code analysis confirms OIDC state/nonce validation is completely disabled. Five separate vulnerability indicators found in oidc.go showing commented-out CSRF protection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "OIDC callback should validate state/nonce to prevent CSRF attacks. Disabled validation allows arbitrary authentication callbacks.",
+  "actual_observed_result": "Verification found 5 critical vulnerability indicators in backend/http/oidc.go: state extraction commented out (line 113), nonce extraction commented out (line 280), nonce comparison commented out (line 281), error handling commented out (line 282), and state not validated against cookie (line 272).",
+  "verification_method": "verify.sh script scans oidc.go source for commented-out validation code patterns, identifying specific line numbers where CSRF protection is disabled.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "State extraction commented out at line 113",
+    "Nonce extraction commented out at line 280",
+    "Nonce comparison commented out at line 281",
+    "Error handling for invalid nonce commented out at line 282",
+    "State parameter never validated against stored nonce cookie"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out HEAD, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/mock-oidc-server.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

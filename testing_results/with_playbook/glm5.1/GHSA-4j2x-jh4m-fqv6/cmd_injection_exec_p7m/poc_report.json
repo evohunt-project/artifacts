@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that uploading a ZIP file with a maliciously crafted filename triggers the vulnerable exec() call in XML::decodeP7M(), resulting in arbitrary command execution. The PoC demonstrates this by executing the 'id' command and writing the output to a proof file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted ZIP filename to be passed to exec() in XML::decodeP7M(), executing the 'id' command and creating /tmp/cmd_exec_proof.txt containing the command output.",
+  "actual_observed_result": "The reproduction script successfully built the Docker container, initialized the application, uploaded the malicious ZIP file, and verified the creation of /tmp/cmd_exec_proof.txt containing the output of the 'id' command (uid, gid, groups).",
+  "verification_method": "The reproduction script executes the exploit and checks for the existence and content of /tmp/cmd_exec_proof.txt. The presence of this file with valid command output confirms successful command injection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious ZIP file created with filename: ';id > /tmp/cmd_exec_proof.txt;#.p7m",
+    "ZIP file extracted and processed by the application",
+    "File /tmp/cmd_exec_proof.txt created containing output from 'id' command",
+    "Command output shows user/group information from inside the container"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the session directory to a temporary workspace and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "2.4.17 (latest version based on update directory structure)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

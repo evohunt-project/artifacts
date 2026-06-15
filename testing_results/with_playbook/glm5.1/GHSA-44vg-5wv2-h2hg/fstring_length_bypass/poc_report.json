@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that the _eval_joinedstr method's missing length update allows creating strings that exceed MAX_STRING_LENGTH by an arbitrary factor through f-strings with multiple format values.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should produce a string whose length exceeds MAX_STRING_LENGTH (100000), demonstrating that the library's safety limit can be bypassed to cause memory exhaustion.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, cloned the vulnerable simpleeval v1.0.4, and executed the exploit script. The exploit created a 999990-character string from an f-string with 10 format values, each individually within the limit but cumulatively exceeding MAX_STRING_LENGTH by ~10x.",
+  "verification_method": "The exploit script measures the result string length and compares it against MAX_STRING_LENGTH. It prints EXPLOIT_SUCCESS only if the result exceeds the limit and exits with code 0. It prints EXPLOIT_FAILED and exits with code 1 otherwise. This distinguishes a real bypass from a properly blocked attempt.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit script reported a result of 999990 characters, exceeding MAX_STRING_LENGTH=100000.",
+    "The exploit printed EXPLOIT_SUCCESS, confirming the safety limit was bypassed.",
+    "The verification helper confirmed that the oversized string was produced by the f-string evaluation, not by an unrelated error."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0425898b23abb3f1a9ed56dbb0bb4244d6350f2f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

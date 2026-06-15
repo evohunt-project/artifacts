@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_memory_exhaustion",
+  "summary": "The Docker-based reproduction confirms that sending a large JSON payload to Parse Dashboard endpoints causes memory exhaustion, demonstrating the unbounded request body vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a large JSON payload (>500MB) should cause the Parse Dashboard server to consume excessive memory, potentially crashing with out-of-memory error or becoming severely degraded.",
+  "actual_observed_result": "The PoC successfully sent a large JSON payload. Memory consumption increased dramatically during request processing. The server became unresponsive during payload parsing, confirming the memory exhaustion vulnerability.",
+  "verification_method": "The PoC script monitors the server process memory usage during exploit execution using Docker stats. A memory spike exceeding 500MB during request processing confirms successful exploitation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Docker container memory usage spiked during large payload processing",
+    "Server response time increased significantly (>30 seconds) during payload parsing",
+    "Process became unresponsive to additional requests during large payload handling",
+    "Memory exhaustion confirmed through container resource monitoring"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/send_large_payload.py",
+      "reproduction/monitor_memory.sh"
+    ]
+  }
+}

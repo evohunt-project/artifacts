@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "incorrect_computation",
+  "summary": "The Docker-based reproduction confirms that p521's Scalar::reduce(2*ORDER) produces a non-zero result (ORDER) instead of the correct value 0. This proves the single conditional subtraction in reduce() is insufficient for U576 inputs >= 2*ORDER.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the integration test to confirm that reduce(2*ORDER) is non-zero, proving the scalar reduction is incorrect. The test prints EVOHUNT_POC_SIGNAL REDUCE_BUG_CONFIRMED on success.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the RustCrypto/elliptic-curves repository, added the PoC integration test to the p521 crate, compiled the workspace, and executed the test. The test confirmed that reduce(2*ORDER) produces a non-zero Scalar value instead of zero, proving the single-subtraction reduction is insufficient for large U576 inputs.",
+  "verification_method": "The test constructs 2*ORDER via U576::wrapping_add(&ORDER, &ORDER), calls <Scalar as Reduce<U576>>::reduce(two_order), and checks result.is_zero(). The correct result should be true (0), but the bug produces false (ORDER). The test asserts the buggy behavior and emits EVOHUNT_POC_SIGNAL REDUCE_BUG_CONFIRMED.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The cargo test output shows reduce(2*ORDER): is_zero = false, confirming the reduction produces an invalid scalar.",
+    "The proof signal EVOHUNT_POC_SIGNAL REDUCE_BUG_CONFIRMED is printed to stderr.",
+    "The test assertion assert!(!is_zero) passes, confirming the bug exists.",
+    "The cargo test exits with code 0, indicating the PoC successfully reproduced the vulnerability."
+  ],
+  "limitations_or_blockers": [
+    "The PoC requires compiling the RustCrypto/elliptic-curves workspace from source, which takes several minutes and requires a stable internet connection for dependency resolution.",
+    "The standard ECDSA usage pattern (SHA-512 prehash, 512-bit output) does not trigger this bug because 512-bit values are always < ORDER (521 bits). The bug is triggered by non-standard inputs >= 2*ORDER."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the master branch, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/poc_test.rs"
+    ]
+  }
+}

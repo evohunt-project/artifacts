@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "mass_assignment_privilege_escalation",
+  "summary": "The Docker-based reproduction confirms that the FacturaScripts REST API mass assignment vulnerability allows a low-privilege API consumer to escalate a regular user to full admin by sending a single PUT request with admin=1. The reproduction creates a non-admin test user, exploits the mass assignment, and verifies that the user's admin flag and level are modified in the database.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After the exploit, the test user should have admin=true and level=99, confirming full privilege escalation via the API mass assignment.",
+  "actual_observed_result": "The PUT request to /api/3/useres/testuser with body admin=1 succeeded. A subsequent GET request confirmed that the user's admin property changed from false to true and level changed from 2 to 99.",
+  "verification_method": "The verification script creates a test user with admin=0, sends the mass assignment PUT request, then queries the same user via GET and checks that the admin field is true and the level field is 99. The proof string EVOHUNT_POC_MASS_ASSIGNMENT_ADMIN_ESCALATION is emitted on success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The GET /api/3/useres/testuser response before the exploit shows admin=false, level=2.",
+    "The PUT /api/3/useres/testuser response confirms the record was updated.",
+    "The GET /api/3/useres/testuser response after the exploit shows admin=true, level=99.",
+    "The verification script emits EVOHUNT_POC_MASS_ASSIGNMENT_ADMIN_ESCALATION on success."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/apache-default.conf"
+    ]
+  }
+}

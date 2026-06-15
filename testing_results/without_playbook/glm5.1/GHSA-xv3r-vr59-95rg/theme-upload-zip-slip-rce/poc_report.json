@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_write_rce",
+  "summary": "The Docker-based reproduction confirms that the Theme::upload endpoint accepts a crafted ZIP archive with path traversal sequences and writes files outside the intended extraction directory, demonstrating arbitrary file write capability that can lead to RCE.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should upload a malicious theme ZIP containing a file with path traversal sequence (../../../public/test_pwned.php). The PoC should successfully write a PHP file outside the theme directory, demonstrating arbitrary file write capability that can be leveraged for RCE.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the CI4MS application, uploaded the crafted theme ZIP via the Theme::upload endpoint, and successfully wrote a test PHP file to public/test_pwned.php, confirming the arbitrary file write vulnerability.",
+  "verification_method": "The run script checks for the existence of the test PHP file (public/test_pwned.php) outside the intended theme directory. The file presence confirms successful path traversal exploitation. The script also verifies the file content matches the expected marker string to distinguish from false positives.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The crafted theme ZIP was successfully uploaded via the authenticated Theme::upload endpoint.",
+    "A PHP file was created at public/test_pwned.php outside the intended public/templates/ directory.",
+    "The file contains the expected marker string, confirming attacker-controlled content was written.",
+    "The application logs show the theme upload process completed without errors."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

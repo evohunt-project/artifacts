@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that jose-swift accepts unbounded PBES2 iteration counts (p2c) from attacker-controlled JWE headers without enforcing a maximum limit. Source code analysis verified the complete data flow from header parsing through PBKDF2 execution with no upper bound validation at any point.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate that the library accepts extremely high p2c values in JWE headers without validation, proving the absence of maximum iteration count enforcement and the potential for CPU exhaustion denial-of-service.",
+  "actual_observed_result": "Source code analysis confirmed no maximum iteration count validation in the complete data flow: DefaultJWEHeaderImpl+Codable.swift:109 decodes p2c as raw Int, JWERegisteredFieldsHeader+Helpers.swift:112-120 retrieves it without bounds check, PasswordBasedDecryptor.swift:55-61 performs nil-check only, PBES2SHA.swift:63 passes saltCount directly to PKCS5.PBKDF2(iterations:). The PBKDF2 scaling demonstration confirms linear CPU time increase with iteration count.",
+  "verification_method": "The PoC combines static source code verification with runtime PBKDF2 scaling demonstration. Source grep confirms no maxIteration/maximum/upper bound patterns exist. PBKDF2 timing measurements confirm linear scaling, enabling extrapolation to billion-iteration DoS.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code grep confirmed no maxIteration, maximum iteration, or upper bound patterns in codebase",
+    "PasswordBasedDecryptor.swift:55-61 only checks p2c for nil, not for maximum value",
+    "PBES2SHA.swift:63 passes saltCount directly to PKCS5.PBKDF2(iterations: saltCount) without bounds",
+    "PasswordBasedEncrypter.swift:26 has minIterationCount=1000 but no maxIterationCount",
+    "PBKDF2 scaling demonstration shows linear CPU time growth with iteration count",
+    "Extrapolation confirms billion-iteration attack would consume minutes to hours of CPU time"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the jose-swift repository from GitHub on the host, checks out the pinned vulnerable ref, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.swift",
+      "reproduction/verify.sh"
+    ]
+  }
+}

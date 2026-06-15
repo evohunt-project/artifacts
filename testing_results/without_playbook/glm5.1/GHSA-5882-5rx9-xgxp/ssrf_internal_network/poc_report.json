@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf_internal_network_access",
+  "summary": "The Docker-based reproduction confirms that the crawler can access internal network services and cloud metadata endpoints without restriction.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the crawler can access a simulated internal service at http://127.0.0.1:8080/internal and the cloud metadata endpoint at http://169.254.169.254/latest/meta-data/, exposing sensitive internal resources.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the target service, started a simulated internal metadata server, submitted crawl requests to localhost and cloud metadata endpoints, and successfully retrieved internal data that should not be accessible from external requests.",
+  "verification_method": "The run script starts a simulated internal metadata service, then uses the crawler to access it via localhost and the simulated cloud metadata IP. The verification checks for the proof string 'INTERNAL_SECRET_DATA' and 'METADATA_SECRET' in the crawl results, confirming SSRF vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Crawl result for http://127.0.0.1:8080/internal contained 'INTERNAL_SECRET_DATA'",
+    "Crawl result for http://169.254.169.254/latest/meta-data/ contained 'METADATA_SECRET'",
+    "No URL validation or IP blocking prevented access to internal endpoints",
+    "Both localhost and simulated cloud metadata IP were accessible through the crawler"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/internal_service.py"
+    ]
+  }
+}

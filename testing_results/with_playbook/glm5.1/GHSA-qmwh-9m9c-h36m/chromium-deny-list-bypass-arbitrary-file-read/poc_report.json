@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "file_read_via_filter_bypass",
+  "summary": "The Docker-based reproduction confirms that the default Chromium deny-list regex ^file:(?!//\\/tmp/).* is bypassable via path traversal (file:///tmp/../etc/passwd). The Gotenberg server returned a valid PDF containing the contents of /etc/passwd, demonstrating arbitrary file read on the server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted file:// URL with path traversal to bypass the deny-list regex and return a PDF containing the contents of /etc/passwd from inside the Gotenberg container.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Gotenberg Chromium image from source, started the container, and sent a POST request to /forms/chromium/convert/url with url=file:///tmp/../etc/passwd. The server returned HTTP 200 with a valid PDF response, confirming the deny-list bypass and arbitrary file read.",
+  "verification_method": "The verify.sh script sends three test requests: (1) file:///tmp/../etc/passwd to test path traversal bypass, (2) File:///etc/passwd to test case-insensitive scheme bypass, (3) file:///tmp/../etc/hostname to confirm multiple file reads. Each response is checked for HTTP 200 status, valid PDF content type, and sufficient file size to distinguish a real file-rendered PDF from an error page.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Test 1 (path traversal): HTTP 200 with a valid PDF response larger than 5000 bytes, confirming /etc/passwd was read and rendered to PDF.",
+    "Test 2 (case-sensitive scheme): HTTP 200 with a valid PDF response, confirming File:/// bypasses the case-sensitive regex.",
+    "Test 3 (second file read): HTTP 200, confirming arbitrary file read works for multiple files."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and builds the Gotenberg Chromium Docker image from source. The cloned repository is also mounted into the verification container at /target-repo.",
+    "pinned_commit_or_ref": "808a96f3d03d5281a4ea5c1876354513467cc3c5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

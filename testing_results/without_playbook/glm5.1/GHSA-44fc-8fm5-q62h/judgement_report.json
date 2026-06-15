@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_920d032c",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-44fc-8fm5-q62h/GHSA-44fc-8fm5-q62h.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "stack_overflow_dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_920d032c/stack_overflow_dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_920d032c/stack_overflow_dos/vulnerability_report.json",
+      "title": "Denial of Service via Stack Overflow in Deeply Nested Schema Processing",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause: unbounded recursion in normalizeSchema (main.js:203-220) vs the advisory's prototype pollution via String.prototype.startsWith override bypass (main.js:564). Different vulnerability class, different vulnerable function, different code path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "L"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:L"
+      }
+    },
+    {
+      "finding_folder_name": "validation_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_920d032c/validation_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_920d032c/validation_bypass/vulnerability_report.json",
+      "title": "Input Validation Bypass via Undeclared Nested Properties in Strict Mode",
+      "vulnerability_type": "input_validation_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause: walk() creating intermediate objects and validate() skipping nested keys for object properties (main.js:565-579, 153-160) vs the advisory's prototype pollution via String.prototype.startsWith override bypass (main.js:564). While the set() function at lines 565-579 is near the advisory's line 564, the described vulnerability mechanism is entirely different — validation gap vs overridable guard function.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerability: prototype pollution via overriding String.prototype.startsWith to bypass the guard at main.js:564, which allows config.set('constructor.prototype.polluted', ...) to pollute Object.prototype. The prototype_pollution_mitigated finding (non_qualifying_vuln) incorrectly concluded the vulnerability is fully mitigated in v6.2.4, contradicting the advisory. The two qualifying findings describe different root causes: stack overflow via unbounded recursion in normalizeSchema, and validation bypass via walk()/validate() gap for nested keys.",
+    "evidence": [
+      "Advisory describes prototype pollution via String.prototype.startsWith override bypass at main.js:564",
+      "stack_overflow_dos: unbounded recursion in normalizeSchema at main.js:203-220 — unrelated root cause and code",
+      "validation_bypass: walk() intermediate object creation + validate() skipping nested keys at main.js:565-579,153-160 — different mechanism from startsWith bypass",
+      "prototype_pollution_mitigated (non_qualifying_vuln): correctly identifies protection locations but incorrectly concludes full mitigation, missing the startsWith override bypass described by the advisory"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_920d032c/stack_overflow_dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_920d032c/stack_overflow_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_920d032c/stack_overflow_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_920d032c/validation_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_920d032c/validation_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_920d032c/validation_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

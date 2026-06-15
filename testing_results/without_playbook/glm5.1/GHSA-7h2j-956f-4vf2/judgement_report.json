@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_12a65f14",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-02/GHSA-7h2j-956f-4vf2/GHSA-7h2j-956f-4vf2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "VULN-001-memory-exhaustion-padding",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_12a65f14/VULN-001-memory-exhaustion-padding",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_12a65f14/VULN-001-memory-exhaustion-padding/vulnerability_report.json",
+      "title": "Memory exhaustion via unbounded width in numeric sequence padding",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes exponential combinatorial expansion from multiple repeated numeric brace ranges (e.g., {0..99}{0..99}{0..99}{0..99}{0..99} producing 10 billion combinations). VULN-001 describes a different root cause: unbounded padding width in a single numeric range ({0[...50000 zeros...]..1}) causing oversized individual strings via new Array(need+1).join('0'). The vulnerable code paths differ: advisory root cause is the combinatorial expansion engine generating all result combinations; VULN-001 root cause is the width calculation at line 171 and padding generation at lines 193-203. Same function and same general vulnerability class (DoS in brace expansion), but different specific mechanisms and code paths.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code/root cause. The advisory (GHSA-7h2j-956f-4vf2) describes uncontrolled resource consumption from exponential combinatorial expansion when multiple numeric brace ranges like {0..99}{0..99}{0..99}{0..99}{0..99} are combined, producing 10 billion results eagerly and synchronously. The only qualifying finding (VULN-001) describes a different vulnerability: memory exhaustion via unbounded padding width in a single numeric range, where leading zeros control the width parameter at src/index.ts:171 and oversized padding strings are generated at src/index.ts:193-203. These are distinct root causes with different attack vectors, different vulnerable code paths, and different resource consumption mechanisms (number of results vs. size of individual strings).",
+    "evidence": [
+      "Advisory root cause: exponential combinatorial expansion from multiple repeated brace ranges {0..99}{0..99}... producing 10^10 combinations",
+      "Advisory PoC pattern: {0..99}{0..99}{0..99}{0..99}{0..99} causing heap out of memory",
+      "VULN-001 root cause: unbounded width from leading zeros in a single numeric range, padding string generation",
+      "VULN-001 PoC pattern: {0[...50000 zeros...]..1} creating width=50001, exploiting new Array(need+1).join('0')",
+      "Different vulnerable code paths: advisory targets the combinatorial expansion engine; VULN-001 targets width calculation (line 171) and padding generation (lines 193-203)"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_12a65f14/VULN-001-memory-exhaustion-padding",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_12a65f14/VULN-001-memory-exhaustion-padding/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_12a65f14/VULN-001-memory-exhaustion-padding/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

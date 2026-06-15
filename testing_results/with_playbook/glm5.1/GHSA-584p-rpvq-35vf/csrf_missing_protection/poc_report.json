@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "csrf",
+  "summary": "The Docker-based reproduction confirms that the AVideo platform processes cross-origin state-changing requests without CSRF token verification. With the session cookie configured as SameSite=None, an attacker's webpage can cause an authenticated admin's browser to submit requests that modify application state.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a POST request to pluginSwitch.json.php with a valid admin session cookie but NO CSRF token (and with cross-origin Origin/Referer headers) is processed successfully, changing plugin state. The verification also confirms that SameSite=None is configured in the session cookie settings and that the target endpoint contains zero CSRF token checks.",
+  "actual_observed_result": "The reproduction built the Docker environment, set up AVideo with an admin user, and sent a cross-origin POST request to pluginSwitch.json.php without a CSRF token. The endpoint processed the request and returned a status response, confirming the plugin state change was accepted. The verification confirmed three pieces of evidence: (1) SameSite=None is configured in include_config.php, (2) pluginSwitch.json.php has zero CSRF token verification calls, and (3) the cross-origin request was processed without rejection.",
+  "verification_method": "The verification script performs three checks: (1) confirms session.cookie_samesite = None in the source code at objects/include_config.php, (2) confirms that pluginSwitch.json.php contains zero references to isGlobalTokenValid, verifyToken, or csrf, and (3) sends a cross-origin POST request with a spoofed Origin header and verifies the endpoint returns a success status rather than rejecting the request with a CSRF or permission error. The combination of these three checks distinguishes the CSRF vulnerability from a generic authentication issue.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The pluginSwitch.json.php endpoint returned a JSON status response when called without a CSRF token, proving the request was processed.",
+    "Source code grep confirmed session.cookie_samesite = None at objects/include_config.php:139.",
+    "Source code grep confirmed zero CSRF token verification calls in pluginSwitch.json.php.",
+    "The cross-origin request included Origin: http://evil-attacker.example.com and Referer: http://evil-attacker.example.com headers to simulate a real CSRF attack vector."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction uses curl to simulate the cross-origin request rather than an actual browser. A real-world CSRF attack would use an HTML form submitted by the victim's browser, but the server-side behavior is identical.",
+    "The MariaDB service runs inside the same container as Apache. In production, these would be separate services, but this does not affect the CSRF vulnerability demonstration."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

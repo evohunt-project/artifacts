@@ -1,0 +1,74 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T05:53:13.324Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_9157ec3f",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-9c4h-pwmf-m6fj/GHSA-9c4h-pwmf-m6fj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "jit_sandbox_arbitrary_memory_access",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_9157ec3f/jit_sandbox_arbitrary_memory_access",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_9157ec3f/jit_sandbox_arbitrary_memory_access/vulnerability_report.json",
+      "title": "JIT sandbox arbitrary memory access via unvalidated memory region registration",
+      "vulnerability_type": "sandbox_bypass_memory_access",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the rssn C-FFI exposed JIT path and the same unvalidated attacker-controlled JIT parameters/instructions root cause described by the advisory, narrowed to memory region registration and Load/Store access.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier3",
+    "target_match": "match",
+    "runtime_evidence": "failed_or_none",
+    "selected_finding": {
+      "folder_name": "jit_sandbox_arbitrary_memory_access",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_9157ec3f/jit_sandbox_arbitrary_memory_access",
+      "status": "qualifying_vuln",
+      "title": "JIT sandbox arbitrary memory access via unvalidated memory region registration",
+      "vulnerability_type": "sandbox_bypass_memory_access"
+    },
+    "reason": "The selected finding statically matches the advisory's rssn C-FFI/JIT input-validation root cause, but the copied PoC did not activate or exploit the rssn vulnerable code at runtime. The run succeeded only as a standalone Cranelift memory-read demonstration, so Tier1 and Tier2 predicates are not satisfied.",
+    "evidence": [
+      "The advisory describes arbitrary code execution in rssn before 0.2.9 through unvalidated JIT instruction generation exposed by the C-FFI layer.",
+      "The finding report names rssn_jit_configure_sandbox_json, rssn_jit_compile_json, and rssn_jit_execute, and describes attacker-controlled JSON memory regions and JIT Load/Store instructions reaching arbitrary process memory.",
+      "The copied PoC run completed with exit code 0 and printed matching reads for 0xdeadbeefcafebabe and 0x1337133713371337.",
+      "The copied PoC log also printed `Library at \"/target-repo/target/release/librssn.so\": exists=false`, and no runtime artifact shows rssn C-FFI entrypoints or the advisory vulnerable logic being invoked."
+    ],
+    "blockers_to_higher_tier": [
+      "The runtime proof uses Cranelift directly rather than the rssn C-FFI/JIT APIs identified by the advisory-matched finding.",
+      "No runtime artifact shows attacker-controlled input reaching rssn_jit_configure_sandbox_json, rssn_jit_compile_json, rssn_jit_execute, or the rssn JIT memory-region/Load/Store implementation.",
+      "The observed memory read is not attributable to the advisory-described rssn vulnerable code/root cause."
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "jit_sandbox_arbitrary_memory_access",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_9157ec3f/jit_sandbox_arbitrary_memory_access",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_9157ec3f/.judge/poc_runs/jit_sandbox_arbitrary_memory_access/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_9157ec3f/.judge/poc_runs/jit_sandbox_arbitrary_memory_access/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_9157ec3f/.judge/poc_runs/jit_sandbox_arbitrary_memory_access/poc_execution.json",
+      "observed_effect": "The copied PoC successfully built and ran after packaging fixes in the copy, and it read two constants using standalone Cranelift JIT code. The log shows the rssn library was not built or loaded and contains no rssn C-FFI/JIT entrypoint invocation, so the advisory-specific exploit and bug-activation predicates are both false.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    }
+  ],
+  "open_world_findings": []
+}

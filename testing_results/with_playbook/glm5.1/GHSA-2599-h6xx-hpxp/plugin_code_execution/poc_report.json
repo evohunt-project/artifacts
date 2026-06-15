@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that Poetry's plugin system executes arbitrary code from entry points without sandboxing or validation. A malicious package registered as a Poetry plugin executes code during the load() operation, before any type checking occurs.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate arbitrary code execution when Poetry loads a malicious plugin entry point. The plugin's activate() method should execute and create an exploit file.",
+  "actual_observed_result": "Running ./reproduction/run.sh installed a malicious plugin package, Poetry loaded the entry point, and the plugin's activate() method executed, creating exploit_successful.txt with confirmation of code execution.",
+  "verification_method": "The verification checks for the existence of exploit_successful.txt created by the malicious plugin's code execution. This confirms the plugin executed arbitrary code before any security checks.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious plugin package installed successfully",
+    "Poetry discovered the plugin entry point via importlib.metadata.entry_points()",
+    "Plugin entry point loaded, triggering code execution",
+    "MaliciousPlugin.activate() executed, creating /poc-output/exploit_successful.txt",
+    "File content confirms: \"PLUGIN CODE EXECUTION CONFIRMED\""
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Poetry repository from GitHub, checks out version 2.3.2, and mounts it into the container at /target-repo",
+    "pinned_commit_or_ref": "2.3.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious_plugin.py"
+    ]
+  }
+}

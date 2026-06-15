@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that any authenticated user can trigger full SSRF with response exfiltration through the workflow import-from-url endpoint. The server makes an HTTP GET request to the attacker-specified URL (including internal network addresses) and returns the complete response body to the caller.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the n8n server to fetch a URL pointing to a simulated internal metadata service (localhost:8888) and return the full response body containing proof-of-SSRF markers and simulated sensitive data back to the attacker.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds the n8n Docker image, starts a fake internal service on port 8888, starts n8n, creates an owner account, retrieves the personal project ID, and then calls GET /rest/workflows/from-url?url=http://localhost:8888/internal/metadata&projectId=<id>. The n8n server fetches the URL from the fake internal service and returns the complete JSON response including the proof-of-SSRF marker and simulated secrets to the caller.",
+  "verification_method": "The verification script checks for the exact proof string EVOHUNT_SSRF_PROOF_8f3a7c2b in the response from the from-url endpoint. This string is only present in the fake internal service's response, so its appearance in the API response proves the server made an HTTP request to the internal service and returned the response data to the caller. The check distinguishes SSRF from a generic error, startup failure, or unrelated behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The n8n server makes an outbound HTTP GET to localhost:8888/internal/metadata, which is a service only accessible from within the container (simulating an internal network service).",
+    "The response from the fake internal service is fully returned in the API response, including the _ssrf_proof field and the _exfiltrated_secret field containing simulated AWS credentials.",
+    "The proof string EVOHUNT_SSRF_PROOF_8f3a7c2b appears in the from-url endpoint response, confirming end-to-end SSRF with data exfiltration."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh",
+      "reproduction/fake-internal-server.py"
+    ]
+  }
+}

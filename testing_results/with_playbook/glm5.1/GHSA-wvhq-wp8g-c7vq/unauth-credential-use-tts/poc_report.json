@@ -1,0 +1,34 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "missing_authorization",
+  "summary": "A Docker-based reproduction was generated to demonstrate that the unauthenticated POST /api/v1/text-to-speech/generate endpoint decrypts and uses any stored credential by UUID. The reproduction seeds a Flowise instance with a test credential, starts the server with a mock OpenAI endpoint to capture the outgoing API key, and verifies the captured key matches the stored value.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running ./reproduction/run.sh should cause the TTS endpoint to decrypt the stored credential and attempt to call the OpenAI API with the victim's key. The mock server should capture an Authorization header containing the exact stored API key (sk-evohunt-poc-stolen-key-12345), confirming the credential was decrypted and used without authentication.",
+  "actual_observed_result": "The reproduction was not executed in this session. The run.sh script, Dockerfile, setup.js, mock_server.js, exploit.sh, and verify.sh artifacts are provided as a self-contained bundle for future execution.",
+  "verification_method": "The verify.sh script starts a mock HTTP server on port 18888, configures Flowise with OPENAI_BASE_URL pointing to the mock server, seeds the database with a credential containing a known API key, then calls the TTS endpoint without authentication. The mock server captures the Authorization header from the outgoing request and writes it to a proof file. The verify script checks whether the captured key matches the expected value (sk-evohunt-poc-stolen-key-12345). A secondary check looks for OpenAI-related error text in the TTS response, which also confirms the credential was decrypted.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The reproduction bundle includes setup.js which seeds a Flowise SQLite database with an AES-encrypted credential containing a known test API key.",
+    "The exploit.sh script demonstrates the full attack chain: GET /api/v1/public-chatbotConfig/<id> to extract credentialId, then POST /api/v1/text-to-speech/generate with the extracted credentialId.",
+    "A mock OpenAI server (mock_server.js) captures the outgoing API key to provide an automated verification oracle."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction was not executed during this session. The PoC artifacts have not been validated by a live run.",
+    "Building Flowise from source or installing via npm may require network access and significant build time.",
+    "The pinned commit ref (9cf17c06e4e97b8e1e37637b61ab3fb2b2b9d2bc) is approximate and may need adjustment to match the exact source version."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub (FlowiseAI/Flowise), checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "9cf17c06e4e97b8e1e37637b61ab3fb2b2b9d2bc",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.js",
+      "reproduction/mock_server.js",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

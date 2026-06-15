@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "Docker-based reproduction confirms that authenticated low-privilege user can retrieve masterKey from /parse-dashboard-config.json endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Authenticated HTTP request to /parse-dashboard-config.json should return configuration containing masterKey field accessible to low-privilege users.",
+  "actual_observed_result": "Successfully retrieved configuration from /parse-dashboard-config.json with authenticated session. Response contained masterKey value confirming sensitive credential exposure to non-admin users.",
+  "verification_method": "Automated check verifies: (1) User authenticates with valid credentials, (2) HTTP GET to /parse-dashboard-config.json returns 200 OK, (3) Response contains masterKey field, (4) User has limited privileges but can access masterKey.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Successful authentication with low-privilege user credentials",
+    "HTTP response with status 200 from authenticated request",
+    "JSON response containing masterKey field",
+    "MasterKey accessible despite user's limited permissions"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v9.0.0-alpha.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/simple_poc.py"
+    ]
+  }
+}

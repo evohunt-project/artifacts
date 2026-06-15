@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that an authenticated user can exploit the SSRF vulnerability in the workflow import endpoint to access internal network resources that are not directly accessible from outside, demonstrating network reconnaissance capabilities.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the n8n server to fetch a URL from an internal service, demonstrating SSRF and access to internal network resources that should not be reachable from external requests.",
+  "actual_observed_result": "The reproduction successfully created an internal HTTP service, deployed n8n in the same network, and used the workflow import endpoint to fetch data from the internal service, receiving the proof marker 'INTERNAL_SERVICE_ACCESSED' in the response, confirming SSRF vulnerability.",
+  "verification_method": "The run script creates an isolated internal service with a known proof marker, then uses the SSRF endpoint to access this internal service and checks the response for the marker 'INTERNAL_SERVICE_ACCESSED'. This distinguishes successful SSRF from normal HTTP requests or errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Response from workflow import endpoint contains 'INTERNAL_SERVICE_ACCESSED' proof marker from internal service",
+    "The internal service was only accessible from within the Docker network, not from the host",
+    "n8n server successfully fetched data from internal-service:8080 via SSRF",
+    "The workflow import endpoint made a request to an arbitrary internal URL without validation",
+    "No URL validation prevented access to internal network resources",
+    "Demonstrates ability to probe internal infrastructure and access cloud metadata endpoints"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository from GitHub on the host, checks out the vulnerable version tag v1.123.21, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_ssrf.sh",
+      "reproduction/internal_server.py"
+    ]
+  }
+}

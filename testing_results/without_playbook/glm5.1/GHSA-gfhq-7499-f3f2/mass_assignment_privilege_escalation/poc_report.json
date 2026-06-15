@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "mass_assignment",
+  "summary": "The Docker-based reproduction demonstrates that the mass assignment vulnerability in User model allows injecting administrative flags during user creation, enabling complete privilege escalation from an unprivileged user to full administrative access.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should create a user with administrative flags ('ts' and 'user-manager') via mass assignment, demonstrating that an attacker can escalate privileges to gain full administrative access to the TSPortal platform including user management, investigation oversight, and report handling.",
+  "actual_observed_result": "The reproduction successfully executed the exploit script which created a user with administrative flags injected via mass assignment. The verification confirmed the user obtained both 'ts' and 'user-manager' flags, granting full administrative privileges as defined in the application policies.",
+  "verification_method": "The reproduction script verifies the exploitation by checking the created user's flags attribute contains ['ts', 'user-manager'], standing=1, and user_verified=true. It writes verification data to a temporary file and the verification script checks for the presence of the success marker 'EVOHUNT_MASS_ASSIGNMENT_EXPLOIT_SUCCESS' which indicates the administrative flags were successfully injected.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "User record created with username 'attacker_user'",
+    "User flags field successfully injected with ['ts', 'user-manager'] administrative privileges",
+    "User standing set to 1 (GOOD standing)",
+    "User verified flag set to true",
+    "Verification file confirms has_ts_flag=true and has_user_manager_flag=true",
+    "Application policies grant full administrative access to users with 'ts' flag (UserPolicy.php:22-24)",
+    "Application policies grant user management permissions to users with 'user-manager' flag (UserPolicy.php:80)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host, checks out the pinned vulnerable version (v30), and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v30",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_and_verify.sh",
+      "reproduction/exploit_mass_assignment.php",
+      "reproduction/verify_mass_assignment.sh"
+    ]
+  }
+}

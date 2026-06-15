@@ -1,0 +1,37 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The PoC demonstrates SSRF vulnerability in the workflow import feature, confirming that internal services and mock cloud metadata endpoints can be accessed through the from-url API.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should attempt to import workflows from mock cloud metadata endpoints (port 9999) and internal API endpoints (port 8080), demonstrating unauthorized access to internal services and potential credential theft.",
+  "actual_observed_result": "The PoC successfully accessed fake cloud metadata endpoint and internal admin API through the workflow import URL parameter, demonstrating SSRF capability to reach internal network services that should not be accessible from external APIs.",
+  "verification_method": "Verification checks for proof files indicating successful SSRF access to the metadata endpoint and internal API, confirming that responses from internal services were retrieved through the vulnerable endpoint.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Mock cloud metadata endpoint on port 9999 was successfully accessed via SSRF",
+    "Internal admin API on port 8080 was successfully accessed via SSRF",
+    "Fake AWS metadata (account ID, secret keys) was retrieved through the vulnerability",
+    "Internal service credentials and configuration data were exposed via SSRF",
+    "The from-url endpoint accepts arbitrary URLs without validation or internal network restrictions"
+  ],
+  "limitations_or_blockers": [
+    "Full exploitation requires actual cloud environment or internal network topology",
+    "The PoC uses mock services to demonstrate the vulnerability mechanism",
+    "Real-world impact depends on what internal services are available in the target deployment"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository from GitHub and mounts it read-only at /target-repo",
+    "pinned_commit_or_ref": "HEAD (latest commit at time of execution)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/cloud-metadata-server.py",
+      "reproduction/internal-server.py",
+      "reproduction/mock-workflow.json"
+    ]
+  }
+}

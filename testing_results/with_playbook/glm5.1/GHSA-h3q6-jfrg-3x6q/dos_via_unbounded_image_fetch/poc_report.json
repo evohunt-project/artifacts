@@ -1,0 +1,35 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "Denial of Service (DoS) - Uncontrolled Resource Consumption",
+  "summary": "Docker-based reproduction demonstrating DoS via unbounded image fetching. The PoC creates an HTTP server serving a large image and monitors memory consumption when the PDF generator processes a malicious survey referencing that image.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PDF generator should attempt to fetch the large image (150MB+) into memory without size limits, causing significant memory consumption and potentially resource exhaustion or process crash.",
+  "actual_observed_result": "PoC bundle created with HTTP server serving large image, exploit script to trigger the fetch, and memory monitoring tools. Docker environment includes resource monitoring to demonstrate impact.",
+  "verification_method": "Memory monitoring scripts track RAM usage before and during image fetch. DoS is confirmed when memory consumption spikes significantly or when the process crashes/exhausts resources.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "PoC files created: Dockerfile, run.sh, exploit.js, large_image_server.js, verify.sh",
+    "Large image server generates 150MB+ image on the fly",
+    "Memory monitoring script to demonstrate resource consumption",
+    "Malicious survey JSON pointing to the large image URL"
+  ],
+  "limitations_or_blockers": [
+    "Docker build timeout during execution - environment setup requires time for npm install and library compilation",
+    "Full DoS demonstration requires extended runtime to observe memory patterns",
+    "Actual memory exhaustion may crash Docker container before verification completes"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/large_image_server.js",
+      "reproduction/verify.sh",
+      "reproduction/malicious_survey.json"
+    ]
+  }
+}

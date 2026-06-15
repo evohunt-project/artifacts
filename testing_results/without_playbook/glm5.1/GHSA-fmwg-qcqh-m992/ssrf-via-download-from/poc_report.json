@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction starts a mock internal HTTP server alongside a default-configured Gotenberg instance, then sends a multipart POST request containing a downloadFrom field that points to the mock server. The PoC confirms the SSRF by verifying that the mock server received an HTTP request originated by Gotenberg's server-side fetch.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Gotenberg should make an outbound HTTP GET request to the mock internal service URL specified in the downloadFrom field, proving that an unauthenticated attacker can cause the server to fetch arbitrary internal URLs. The proof marker file written by the mock server confirms the request was received.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Gotenberg container with default configuration (no authentication, empty URL filter lists). The verify.sh script started a mock internal HTTP server on 127.0.0.1:8888, waited for Gotenberg to become healthy (~2s), then sent a POST to /forms/pdfengines/merge with downloadFrom=[{\"url\":\"http://127.0.0.1:8888/internal-secret\"}]. Gotenberg responded with HTTP 200 and the mock server logged the incoming GET request from Gotenberg, confirming the server-side fetch occurred.",
+  "verification_method": "The verify.sh script starts a Python HTTP server on port 8888 that writes a unique proof marker file (containing the string EVOHUNT_SSRF_PROOF_7d3f8a2b1c) to /tmp when it receives a request. After sending the SSRF trigger to Gotenberg, the script checks whether the proof file exists and contains the expected proof string. This distinguishes a real SSRF from a generic startup failure or unrelated error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The mock internal server logged: GET /internal-secret HTTP/1.1 200 -",
+    "The proof file was created with content: SSRF_CONFIRMED: Gotenberg server fetched 127.0.0.1 with path /internal-secret",
+    "The proof file contains the expected proof string EVOHUNT_SSRF_PROOF_7d3f8a2b1c",
+    "Gotenberg responded with HTTP 200 to the merge request, meaning the downloaded file was successfully used as merge input",
+    "Gotenberg version confirmed as 8.33.0 running all standard modules including api, chromium, libreoffice, pdfengines"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/internal_server.py",
+      "reproduction/verify.sh",
+      "reproduction/cover.pdf"
+    ]
+  }
+}

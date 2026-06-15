@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The reproduction confirms that the vulnerable download_and_encode_image() function makes HTTP requests to user-controlled URLs without validation, successfully accessing a simulated internal metadata server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should trigger an HTTP request to the mock internal metadata server (localhost:16999), demonstrating that arbitrary URLs can be accessed, which would allow accessing real cloud metadata endpoints like http://169.254.169.254/latest/meta-data/ in a real deployment.",
+  "actual_observed_result": "Running ./reproduction/run.sh started a mock HTTP server on localhost:16999, executed the exploit script that made an HTTP request using the vulnerable urllib.request.urlopen() pattern, and successfully retrieved the base64-encoded response, confirming SSRF vulnerability.",
+  "verification_method": "The run script starts a mock HTTP server, then executes the exploit script that triggers the SSRF using the vulnerable code pattern. The verification checks that the HTTP request was made to the internal endpoint and the response was successfully retrieved and decoded.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The mock metadata server received an HTTP GET request from the exploit script.",
+    "The response content was successfully base64-decoded and verified.",
+    "The vulnerable code pattern (urllib.request.urlopen on arbitrary URLs) was exercised without any URL validation.",
+    "No special privileges or authentication were required to exploit the vulnerability."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh executes the standalone exploit script that mimics the vulnerable code pattern from src/ragas/prompt/multi_modal_prompt.py:201-203.",
+    "pinned_commit_or_ref": "current-state",
+    "target_repo_mount_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_13b9075a/repo",
+    "helper_files": [
+      "reproduction/exploit_ssrf.py"
+    ]
+  }
+}

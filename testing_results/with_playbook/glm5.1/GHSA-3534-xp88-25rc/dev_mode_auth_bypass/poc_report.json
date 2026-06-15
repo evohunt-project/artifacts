@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "Docker-based reproduction confirms that starting parse-dashboard with --dev flag allows unauthenticated access to /parse-dashboard-config.json, exposing masterKey.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Unauthenticated HTTP request to /parse-dashboard-config.json should return full configuration including masterKey when --dev flag is enabled.",
+  "actual_observed_result": "Successfully retrieved configuration from /parse-dashboard-config.json without authentication. Response contained masterKey value 'testMasterKey123' confirming complete authentication bypass.",
+  "verification_method": "Automated check verifies: (1) Dashboard starts with --dev flag, (2) HTTP GET to /parse-dashboard-config.json returns 200 OK without authentication, (3) Response contains masterKey field, (4) No authentication headers or credentials required.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response with status 200 from unauthenticated request",
+    "JSON response containing masterKey field",
+    "Full application configuration exposed without credentials"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v9.0.0-alpha.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

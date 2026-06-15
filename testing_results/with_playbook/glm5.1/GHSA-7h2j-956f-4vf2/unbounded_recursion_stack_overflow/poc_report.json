@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_stack_overflow",
+  "summary": "The reproduction demonstrates that deeply nested brace patterns (10000 levels) cause stack overflow due to unbounded recursion in expand_() and parseCommaParts() functions, crashing the Node.js process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Processing 10000 nested braces should cause a 'Maximum call stack size exceeded' error, crashing the process and demonstrating that the max expansion limit does not protect against stack overflow.",
+  "actual_observed_result": "The Node.js process threw a 'Maximum call stack size exceeded' RangeError when processing the deeply nested pattern, confirming the stack overflow vulnerability. The process crashed due to excessive recursive calls without depth limits.",
+  "verification_method": "The test script catches the stack overflow error and checks for 'Maximum call stack' in the error message. This distinguishes stack overflow from other errors. The non-zero exit code confirms process crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Stack overflow error thrown: Maximum call stack size exceeded",
+    "Process crashed with non-zero exit code",
+    "10000 nested braces exceeded call stack limit",
+    "No depth limit in recursive calls at lines 64, 124, 142, 154, 211",
+    "Max expansion limit (100,000) does not protect against recursion depth"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out vulnerable v5.0.0 tag, and Dockerfile copies it for build.",
+    "pinned_commit_or_ref": "v5.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

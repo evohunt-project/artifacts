@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the vulnerable upload endpoint allows uploading files to arbitrary locations using path traversal in the destination parameter, verified by uploading a file outside the intended directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate uploading a file to an arbitrary location outside the intended upload directory using path traversal sequences in the destination parameter.",
+  "actual_observed_result": "Running ./reproduction/run.sh sent a POST request to /api/upload with destination='../../tmp', successfully uploaded a test file outside the intended upload directory, and verified the file exists in /tmp.",
+  "verification_method": "The run.sh script uploads a file with path traversal payload in the destination parameter and checks if the file appears in the target location (/tmp). File existence outside the intended upload directory confirms successful path traversal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File uploaded to /tmp directory via destination='../../tmp' path traversal",
+    "Uploaded file exists outside the intended upload directory",
+    "No authentication required for the upload endpoint",
+    "Path traversal successfully bypassed directory restrictions"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and builds the Docker image from that source.",
+    "pinned_commit_or_ref": "37ebc5ead6e5b7115507d2289784d0aa28c93630",
+    "target_repo_mount_path": "/app/FUXA",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

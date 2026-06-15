@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_information_exposure",
+  "summary": "The Docker-based reproduction confirms that the APIKeyAuthProvider accepts API keys via URL query string parameters (?api_key=...). A request sent without credentials returns HTTP 401, confirming auth is required. The same request with the API key in the query string returns HTTP 200, demonstrating that the server accepts credentials in the URL where they are exposed to logs, proxies, browser history, and Referer headers.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The MCP server should reject API keys sent via query string to prevent credential leakage in server access logs, proxy logs, browser history, and HTTP Referer headers. Instead, it accepts the query-string API key and processes the request successfully.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the framework, started the MCP server with API key auth, confirmed that unauthenticated requests are rejected (HTTP 401), then sent a request with the API key in the query string (?api_key=secret-api-key-12345). The server returned HTTP 200 with a valid MCP initialize response, confirming that query-string API keys are accepted.",
+  "verification_method": "The exploit performs two requests: first without any credentials (expected HTTP 401 to confirm auth is active), then with the API key in the query string. If the second request returns HTTP 200, it confirms the server accepts query-string credentials. This is compared against the OAuth provider which explicitly rejects query-string tokens.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Unauthenticated request returned HTTP 401, confirming authentication is enforced.",
+    "Request with api_key in query string returned HTTP 200, confirming query-string credentials are accepted.",
+    "The OAuth provider explicitly rejects query-string tokens (validateTokenNotInQueryString), highlighting the inconsistent security posture."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.2.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/test-server.mjs",
+      "reproduction/exploit.mjs"
+    ]
+  }
+}

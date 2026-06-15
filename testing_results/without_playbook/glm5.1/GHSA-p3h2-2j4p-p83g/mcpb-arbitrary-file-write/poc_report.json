@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_file_write",
+  "summary": "The Docker-based reproduction successfully demonstrates that a malicious MCPB package with path traversal in the manifest name field can write files outside the intended upload directory. The PoC creates a proof-of-concept file at /tmp/pwned-by-mcpb/proof.txt, confirming arbitrary file write capability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Uploading a malicious MCPB package should cause files from the archive to be extracted outside the data/uploads/mcpb directory, specifically to /tmp/pwned-by-mcpb/proof.txt, demonstrating arbitrary file write through path traversal.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the MCPHub container, started the server with skipAuth enabled, uploaded the malicious MCPB package, and verified that the proof.txt file was written to /tmp/pwned-by-mcpb/proof.txt outside the upload directory, confirming the arbitrary file write vulnerability.",
+  "verification_method": "The verification script checks for the existence of /tmp/pwned-by-mcpb/proof.txt after upload and compares its contents with the expected proof string. This distinguishes successful path traversal exploitation from normal upload behavior where files would remain inside data/uploads/mcpb/.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show successful MCPB file upload and processing",
+    "The file /tmp/pwned-by-mcpb/proof.txt exists after the upload attempt",
+    "The proof.txt file contains the expected content 'ARBITRARY_FILE_WRITE_SUCCESS', confirming the attacker-controlled file was written to the target location",
+    "The normal upload directory data/uploads/mcpb/ does not contain the proof.txt file, confirming it was written outside the intended boundary"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_exploit.py",
+      "reproduction/verify_exploit.sh"
+    ]
+  }
+}

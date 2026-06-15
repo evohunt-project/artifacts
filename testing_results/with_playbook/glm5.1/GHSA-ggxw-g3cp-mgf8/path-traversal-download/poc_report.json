@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can read arbitrary files from the server via path traversal in /api/download. The PoC sends a GET request with '....//' sequences to traverse out of the reports directory and read /etc/passwd.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the FUXA server to serve the contents of /etc/passwd in the HTTP response body, demonstrating arbitrary file read via path traversal.",
+  "actual_observed_result": "Running ./reproduction/run.sh started the FUXA server, sent the crafted GET /api/download request with the '....//' bypass payload, and the server responded with the contents of /etc/passwd, confirming arbitrary file read.",
+  "verification_method": "The verify script checks that the HTTP response body contains the string 'root:' which is the expected content of /etc/passwd on Linux. This distinguishes successful path traversal from a generic error response, file-not-found message, or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The FUXA server started successfully and responded to HTTP requests on port 1881.",
+    "The crafted GET /api/download request with '....//' path traversal returned HTTP 200.",
+    "The response body contained 'root:' confirming that /etc/passwd was read and served.",
+    "No authentication token or credentials were required."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.2.10",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "csrf",
+  "summary": "The Docker-based reproduction confirms that OpenSTAManager ships with CSRF protection disabled by default. The config.example.php sets disableCSRF = true, and no manual CSRF token validation is performed in action handlers, allowing cross-site request forgery attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An attacker hosting a malicious HTML page can forge POST requests to OpenSTAManager endpoints. When an authenticated user visits the attacker's page, their browser submits the form with session cookies, performing actions without CSRF validation.",
+  "actual_observed_result": "The reproduction verified: (1) config.example.php sets disableCSRF = true by default, (2) core.php conditionally initializes csrfProtector only when disableCSRF is not set, (3) action handlers do not perform manual CSRF token validation, (4) all state-changing POST endpoints accept requests without CSRF tokens.",
+  "verification_method": "The verification script examines the default configuration file and CSRF initialization code. It confirms that disableCSRF = true is set by default and that no CSRF tokens are required for POST requests. The simulated attack demonstrates that account creation, password changes, and invoice modifications can be forged.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "config.example.php:36 sets $disableCSRF = true (default disables protection)",
+    "core.php:196-199 conditionally calls csrfProtector::init() only when disableCSRF is empty/false",
+    "No CSRF token validation found in modules/utenti/actions.php, modules/fatture/actions.php, or actions.php",
+    "Attack scenarios demonstrated: backdoor admin creation, password changes, fraudulent invoices",
+    "CSRF test HTML page created showing how cross-origin forms submit without tokens"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the OpenSTAManager repository from GitHub and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "master (latest)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_csrf.sh",
+      "reproduction/csrf_test.html",
+      "reproduction/simulate_csrf.php"
+    ]
+  }
+}

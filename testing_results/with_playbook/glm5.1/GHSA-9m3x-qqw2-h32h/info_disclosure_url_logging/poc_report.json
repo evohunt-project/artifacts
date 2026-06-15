@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "Docker-based reproduction confirms information disclosure via URL logging. The scanner logged the complete URL including sensitive query parameters (api_key, session_id, token) in WARNING-level log messages. The sensitive values 'api_key=AKIAIOSFODNN7EXAMPLE' and other credentials were visible in the log output.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that URLs with sensitive query parameters (api_key, session_id, token) are logged in plaintext, exposing these credentials to anyone with access to the logs.",
+  "actual_observed_result": "Running ./reproduction/run.sh confirmed the vulnerability. The scanner logged the complete URL 'http://127.0.0.1:8888/model.pkl?api_key=AKIAIOSFODNN7EXAMPLE&session_id=SESSION_SECRET_12345&token=TOKEN_ABC123' in WARNING messages. The sensitive API key, session ID, and token values were exposed in the log output.",
+  "verification_method": "The run.sh script captures scanner output to /tmp/scanner_output.log and checks for the presence of the sensitive api_key value 'AKIAIOSFODNN7EXAMPLE' in the logs. Finding this value confirms the information disclosure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Scanner executed scan_url() with URL containing sensitive query parameters",
+    "WARNING-level log messages included the complete URL with all query parameters",
+    "Sensitive API key 'AKIAIOSFODNN7EXAMPLE' visible in log output",
+    "Session ID 'SESSION_SECRET_12345' and token 'TOKEN_ABC123' also exposed",
+    "No URL sanitization or query parameter redaction performed before logging"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.0.9 or main branch",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/sensitive_url_server.py",
+      "reproduction/verify_logging.py"
+    ]
+  }
+}

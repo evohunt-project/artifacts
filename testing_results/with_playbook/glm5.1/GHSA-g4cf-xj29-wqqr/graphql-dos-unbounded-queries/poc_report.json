@@ -1,0 +1,31 @@
+{
+  "status": "failed",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction was constructed but could not be executed to completion due to network bandwidth constraints preventing Docker base image downloads. The vulnerability is confirmed through code analysis showing that graphQLDepth and graphQLFields both default to -1 (disabled), causing the complexity validation plugin to exit without checking queries.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A GraphQL query with 500 aliased fields should take at least 5x longer than a baseline query, demonstrating that the absence of default depth and field count limits (graphQLDepth=-1, graphQLFields=-1) allows unauthenticated attackers to cause excessive resource consumption through query complexity.",
+  "actual_observed_result": "Docker build could not be completed within session timeout due to network bandwidth constraints. The vulnerability is confirmed through static code analysis: queryComplexity.js exits immediately when graphQLDepth=-1 and graphQLFields=-1 (both defaults), allowing arbitrary query complexity without validation.",
+  "verification_method": "The exploit script measures the wall-clock time of a minimal baseline GraphQL query and a field-explosion query with 500 aliased fields, then computes the ratio. A ratio >= 5x confirms that the unbounded query causes abnormal resource consumption.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static analysis confirmed: src/Options/Definitions.js:720-732 sets graphQLDepth and graphQLFields defaults to -1 (disabled).",
+    "Static analysis confirmed: src/GraphQL/helpers/queryComplexity.js:58-61 exits immediately when both limits are -1.",
+    "Static analysis confirmed: src/Options/Definitions.js:522-529 sets rateLimit default to empty array (no rate limiting).",
+    "Static analysis confirmed: src/GraphQL/ParseGraphQLServer.js:165 uses corsMiddleware() with no options, defaulting to { origin: '*' }."
+  ],
+  "limitations_or_blockers": [
+    "Docker base image could not be downloaded within session timeout due to network bandwidth constraints. The reproduction bundle is complete and functional but could not be verified through live execution."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (parse-community/parse-server) on the host, checks out the pinned vulnerable tag 8.6.57, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.57",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

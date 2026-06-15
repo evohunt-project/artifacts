@@ -1,0 +1,33 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "A Docker-based reproduction bundle was generated to demonstrate the SSRF via cluster node registration and proxy middleware. The exploit registers a node with an internal URL (simulating an internal service) and verifies the server proxies requests to it, returning the response body to the attacker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the server to proxy a request to a fake internal HTTP server running on localhost:8888 and return that server's response (containing a proof marker string EVOHUNT_SSRF_PROOF_SECRET_DATA_EXFILTRATED) to the attacker, demonstrating SSRF-based data exfiltration from internal services.",
+  "actual_observed_result": "The reproduction was not executed to completion due to Docker environment instability. The Go build from source requires downloading ~200+ modules and compiling, which takes 5-10+ minutes, and the Docker environment repeatedly terminated the build container before completion. The vulnerability was confirmed through comprehensive source code analysis tracing the complete exploit path from user-controlled node URL registration through the proxy middleware to response exfiltration.",
+  "verification_method": "The exploit script checks for the exact proof marker string EVOHUNT_SSRF_PROOF_SECRET_DATA_EXFILTRATED in the proxied response body. This distinguishes a successful SSRF from a connection error, authentication failure, or unrelated response.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Source code analysis confirms the complete exploit chain: AddNode (api/cluster/node.go:51) accepts arbitrary URLs with only format validation, Proxy middleware (internal/middleware/proxy.go:16-110) forwards requests to node URLs via httputil.NewSingleHostReverseProxy with no SSRF protection, and the response is returned to the attacker.",
+    "The proxy middleware at proxy.go:72 injects the node's stored token as X-Node-Secret, potentially leaking cluster credentials to attacker-controlled endpoints.",
+    "router/routers.go:97 places cluster.InitRouter(g) under the AuthRequired middleware group, meaning any authenticated user (not just admins) can add nodes and trigger the proxy.",
+    "model/node.go:10 stores the node URL without restriction; api/cluster/node.go:44-48 returns node data including tokens in API responses."
+  ],
+  "limitations_or_blockers": [
+    "The Go build from source requires significant time (5-10+ minutes) and stable network access for dependency downloads (~200+ modules).",
+    "Docker Desktop instability in the test environment prevented the full runtime verification from completing within time constraints.",
+    "The GOTOOLCHAIN=auto approach (downloading Go 1.26 toolchain automatically) adds additional build time."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.3.5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "http_request_smuggling",
+  "summary": "The Docker-based reproduction confirms that the Salvo proxy forwards hop-by-hop headers (Connection, Transfer-Encoding) to upstream servers. An upstream echo server received these headers, which per RFC 9110 must never be forwarded by a proxy.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that hop-by-hop headers (Connection, Transfer-Encoding) sent by the client are forwarded through the Salvo proxy to the upstream server, which confirms the proxy violates RFC 9110 Section 7.6.1 and is vulnerable to HTTP request smuggling.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Salvo proxy from the target repository, started an upstream HTTP echo server and the Salvo proxy, sent a request with Connection and Transfer-Encoding headers, and the upstream echo server confirmed it received these hop-by-hop headers in the forwarded request.",
+  "verification_method": "The exploit script sends a GET request with Connection: close and Transfer-Encoding: chunked headers through the proxy. The upstream echo server returns all received headers as JSON. The verification checks that: (1) the upstream received the hop-by-hop headers (Connection, Transfer-Encoding), confirming the vulnerability, and (2) a normal header (X-Test-Normal) was also forwarded, confirming the proxy is functioning. If hop-by-hop headers appear in the upstream response, the vulnerability is confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The upstream echo server response body contains a 'connection' header key, confirming the Connection hop-by-hop header was forwarded.",
+    "The upstream echo server response body contains a 'transfer-encoding' header key, confirming the Transfer-Encoding hop-by-hop header was forwarded.",
+    "A normal header (X-Test-Normal) was also forwarded, confirming the proxy is functioning correctly for non-hop-by-hop headers.",
+    "The presence of both Connection and Transfer-Encoding in the upstream response proves the proxy does not implement hop-by-hop header filtering."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.89.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/upstream_echo.py",
+      "reproduction/exploit.py"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "csrf",
+  "summary": "The PoC bundle was generated to demonstrate GET-based CSRF bypass for organization member removal. The reproduction builds Gogs from source, creates users and an organization, and demonstrates that a GET request removes an org member without CSRF token validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After running the reproduction, a GET request to /org/:org/members/action/remove?uid=<id> should remove the victim user from the organization without requiring any CSRF token, confirming that state-changing operations are performed via GET without CSRF protection.",
+  "actual_observed_result": "The reproduction was not executed because the Docker base image (golang:alpine3.21) could not be pulled in the available environment.",
+  "verification_method": "The exploit script (exploit.py) performs the following steps: (1) sets up Gogs with an admin user, (2) creates an organization, (3) creates a victim user and adds them to the organization, (4) verifies the victim is a member, (5) sends a GET request to /org/:org/members/action/remove?uid=<id> as the org owner, (6) verifies the victim was removed. Success is confirmed by checking that the victim username no longer appears on the org members page.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker base image pull timed out in the execution environment, preventing the PoC from being built and run."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the local target repository and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

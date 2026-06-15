@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that Gogs 0.14.3 in Development mode exposes detailed stack traces, internal paths, and runtime information through error responses. Sending malformed multipart POST requests to /user/sign_up and /user/login triggers panics that return HTTP 500 responses containing full stack traces with internal module paths.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Error responses should expose stack traces, internal paths, and runtime details that facilitate attacker reconnaissance. Malformed multipart requests should trigger panics that disclose Go runtime internals and application module paths.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the gogs/gogs:latest image, started Gogs 0.14.3 in Development mode, and sent malformed multipart POST requests to /user/sign_up and /user/login. Both returned HTTP 500 with full panic stack traces including: 'runtime error: invalid memory address or nil pointer dereference', runtime/panic.go:262, runtime/signal_unix.go:925, github.com/go-macaron/binding paths, and gopkg.in/macaron.v1 internal paths.",
+  "verification_method": "The exploit sends malformed multipart requests to trigger panic responses and checks for disclosure patterns in the response body: goroutine stack traces, Go runtime paths (runtime/), internal module paths (gogs.io/gogs/internal, /app/gogs/), panic messages. The verify.sh script checks for a proof file that records all disclosed information.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "POST /user/sign_up (malformed multipart) returned HTTP 500 with full stack trace",
+    "POST /user/login (invalid multipart) returned HTTP 500 with full stack trace",
+    "Stack trace includes: runtime/panic.go:262, runtime/signal_unix.go:925",
+    "Internal paths disclosed: github.com/go-macaron/binding, gopkg.in/macaron.v1",
+    "Panic message: 'runtime error: invalid memory address or nil pointer dereference'",
+    "Gogs running in Development mode (non-production) which enables error disclosure",
+    "Gogs version: 0.14.3 (commit 3ba8aca90e17e5410b7e8b227c9f29256ac3e875)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

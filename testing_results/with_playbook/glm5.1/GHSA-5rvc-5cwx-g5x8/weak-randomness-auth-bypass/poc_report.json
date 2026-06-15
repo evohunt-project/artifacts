@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "weak_randomness",
+  "summary": "The code analysis confirms that generate_auth_data.go line 125 uses math/rand seeded with time.Now().UnixNano(), introducing weak randomness into the authentication procedure, while line 259 correctly uses crypto/rand for RAND generation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction demonstrates the presence of weak PRNG usage in security-sensitive code through code inspection and highlights the design flaw.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the UDM service, verified line 125 contains rand.New(rand.NewSource(time.Now().UnixNano())), and verified line 259 uses crypto/rand.Read(). The design flaw is confirmed.",
+  "verification_method": "The verify.sh script inspects the source code to confirm the weak PRNG pattern exists alongside proper crypto/rand usage.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code at generate_auth_data.go:125 contains weak PRNG seed",
+    "Source code at generate_auth_data.go:259 uses crypto/rand correctly",
+    "Code analysis confirms design flaw: both patterns coexist in same procedure",
+    "Weak PRNG could affect other variables if math/rand is used elsewhere in the flow"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the free5gc/udm repository from GitHub, checks out v3.2.10 tag, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v3.2.10",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

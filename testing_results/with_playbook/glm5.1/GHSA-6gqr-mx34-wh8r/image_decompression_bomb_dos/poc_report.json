@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that a crafted PNG image with large dimensions (10000x10000 pixels) causes PHP memory exhaustion when processed by Kirby CMS's GdLib image processing pipeline. The proof string 'EVOHUNT_MEMORY_EXHAUSTED' is emitted by the verification script, confirming the GD library attempted the unbounded memory allocation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Processing the crafted image through Kirby's GdLib::process() should trigger a PHP fatal error due to exceeding the memory_limit, demonstrating that an authenticated user can crash the image processing pipeline and deny service.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, created a 10000x10000 pixel PNG (small on disk due to compression), and ran the PHP verification script. The script attempted to instantiate GdLib and process the image, which triggered the expected Allowed memory size exhausted error from PHP's GD extension, confirmed by the proof string in the output.",
+  "verification_method": "The verify.sh script runs a PHP script that instantiates Kirby's GdLib class directly, processes the crafted image, and captures the output. It checks for the EVOHUNT_MEMORY_EXHAUSTED proof string in stdout, which is emitted only when PHP's memory allocation fails during imagecreatefrompng(). A grep for this exact string distinguishes a genuine memory exhaustion crash from other errors (file not found, class not loaded, syntax errors).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The PHP process emitted 'Allowed memory size exhausted' when SimpleImage::fromFile() attempted to allocate the 10000x10000 pixel buffer.",
+    "The verification script confirmed the EVOHUNT_MEMORY_EXHAUSTED proof string was present in the output.",
+    "The crafted image file size was under 100 KB on disk but required approximately 400 MB to decompress into a GD pixel buffer."
+  ],
+  "limitations_or_blockers": [
+    "The PoC exercises GdLib::process() directly rather than through the full HTTP thumbnail-generation pipeline, because setting up a complete Kirby installation with Panel authentication requires significant infrastructure. The vulnerable code path (GdLib::process -> SimpleImage::fromFile -> imagecreatefrompng) is identical."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "4.9.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/create_bomb.py",
+      "reproduction/trigger_dos.php"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that ASN1HEX.getChildIdx enters an extremely long loop when processing ASN.1 data with an inflated length field. With a claimed content length of 0x05FFFFFF (~100MB) but only 1 byte of actual data, the function takes over 1 second and allocates an array of 100 million elements, compared to <1ms for normal valid ASN.1 parsing. This is a 1000x slowdown demonstrating a clear denial-of-service condition. Larger claimed lengths cause the Node.js process to crash entirely due to V8 array memory exhaustion.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause ASN1HEX.getChildIdx to take significantly longer than normal parsing (1000x slowdown) or crash the process entirely, demonstrating that malformed ASN.1 data can deny service to any application using jsrsasign for parsing.",
+  "actual_observed_result": "The exploit constructs ASN.1 data with a SEQUENCE tag and a 4-byte length field claiming 0x05FFFFFF (~100MB) of content but provides only 1 byte of actual data. When ASN1HEX.getChildIdx processes this data, it iterates approximately 100 million times, allocates an array of 100 million elements, and takes 1061ms to complete. Normal valid ASN.1 parsing takes <1ms. The slowdown factor is over 1000x. With larger claimed lengths (e.g., 0x7FFFFFFF), the V8 engine crashes with a fatal memory allocation error.",
+  "verification_method": "The exploit measures the time taken by ASN1HEX.getChildIdx for both valid and malformed ASN.1 data. If the malformed parsing takes more than 500ms (a 500x slowdown threshold), the DoS is confirmed. A 30-second timeout catches cases where the function does not return at all. The exploit outputs EVOHUNT_PROOF markers with timing data, array size, and slowdown factor to distinguish a genuine DoS from normal parsing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Normal ASN.1 parsing (valid SEQUENCE with 2 children) completes in <1ms.",
+    "Malformed ASN.1 parsing (SEQUENCE claiming 100MB of content with 1 byte actual) takes 1061ms.",
+    "The result array grows to 100,663,295 elements, consuming excessive memory.",
+    "Slowdown factor is over 1000x, confirming the denial-of-service.",
+    "With larger claimed lengths, the V8 process crashes entirely with a fatal JavaScript invalid size error."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version 11.1.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "11.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

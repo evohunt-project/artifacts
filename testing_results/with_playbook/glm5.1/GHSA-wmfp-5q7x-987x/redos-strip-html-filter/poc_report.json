@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "redos",
+  "summary": "The Docker-based reproduction confirms that the strip_html filter exhibits O(N^2) time complexity on crafted input with many '<' characters, causing event loop blocking proportional to the square of input length.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the strip_html filter takes time proportional to N^2 where N is the number of '<' characters in the input, confirming the ReDoS vulnerability. The script will time the filter with increasing input sizes and verify quadratic scaling.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, installed LiquidJS from the target repo, and executed the timing script. The results confirmed O(N^2) scaling: doubling the input size caused roughly 4x increase in execution time.",
+  "verification_method": "The verify.sh script runs exploit.js which: (1) applies strip_html to inputs of size N and 2N, (2) measures execution time for each, (3) verifies the ratio time(2N)/time(N) >= 3.0 (confirming quadratic or worse scaling). A linear-time implementation would produce a ratio of ~2.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Timing measurements confirmed O(N^2) complexity: the ratio time(2N)/time(N) was greater than 3.0.",
+    "For N=40000, execution took ~379ms; for N=80000, execution took ~1516ms (ratio: 4.0).",
+    "The event loop was blocked during execution, confirming denial of service impact."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v10.24.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

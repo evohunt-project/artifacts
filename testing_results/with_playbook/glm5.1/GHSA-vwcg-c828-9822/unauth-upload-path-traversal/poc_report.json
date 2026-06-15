@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the POST /api/upload endpoint has no authentication middleware and the destination parameter is vulnerable to path traversal, allowing an unauthenticated attacker to write arbitrary files to any directory on the server filesystem.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted upload request to resolve the destination path outside the intended directory and write a proof file to /tmp/EVOHUNT_UPLOAD_POC.txt with attacker-controlled content.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned FUXA v1.2.9, built the Docker image, started the FUXA server, sent the exploit POST request to /api/upload without authentication with destination='x/../../../../tmp', and the server wrote the file to /tmp/EVOHUNT_UPLOAD_POC.txt. The proof file contained the expected attacker-controlled content.",
+  "verification_method": "The verify.sh script checks for the existence of /tmp/EVOHUNT_UPLOAD_POC.txt inside the container and verifies its content contains the expected proof string. The file would not exist at that path without successful path traversal because the server's intended upload directory is within its application directory, not /tmp.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit POST to /api/upload returned a successful HTTP response with a location header, confirming the file was accepted.",
+    "The proof file /tmp/EVOHUNT_UPLOAD_POC.txt was created inside the container at the traversed path.",
+    "The file content matches the attacker-controlled payload, confirming arbitrary file write.",
+    "No authentication token was provided, confirming the endpoint is accessible without credentials."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag v1.2.9, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.2.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

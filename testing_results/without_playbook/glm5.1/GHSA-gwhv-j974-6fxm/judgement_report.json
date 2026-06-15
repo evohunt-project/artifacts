@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T08:45:47.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_bfd5aae1",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-gwhv-j974-6fxm/GHSA-gwhv-j974-6fxm.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "sql-injection-via-unsanitized-comment",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_bfd5aae1/sql-injection-via-unsanitized-comment",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_bfd5aae1/sql-injection-via-unsanitized-comment/vulnerability_report.json",
+      "title": "SQL injection via unsanitized comment and hintComment in NativeQueryBuilder",
+      "vulnerability_type": "sql_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes SQL injection via unsanitized comment strings in FindOptions.comments/hintComments/indexHint fields, while the advisory describes SQL injection via duck-typed object detection that interprets specially crafted objects as raw SQL fragments. Different root causes: the advisory root cause is duck-typed detection of ORM marker properties in object assignment/update APIs (wrap().assign(), em.nativeUpdate(), em.nativeInsert(), em.create()), while the finding root cause is missing sanitization of SQL comment delimiters in comment-related APIs (QueryBuilder.comment(), FindOptions.comments). Different affected code paths: advisory affects object property interpretation in core ORM APIs, finding affects comment string embedding in query builder.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code/root cause. The advisory describes SQL injection in MikroORM via duck-typed detection of internal ORM marker properties when specially crafted objects are passed to wrap().assign(), em.nativeUpdate(), em.nativeInsert(), or em.create() APIs. The 'sql-injection-via-unsanitized-comment' finding describes a different SQL injection vector via unsanitized comment strings in FindOptions.comments/hintComments/indexHint, which is a distinct code path with a different root cause (missing comment delimiter sanitization vs duck-typed object marker detection).",
+    "evidence": [
+      "Advisory root cause: duck-typed detection of ORM marker properties in object-based APIs (lines in advisory: 'vulnerability was caused by duck-typed detection of internal ORM marker properties')",
+      "Finding root cause: missing sanitization of */ delimiter in SQL comment string interpolation (NativeQueryBuilder.ts:195, 590, 637)",
+      "Advisory affected APIs: wrap(entity).assign(userInput), em.nativeUpdate(), em.nativeInsert(), em.create() followed by em.flush()",
+      "Finding affected APIs: EntityManager.find(), QueryBuilder.comment(), QueryBuilder.hintComment(), QueryBuilder.indexHint()",
+      "Different vulnerability mechanisms: object property interpretation vs comment string embedding"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_bfd5aae1/sql-injection-via-unsanitized-comment",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_bfd5aae1/sql-injection-via-unsanitized-comment/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_bfd5aae1/sql-injection-via-unsanitized-comment/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

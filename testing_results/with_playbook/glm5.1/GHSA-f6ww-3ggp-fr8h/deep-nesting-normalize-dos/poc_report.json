@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that parsing XML with 10,000 nested elements via DOMParser.parseFromString() causes a RangeError (Maximum call stack size exceeded) in the recursive normalize() method, crashing the process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the xmldom DOMParser to crash with a RangeError during the normalize() step, confirming that deeply nested XML input causes an unhandled stack overflow that terminates the process.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the repository, built the reproduction image, and executed the crash trigger inside the container. The Node.js process exited with an uncaught RangeError at Element.normalize (dom.js:1314), matching the expected stack overflow from recursive normalization of a deeply nested DOM tree.",
+  "verification_method": "The verify.sh script runs the crash trigger and checks the process exit code. A non-zero exit code caused by RangeError confirms the stack overflow. The script distinguishes the DoS crash from a successful parse by verifying that the process did not exit cleanly (exit code != 0) and that stderr contains the RangeError signature.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Process exited with non-zero exit code confirming the crash.",
+    "Stderr contains 'RangeError: Maximum call stack size exceeded' at 'Element.normalize'.",
+    "The crash occurs in the normalize() method at dom.js:1314, confirming the recursive stack overflow path.",
+    "No output was produced on stdout because the process crashed before completing."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0.9.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/trigger.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "heap_buffer_overread",
+  "summary": "A crafted sentencepiece model file with a malicious precompiled_charsmap field triggers a heap buffer over-read in DecodePrecompiledCharsMap. The reproduction builds sentencepiece from source, creates a malicious model, and verifies the overread via AddressSanitizer on Linux or pointer-range verification on any platform.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Loading the crafted model should cause AddressSanitizer to report a heap-buffer-overflow in DecodePrecompiledCharsMap (normalizer.cc:308), or the verification program should confirm that the trie_blob string_view extends past the heap allocation by up to 3 bytes.",
+  "actual_observed_result": "Running the reproduction locally confirmed that DecodePrecompiledCharsMap creates a trie_blob string_view extending 3 bytes past the precompiled_charsmap allocation. The trie_end pointer (0x100c92fd4) exceeds blob_end (0x100c92fd1) by exactly 3 bytes, matching the predicted overread of trie_blob_size (1024) minus available data after header (1021).",
+  "verification_method": "The verify.sh script uses two verification strategies: (1) Build sentencepiece with AddressSanitizer (-fsanitize=address) and load the malicious model; ASAN detects the heap-buffer-overflow and prints an error report. (2) Build a custom test program (verify_overread.cc) that directly computes the trie_blob range and checks if trie_end exceeds blob_end, printing 'OVERREAD CONFIRMED' with the exact byte count. The run.sh script checks for either ASAN output or the 'OVERREAD CONFIRMED' string in the container logs.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Local test showed trie_end (0x100c92fd4) > blob_end (0x100c92fd1) by 3 bytes.",
+    "DecodePrecompiledCharsMap returned OK status despite the overread, meaning the overread data was used to initialize the trie.",
+    "The bounds check at normalizer.cc:289 passes because 1024 < 1025, but after stripping the 4-byte header at line 298, only 1021 bytes remain while trie_blob_size is still 1024."
+  ],
+  "limitations_or_blockers": [
+    "AddressSanitizer verification is Linux-only (ASAN initialization fails on macOS in this environment). The pointer-range verification works on all platforms."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.2.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/verify_overread.cc"
+    ]
+  }
+}

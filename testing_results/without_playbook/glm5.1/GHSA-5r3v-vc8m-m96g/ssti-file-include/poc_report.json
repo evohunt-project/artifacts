@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssti_file_include",
+  "summary": "The Docker-based PoC successfully demonstrates Server-Side Template Injection through path traversal in Caddy's template include functions. The reproduction confirms that an attacker can read arbitrary files from the filesystem and execute their contents as Go templates, enabling environment variable exfiltration and information disclosure.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate path traversal to read a crafted template file from /tmp/exploit.tpl, execute it as a Go template, and exfiltrate environment variables (SECRET_API_KEY, AWS_ACCESS_KEY_ID, DATABASE_PASSWORD) that are set in the container environment. The output should contain the proof markers EVOHUNT_POC_MARKER_START and EVOHUNT_POC_MARKER_END along with the secret values.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the Caddy server from source, deployed it in a Docker container with the vulnerable template configuration, and triggered the SSTI exploit. The HTTP response contained all expected proof markers and successfully exfiltrated all three environment variables: SECRET_API_KEY (EVOHUNT_POC_SECRET_12345), AWS_ACCESS_KEY_ID (AKIAIOSFODNN7EXAMPLE), and DATABASE_PASSWORD (super_secret_db_pass).",
+  "verification_method": "The verify.sh script performs automated verification by: (1) starting the Caddy container, (2) waiting for health check to pass, (3) making an HTTP request to /test.html which includes the malicious template via path traversal, (4) checking for proof markers EVOHUNT_POC_MARKER_START and EVOHUNT_POC_MARKER_END, and (5) verifying all three environment variables were successfully exfiltrated. The verification distinguishes successful SSTI from template errors or startup failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response contains EVOHUNT_POC_MARKER_START indicating template was parsed and executed",
+    "Environment variable SECRET_API_KEY exfiltrated with value EVOHUNT_POC_SECRET_12345",
+    "Environment variable AWS_ACCESS_KEY_ID exfiltrated with value AKIAIOSFODNN7EXAMPLE",
+    "Environment variable DATABASE_PASSWORD exfiltrated with value super_secret_db_pass",
+    "HTTP response contains EVOHUNT_POC_MARKER_END indicating complete template execution",
+    "Path traversal successfully accessed /tmp/exploit.tpl from within /var/www/html context"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned vulnerable commit 7aa3641c, and builds Caddy from source in the Docker image.",
+    "pinned_commit_or_ref": "7aa3641c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Caddyfile",
+      "reproduction/exploit.tpl",
+      "reproduction/test.html",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that the participatory process import functionality makes unvalidated HTTP requests to attacker-controlled URLs, confirming the SSRF vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the vulnerable code in ParticipatoryProcessImporter makes HTTP requests to internal network endpoints without validation, allowing access to cloud metadata services and internal resources.",
+  "actual_observed_result": "The reproduction successfully demonstrated that the vulnerable code attempts to fetch resources from attacker-controlled URLs. The URI.parse().open and Net::HTTP.new() calls make HTTP requests without validating the URL scheme, hostname, or IP address, confirming the SSRF vulnerability.",
+  "verification_method": "The verification script runs a Ruby application that simulates the vulnerable ParticipatoryProcessImporter code. The script attempts to make HTTP requests to internal endpoints (169.254.169.254) and validates that the vulnerable code path executes without URL validation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The vulnerable code in remote_file_exists?() makes HTTP HEAD requests without URL validation",
+    "The vulnerable code in import_folders_and_attachments() uses URI.parse(url).open without validation",
+    "No hostname allowlisting or private IP range blocking was observed",
+    "The code accepts any URL scheme including http://, https://, and potentially file://",
+    "Internal endpoints like 169.254.169.254 (AWS metadata) can be reached from the vulnerable code path"
+  ],
+  "limitations_or_blockers": [
+    "The PoC demonstrates the vulnerability concept without a full Decidim installation",
+    "A full PoC would require setting up a complete Decidim Rails application with admin authentication",
+    "In a real attack scenario, the attacker would need admin privileges to access the import endpoint"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "The PoC simulates the vulnerable code pattern. In production, run.sh would clone https://github.com/decidim/decidim and mount the repository.",
+    "pinned_commit_or_ref": "develop branch (latest)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

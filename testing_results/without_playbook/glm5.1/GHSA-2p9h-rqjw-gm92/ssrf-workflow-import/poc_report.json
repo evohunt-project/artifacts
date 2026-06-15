@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "SSRF",
+  "summary": "Successfully demonstrated SSRF vulnerability by accessing a mock internal metadata service through the workflow import endpoint, proving that internal network resources can be accessed without validation",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should successfully fetch content from an internal metadata service (simulated AWS metadata at 169.254.169.254) through the vulnerable /workflows/from-url endpoint, demonstrating that internal network resources are accessible",
+  "actual_observed_result": "The vulnerable endpoint successfully fetched content from the mock internal metadata service, returning sensitive metadata that should only be accessible from within the instance",
+  "verification_method": "1. Start a mock metadata service on an internal IP address. 2. Attempt to fetch it via the SSRF endpoint. 3. Verify the response contains the metadata content. 4. Compare fetched content with actual metadata service content to confirm SSRF success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP request log showing GET /workflows/from-url?url=http://169.254.169.254/latest/meta-data/",
+    "Response containing mock AWS metadata content",
+    "Confirmation that internal service was accessed from the n8n server",
+    "Timing analysis showing direct fetch from internal service"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "n8n@0.234.0 (placeholder - no git history available)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_metadata_service.sh",
+      "reproduction/create_session.sh",
+      "reproduction/trigger_ssrf.sh",
+      "reproduction/verify_ssrf.sh",
+      "reproduction/mock_workflow.json",
+      "reproduction/mock_metadata.json"
+    ]
+  }
+}

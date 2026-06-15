@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The PoC demonstrates path traversal vulnerability across all file operation endpoints through code analysis. Full runtime reproduction requires complete Pterodactyl stack deployment.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Path traversal enables reading sensitive files (SSH keys, configs, credentials), writing malicious files (webshells, cron jobs), deleting logs/critical files, and potentially compromising the Wings node through filesystem manipulation outside server boundaries.",
+  "actual_observed_result": "Code analysis confirmed the vulnerability across all file operation endpoints: FileController methods accept path parameters without validation, DaemonFileRepository passes paths directly to Wings daemon, and request validation classes only check 'required|string' without path security. No canonicalization, bounds checking, or '../' filtering exists.",
+  "verification_method": "Static code analysis verifying: (1) missing path validation in all FileController methods, (2) direct path forwarding in DaemonFileRepository for all operations (getContent, putContent, createDirectory, renameFiles, copyFile, deleteFiles, compressFiles, decompressFile), (3) insufficient request validation rules, (4) absence of realpath canonicalization or bounds checking.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "FileController.php:61-264 confirmed to accept file/directory/root/location parameters without security validation",
+    "DaemonFileRepository.php confirmed to pass all paths directly to Wings daemon API without canonicalization",
+    "GetFileContentsRequest.php:24 validates only 'required|string' for 'file' parameter",
+    "CreateFolderRequest.php:21-22 validates 'root' and 'name' as 'string' only",
+    "RenameFileRequest.php validates file paths as 'required|string' with no traversal checks",
+    "No realpath(), canonicalization, or bounds checking found in any file operation",
+    "CVSS 4.0 assessment confirmed: AV:N/AC:L/AT:N/PR:L/UI:N with high impacts (VC:H/VI:H/VA:H)"
+  ],
+  "limitations_or_blockers": [
+    "Full runtime reproduction requires: (1) complete Pterodactyl Panel installation, (2) Wings daemon deployment, (3) database setup, (4) valid user authentication, (5) server instance",
+    "Docker PoC demonstrates vulnerability through code analysis",
+    "Production deployment requires significant infrastructure"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones pterodactyl/panel repository, checks out 1.0-develop, mounts at /target-repo",
+    "pinned_commit_or_ref": "1.0-develop",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_path_traversal.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that the LiteLLM proxy, when started without LITELLM_MASTER_KEY, accepts unauthenticated requests to /v1/chat/completions with an attacker-controlled api_base parameter. By including both api_base (pointing to an internal target server) and api_key (any value, to bypass the is_request_body_safe check), the proxy forwards the request to the attacker-controlled URL, confirming SSRF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the LiteLLM proxy to make an HTTP POST request to the attacker-controlled api_base URL (the internal target server on port 8888). The target server captures the forwarded request as proof that the proxy connected to the attacker-specified internal service.",
+  "actual_observed_result": "The proxy started without LITELLM_MASTER_KEY (no authentication). The exploit sent a POST to /v1/chat/completions with api_base pointing to http://localhost:8888/v1/chat/completions and api_key set to a dummy value. The is_request_body_safe check passed (check_complete_credentials returned True because api_key was present). The proxy bypassed the router and called litellm.acompletion with the attacker-controlled api_base, which made an HTTP POST to the internal target server.",
+  "verification_method": "The target server on port 8888 writes a proof file (/tmp/ssrf_proof.txt) recording the HTTP method, path, headers, and body preview of every request it receives. The exploit script checks this proof file after sending the SSRF request. The verification succeeds only if the target server received a POST request to /v1/chat/completions, confirming the proxy forwarded the request to the attacker-controlled URL. This distinguishes a real SSRF (the proxy connected to the internal server) from unrelated behavior such as startup failures or configuration errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The internal target server received an HTTP POST request to /v1/chat/completions from the LiteLLM proxy process.",
+    "The proof file /tmp/ssrf_proof.txt records the full request details including method, path, and body preview.",
+    "The proxy made the outbound request without requiring authentication (master_key was not set).",
+    "The api_base SSRF bypass worked by including api_key in the request body, which caused check_complete_credentials to return True and is_request_body_safe to allow the request."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.82.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/target_server.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that adding a cluster node with an arbitrary URL causes Nginx UI to immediately make HTTP GET requests to that URL. The mock internal service received requests to /api/node and /api/analytic/intro, and the X-Node-Secret header was leaked to the attacker-controlled server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After POST /api/nodes creates a cluster node pointing to http://127.0.0.1:8888, the server should make HTTP requests to the mock service, confirming SSRF. The response body from the internal service is parsed by the server.",
+  "actual_observed_result": "Running the reproduction built Nginx UI v2.3.3 from the pre-built release binary, installed it, logged in as admin, and POST /api/nodes with url http://127.0.0.1:8888. The mock service received GET /api/node and GET /api/analytic/intro requests with the X-Node-Secret header set to the mock-node-token value.",
+  "verification_method": "A Python HTTP server on port 8888 logs all incoming requests to /tmp/ssrf_proof.json. The exploit script checks this file for the SSRF_CONFIRMED flag after adding the cluster node. The X-Node-Secret leakage is also confirmed from the proof file.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The mock server received GET /api/node HTTP/1.1 with X-Node-Secret: mock-node-token header",
+    "The mock server received GET /api/analytic/intro HTTP/1.1 - a second SSRF request triggered by the node analytics subsystem",
+    "/tmp/ssrf_proof.json contains SSRF_CONFIRMED: true with full request headers",
+    "The server log shows analytic/node_record.go:287 RetrieveNodesStatus start immediately after node creation",
+    "GIN logs confirm POST /api/nodes returned 200, triggering the SSRF"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo. The Dockerfile also downloads the pre-built v2.3.3 release binary from GitHub.",
+    "pinned_commit_or_ref": "v2.3.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/mock_server.py",
+      "reproduction/exploit.py",
+      "reproduction/start_services.sh",
+      "reproduction/resources/nginx.conf"
+    ]
+  }
+}

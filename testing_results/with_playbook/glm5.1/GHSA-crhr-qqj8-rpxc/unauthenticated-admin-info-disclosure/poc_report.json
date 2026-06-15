@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that the Jetty admin HTTP server in Apache ZooKeeper exposes sensitive system properties, environment details, and server configuration to unauthenticated network requesters.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause unauthenticated HTTP GET requests to the admin server at port 8080 to return sensitive JVM system properties (java.version, user.name, java.home), environment details (hostname, OS, user identity), and full server configuration without requiring any authentication.",
+  "actual_observed_result": "Running ./reproduction/run.sh built a ZooKeeper server from the target repository, started it with the admin server enabled, and successfully retrieved all three sensitive endpoints without authentication: /commands/system_properties returned java.version and user.name; /commands/environment returned host.name and user.name; /commands/configuration returned client_port and full server config. All 3/3 tests passed.",
+  "verification_method": "The verify.sh script starts the ZooKeeper server, waits for the admin HTTP server to respond, then sends unauthenticated HTTP GET requests to three sensitive endpoints. Each response is checked for the presence of known-sensitive fields (java.version in system_properties, user.name in environment, clientPort in configuration). The check distinguishes successful information disclosure from a generic startup failure by verifying specific field names in the JSON response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP GET to /commands/system_properties returned JSON containing java.version and user.name fields without requiring authentication.",
+    "HTTP GET to /commands/environment returned JSON containing host.name and user.name fields without requiring authentication.",
+    "HTTP GET to /commands/configuration returned JSON containing client_port and full server configuration without requiring authentication.",
+    "All three endpoints confirmed the absence of any authentication mechanism on the CommandServlet."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the branch-3.8 ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "branch-3.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

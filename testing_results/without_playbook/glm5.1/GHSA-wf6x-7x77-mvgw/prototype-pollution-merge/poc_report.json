@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution",
+  "summary": "The PoC demonstrates that merge() with a source object containing '__proto__' as an own property (from JSON.parse) successfully pollutes Object.prototype.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should parse JSON containing __proto__ key, merge it with a target object, and verify that Object.prototype is polluted with the attacker-controlled value.",
+  "actual_observed_result": "The PoC parsed malicious JSON, executed merge(), and verified that Object.prototype.polluted equals 'POLLUTED_VALUE' after the merge operation. All new objects inherit the polluted property.",
+  "verification_method": "The PoC script checks Object.prototype.polluted and ({}).polluted before and after the merge operation. The malicious payload is created via JSON.parse to ensure __proto__ is an own enumerable property.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console output shows Object.prototype.polluted is undefined before the attack",
+    "Malicious JSON payload: {\"__proto__\":{\"polluted\":\"POLLUTED_VALUE\"}}",
+    "Console output shows Object.prototype.polluted equals 'POLLUTED_VALUE' after merge",
+    "Newly created objects inherit the polluted property"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v5.1.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test-merge.js"
+    ]
+  }
+}

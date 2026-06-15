@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms SSRF via configurable LLM base URLs. Flowise makes HTTP requests to the attacker-controlled metadata endpoint without validating against the SSRF deny list.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause Flowise to make a request to http://169.254.169.254/latest/meta-data/iam/security-credentials/admin-role and capture the mock AWS credentials, demonstrating SSRF to cloud metadata endpoints.",
+  "actual_observed_result": "The reproduction successfully set up a mock AWS metadata server on 169.254.169.254, created a ChatOllama node with the base URL pointing to the metadata endpoint, and triggered a prediction that caused Flowise to make an HTTP request to the internal metadata endpoint, capturing the mock AWS credentials.",
+  "verification_method": "The verify.sh script checks for specific proof strings in the captured metadata (AWS Access Key ID AKIAIOSFODNN7EXAMPLE, Secret Access Key, or the metadata endpoint IP) to distinguish genuine SSRF from connection failures or blocked requests.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Mock metadata server logs show incoming request from Flowise to 169.254.169.254",
+    "Request path matches /latest/meta-data/iam/security-credentials/admin-role",
+    "AWS credentials (AKIAIOSFODNN7EXAMPLE) captured in metadata response",
+    "ssrf_success.txt file contains full metadata response demonstrating SSRF",
+    "Chatflow successfully created with malicious base URL configuration"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Flowise repository from GitHub, checks out commit 378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97 (v3.1.0), and mounts that checkout into the container at /target-repo",
+    "pinned_commit_or_ref": "378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/mock_metadata.py",
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

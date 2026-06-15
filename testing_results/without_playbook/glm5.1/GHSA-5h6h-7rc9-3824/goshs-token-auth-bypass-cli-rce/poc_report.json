@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass_rce",
+  "summary": "The Docker-based reproduction successfully demonstrates that share tokens in goshs v1.1.4 bypass authentication entirely, allowing unauthenticated access to the CLI command execution endpoint. A valid share token was created, then used to execute arbitrary system commands via WebSocket without providing credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate that a share token bypasses authentication and allows executing arbitrary system commands. The attack flow: 1) Create share token with valid credentials, 2) Use token to bypass auth, 3) Connect to WebSocket with token, 4) Execute command via CLI interface. Expected output: Command execution result (e.g., output of 'id' command) returned via WebSocket.",
+  "actual_observed_result": "The reproduction successfully created a share token, used it to bypass authentication middleware, established a WebSocket connection to the CLI endpoint, and executed the 'id' command. The command output was received via WebSocket, demonstrating complete authentication bypass and arbitrary command execution with the privileges of the goshs process.",
+  "verification_method": "The exploit script creates a marker file (/tmp/poc_success_marker) upon successful command execution. The verification script checks for this marker and its contents. The presence of the marker with the command output confirms that: 1) Authentication was bypassed using the share token, 2) The WebSocket connection succeeded without credentials, 3) Arbitrary commands were executed, 4) Command output was received.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Share token successfully created via authenticated request",
+    "Token extracted from share link HTML response",
+    "WebSocket connection established to wss://localhost:8000/?ws&token=TOKEN without authentication",
+    "Command packet {\"type\":\"command\",\"content\":\"id\"} sent successfully",
+    "Command output received via WebSocket response packet with type 'updateCLI'",
+    "Marker file /tmp/poc_success_marker created with exploit results",
+    "Full command execution demonstrating system compromise"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (goshs) from GitHub, checks out the vulnerable v1.1.4 tag, builds the binary, and runs it with CLI mode enabled.",
+    "pinned_commit_or_ref": "v1.1.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup_ca.sh"
+    ]
+  }
+}

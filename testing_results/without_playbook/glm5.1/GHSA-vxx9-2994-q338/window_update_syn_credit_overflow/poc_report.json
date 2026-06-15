@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "integer_overflow_dos",
+  "summary": "The Docker-based reproduction confirms that sending a crafted WindowUpdate SYN frame with credit=u32::MAX triggers an integer overflow at connection.rs:730, causing the debug-mode yamux server process to panic and crash.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted WindowUpdate SYN frame to trigger the vulnerable `credit + DEFAULT_CREDIT` addition at connection.rs:730. In debug builds the integer overflow panics, crashing the server process. The verify script detects the crash by checking the server exit code and log output.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds the target yamux library in debug mode, starts a server, connects via the exploit script, and sends a 12-byte WindowUpdate SYN frame with credit=0xFFFFFFFF. The server processes the frame, hits the `credit + DEFAULT_CREDIT` overflow, and panics with 'attempt to add with overflow'. The server exits with a non-zero code, which verify.sh confirms.",
+  "verification_method": "The verify script checks two conditions: (1) the server process is no longer running after the exploit, and (2) the server's stderr log contains the string 'overflow', confirming an arithmetic overflow panic. This distinguishes an overflow crash from a normal shutdown or unrelated startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server process terminates with non-zero exit code after receiving the crafted frame.",
+    "Server log contains 'attempt to add with overflow' panic message.",
+    "The exploit sends exactly one 12-byte crafted Yamux WindowUpdate SYN frame with credit=u32::MAX."
+  ],
+  "limitations_or_blockers": [
+    "The panic only occurs in debug builds. Release builds use wrapping arithmetic and would not crash, though the send_window value would be incorrect."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag yamux-v0.13.9, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "yamux-v0.13.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.rs",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

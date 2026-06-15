@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "uncontrolled_recursion_dos",
+  "summary": "The Docker-based reproduction confirms that parsing a deeply nested XML document (15000 levels) with xmldom DOMParser triggers an unbounded recursive normalize() call, producing a RangeError: Maximum call stack size exceeded crash.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Parsing a deeply nested XML document should cause the DOMParser to crash with RangeError: Maximum call stack size exceeded during the automatic normalize() step at the end of parsing, demonstrating denial of service.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, mounted the vulnerable xmldom repository, and executed the exploit script. The script generated a 15000-level nested XML document and called DOMParser.parseFromString(). The process crashed with RangeError: Maximum call stack size exceeded inside doc.normalize(), confirming the stack overflow vulnerability.",
+  "verification_method": "The exploit script runs inside the container with Node.js, generates deeply nested XML, calls parseFromString, and checks that a RangeError with 'Maximum call stack size exceeded' message is thrown. It writes a proof file only when this exact error is caught, distinguishing the vulnerability from unrelated crashes or parse errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit script caught a RangeError: Maximum call stack size exceeded thrown from the normalize() call path during parseFromString.",
+    "The proof file /tmp/evohunt-proof was written only after confirming the error message matches the expected stack overflow pattern.",
+    "The SAX parsing phase completed successfully (the iterative parser handles deep nesting), but the mandatory post-parse normalize() step overflowed the call stack."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0.8.12",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

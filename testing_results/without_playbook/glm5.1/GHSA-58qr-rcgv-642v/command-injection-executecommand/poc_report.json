@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the ExecuteCommand node executes arbitrary shell commands on the host system without sanitization or validation. The PoC creates a workflow with a malicious command payload that successfully creates a proof file demonstrating arbitrary command execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should create a workflow with an ExecuteCommand node containing a malicious command, execute it, and produce a proof file (/tmp/pwned.txt) containing the verification marker, demonstrating arbitrary command execution on the n8n host.",
+  "actual_observed_result": "The reproduction successfully built the n8n environment, created a workflow with the ExecuteCommand node, executed the malicious command payload 'id > /tmp/pwned.txt && echo EVOHUNT-CMD-INJECTION-VERIFIED > /tmp/pwned.txt', and created the proof file /tmp/pwned.txt with the verification marker, confirming arbitrary command execution.",
+  "verification_method": "The run script checks for the presence of /tmp/pwned.txt created by the malicious command and verifies its contents contain the expected verification marker. This distinguishes actual command execution from workflow execution failures or unrelated crashes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File /tmp/pwned.txt was created by the malicious command payload",
+    "File contents contain the verification marker 'EVOHUNT-CMD-INJECTION-VERIFIED'",
+    "The workflow execution succeeded and the ExecuteCommand node processed the malicious command",
+    "No sanitization or validation prevented the command injection"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the session directory and mounts that copy into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n-2.14.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

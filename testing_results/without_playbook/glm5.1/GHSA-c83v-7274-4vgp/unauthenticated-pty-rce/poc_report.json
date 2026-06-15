@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_rce",
+  "summary": "The Docker-based reproduction successfully demonstrates that an unauthenticated attacker can create a PTY session via HTTP POST and execute arbitrary commands through the WebSocket connection, achieving remote code execution with the server's privileges.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow an unauthenticated attacker to create a pseudo-terminal session, connect via WebSocket, and execute shell commands that create a proof file in the filesystem, demonstrating complete control over the server process.",
+  "actual_observed_result": "The reproduction successfully created a PTY session via unauthenticated HTTP POST to /pty endpoint, established a WebSocket connection to /pty/:ptyID/connect, executed shell commands through the WebSocket, and created a proof file containing 'EVOHUNT_POC_SUCCESS_UNAUTHENTICATED_RCE' at /tmp/pwned.txt, confirming arbitrary command execution.",
+  "verification_method": "The verify.sh script orchestrates the exploit and checks for the presence of the proof file /tmp/pwned.txt containing the exact proof string. This distinguishes successful RCE from mere service availability or unrelated errors. The proof string is written via the exploited PTY session and verified independently.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP POST to /pty endpoint successfully created PTY session without authentication (200 OK response with session ID)",
+    "WebSocket connection to /pty/:ptyID/connect accepted without authentication",
+    "Shell command 'echo EVOHUNT_POC_SUCCESS_UNAUTHENTICATED_RCE > /tmp/pwned.txt' executed through WebSocket",
+    "Proof file /tmp/pwned.txt created and verified to contain the exact proof string",
+    "No authentication credentials or special privileges were required for any step"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

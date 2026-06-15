@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "timing_side_channel",
+  "summary": "The PoC verifies that Quinn's stateless reset token comparison in packet_crypto.rs uses a standard short-circuit byte equality (==) instead of the available constant_time::eq function. The vulnerable pattern bypasses ResetToken's constant-time PartialEq via .as_deref(), converting to raw byte slices. The PoC benchmarks both the vulnerable and safe comparison patterns, demonstrating that the vulnerable comparison exhibits timing proportional to the number of matching token bytes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The verification script confirms that (1) the vulnerable comparison pattern exists in the target code at packet_crypto.rs:42, (2) constant_time::eq exists but is NOT used in the vulnerable code path, and (3) ResetToken::eq correctly uses constant_time::eq but is bypassed by .as_deref(). The timing benchmark demonstrates that the standard comparison takes time proportional to the matching prefix length, while the constant-time comparison does not.",
+  "actual_observed_result": "The verification script found the vulnerable comparison pattern (stateless_reset_token.as_deref() == Some(...)) in packet_crypto.rs:42, confirmed that constant_time::eq exists in constant_time.rs but is not used in packet_crypto.rs, and verified that ResetToken::eq uses constant_time::eq while the vulnerable code path bypasses it. The timing benchmark demonstrated measurable timing differences correlated with the number of matching token bytes in the vulnerable comparison.",
+  "verification_method": "Three-stage verification: (1) Static code analysis confirms the vulnerable pattern exists and the safe alternative is available but unused. (2) Cross-reference check confirms ResetToken::eq uses constant_time::eq while packet_crypto.rs bypasses it. (3) Runtime timing benchmark measures nanosecond-level timing differences for 0 through 16 matching token bytes, computing linear regression slope to confirm timing correlation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Grep match for vulnerable pattern 'stateless_reset_token.as_deref() == Some' in quinn-proto/src/connection/packet_crypto.rs:42",
+    "Grep match for safe pattern 'pub(crate) fn eq' in quinn-proto/src/constant_time.rs:20-22",
+    "Grep match for 'constant_time::eq' usage in quinn-proto/src/token.rs:382 (ResetToken::eq)",
+    "Absence of 'constant_time::eq' reference in quinn-proto/src/connection/packet_crypto.rs",
+    "Timing benchmark showing slope > 0 for vulnerable comparison (timing increases with matching bytes)",
+    "Timing benchmark showing near-zero slope for constant-time comparison (timing independent of matching bytes)"
+  ],
+  "limitations_or_blockers": [
+    "The timing benchmark measures the comparison pattern directly rather than through the full QUIC server packet processing pipeline, due to the complexity of setting up a full QUIC server with TLS in Docker.",
+    "Timing measurements may be affected by system load and CPU frequency scaling; the PoC uses 1 million iterations to average out noise.",
+    "The full exploitation (byte-by-byte token recovery over the network) requires many more samples and statistical analysis, which is beyond the scope of this PoC."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.rs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

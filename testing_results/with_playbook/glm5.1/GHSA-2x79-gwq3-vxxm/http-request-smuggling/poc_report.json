@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "http_request_smuggling",
+  "summary": "The Docker-based reproduction confirms that the facil.io HTTP parser ignores Transfer-Encoding: chunked when Content-Length appears first in the request headers. A request with Content-Length: 5 before Transfer-Encoding: chunked causes the parser to read 5 bytes as the body, treating remaining data as a second HTTP request, demonstrating request smuggling.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The server should process two separate HTTP requests: the original POST /first (with 5-byte body per Content-Length) and a smuggled GET /smuggled (from data after the CL body). The GET /smuggled request appearing in server logs confirms that Transfer-Encoding was ignored, violating RFC 7230 Section 3.3.3.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the facil.io HTTP server, sent the crafted request with Content-Length before Transfer-Encoding, and the server log shows both POST /first and GET /smuggled being processed as separate requests. This confirms the parser used Content-Length for body parsing and ignored Transfer-Encoding: chunked.",
+  "verification_method": "The verify.sh script starts the server with request logging, sends the crafted smuggling payload via Python, and checks the server log for EVOHUNT_SMUGGLED_DETECTED. The presence of GET /smuggled in the log confirms that facil.io processed a second request from the remaining data after the Content-Length body, proving Transfer-Encoding was ignored.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server log shows 'POST /first' as the first request with a 5-byte body matching Content-Length.",
+    "Server log shows 'GET /smuggled' as a second request, parsed from data after the CL body.",
+    "The EVOHUNT_SMUGGLED_DETECTED marker appeared in the server log, confirming the smuggled request was processed.",
+    "This behavior violates RFC 7230 Section 3.3.3 which requires Transfer-Encoding to override Content-Length."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag v0.7.4, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.7.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/http_server.c",
+      "reproduction/smuggle.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

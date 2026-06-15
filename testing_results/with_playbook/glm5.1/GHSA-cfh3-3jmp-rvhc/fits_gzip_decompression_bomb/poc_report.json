@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_resource_consumption",
+  "summary": "The Docker-based reproduction creates a 55 KB FITS file with 2x2 pixel dimensions containing a gzip bomb data section. When Pillow opens and loads this file, gzip.decompress() allocates 50 MB of memory for a 2x2 image, confirming unbounded resource allocation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Opening a small FITS file (~55 KB, 2x2 pixels) with Pillow should cause gzip.decompress() to allocate approximately 50 MB of memory for the decompressed output, which is a >1000x amplification over the input size and disproportionate for a 4-pixel image.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds the reproduction image, creates the malicious FITS file inside the container, and runs the verification script. The verification script confirms that gzip.decompress() produces 52,428,800 bytes (50 MB) of decompressed output from only 50,988 bytes of compressed input, and the process memory increases by approximately 100 MB for what should be a 4-pixel image.",
+  "verification_method": "The verify.sh script monkey-patches gzip.decompress to capture the input and output sizes. It then opens the malicious FITS file with Pillow and calls .load(). The script checks: (1) the decompressed output size exceeds 40 MB (indicating a successful decompression bomb), (2) the input file is less than 1 MB (confirming the amplification), and (3) the declared image dimensions are 2x2 (confirming the decompression bomb check bypass). A distinct proof string is emitted on success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "gzip.decompress() input size: 50,988 bytes (from the malicious FITS file)",
+    "gzip.decompress() output size: 52,428,800 bytes (50 MB, >1000x amplification)",
+    "Image dimensions: 2x2 pixels (passes decompression bomb check)",
+    "Process memory increase: ~100 MB (disproportionate for a 4-pixel image)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/build_payload.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

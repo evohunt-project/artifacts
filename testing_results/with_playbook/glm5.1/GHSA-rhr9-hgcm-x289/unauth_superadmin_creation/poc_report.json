@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authorization",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can create a superadmin account on a fresh Netmaker deployment via POST /api/users/adm/createsuperadmin, then authenticate with those credentials to gain full platform control.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "On a fresh deployment, sending POST /api/users/adm/createsuperadmin with a chosen username and password should create a superadmin account. The attacker can then authenticate via POST /api/users/adm/authenticate and receive a JWT with superadmin privileges.",
+  "actual_observed_result": "Running ./reproduction/run.sh started a fresh Netmaker server, checked that no superadmin exists via the unauthenticated /api/users/adm/hassuperadmin endpoint, created a superadmin account via POST /api/users/adm/createsuperadmin, authenticated with the new credentials, and verified the account has admin-level access.",
+  "verification_method": "The run script performs the full attack chain: (1) confirms no superadmin exists via unauthenticated endpoint, (2) creates superadmin with attacker-chosen credentials, (3) authenticates with those credentials, (4) verifies the JWT grants access to the admin user endpoint. Success is determined by receiving a valid token and confirming admin status in the user profile.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GET /api/users/adm/hassuperadmin returned confirmation that no superadmin exists (unauthenticated reconnaissance).",
+    "POST /api/users/adm/createsuperadmin with attacker credentials returned a successful user creation response.",
+    "POST /api/users/adm/authenticate with the attacker's credentials returned a valid JWT token.",
+    "GET /api/users/{username} with the attacker's token returned a user object with is_admin=true, confirming superadmin access."
+  ],
+  "limitations_or_blockers": [
+    "This vulnerability is only exploitable on fresh deployments where no superadmin has been created yet. Once a superadmin exists, the endpoint returns an error."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the v1.1.0 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

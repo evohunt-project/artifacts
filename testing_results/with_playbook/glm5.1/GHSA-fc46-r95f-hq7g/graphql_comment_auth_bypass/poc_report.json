@@ -1,0 +1,35 @@
+{
+  "status": "failed",
+  "vulnerability_type": "missing_authorization",
+  "summary": "The GraphQL addComment, upVote, and downVote mutations bypass the enforce_permission_to authorization chain. The reproduction bundle was prepared but full runtime execution against a live Decidim instance could not be completed within the session. Static code analysis confirms the missing authorization gate: the HTTP endpoint calls enforce_permission_to which checks user_allowed_to_comment? (including ActionAuthorizer and can_participate?), while the GraphQL mutation calls CreateComment.call(form) directly without any authorization check.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An authenticated user should be able to add comments through the GraphQL API to resources in components where authorization rules (private space membership, configured authorization handlers) should block commenting, bypassing the enforce_permission_to gate that the HTTP endpoint enforces.",
+  "actual_observed_result": "Runtime reproduction was not completed. The Docker-based reproduction bundle requires setting up a full Decidim application with PostgreSQL and Redis, bundling all gem dependencies, running database migrations, seeding test data, and executing the exploit against a running server. The exploit.rb script in the bundle performs code-level analysis showing the authorization gap but does not complete an end-to-end HTTP request cycle against a live Decidim instance.",
+  "verification_method": "Static code analysis comparing the HTTP endpoint authorization path (CommentsController -> enforce_permission_to -> Permissions#can_create_comment? -> user_allowed_to_comment? -> can_participate? + ActionAuthorizer) with the GraphQL mutation path (CommentableMutationType -> CreateComment.call -> form validation only checks accepts_new_comments?). The missing enforce_permission_to call in the GraphQL path is confirmed as the root cause.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "decidim-comments/lib/decidim/api/commentable_mutation_type.rb:15-27: add_comment method calls CreateComment.call(form) directly without enforce_permission_to",
+    "decidim-comments/app/controllers/decidim/comments/comments_controller.rb:77: HTTP create action properly calls enforce_permission_to(:create, :comment, commentable:)",
+    "decidim-comments/app/permissions/decidim/comments/permissions.rb:31-37: can_create_comment? checks user present, commentable.commentable?, and user_allowed_to_comment?(user)",
+    "decidim-comments/lib/decidim/comments/commentable_with_component.rb:26-31: user_allowed_to_comment? checks can_participate? and ActionAuthorizer - both bypassed by GraphQL",
+    "decidim-comments/app/forms/decidim/comments/comment_form.rb:44-49: form validation only checks accepts_new_comments?, not user_allowed_to_comment? or can_participate?",
+    "decidim-comments/lib/decidim/api/comment_mutation_type.rb:13-19: upVote/downVote call VoteCommentResolver without enforce_permission_to",
+    "decidim-comments/app/controllers/decidim/comments/votes_controller.rb:16: HTTP votes controller properly calls enforce_permission_to(:vote, :comment, comment:)"
+  ],
+  "limitations_or_blockers": [
+    "Full end-to-end runtime reproduction requires setting up a complete Decidim application (Ruby 3.3, PostgreSQL, Redis, Rails 7.0), bundling gem dependencies, running migrations, seeding test data with a private participatory space, and executing the exploit against a running server. This setup is time-intensive and the reproduction bundle was not executed to completion."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.30.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.rb",
+      "reproduction/verify.sh",
+      "reproduction/setup_app.sh"
+    ]
+  }
+}

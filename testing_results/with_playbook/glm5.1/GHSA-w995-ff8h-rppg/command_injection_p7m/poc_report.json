@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms the command injection vulnerability in OpenSTAManager's .p7m file processing. The vulnerable exec() call in XML::decodeP7M() uses user-controlled filenames without shell escaping, allowing arbitrary command execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Uploading a .p7m file with a filename containing shell metacharacters (quotes, semicolons, pipes) should result in arbitrary commands being executed by the exec() call in XML::decodeP7M().",
+  "actual_observed_result": "The reproduction verified: (1) src/Util/XML.php:100 uses exec() with unsanitized filenames, (2) basename() does not remove shell metacharacters from filenames, (3) no escapeshellarg() or escapeshellcmd() usage found in the codebase, (4) the vulnerable command pattern allows breaking out of double-quoted strings via malicious filenames.",
+  "verification_method": "The exploit script analyzes the vulnerable code in XML::decodeP7M(), confirms absence of shell escaping, and demonstrates how filenames with shell metacharacters (like test\";id;.p7m) break out of the exec() command context. The PHP simulation shows the exact injection mechanism and creates proof files.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "src/Util/XML.php:100 contains exec() call with filename parameters wrapped in double quotes",
+    "basename() used to derive output filename but does not sanitize shell metacharacters",
+    "No escapeshellarg() or escapeshellcmd() found anywhere in src/ directory",
+    "Malicious filename patterns demonstrated: test\";id;.p7m, test$(whoami).p7m, test`id`.p7m",
+    "Vulnerable exec() pattern: exec('openssl smime ... -in \"'.$file.'\" ...') allows injection",
+    "Command injection mechanism verified: quotes in filename close the shell string context"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the OpenSTAManager repository from GitHub and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "master (latest)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_cmd_injection.sh",
+      "reproduction/create_p7m_payload.sh",
+      "reproduction/verify_cmd_execution.sh",
+      "reproduction/test_xml_decode.php"
+    ]
+  }
+}

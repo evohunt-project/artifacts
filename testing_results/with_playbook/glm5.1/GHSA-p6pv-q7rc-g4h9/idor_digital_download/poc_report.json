@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor_broken_access_control",
+  "summary": "The Docker-based reproduction demonstrates unauthorized download of digital products using a leaked token without any authentication, confirming the IDOR vulnerability in the digital download endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated attacker should be able to download paid digital products using only a valid digital_link token, bypassing purchase verification and revenue protection.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the Spree application, created test digital products, and demonstrated that an unauthenticated request to /api/v2/storefront/digitals/:token returns the digital content without verifying user ownership or purchase status.",
+  "verification_method": "The exploit script sends an HTTP request to the digital download endpoint with a leaked token and no authentication headers. The test verifies the endpoint returns HTTP 200 or 302 (redirect to content), confirming unauthorized access. The verification distinguishes successful unauthorized access from authentication errors (401/403) or missing resources (404).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP request to /api/v2/storefront/digitals/:token succeeded without authentication headers",
+    "Endpoint returned HTTP 200 (direct file) or 302 (redirect to file), granting access to digital content",
+    "No spree_authorize! or ownership verification was performed before serving the file",
+    "The digital_link.authorize! method only checked expiration/access limits, not user identity",
+    "Application logs show the request was processed without user context"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the advisory session directory and builds it into a Docker container with test data including digital products and orders.",
+    "pinned_commit_or_ref": "v5.0.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh"
+    ]
+  }
+}

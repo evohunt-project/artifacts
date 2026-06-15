@@ -1,0 +1,36 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the unfurl server with remote_lookups enabled makes outbound HTTP requests to attacker-influenced destinations, demonstrating successful SSRF to an internal-only endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should trigger the unfurl server to make HTTP requests to internal or attacker-controlled endpoints that would not be accessible from external networks, demonstrating SSRF capability.",
+  "actual_observed_result": "The PoC demonstrates SSRF by starting a vulnerable unfurl instance with remote_lookups=True, then triggering URL parsing that causes outbound requests to an internal secret endpoint (http://localhost:8080/internal-secret) that only exists in the container's network namespace.",
+  "verification_method": "The verification script checks Docker container logs for evidence of outbound HTTP requests to the internal endpoint and SSRF-related function calls. The presence of request logs to localhost:8080 or external APIs with attacker-provided parameters confirms the SSRF vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server logs show requests to internal localhost:8080 endpoint that is not externally accessible",
+    "Container logs contain indicators of external API calls (nitrxgen.net, bsky.social) with attacker-influenced parameters",
+    "Function calls to expand_url_via_redirect_header and other SSRF-triggering functions are present in execution",
+    "The vulnerable endpoint responds to crafted URLs by making outbound requests without validation"
+  ],
+  "limitations_or_blockers": [
+    "Full SSRF impact demonstration requires a real target with internal services or cloud metadata endpoints. The PoC uses a mock internal server to demonstrate the capability.",
+    "The vulnerability only manifests when remote_lookups=True is configured in the unfurl instance.",
+    "Some external API endpoints may block malicious requests or return errors, but the SSRF vector remains viable."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/start_server.py",
+      "reproduction/exploit_trigger.py",
+      "reproduction/verify_ssrf.py",
+      "reproduction/unfurl.ini",
+      "reproduction/requirements.txt"
+    ]
+  }
+}

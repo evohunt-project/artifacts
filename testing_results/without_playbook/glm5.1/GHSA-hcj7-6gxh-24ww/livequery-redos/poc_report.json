@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "redos",
+  "summary": "The Docker-based reproduction confirms that LiveQuery regex evaluation blocks the Node.js event loop when regexTimeout is 0 (default). The reproduction subscribes to a LiveQuery with a catastrophically-backtracking regex, triggers evaluation, and measures the blocking duration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Subscribing to LiveQuery with a malicious regex pattern and triggering evaluation should block the Node.js event loop for a significant duration (multiple seconds), during which the server is unresponsive to other requests.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started Parse Server with LiveQuery, subscribed via WebSocket with a malicious regex pattern (a+)+$, triggered evaluation with a crafted input, and observed that the event loop was blocked for over 5 seconds, during which a health check request timed out.",
+  "verification_method": "The verify script measures the time taken for a regex evaluation that should be near-instant (<100ms) if the safe path were used. It also sends a concurrent health check request and verifies it times out during the regex evaluation. Success is determined by the regex evaluation taking >5 seconds and the concurrent request being blocked.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The regex evaluation with pattern '(a+)+$' against a 30-character input took over 5 seconds to complete.",
+    "A concurrent HTTP request to the /health endpoint timed out during the regex evaluation, confirming event loop blocking.",
+    "After the regex evaluation completed, the server resumed responding to requests normally."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.16",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.js"
+    ]
+  }
+}

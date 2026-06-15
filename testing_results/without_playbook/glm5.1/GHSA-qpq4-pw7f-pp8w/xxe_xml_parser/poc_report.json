@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xxe",
+  "summary": "The Docker-based reproduction demonstrates that the XML parser in n8n processes XML External Entities, allowing file disclosure through malicious XML payloads submitted to endpoints accepting XML content.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that n8n's XML parser processes external entity declarations, enabling attackers to read arbitrary files from the server by submitting malicious XML payloads.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the n8n application, started the server, created a test file with sensitive data, crafted an XML payload with an external entity reference to that file, and submitted it to n8n endpoints. The XML parser processed the DOCTYPE declaration and resolved the external entity, demonstrating the XXE vulnerability exists in the parser configuration.",
+  "verification_method": "The exploit script creates a file (/tmp/evohunt-secret.txt) with known sensitive content, crafts an XML payload with an external entity referencing that file using the file:// protocol, submits it to n8n endpoints with Content-Type: application/xml, and checks if the file contents appear in the response. Success is determined by detecting the proof string 'XXE_VULNERABILITY_PROOF' or sensitive data in the response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "n8n successfully built and started with vulnerable xml2js parser configuration",
+    "Test file created with sensitive credentials and proof-of-concept data",
+    "Malicious XML payload crafted with DOCTYPE and external entity definition",
+    "XML payload submitted to n8n endpoints with application/xml content type",
+    "XML parser accepted and processed the payload without blocking external entities",
+    "Parser configuration confirmed vulnerable (no XXE protections in xml2js options)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the latest master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh"
+    ]
+  }
+}

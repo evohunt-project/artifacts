@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that Traefik v1.7.34 exposes the full routing configuration via the /api endpoint without authentication. An unauthenticated curl request returns all backend server URLs, frontend routing rules, and internal service topology.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should start Traefik with a sample configuration containing internal backend URLs, then demonstrate that an unauthenticated GET /api request returns the full configuration including those internal URLs.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, started Traefik v1.7.34 with sample backends at 10.0.0.50:3000 and 192.168.1.100:8080, and the unauthenticated curl to /api returned the complete JSON configuration including both internal backend URLs.",
+  "verification_method": "The verify.sh script sends an unauthenticated GET request to http://localhost:8080/api, checks that the response is valid JSON, and confirms it contains the expected internal backend URLs (10.0.0.50:3000 and 192.168.1.100:8080) that should not be accessible without authentication.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The API response is valid JSON containing the full routing configuration.",
+    "The response includes backend server URLs with internal IP addresses (10.0.0.50:3000, 192.168.1.100:8080).",
+    "No authentication headers or credentials were required to access the /api endpoint.",
+    "The default traefik entrypoint on port 8080 has no authentication configured."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (traefik/traefik) on the host, checks out the v1.7.34 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.7.34",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/traefik.toml",
+      "reproduction/traefik-dynamic.toml"
+    ]
+  }
+}

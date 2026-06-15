@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction was not executed due to environment constraints (Docker base image pull timeout). The vulnerability was validated through thorough code-level analysis confirming distinct error codes (202 USERNAME_TAKEN vs 203 EMAIL_TAKEN) returned by the signup endpoint for existing usernames and emails.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that signing up with an existing username returns error code 202, with an existing email returns error code 203, while a new user signup succeeds, enabling unauthenticated user enumeration.",
+  "actual_observed_result": "Not executed. Code-level validation confirmed: RestWrite.js line 775 throws USERNAME_TAKEN (code 202) and line 843 throws EMAIL_TAKEN (code 203) with distinct messages, enabling unauthenticated enumeration of all registered usernames and email addresses.",
+  "verification_method": "The reproduction creates a target user, then attempts signup with existing username (expect code 202), existing email (expect code 203), and new credentials (expect success). All three distinct responses confirm the enumeration vulnerability.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker base image pull (node:22-bookworm, ~300MB) exceeded the session timeout due to network bandwidth constraints.",
+    "No local MongoDB installation available for alternative non-Docker verification."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "9b44d25e9f9b7e6fdf3c08ab946de25e4075dc59",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

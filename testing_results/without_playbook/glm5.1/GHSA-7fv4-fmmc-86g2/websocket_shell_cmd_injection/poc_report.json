@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that an authenticated WebSocket client can inject arbitrary OS commands through the unsanitized projectPath parameter in the shell init message, achieving command execution on the server host.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the injected OS command (touch /tmp/evohunt_cmdi_proof) to execute on the server host via the bash command substitution in projectPath, creating the proof file.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the target service, registered a user, obtained a JWT via the hardcoded default secret, connected to the /shell WebSocket with a projectPath containing $(touch /tmp/evohunt_cmdi_proof), and verified that the proof file was created on the host filesystem, confirming command injection.",
+  "verification_method": "The exploit script connects to the /shell WebSocket with a projectPath containing a bash command substitution that creates a unique proof file at /tmp/evohunt_cmdi_proof. After sending the WebSocket init message, the script checks for the existence of this proof file. The check distinguishes actual command injection from a generic WebSocket error or server startup issue.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The WebSocket init message with injected projectPath was accepted by the shell handler.",
+    "The bash command substitution in projectPath executed on the host, creating /tmp/evohunt_cmdi_proof.",
+    "The proof file /tmp/evohunt_cmdi_proof was found after the exploit ran, confirming arbitrary command execution.",
+    "The proof string EVOHUNT_CMDI_CONFIRMED was emitted by the exploit script."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

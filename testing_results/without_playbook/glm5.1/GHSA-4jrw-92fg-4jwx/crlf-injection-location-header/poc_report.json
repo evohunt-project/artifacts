@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "crlf_injection",
+  "summary": "The Docker-based reproduction confirms that the AUSF UE authentication endpoint is vulnerable to CRLF injection via the supiOrSuci parameter, allowing arbitrary HTTP header injection in the server response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploitation should demonstrate that attacker-controlled CRLF sequences in the supiOrSuci parameter result in injected HTTP headers in the server response, specifically the injection of a custom X-Injected header.",
+  "actual_observed_result": "The reproduction bundle successfully built and executed the AUSF service, sent a malicious request with CRLF payload in the supiOrSuci parameter, and confirmed the presence of the injected X-Injected header in the HTTP response.",
+  "verification_method": "The exploit script sends an HTTP POST request with a crafted supiOrSuci value containing CRLF sequences and a custom X-Injected header. The response is then checked for the presence of the injected header, confirming successful CRLF injection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The HTTP response contained the X-Injected header that was injected via the supiOrSuci parameter",
+    "The Location header construction at internal/sbi/processor/ue_authentication.go:286 concatenates user input without sanitization",
+    "The injected header was set via c.Header(\"Location\", locationURI) at line 458, demonstrating the CRLF vulnerability"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/config.yaml"
+    ]
+  }
+}

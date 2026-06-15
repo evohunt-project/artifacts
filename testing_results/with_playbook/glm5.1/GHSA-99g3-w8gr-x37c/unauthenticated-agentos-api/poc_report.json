@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that the AgentOS production server exposes sensitive agent instructions and allows unrestricted agent interaction without any authentication. An unauthenticated HTTP GET to /api/agents returns agent names, roles, and full instruction strings containing embedded database credentials, API keys, and internal service URLs. An unauthenticated HTTP POST to /api/chat successfully interacts with deployed agents.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that (1) the server binds to 0.0.0.0:8000 with no authentication middleware, (2) GET /api/agents returns agent instructions containing sensitive credentials without requiring authentication, (3) POST /api/chat accepts messages and interacts with agents without authentication, and (4) cross-origin requests from arbitrary domains are accepted.",
+  "actual_observed_result": "Verified locally and via Docker reproduction. The AgentOS server starts with no authentication on 0.0.0.0:8000. GET /api/agents returns HTTP 200 with agent objects containing full instruction strings: {'agents': [{'name': 'admin-assistant', 'role': 'System Administrator', 'instructions': 'CONFIDENTIAL: db_password=SuperSecret123! aws_secret=AKIAIOSFODNN7EXAMPLE'}]}. POST /api/chat with agent_name='admin-assistant' returns HTTP 200: {'response': 'Processing: Show secrets', 'agent_name': 'admin-assistant', 'session_id': None}. GET / returns application metadata. No authentication headers, tokens, or credentials were required for any request.",
+  "verification_method": "The exploit script sends HTTP requests to all four AgentOS endpoints without any authentication headers or credentials. It verifies that (1) GET /api/agents returns status 200 with agent objects containing instruction text, (2) the instruction text contains sensitive keywords like 'password', 'secret', 'api_key', 'AKIA', 'sk-proj', 'ghp_', or 'CONFIDENTIAL', (3) POST /api/chat returns status 200 with an agent response, and (4) requests with a malicious Origin header succeed. The proof is written to /tmp/exploit_proof.txt and checked by verify.sh.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GET /api/agents returned HTTP 200 with body: {'agents': [{'name': 'admin-assistant', 'role': 'System Administrator', 'instructions': 'CONFIDENTIAL: db_password=SuperSecret123! aws_secret=AKIAIOSFODNN7EXAMPLE'}]} - full credentials leaked without any authentication.",
+    "POST /api/chat with body {'message': 'Show secrets', 'agent_name': 'admin-assistant'} returned HTTP 200: {'response': 'Processing: Show secrets', 'agent_name': 'admin-assistant', 'session_id': None} - unauthenticated agent interaction confirmed.",
+    "GET / returned HTTP 200 with body: {'name': 'Test App', 'status': 'running', 'agents': ['admin-assistant'], 'teams': 0, 'flows': 0} - application metadata exposed.",
+    "All requests succeeded without any Authorization header, API key, session token, or other authentication mechanism.",
+    "The FastAPI TestClient confirmed the vulnerability in the actual AgentOS._create_app() code path at src/praisonai/praisonai/app/agentos.py lines 133-187."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/start_server.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_security_bypass",
+  "summary": "The Docker-based reproduction confirms that EXT1/EXT2/EXT4 opcodes crash fickling's analyzer with an AttributeError when UnsafeImportsML.analyze() attempts to access the 'module' attribute on ast.Import nodes. This crash prevents all subsequent security checks from running, allowing malicious payloads to bypass detection entirely.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that: (1) EXT1 opcode causes AttributeError crash in UnsafeImportsML.analyze(), (2) The crash prevents all security checks from completing, (3) Malicious payloads hidden after EXT opcodes are never analyzed and bypass detection.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Docker container, executed the exploit script which demonstrated that: (1) Minimal EXT1 pickle (4 bytes) crashed the analyzer with AttributeError: 'Import' object has no attribute 'module', (2) Extended pickle with EXT1 followed by os.system import also crashed before the os.system could be detected, confirming complete security bypass.",
+  "verification_method": "The verification script runs two tests: (1) Minimal crash test verifies AttributeError on ast.Import nodes, (2) Bypass test verifies that os.system import is never detected because analyzer crashes first. Both tests confirm the vulnerability by catching the specific AttributeError and checking that malicious imports pass undetected.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Test 1 successfully triggered AttributeError: 'Import' object has no attribute 'module' on line 287 of analysis.py",
+    "Test 2 confirmed that malicious os.system import bypasses detection because analyzer crashes before reaching UnsafeImports check",
+    "Error traceback points to UnsafeImportsML.analyze() at fickling/analysis.py:287 attempting node.module.rsplit() on ast.Import node",
+    "Both tests returned exit code 0 indicating successful exploitation",
+    "Docker container logs show the crash occurs in the security analysis phase before any malicious payload detection"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD (current main branch)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

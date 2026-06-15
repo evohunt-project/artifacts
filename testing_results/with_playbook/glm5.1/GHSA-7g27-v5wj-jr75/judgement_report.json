@@ -1,0 +1,104 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T05:58:56.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-7g27-v5wj-jr75/GHSA-7g27-v5wj-jr75.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "nil-ptr-deref-dos-callback",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/nil-ptr-deref-dos-callback",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/nil-ptr-deref-dos-callback/vulnerability_report.json",
+      "title": "Nil pointer dereference crash via unauthenticated data-change-notification callback endpoint",
+      "vulnerability_type": "dos_null_ptr_deref",
+      "advisory_match": true,
+      "advisory_match_reason": "Same UDM callback endpoint, same DataChangeNotificationProcedure path, and same missing nil check on the UE lookup that the advisory patch fixes in api_httpcallback.go and notifier.go.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "ssrf-via-dereg-callback-uri",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/ssrf-via-dereg-callback-uri",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/ssrf-via-dereg-callback-uri/vulnerability_report.json",
+      "title": "SSRF via attacker-controlled DeregCallbackUri in AMF registration endpoint",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "Separate AMF registration DeregCallbackUri SSRF path; it does not identify the advisory's /sdm-subscriptions DataChangeNotificationProcedure nil dereference.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier2",
+    "target_match": "match",
+    "runtime_evidence": "bug_activation",
+    "selected_finding": {
+      "folder_name": "nil-ptr-deref-dos-callback",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/nil-ptr-deref-dos-callback",
+      "status": "qualifying_vuln",
+      "title": "Nil pointer dereference crash via unauthenticated data-change-notification callback endpoint",
+      "vulnerability_type": "dos_null_ptr_deref"
+    },
+    "reason": "The selected finding matches the advisory root cause. Fresh runtime execution against vulnerable tag v1.4.1 reached HandleDataChangeNotificationToNF and produced a nil pointer panic in DataChangeNotificationProcedure at notifier.go:30. The run demonstrates bug activation, but not the advisory's complete UDM service crash because Gin recovered the panic and the process remained responsive.",
+    "evidence": [
+      "Advisory GHSA-7g27-v5wj-jr75 describes a crafted POST to the UDM /sdm-subscriptions callback path causing DataChangeNotificationProcedure in notifier.go to nil-pointer panic.",
+      "Patch diff v1.4.1 -> v1.4.2 changes api_httpcallback.go from /sdm-subscriptions to /:supi/sdm-subscriptions, validates NotifyItems and supi, and adds nil checks in notifier.go.",
+      "Finding nil-ptr-deref-dos-callback reports POST /sdm-subscriptions -> HandleDataChangeNotificationToNF -> empty supi -> UdmUeFindBySupi returns nil -> ue.UdmSubsToNotify dereference at notifier.go:30.",
+      "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/.judge/poc_runs/nil-ptr-deref-dos-callback/run.log shows target ref a9d40fb (v1.4.1), UDM readiness, Handle DataChangeNotificationToNF, runtime error: invalid memory address or nil pointer dereference, and DataChangeNotificationProcedure at /tmp/udm-build/internal/sbi/processor/notifier.go:30."
+    ],
+    "blockers_to_higher_tier": [
+      "The fresh run returned HTTP 500 panic responses and logged that the UDM process stayed running and responsive; it did not show full service termination or unavailability."
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "nil-ptr-deref-dos-callback",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/nil-ptr-deref-dos-callback",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/.judge/poc_runs/nil-ptr-deref-dos-callback/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/.judge/poc_runs/nil-ptr-deref-dos-callback/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/.judge/poc_runs/nil-ptr-deref-dos-callback/poc_execution.json",
+      "observed_effect": "The copied PoC cloned vulnerable tag v1.4.1 (a9d40fb), started UDM after a local NRF-startup bypass, confirmed the server was ready, then POSTed to /sdm-subscriptions. The log shows Handle DataChangeNotificationToNF followed by a nil-pointer panic in DataChangeNotificationProcedure at notifier.go:30 and HTTP 500 responses; the process remained responsive afterward.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/ssrf-via-dereg-callback-uri",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/ssrf-via-dereg-callback-uri/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_27c678e8/ssrf-via-dereg-callback-uri/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

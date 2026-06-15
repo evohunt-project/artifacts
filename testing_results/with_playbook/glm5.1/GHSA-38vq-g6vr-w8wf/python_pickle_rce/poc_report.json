@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that SentencePiece's pickle deserialization support allows arbitrary code execution. Loading a malicious pickle file triggers the vulnerable __setstate__ method and executes attacker-controlled commands.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Loading a malicious pickle file should execute arbitrary system commands, create proof files in the container filesystem, and demonstrate code execution within the Python process context.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, verified SentencePiece installation, created a malicious pickle payload, loaded it via pickle.load(), and successfully executed arbitrary commands that created /tmp/evilhunt_pwned and captured the user context.",
+  "verification_method": "The verification script checks for the presence of /tmp/evilhunt_pwned file created by the malicious payload, which serves as an unambiguous proof signal that distinguishes successful RCE from parser errors or other failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File /tmp/evilhunt_pwned was successfully created by the malicious pickle payload",
+    "User context (/tmp/evilhunt_user.txt) was captured, showing code execution as root in the container",
+    "Container logs contain the '[EVILHUNT-RCE-PROOF] Arbitrary code executed!' message from the malicious payload",
+    "The pickle deserialization completed without error, confirming the vulnerable code path was reached"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo. The vulnerability is also present in the published PyPI package.",
+    "pinned_commit_or_ref": "v0.2.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_pickle.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

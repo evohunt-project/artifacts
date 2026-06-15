@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_execution",
+  "summary": "The Docker-based reproduction confirms that a malicious JavaScript file placed at ~/.marked.js is automatically loaded and executed when the marked CLI runs, achieving arbitrary code execution without user consent.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a malicious config file in ~/.marked.js is automatically loaded and executed when the marked CLI is invoked, creating a proof-of-concept file and demonstrating arbitrary code execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the marked library, installed the CLI globally, placed a malicious config file in a fake home directory, and executed the marked CLI. The malicious config was automatically loaded and executed, creating a proof file at /tmp/marked-cli-poc-executed.txt and logging attacker-controlled messages to the console.",
+  "verification_method": "The test places a malicious config file at ~/.marked.js that creates a proof file when executed. After running the marked CLI, the test checks for the existence and content of the proof file to verify that arbitrary code execution occurred.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof file /tmp/marked-cli-poc-executed.txt was created by malicious config",
+    "Console output shows [ATTACKER CODE EXECUTED] messages from malicious config",
+    "Malicious config received the marked object and could manipulate parser behavior",
+    "No user confirmation or opt-in was required - config loaded automatically",
+    "Execution occurred with full user privileges in the container"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v18.0.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious_config.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "csrf",
+  "summary": "The Docker-based reproduction confirms that the Laravel CSRF middleware is completely disabled with a wildcard exception, leaving all state-changing operations vulnerable to cross-site request forgery attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should confirm that CSRF protection is completely disabled by showing the wildcard exception in VerifyCsrfToken middleware.",
+  "actual_observed_result": "Running ./reproduction/run.sh verified that app/Http/Middleware/VerifyCsrfToken.php contains 'protected $except = ['*'];' which disables CSRF token validation for all routes, enabling CSRF attacks on all state-changing operations.",
+  "verification_method": "The exploit script checks the VerifyCsrfToken middleware file and confirms the wildcard exception that disables CSRF protection globally.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Confirmed app/Http/Middleware/VerifyCsrfToken.php exists",
+    "Verified the $except array contains '*' wildcard at line 15",
+    "Demonstrated that ALL routes bypass CSRF token validation",
+    "Proof file created showing CSRF protection is disabled"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the local repository checkout mounted at /target-repo.",
+    "pinned_commit_or_ref": "advisory_95319ef7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

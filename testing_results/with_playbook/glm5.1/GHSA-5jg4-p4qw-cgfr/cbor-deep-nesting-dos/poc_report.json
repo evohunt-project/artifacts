@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that the @stablelib/cbor decoder crashes with a RangeError stack overflow when processing a crafted CBOR payload with 15000 levels of nested arrays.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The CBOR decoder should crash with RangeError: Maximum call stack size exceeded when attempting to decode a payload with deeply nested arrays, demonstrating complete denial of service.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the StableLib cbor package from source, generated a 15001-byte CBOR payload with 15000 levels of nested arrays, and the decode() call threw RangeError: Maximum call stack size exceeded, confirming the vulnerability.",
+  "verification_method": "The exploit script generates a CBOR payload where byte 0x81 (definite-length array of 1 element) is repeated 15000 times followed by 0x00 (integer 0). The script calls decode() in a try/catch and checks whether the caught exception is a RangeError. Success is indicated by exit code 0 with the VULNERABLE message; failure (no crash or wrong error type) is indicated by exit code 1.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show the CBOR package and its dependencies built successfully from the target repo source.",
+    "The exploit generated a 15001-byte payload with 15000 levels of array nesting.",
+    "decode() threw RangeError: Maximum call stack size exceeded when processing the payload.",
+    "The verification script exited with code 0, confirming the vulnerability was reproduced."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0f153a63b7552a0e8721f640984113e419015026",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

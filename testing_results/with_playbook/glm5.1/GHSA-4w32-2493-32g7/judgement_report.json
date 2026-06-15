@@ -1,0 +1,132 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T05:39:11.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-4w32-2493-32g7/GHSA-4w32-2493-32g7.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "ping_flooding_dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/ping_flooding_dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/ping_flooding_dos/vulnerability_report.json",
+      "title": "Missing rate limiting on incoming ping frames enables resource exhaustion",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "Different Yamux root cause: this finding concerns unbounded incoming ping/pong handling, while the advisory concerns WindowUpdate credit addition overflowing per-stream send-window state.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "send_window_overflow_panic",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/send_window_overflow_panic",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/send_window_overflow_panic/vulnerability_report.json",
+      "title": "Send window overflow via malicious window updates causes panic and denial of service",
+      "vulnerability_type": "integer_overflow_dos",
+      "advisory_match": true,
+      "advisory_match_reason": "Same vulnerable code and root cause as the advisory: attacker-controlled Yamux WindowUpdate credit reaches FlowController::increase_send_window_by, overflows per-stream send-window accounting, and panics via expect().",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unbounded_memory_allocation_dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/unbounded_memory_allocation_dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/unbounded_memory_allocation_dos/vulnerability_report.json",
+      "title": "Unbounded memory allocation via stream window auto-tuning enables denial of service",
+      "vulnerability_type": "memory_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "Different Yamux flow-control condition: this finding concerns receive-window auto-tuning and memory growth, not malformed WindowUpdate credit overflowing send-window accounting.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "H",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "send_window_overflow_panic",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/send_window_overflow_panic",
+      "status": "qualifying_vuln",
+      "title": "Send window overflow via malicious window updates causes panic and denial of service",
+      "vulnerability_type": "integer_overflow_dos"
+    },
+    "reason": "The selected qualifying finding identifies the advisory-described Yamux WindowUpdate credit overflow in per-stream send-window accounting. A copied PoC under .judge fed a WindowUpdate SYN followed by a WindowUpdate with credit u32::MAX into yamux 0.13.8, kept the stream alive, and observed the advisory-specific panic in FlowController::increase_send_window_by.",
+    "evidence": [
+      "Advisory GHSA-4w32-2493-32g7 describes remote unauthenticated DoS from malformed Yamux WindowUpdate credit overflowing send-window accounting.",
+      "send_window_overflow_panic/vulnerability_report.json names connection.rs:733 and flow_control.rs:179-183, with untrusted frame.header().credit() passed to increase_send_window_by and expect() panicking on checked_add overflow.",
+      ".judge/poc_runs/send_window_overflow_panic/run.log shows a WindowUpdate SYN for stream 1, a second WindowUpdate with credit 4294967295, a panic at yamux-0.13.8/src/connection/stream/flow_control.rs:183, and panic message 'send window not to exceed u32'."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "send_window_overflow_panic",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/send_window_overflow_panic",
+      "executed": true,
+      "command": "cargo run --release",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/.judge/poc_runs/send_window_overflow_panic/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/.judge/poc_runs/send_window_overflow_panic/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/.judge/poc_runs/send_window_overflow_panic/poc_execution.json",
+      "observed_effect": "The copied PoC fed Yamux 0.13.8 a valid WindowUpdate SYN to create stream 1, then a WindowUpdate on the live stream with credit 4294967295. The run log shows a panic at connection/stream/flow_control.rs:183 with 'send window not to exceed u32', proving the advisory-described remote DoS condition.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/ping_flooding_dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/ping_flooding_dos/vulnerability_report.json",
+      "poc_report_path": null,
+      "poc_report_status": "missing"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/unbounded_memory_allocation_dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7e0ea0c4/unbounded_memory_allocation_dos/vulnerability_report.json",
+      "poc_report_path": null,
+      "poc_report_status": "missing"
+    }
+  ]
+}

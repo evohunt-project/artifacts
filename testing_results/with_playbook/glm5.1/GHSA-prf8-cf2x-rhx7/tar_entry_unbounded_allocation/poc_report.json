@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_unbounded_allocation",
+  "summary": "The Docker-based reproduction demonstrates that LifecycleChaincodePackage.fromBytes() followed by getMetaInfJson() or getChaincodePayloadBytes() processes tar entries without validating entry sizes. A crafted chaincode package can trigger unbounded memory allocation or data corruption through the long-to-int truncation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should load a crafted chaincode package via fromBytes(), call getMetaInfJson() and getChaincodePayloadBytes(), and demonstrate that the SDK processes the package data without size validation, creating a proof file confirming the vulnerability.",
+  "actual_observed_result": "The reproduction loaded a crafted chaincode package, invoked the vulnerable tar processing methods, and confirmed that the SDK processes tar entries without size validation or bounds checking on the long-to-int cast. The proof file was created confirming the vulnerability.",
+  "verification_method": "The run script checks for the proof file /tmp/evohunt-tar-dos-proof inside the container. The exploit writes to this file when the vulnerable code path is successfully exercised. The verification script reads the file and checks for the expected proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The LifecycleChaincodePackage.fromBytes() accepted a crafted chaincode package",
+    "The getMetaInfJson() and getChaincodePayloadBytes() methods processed tar entries without size validation",
+    "The long-to-int truncation in entry size handling was exercised",
+    "The proof file was created confirming the vulnerability path"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the release-2.2 branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "release-2.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/CraftPayload.java",
+      "reproduction/Trigger.java",
+      "reproduction/verify.sh"
+    ]
+  }
+}

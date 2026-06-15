@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction demonstrates path traversal by writing a generated file outside the intended output directory using ../../../ sequences in the output path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Orval should write the generated endpoints.ts file to /tmp/ outside the intended /poc-output directory when the output path contains ../../../tmp/traversal-endpoints.ts.",
+  "actual_observed_result": "File was successfully written to /tmp/traversal-endpoints.ts, proving that path traversal sequences in the -o argument are not validated and allow writing to arbitrary filesystem locations.",
+  "verification_method": "The verification script checks if /tmp/traversal-endpoints.ts exists, confirming the file was written outside the intended workspace. This proves the path traversal vulnerability enables arbitrary file write.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Generated file exists at /tmp/traversal-endpoints.ts outside the /poc-output workspace.",
+    "Path traversal sequence ../../../ was not blocked or sanitized.",
+    "No workspace boundary validation exists in the codebase."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out HEAD, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious-spec.yaml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

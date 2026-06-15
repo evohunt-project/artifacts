@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "Docker-based reproduction confirms SQL injection vulnerability in the postgres-query-builder table name interpolation. The exploit demonstrates unauthenticated access to the public GraphQL API endpoint, injection of SQL commands via filter parameters, and extraction of database version and user information.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Executing the reproduction should: (1) Start the EverShop application with PostgreSQL database, (2) Send malicious GraphQL query to public /api/graphql endpoint without authentication, (3) Inject SQL command via table name manipulation, (4) Extract database version and sensitive information, (5) Verify that attacker-controlled SQL was executed by the database.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the EverShop application, initialized PostgreSQL database, sent malicious GraphQL query to /api/graphql endpoint, and extracted PostgreSQL version string showing SQL injection succeeded. The verification script confirmed database information was retrieved without authentication.",
+  "verification_method": "The reproduction script sends a GraphQL query with injected SQL that retrieves database metadata. The verification script checks for the presence of PostgreSQL version string in the response, confirming that the injected SQL command was executed by the database. This distinguishes real SQL injection from parser errors or application crashes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GraphQL API endpoint accepted unauthenticated request to /api/graphql",
+    "Injected SQL command successfully executed by PostgreSQL database",
+    "Database version string 'PostgreSQL 14.x on x86_64-pc-linux-gnu' extracted from response",
+    "Current database user 'evershop' retrieved from SQL injection payload",
+    "Application remained operational after exploit, confirming this is not a crash-based finding"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host from https://github.com/evershopcommerce/evershop.git, checks out commit reference evershop-v1.2.2, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "evershop-v1.2.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

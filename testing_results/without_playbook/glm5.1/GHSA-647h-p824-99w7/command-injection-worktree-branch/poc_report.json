@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the shell-enabled git executor in worktree.ts allows command injection through the branch parameter. A branch name containing shell metacharacters (semicolons) causes arbitrary commands to execute alongside the intended git worktree add invocation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the injected touch command to execute on the shell, creating the proof file /tmp/evohunt-cmd-injection-proof. The verify.sh script checks for this file to confirm the injection succeeded.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the container, created a test git repository, invoked the vulnerable shell-enabled execFile pattern with a malicious branch name containing '; touch /tmp/evohunt-cmd-injection-proof', and confirmed that the proof file was created by the injected command.",
+  "verification_method": "The verify.sh script runs the exploit.js Node.js program which: (1) verifies the vulnerable code pattern (shell: true in execFile) exists in the target repo at /target-repo/packages/powerline/src/worktree.ts, (2) replicates the vulnerability by calling execFile with shell: true and a malicious branch name, and (3) checks for the proof file /tmp/evohunt-cmd-injection-proof. The check distinguishes command injection from a generic git error or startup failure by verifying the exact proof file created by the injected command exists.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/evohunt-cmd-injection-proof was created by the injected touch command, confirming the shell executed the attacker-controlled portion of the branch name.",
+    "The exploit verified that the target source code at /target-repo/packages/powerline/src/worktree.ts contains the shell: true pattern in the NODE_GIT_EXECUTOR.",
+    "The injected command ran in the same process context that the PowerLine server would use for worktree operations."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The reproduction confirms that the WebSocket server pattern used in cosmos/evm rpc/websockets.go:101-102 (bare http.ListenAndServe without timeouts) allows Slowloris connections to persist indefinitely, while the HTTP server pattern from server/json_rpc.go:86-93 (http.Server with ReadHeaderTimeout/ReadTimeout/WriteTimeout/IdleTimeout) properly closes slow connections after the configured timeout.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A server using http.ListenAndServe without timeouts should keep Slowloris connections alive indefinitely (no ReadHeaderTimeout). A server using http.Server with 3-second timeouts should close slow connections within 3 seconds. The actual cosmos/evm source at rpc/websockets.go:102 contains http.ListenAndServe(s.wsAddr, ws) with a #nosec G114 suppression, confirming the vulnerable pattern.",
+  "actual_observed_result": "The vulnerable server kept the Slowloris connection alive for 5+ seconds (well beyond any reasonable timeout). The safe server with 3-second timeouts closed the connection after exactly 3.0 seconds. Source code analysis confirmed that rpc/websockets.go uses http.ListenAndServe (line 102) without any timeout configuration, while server/json_rpc.go properly configures all four HTTP timeouts (ReadHeaderTimeout, ReadTimeout, WriteTimeout, IdleTimeout at lines 89-92). The #nosec G114 suppression at line 101 explicitly acknowledges the missing timeout.",
+  "verification_method": "The exploit opens TCP connections to both a vulnerable server (http.ListenAndServe, no timeouts) and a safe server (http.Server with 3s timeouts), sends partial HTTP requests (missing final CRLF), and observes: (1) vulnerable server keeps the connection alive past the expected timeout period, (2) safe server closes the connection within the configured timeout. Additionally, the exploit reads the actual cosmos/evm source code from /target-repo to confirm the vulnerable pattern exists at rpc/websockets.go:102.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Vulnerable server connection alive after 5 seconds - no timeout enforced (Slowloris successful)",
+    "Safe server closed connection after 3.0 seconds - timeout enforced correctly",
+    "Source code verification: rpc/websockets.go contains http.ListenAndServe at line 102",
+    "Source code verification: rpc/websockets.go has #nosec G114 suppression acknowledging missing timeout",
+    "Source code verification: rpc/websockets.go does NOT set ReadHeaderTimeout",
+    "Source code verification: server/json_rpc.go sets all four HTTP timeouts (ReadHeaderTimeout, ReadTimeout, WriteTimeout, IdleTimeout)",
+    "PROOF_STRING:EVOHUNT_WS_SLOWLORIS_CONFIRMED"
+  ],
+  "limitations_or_blockers": [
+    "The reproduction uses a standalone Go server that replicates the exact http.ListenAndServe pattern from the vulnerable code, rather than building and running the full cosmos/evm node. Building the full node requires Go 1.23+, all cosmos-sdk dependencies, and a testnet setup which takes significant time and network bandwidth."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "d07bcd4c4ec8efbd5654ad303c897f30dc22996e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/vuln_server.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

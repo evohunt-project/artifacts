@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction builds the target Flowise server from source, registers a user account, creates an OAuth2 credential with accessTokenUrl pointing to a local HTTP listener, then triggers the unauthenticated callback endpoint. The listener receives an outbound POST request from the Flowise server, confirming the SSRF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The Flowise server should issue an HTTP POST request to the attacker-controlled accessTokenUrl (a local listener on port 9999) when the unauthenticated callback endpoint is hit. The listener captures the request, proving the SSRF.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the target Flowise server, started it, created an OAuth2 credential with accessTokenUrl=http://127.0.0.1:9999/ssrf-callback-target, then triggered GET /api/v1/oauth2-credential/callback?code=evohunt-ssrf-payload&state=<credential_id>. The Python HTTP listener on port 9999 received a POST request from the Flowise server to /ssrf-callback-target, confirming the SSRF.",
+  "verification_method": "A Python HTTP listener on port 9999 writes a proof file (/tmp/ssrf_proof) when it receives any POST request. After the exploit triggers the callback endpoint, the verification script checks for the existence of this proof file and confirms the SSRF by examining the listener log.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The Python listener received an inbound POST request to /ssrf-callback-target from the Flowise server process.",
+    "The proof file /tmp/ssrf_proof was created by the listener, confirming the SSRF fired.",
+    "The callback endpoint returned an HTML error page (expected, since the listener does not return a valid OAuth2 token response), confirming the code path reached the axios.post() call.",
+    "The SSRF fired on the unauthenticated callback endpoint with no API key or JWT token required."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

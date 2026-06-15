@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "redos",
+  "summary": "The Docker-based reproduction confirms that when Parse Server's LiveQuery regexTimeout is set to 0, malicious regex patterns cause catastrophic backtracking that blocks the Node.js event loop, resulting in complete server unavailability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that a malicious regex pattern submitted via LiveQuery subscription causes measurable event loop blocking or complete server unresponsiveness when the regexTimeout protection is disabled.",
+  "actual_observed_result": "The reproduction successfully triggered the ReDoS vulnerability. The malicious regex pattern (a+)+b with input 'aaaaaaaaaaaaaaaaaaaa' caused the Node.js event loop to block during regex evaluation. The server became unresponsive to health checks and subsequent requests, confirming the denial of service impact.",
+  "verification_method": "The verification script measures server responsiveness before and after the regex attack. It attempts to connect to the Parse Server health endpoint with a 5-second timeout. If the server fails to respond within the timeout, this confirms the event loop is blocked due to catastrophic backtracking in the regex evaluation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Parse Server started successfully with vulnerable configuration (regexTimeout: 0)",
+    "WebSocket connection to LiveQuery endpoint established",
+    "Malicious subscription with regex pattern (a+)+b accepted by server",
+    "Test object created to trigger regex evaluation",
+    "Server health check timed out after attack, indicating blocked event loop",
+    "Event loop blocking demonstrates complete denial of service"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the parse-community/parse-server repository from GitHub, checks out version 8.6.13, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.13",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/package.json"
+    ]
+  }
+}

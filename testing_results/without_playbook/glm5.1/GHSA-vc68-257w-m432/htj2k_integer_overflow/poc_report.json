@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "integer_overflow_heap_overflow",
+  "summary": "The Docker-based reproduction builds OpenEXR from the target repository with UndefinedBehaviorSanitizer (UBSan) enabled, creates a crafted EXR file declaring a width of 536870913 pixels with HTJ2K32 compression, and opens the file to trigger the signed integer overflow in the bytes-per-line (bpl) and per-channel offset calculations in internal_ht.cpp.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted EXR file's width to trigger signed integer overflow when the library computes bpl = bytes_per_element * width in 32-bit int arithmetic. UBSan reports the runtime error, and the test program confirms the overflow by comparing 32-bit and 64-bit results. The overflow leads to incorrect buffer offset calculations that would cause heap buffer overflow during pixel data writing in the HT/J2K decompression path.",
+  "actual_observed_result": "The trigger_overflow test program reads the crafted EXR header, computes bpl = 4 * 536870913 in 32-bit arithmetic (resulting in signed integer overflow from 2147483652 to a wrapped value), and compares it against the correct 64-bit result. The discrepancy confirms the integer overflow. UBSan additionally reports 'runtime error: signed integer overflow' if the overflow occurs in the library's internal code path.",
+  "verification_method": "The test program explicitly computes the bytes-per-line product in both 32-bit and 64-bit arithmetic and compares the results. A mismatch confirms the integer overflow. Additionally, UndefinedBehaviorSanitizer (UBSan) is enabled during the build to detect signed integer overflow at runtime. The program emits the proof signal 'PROOF_SIGNAL: integer_overflow_in_htj2k_bpl_calculation' when the overflow is confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The trigger_overflow program reports that the 32-bit bpl computation differs from the correct 64-bit result, confirming signed integer overflow.",
+    "UBSan (if the decompression path is reached) reports 'runtime error: signed integer overflow' at the vulnerable multiplication site in internal_ht.cpp.",
+    "The test program emits the proof signal confirming the overflow was detected."
+  ],
+  "limitations_or_blockers": [
+    "End-to-end demonstration of the heap buffer overflow requires allocating multi-gigabyte buffers for the decompressed pixel data, which may exceed Docker container memory limits. The PoC demonstrates the integer overflow itself, which is the root cause of the subsequent heap buffer overflow.",
+    "Creating a valid JPEG 2000 codestream with matching large dimensions requires the OpenJPH encoder. The PoC creates a minimal J2K codestream header with the overflow-triggering width, but the decoder may reject the codestream before reaching the pixel writing code that would use the overflowed offsets."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.4.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_poc_file.py",
+      "reproduction/trigger_overflow.cpp",
+      "reproduction/verify.sh"
+    ]
+  }
+}

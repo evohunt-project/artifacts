@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that Caddy's HTTP server does not set a default ReadTimeout. After sending valid headers within the ReadHeaderTimeout window, a client can drip-feed the request body at an arbitrarily slow rate and the server keeps the connection open indefinitely, enabling slow POST denial of service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A slow POST connection should remain open past the configured ReadHeaderTimeout (3s in the test config), proving that the body-reading phase has no timeout. The source code should confirm that ReadTimeout receives no default value while ReadHeaderTimeout and IdleTimeout do.",
+  "actual_observed_result": "Running the reproduction built Caddy from source, started it with read_header_timeout=3s, and executed a slow POST exploit. The exploit sent headers immediately then drip-fed body bytes at 1 byte/second. After 8 seconds (well past the 3s ReadHeaderTimeout), the connection was still open and the server had accepted 8 slow body bytes. Source code analysis confirmed that app.go sets default IdleTimeout and ReadHeaderTimeout but NOT ReadTimeout.",
+  "verification_method": "Three-way verification: (1) Source code grep confirms ReadTimeout has no default assignment while ReadHeaderTimeout and IdleTimeout do. (2) Runtime test sends a slow POST body past ReadHeaderTimeout and confirms the connection stays open. (3) A control test verifies that slow headers ARE rejected by ReadHeaderTimeout, confirming the defense works for headers but not for bodies.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code analysis: ReadTimeout default lines = [], ReadHeaderTimeout default lines = ['srv.ReadHeaderTimeout = defaultReadHeaderTimeout // see #6663']",
+    "Runtime: Connection stayed open for 8.0s past ReadHeaderTimeout=3s, accepting 8 slow body bytes without timeout",
+    "Server response received (148 bytes) after completing the body, confirming the full request was processed",
+    "JSON result: vuln_confirmed=true, source_confirmed=true, runtime_confirmed=true"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

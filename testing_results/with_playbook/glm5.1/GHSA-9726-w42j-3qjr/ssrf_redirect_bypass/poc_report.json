@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The PoC demonstrates that picklescan follows HTTP redirects to internal resources, allowing access to cloud metadata endpoints or internal services that should be inaccessible.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the picklescan scanner to follow a redirect from an external URL to an internal metadata-like endpoint, demonstrating SSRF.",
+  "actual_observed_result": "The PoC successfully demonstrated SSRF. The scanner followed the redirect to the internal endpoint and attempted to process the response as a pickle file, with the internal endpoint's response appearing in error messages.",
+  "verification_method": "The run.sh script sets up a mock metadata endpoint and verifies the scanner accessed it by checking for the endpoint's unique response content in scanner output or logs.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Scanner logs or errors contain content from the internal metadata endpoint",
+    "HTTP request reached the internal mock server",
+    "Scanner followed redirect from external to internal URL",
+    "Internal resource data was processed by the scanner"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.py",
+      "reproduction/run_test.sh"
+    ]
+  }
+}

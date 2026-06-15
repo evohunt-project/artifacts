@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that when File Browser is configured with proxy authentication, an attacker can spoof the proxy auth header to impersonate the admin user and obtain a valid JWT token, then use it to read sensitive files that should be protected.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the attacker to obtain a valid admin JWT token by sending a single HTTP request with a spoofed proxy auth header, then use that token to read a sensitive file placed in the admin's file scope, demonstrating complete authentication bypass.",
+  "actual_observed_result": "Running ./reproduction/run.sh built File Browser from source, configured proxy auth with header X-Forwarded-User, created an admin user with a sensitive file, started the server, then the exploit script spoofed the header to get an admin JWT and used it to read the sensitive file content, confirming full authentication bypass.",
+  "verification_method": "The exploit script writes a unique proof string into a file under the admin scope, then authenticates via the spoofed header, reads the file via the API, and checks for the exact proof string in the response. This distinguishes a real auth bypass from a startup failure, permission error, or unrelated response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The spoofed login request returned a valid JWT token for the admin user without providing any password.",
+    "Using the spoofed token, the API returned the contents of a sensitive file that should only be accessible to the admin.",
+    "The proof string EVOHUNT_AUTH_BYPASS_CONFIRMED was successfully extracted from the API response.",
+    "A second test confirmed that without the proxy header, the login endpoint correctly rejects the request, proving the bypass is caused by the spoofed header."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh"
+    ]
+  }
+}

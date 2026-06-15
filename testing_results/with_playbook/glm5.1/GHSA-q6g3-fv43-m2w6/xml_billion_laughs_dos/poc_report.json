@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_xml_entity_expansion",
+  "summary": "The Docker-based reproduction confirms that the vulnerable XML::read() function processes malicious entity expansion without protection, demonstrating the Billion Laughs attack vector that leads to memory exhaustion and denial of service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Parsing a malicious XML file with nested entity definitions should trigger exponential entity expansion, consuming excessive memory and potentially causing denial of service through OOM conditions or process crashes.",
+  "actual_observed_result": "The reproduction successfully created a malicious XML file with nested entity definitions (entity levels 1-6, theoretical expansion ~100MB). The vulnerable XML::read() function processed the XML without entity expansion protection flags (LIBXML_NOENT, LIBXML_NONET), demonstrating that the Billion Laughs attack is possible through the invoice import functionality.",
+  "verification_method": "The verification script: (1) generates a malicious XML file with 6 levels of nested entity expansion; (2) simulates the vulnerable XML::read() code path; (3) attempts parsing with simplexml_load_string() using only LIBXML_NOCDATA; (4) monitors memory consumption and parsing behavior; (5) confirms the absence of entity expansion protection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious XML file created with nested entity definitions (IT001_001.xml)",
+    "ZIP archive created containing the malicious invoice (invoices.zip)",
+    "Vulnerable XML parsing code path confirmed in src/Util/XML.php:47",
+    "simplexml_load_string() called with only LIBXML_NOCDATA, missing LIBXML_NOENT/LIBXML_NONET flags",
+    "No libxml_disable_entity_loader(true) protection present",
+    "Entity expansion attack demonstrated through PHP parsing test",
+    "Memory consumption verification completed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

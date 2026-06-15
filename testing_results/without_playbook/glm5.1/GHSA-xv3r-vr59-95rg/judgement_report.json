@@ -1,0 +1,140 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T18:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-xv3r-vr59-95rg/GHSA-xv3r-vr59-95rg.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "theme-upload-zip-slip-rce",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/theme-upload-zip-slip-rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/theme-upload-zip-slip-rce/vulnerability_report.json",
+      "title": "Zip Slip arbitrary file write leading to RCE in Theme::upload",
+      "vulnerability_type": "arbitrary_file_write_rce",
+      "advisory_match": true,
+      "advisory_match_reason": "Identical vulnerable function (Theme::upload), same root cause (missing ZIP entry name validation before extractTo()), same attack vector (Zip Slip via path traversal in uploaded theme archive), and same impact path (arbitrary file write leading to RCE). The finding code locations (modules/Theme/Controllers/Theme.php:22-30) match the advisory description exactly.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "backup-restore-sql-injection",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/backup-restore-sql-injection",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/backup-restore-sql-injection/vulnerability_report.json",
+      "title": "SQL injection via malicious backup restore leading to data manipulation",
+      "vulnerability_type": "sql_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerable function (Backup::restore vs Theme::upload), different root cause (SQL injection via untrusted SQL execution vs Zip Slip via missing path validation), different vulnerability class (SQL injection vs path traversal/arbitrary file write). The advisory specifically describes Zip Slip in Theme::upload, not SQL injection in Backup::restore.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "install-guard-bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/install-guard-bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/install-guard-bypass/vulnerability_report.json",
+      "title": "Install guard bypass allowing application takeover",
+      "vulnerability_type": "authorization_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerable component (install guard filter vs Theme::upload), different root cause (installation state check bypass vs missing ZIP entry validation), different vulnerability class (authorization bypass vs path traversal), different attack vector (local .env deletion vs network-accessible theme upload). The advisory specifically describes Zip Slip in Theme::upload, not install guard bypass.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier3",
+    "target_match": "match",
+    "runtime_evidence": "failed_or_none",
+    "selected_finding": {
+      "folder_name": "theme-upload-zip-slip-rce",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/theme-upload-zip-slip-rce",
+      "status": "qualifying_vuln",
+      "title": "Zip Slip arbitrary file write leading to RCE in Theme::upload",
+      "vulnerability_type": "arbitrary_file_write_rce"
+    },
+    "reason": "The finding identifies the exact vulnerable function (Theme::upload), root cause (missing ZIP entry name validation before ZipArchive::extractTo()), and attack vector (Zip Slip via path traversal in uploaded theme archive) described in the advisory. The code locations (modules/Theme/Controllers/Theme.php:22-30) match the advisory description. The finding correctly identifies that $zip->extractTo() is called without iterating over entry names to validate they resolve inside the destination, enabling path traversal. PoC execution failed due to network connectivity constraints (unable to clone target repository), preventing Tier1/Tier2 verification.",
+    "evidence": [
+      "Finding code location modules/Theme/Controllers/Theme.php:22-30 matches advisory description of Theme::upload vulnerability",
+      "Finding identifies same root cause: ZipArchive::extractTo() called without entry name validation",
+      "Finding describes same attack vector: path traversal in ZIP entry names (e.g., ../../../../public/malicious.php)",
+      "Finding describes same impact: arbitrary file write leading to RCE via PHP webshell placement",
+      "Advisory states: 'ZipArchive::extractTo() is called directly with no iteration over entry names to verify they resolve inside the destination'",
+      "Finding evidence states: '$zip->extractTo($tempPath) which extracts all files without additional path validation, allowing files with path traversal sequences to be written outside $tempPath'",
+      "Both describe missing validation that the advisory notes is correctly implemented in modules/Methods/Controllers/Methods.php:165-175 but missing in Theme::upload"
+    ],
+    "blockers_to_higher_tier": [
+      "PoC execution failed due to network connectivity - unable to clone target repository from GitHub",
+      "Runtime verification requires Docker environment with network access to build and execute the PoC",
+      "Cannot verify exploit_success_predicate or bug_activation_predicate without runtime execution"
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "theme-upload-zip-slip-rce",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/theme-upload-zip-slip-rce",
+      "executed": false,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/.judge/poc_runs/theme-upload-zip-slip-rce/reproduction",
+      "exit_code": null,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/.judge/poc_runs/theme-upload-zip-slip-rce/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/.judge/poc_runs/theme-upload-zip-slip-rce/poc_execution.json",
+      "observed_effect": "PoC execution failed due to network connectivity - unable to clone target repository from GitHub. The PoC script requires internet access to clone the repository, which is not available in this environment.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/backup-restore-sql-injection",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/backup-restore-sql-injection/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/backup-restore-sql-injection/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/install-guard-bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/install-guard-bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b533971a/install-guard-bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

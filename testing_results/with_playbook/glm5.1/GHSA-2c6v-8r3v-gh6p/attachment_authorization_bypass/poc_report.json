@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authorization",
+  "summary": "The /attachments/:uuid endpoint serves attachment files without any authorization check, allowing unauthenticated users to download attachments from private repositories by guessing or obtaining UUIDs.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Unauthenticated attackers can access sensitive files uploaded as issue or release attachments in private repositories, leading to information disclosure.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built and launched the Gogs instance, created a private repository with an attachment, and confirmed that unauthenticated requests to /attachments/:uuid can download the file without any credentials.",
+  "verification_method": "The exploit script creates a private repository with an attachment containing a secret, then attempts to download it without authentication. Verification confirms the file content is returned without any authorization header.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 200 response when accessing attachment UUID without authentication",
+    "File content matches the original uploaded secret",
+    "No session or authentication token required in the request",
+    "Attachment belongs to a private repository but is still accessible"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Gogs repository from GitHub and checks out the vulnerable version",
+    "pinned_commit_or_ref": "main",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup_gogs.sh"
+    ]
+  }
+}

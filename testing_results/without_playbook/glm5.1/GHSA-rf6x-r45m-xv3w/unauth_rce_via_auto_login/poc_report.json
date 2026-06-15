@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "rce",
+  "summary": "The Docker-based reproduction installs Langflow from the target source, starts the server with default AUTO_LOGIN=True configuration, obtains a superuser JWT via the unauthenticated /api/v1/auto_login endpoint, and submits a crafted Python function to /api/v1/validate/code that writes a proof file via default-argument side effects during exec().",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted function definition to be exec()'d by validate_code, creating /tmp/evohunt_rce_proof with the string EVOHUNT_RCE_CONFIRMED. This demonstrates that an unauthenticated attacker can execute arbitrary Python code on the Langflow server.",
+  "actual_observed_result": "PoC not executed in this session; reproduction bundle provided for independent verification.",
+  "verification_method": "The run script executes the exploit trigger and then checks for the proof file /tmp/evohunt_rce_proof containing the exact string EVOHUNT_RCE_CONFIRMED. This distinguishes successful arbitrary code execution from a generic server error, startup failure, or authentication rejection.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The reproduction requires Docker to be available on the host machine.",
+    "Langflow has many Python dependencies; the initial installation may take several minutes.",
+    "The server startup can take 30-60 seconds after dependency installation."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.7.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

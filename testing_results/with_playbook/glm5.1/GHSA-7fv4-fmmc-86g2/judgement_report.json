@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T05:44:28.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1dd64da3",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-7fv4-fmmc-86g2/GHSA-7fv4-fmmc-86g2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "os_command_injection_git_commit_diff",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1dd64da3/os_command_injection_git_commit_diff",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1dd64da3/os_command_injection_git_commit_diff/vulnerability_report.json",
+      "title": "Unauthenticated remote code execution via command injection in git commit-diff endpoint",
+      "vulnerability_type": "os_command_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets the commit-diff route in server/routes/git.js where req.query.commit is interpolated into `git show ${commit}`; the advisory targets the user git-config route in server/routes/user.js where gitName and gitEmail are interpolated into `git config --global` commands.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or equivalent root cause. The advisory is shell command injection in POST /api/user/git-config caused by gitName/gitEmail command substitution reaching child_process.exec() in server/routes/user.js. The only qualifying finding is a separate shell command injection in GET /api/git/commit-diff caused by the commit query parameter reaching child_process.exec() in server/routes/git.js.",
+    "evidence": [
+      "Advisory GHSA-7fv4-fmmc-86g2 describes server/routes/user.js lines 58-59 using child_process.exec() with `git config --global user.name` and `git config --global user.email` built from gitName and gitEmail.",
+      "Finding os_command_injection_git_commit_diff reports server/routes/git.js:542 using execAsync(`git show ${commit}`, { cwd: projectPath }) with the commit query parameter.",
+      "The finding and advisory share a repository and vulnerability class, but the affected endpoint, file, parameter, git command, and vulnerable source-to-sink path differ."
+    ],
+    "blockers_to_higher_tier": [
+      "Runtime tiering is not applicable because there is no advisory-matched qualifying finding."
+    ]
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1dd64da3/os_command_injection_git_commit_diff",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1dd64da3/os_command_injection_git_commit_diff/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1dd64da3/os_command_injection_git_commit_diff/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

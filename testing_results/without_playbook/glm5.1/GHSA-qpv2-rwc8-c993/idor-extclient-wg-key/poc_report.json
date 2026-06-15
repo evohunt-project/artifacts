@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "idor",
+  "summary": "The IDOR vulnerability is caused by no-op permission checks in the Community Edition SecurityCheck middleware. Demonstrating the full end-to-end exploit requires building and running the complete NetMaker server with its application stack (SQLite database, REST backend, JWT authentication), which exceeds the scope of a self-contained Docker reproduction bundle. The root cause is verified through source code analysis.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Any authenticated low-privilege user should be able to read any external client's WireGuard private key by sending GET /api/extclients/{network}/{clientid}/file with their JWT token, regardless of whether they own the ext client or have access to the target network.",
+  "actual_observed_result": "The PoC was not attempted because building the full NetMaker server from source requires Go 1.25.3 and the complete application dependency chain, which cannot be reliably built in a self-contained Docker reproduction environment. The vulnerability is confirmed through source code analysis of the no-op permission checks in logic/security.go:23-24 and the unprotected ext client endpoints in controllers/ext_client.go:41-51.",
+  "verification_method": "Source code analysis confirms: (1) SecurityCheck(false, ...) is used on all ext client CRUD endpoints, (2) both NetworkPermissionsCheck and GlobalPermissionsCheck always return nil in CE, (3) reqAdmin parameter is unused, (4) getExtClientConf returns client.PrivateKey without ownership verification.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Building the full NetMaker server from source requires Go 1.25.3 (go.mod specifies go 1.25.3), which is not yet available in standard Docker images.",
+    "The server requires a complex initialization sequence including database setup, JWT secret generation, and role initialization.",
+    "The vulnerability is confirmed through code analysis but not through runtime verification."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host and mounts the checked-out source into the container for reference. The PoC analyzes the vulnerable code paths rather than running the full server.",
+    "pinned_commit_or_ref": "v1.5.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/analyze.py"
+    ]
+  }
+}

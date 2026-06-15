@@ -1,0 +1,32 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "stored_xss",
+  "summary": "The Docker-based reproduction demonstrates that a registered user can send a private message containing an XSS payload that renders as raw HTML when the recipient views the message, because MessagesContactsPanel renders the message body with setEscapeModelStrings(false) and no HTML sanitization is applied.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The injected HTML payload in the message body should be rendered unescaped in the victim user's browser when they open the private message, demonstrating that arbitrary HTML and JavaScript can execute in the victim's session context.",
+  "actual_observed_result": "Reproduction was not attempted in this run. The vulnerability was confirmed through static code analysis tracing the data flow from message composition through persistence to rendering.",
+  "verification_method": "The verification script checks whether the XSS payload string appears unescaped in the HTTP response body when the victim user retrieves the message. A successful exploit is distinguished by the presence of the exact injected HTML tag in the response, versus escaped entity encoding (&lt;script&gt;) which would indicate proper escaping.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static analysis confirmed MessagesContactsPanel.java:514 renders msg.getMessage() with setEscapeModelStrings(false)",
+    "Static analysis confirmed MessageDialog.java:169 persists the message body without HTML sanitization",
+    "Static analysis confirmed CalendarMapper.java:51-65 applies OWASP HTML Sanitizer to calendar descriptions but the same sanitizer is not applied to private messages",
+    "Static analysis confirmed UserDao.java:96-102 grants DASHBOARD right to all new users by default, enabling any registered user to send and view messages"
+  ],
+  "limitations_or_blockers": [
+    "Building Apache OpenMeetings from source requires Maven and significant build time; the full build was not executed during this run",
+    "The reproduction requires a running OpenMeetings server with database initialization, user registration, and web session management"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

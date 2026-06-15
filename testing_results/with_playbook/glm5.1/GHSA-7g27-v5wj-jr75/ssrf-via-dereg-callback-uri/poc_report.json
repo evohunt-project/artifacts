@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction builds the free5gc UDM from source, starts mock NRF and UDR backends, and triggers the SSRF by sending two PUT requests to the AMF 3GPP registration endpoint. The first request stores an attacker-controlled DeregCallbackUri pointing to a local callback listener. The second request with a different GUAMI triggers the UDM to send an HTTP POST to the stored URL, confirming the SSRF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The UDM server should make an HTTP POST request to the attacker-controlled callback URL (DeregCallbackUri) stored during the first AMF registration, when a second registration with a different GUAMI replaces the first one. This demonstrates that an unauthenticated attacker can cause the server to make arbitrary outbound HTTP requests to any URL.",
+  "actual_observed_result": "Running the reproduction pipeline built the UDM from source, started mock NRF and UDR services, started the UDM server, sent two PUT requests to the AMF 3GPP registration endpoint with different GUAMI values, and the UDM sent an HTTP POST to the attacker-controlled callback URL. The callback listener received the POST request with deregistration data in the body.",
+  "verification_method": "The reproduction starts a dedicated callback HTTP listener on port 12347. After sending the two registration PUT requests, the verification checks whether the callback listener received an HTTP POST request. The proof signal is the presence of a POST request from the UDM process to the callback URL, containing a JSON body with DeregReason and AccessType fields. This distinguishes the SSRF from a generic HTTP response or startup behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The callback listener on port 12347 received an HTTP POST request from the UDM process.",
+    "The POST body contained UdmUecmDeregistrationData with DeregReason and AccessType fields.",
+    "The UDM log shows 'Send DeregNotify to old AMF' confirming the deregistration notification was triggered.",
+    "The proof file /tmp/ssrf_proof.txt contains SSRF_CALLBACK_RECEIVED=true and the callback body."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction requires building the UDM from source, which requires Go 1.24+ and network access for dependency downloads.",
+    "The mock NRF and UDR servers must be running before the UDM starts, as the UDM retries NRF registration indefinitely.",
+    "The exploit relies on the default OAuth2 being disabled (OAuth2Required=false), which is the default configuration for free5gc."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/verify.sh",
+      "reproduction/udmcfg.yaml"
+    ]
+  }
+}

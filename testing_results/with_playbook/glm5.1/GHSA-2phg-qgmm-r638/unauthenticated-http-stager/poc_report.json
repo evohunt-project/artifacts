@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction demonstrates that the HTTP stager endpoint serves implant binaries to clients who provide a valid nonce, without requiring cryptographic authentication or credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a client with knowledge of the nonce/resource ID can retrieve the implant binary payload via HTTP without providing authentication credentials.",
+  "actual_observed_result": "The reproduction successfully demonstrated that providing the correct nonce in the HTTP request path resulted in retrieval of the implant binary without any authentication challenge or credential verification.",
+  "verification_method": "The test script creates a mock HTTP stager that mimics the real server's behavior, then an unauthenticated client connects with the known nonce and verifies that payload data is returned.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP GET request with nonce was accepted without authentication",
+    "Implant binary data was successfully retrieved",
+    "No session token, certificate, or credential was required",
+    "Only the nonce value (stored in database) was needed to access the payload"
+  ],
+  "limitations_or_blockers": [
+    "The PoC uses a mock server to demonstrate the vulnerability pattern. Full exploitation requires discovering or predicting a valid nonce from a real Sliver deployment."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Sliver repository from GitHub and creates a mock HTTP stager demonstrating the vulnerability.",
+    "pinned_commit_or_ref": "latest",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

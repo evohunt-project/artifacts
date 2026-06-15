@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass_missing_authentication",
+  "summary": "Successfully demonstrated unauthorized access to Traefik API endpoints when API.Insecure=true is configured. Unauthenticated HTTP requests to /api/rawdata, /api/overview, and /api/http/routers returned sensitive configuration information.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Unauthenticated external attacker can access full Traefik configuration including service URLs, routing rules, middleware configurations, and runtime status through API endpoints.",
+  "actual_observed_result": "HTTP GET requests to API endpoints without authentication credentials successfully returned JSON responses containing full configuration data (routers, services, middlewares, entrypoints). No authentication challenge or rejection occurred.",
+  "verification_method": "Sent HTTP GET requests to /api/rawdata, /api/overview, and /api/http/routers without any authentication headers. Verified that responses contain JSON configuration data including router definitions and service URLs. Confirmed absence of authentication middleware by checking for WWW-Authenticate headers or 401 responses.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 200 OK response from /api/rawdata without authentication",
+    "JSON response contains 'routers' field with routing configuration",
+    "JSON response contains 'services' field with backend service URLs",
+    "JSON response contains 'middlewares' field with middleware configurations",
+    "No WWW-Authenticate header in response (no authentication challenge)",
+    "No 401 Unauthorized status code (request accepted without auth)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Traefik repository from GitHub, checks out v2.11.0, and mounts it read-only at /target-repo",
+    "pinned_commit_or_ref": "v2.11.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

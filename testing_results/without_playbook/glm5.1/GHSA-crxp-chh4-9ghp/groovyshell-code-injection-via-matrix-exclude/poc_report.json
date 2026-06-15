@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that a malicious .jervis.yml file with a crafted matrix.exclude value breaks out of the Groovy string literal via single-quote injection, causing arbitrary code execution through the GroovyShell.evaluate() call in MultiPlatformGenerator.getBuildableMatrixAxes().",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted .jervis.yml payload to be parsed, the malicious value interpolated into a Groovy expression by matrixExcludeFilterBuilder(), and the resulting expression executed by GroovyShell.evaluate(). The injected code writes a proof string to /tmp/evohunt-poc-proof, confirming arbitrary code execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the Jervis repository, built the library with Gradle, executed the exploit script which loaded the malicious YAML, generated the Groovy expression containing the injected payload, and GroovyShell.evaluate() executed the injected code writing EVOHUNT_CODE_INJECTION_SUCCESSFUL to the proof file.",
+  "verification_method": "The exploit script prints the generated Groovy expression to confirm the payload is present, then calls getBuildableMatrixAxes() which triggers GroovyShell.evaluate(). The verify.sh script checks for the existence and content of the proof file at /tmp/evohunt-poc-proof. The proof string EVOHUNT_CODE_INJECTION_SUCCESSFUL distinguishes genuine code injection from a YAML parsing artifact or unrelated error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The matrixExcludeFilter() output contains the injected payload string EVOHUNT_CODE_INJECTION_SUCCESSFUL, confirming user-controlled input reaches the Groovy expression without sanitization.",
+    "The proof file /tmp/evohunt-poc-proof is created with exact content EVOHUNT_CODE_INJECTION_SUCCESSFUL, confirming GroovyShell.evaluate() executed the injected Groovy code.",
+    "The exploit required no special privileges, no user interaction, and no complex setup beyond submitting a .jervis.yml with a malicious matrix.exclude entry."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.groovy",
+      "reproduction/verify.sh"
+    ]
+  }
+}

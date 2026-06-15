@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xml_injection",
+  "summary": "The Docker-based reproduction confirms that XMLSerializer.serializeToString in @xmldom/xmldom 0.8.12 does not escape the comment-closing sequence --> in Comment node data, allowing an attacker to inject arbitrary XML content through the serialization path. The exploit creates comment nodes containing --> followed by attacker-controlled XML elements, serializes the document, and re-parses the output to demonstrate that the injected elements become part of the DOM tree.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that (1) comment data containing --> breaks the comment boundary in serialized output, (2) arbitrary XML elements including <script> tags are injected into the serialized document, and (3) re-parsing the injected output produces a DOM containing the attacker-controlled elements. The verification script checks for the proof string EVOHUNT_PROOF_XML_INJECTION_SUCCESS in the serialized output and confirms the injected elements are present in the re-parsed DOM.",
+  "actual_observed_result": "Running the exploit locally against the target repo confirmed all four test cases: (1) comment data with --> produces serialized output containing <injected> and <script> elements, (2) re-parsing the injected output yields DOM nodes with the attacker-controlled proof attribute, (3) PI data with ?> produces injected elements in serialized output, and (4) the parser accepts comments with -- that produce malformed XML on round-trip. All tests passed with EVOHUNT_VERIFICATION_SUCCESS.",
+  "verification_method": "The exploit script creates comment and PI nodes with injection payloads, serializes the document with XMLSerializer, and verifies that: (a) the serialized string contains the injected XML element names and the proof string EVOHUNT_PROOF_XML_INJECTION_SUCCESS, (b) re-parsing the serialized output with DOMParser produces a DOM containing the injected elements with correct attributes. The verify.sh wrapper checks the exploit exit code and the presence of the EVOHUNT_VERIFICATION_SUCCESS signal to distinguish real injection from parser errors or unrelated failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Comment data containing --> breaks the comment boundary: serialized output contains '<!-- --><injected ...>...</injected><!-- -->'",
+    "Re-parsing the injected serialized output yields 1 <injected> element with the proof attribute EVOHUNT_PROOF_XML_INJECTION_SUCCESS",
+    "PI data containing ?> breaks the PI boundary: serialized output contains injected <pi-injected> element",
+    "Parser accepts comments with -- producing malformed XML on round-trip: '<!--foo--bar-->'"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the 0.8.12 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0.8.12",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

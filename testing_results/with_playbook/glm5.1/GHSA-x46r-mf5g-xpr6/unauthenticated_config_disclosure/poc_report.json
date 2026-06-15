@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that the Glances REST API endpoint GET /api/4/config returns the full configuration file including database passwords, API tokens, and JWT secret keys without requiring authentication. The exploit script sent a single unauthenticated HTTP GET request and successfully extracted all 8 planted sensitive values from the config endpoint, plus the password field from the args endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the unauthenticated config endpoint to return all sensitive configuration values including database passwords, API tokens, and JWT secret keys planted in the test configuration file.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Glances web server, sent an unauthenticated GET request to /api/4/config, and the response contained all 8 sensitive marker strings: EVOHUNT_SECRET_INFLUXDB_PASSWORD, EVOHUNT_SECRET_INFLUXDB2_TOKEN, EVOHUNT_SECRET_MONGODB_PASSWORD, EVOHUNT_SECRET_RABBITMQ_PASSWORD, EVOHUNT_SECRET_COUCHDB_PASSWORD, EVOHUNT_SECRET_TIMESCALEDB_PASSWORD, EVOHUNT_SECRET_JWT_KEY_12345, and EVOHUNT_SECRET_MQTT_PASSWORD. The /api/4/args endpoint also exposed the password field.",
+  "verification_method": "The exploit script queries the /api/4/config endpoint without any authentication credentials and searches the JSON response for 8 unique secret marker strings that were planted in the test configuration file. Finding any of these markers in the unauthenticated response proves information disclosure. The verification distinguishes between a legitimate authenticated response and an unauthenticated leak by confirming that no Authorization header or cookies are sent with the request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The /api/4/config endpoint returned a JSON object with 23 configuration sections without requiring any authentication.",
+    "All 8 planted sensitive secret strings were found in the config response: EVOHUNT_SECRET_INFLUXDB_PASSWORD, EVOHUNT_SECRET_INFLUXDB2_TOKEN, EVOHUNT_SECRET_MONGODB_PASSWORD, EVOHUNT_SECRET_RABBITMQ_PASSWORD, EVOHUNT_SECRET_COUCHDB_PASSWORD, EVOHUNT_SECRET_TIMESCALEDB_PASSWORD, EVOHUNT_SECRET_JWT_KEY_12345, and EVOHUNT_SECRET_MQTT_PASSWORD.",
+    "The /api/4/args endpoint returned 153 CLI argument fields including the password field, without authentication.",
+    "No HTTP Authorization header, cookie, or JWT token was included in the exploit request, confirming the disclosure is unauthenticated."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/test_config.ini"
+    ]
+  }
+}

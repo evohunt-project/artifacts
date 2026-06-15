@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the ragas library fetches attacker-controlled URLs via urllib.request.urlopen() without scheme validation, private IP blocking, or response validation. A local HTTP server receives a request when a URL with an image extension is included in the prompt value items.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the ragas library to fetch an internal URL (http://127.0.0.1:18088/internal_secret.png) via urllib.request.urlopen(), confirming the SSRF vulnerability. The local HTTP server should receive the request and the proof token should be printed.",
+  "actual_observed_result": "Running the exploit script started a local HTTP server on 127.0.0.1:18088, created an ImageTextPromptValue with a URL pointing to the local server, called to_messages() which triggered download_and_encode_image(), and the server received the GET request. The PROOF_TOKEN was printed, confirming the SSRF.",
+  "verification_method": "The exploit script starts a local HTTP server, provides a URL to the server in the prompt value, and checks whether the server received a request. If the server received the request, the SSRF is confirmed. The proof token (EVOHUNT_SSRF_PROOF_7f3a9b2c) distinguishes a real SSRF from unrelated network activity.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The local HTTP server received a GET request for /internal_secret.png",
+    "The response was base64-encoded by download_and_encode_image(), confirming the response content would be included in the LLM prompt",
+    "The PROOF_TOKEN EVOHUNT_SSRF_PROOF_7f3a9b2c was printed, confirming the SSRF was triggered through the vulnerable code path"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "cf49a5c8a2d2bd8bad40a791174058c05b247dee",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

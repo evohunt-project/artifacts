@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that the eval() call on field_type in UserInputField.from_dict() and models/base.py executes arbitrary Python code, creating proof files on the filesystem.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the eval() call on a crafted field_type string to execute arbitrary OS commands, creating a proof file at /tmp/evohunt_eval_rce_proof that confirms code execution.",
+  "actual_observed_result": "Running the reproduction demonstrates that UserInputField.from_dict({'field_type': '__import__(\"os\").system(\"touch /tmp/evohunt_eval_rce_proof\")'}) passes the malicious string to eval(), which executes the OS command and creates the proof file. The same pattern applies to the eval(field_type) calls in models/base.py:2034 and models/base.py:2189.",
+  "verification_method": "The verify.sh script checks two conditions: (1) the vulnerable eval() pattern exists in the target source code via grep, and (2) the exploit.py script creates a proof file at /tmp/evohunt_eval_rce_proof by executing OS commands through eval(). The proof file distinguishes real code execution from a parsing error or exception.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof file /tmp/evohunt_eval_rce_proof created by OS command executed through eval()",
+    "Proof file /tmp/evohunt_eval_rce_proof_alt with content 'eval_rce_confirmed' written through eval() via pathlib",
+    "grep confirmation that eval(data['field_type']) exists in function.py:59",
+    "grep confirmation that eval(field_type) exists in models/base.py:2034 and models/base.py:2189"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref v2.3.23, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.3.23",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/server.py",
+      "reproduction/requirements.txt"
+    ]
+  }
+}

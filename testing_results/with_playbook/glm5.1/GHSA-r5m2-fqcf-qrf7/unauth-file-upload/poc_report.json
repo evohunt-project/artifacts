@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unrestricted_file_upload",
+  "summary": "The Docker-based reproduction confirms that the POST /api/upload endpoint accepts file uploads without any authentication and writes them to the server's static file directory. The uploaded file is immediately accessible via the /resources/ HTTP route, confirming the vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should upload a proof file via an unauthenticated POST /api/upload request. The file should be written to the server's _upload_files directory and accessible at the /resources/ static route with the exact content sent by the attacker.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the FUXA server, sent an unauthenticated POST /api/upload request with a proof file, and verified the file was written to disk and served at /resources/evohunt-upload-proof.txt with the exact attacker-controlled content.",
+  "verification_method": "The verify.sh script uploads a file with unique content via the unauthenticated endpoint, then fetches it from the static /resources/ route and compares the content byte-for-byte with what was uploaded. This confirms the file was both written to disk (upload succeeded) and is served to any HTTP client (no access control on served files).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated POST /api/upload returned a JSON response with a location field confirming the file path.",
+    "A subsequent GET /resources/evohunt-upload-proof.txt returned the exact content uploaded by the attacker, confirming the file is served publicly.",
+    "No authentication headers or tokens were included in either request."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the v1.2.7 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.2.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

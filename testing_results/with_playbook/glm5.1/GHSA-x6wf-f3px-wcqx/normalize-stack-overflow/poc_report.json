@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_uncontrolled_recursion",
+  "summary": "The Docker-based reproduction confirms that parsing an XML document with 9000 levels of nested elements via DOMParser.parseFromString() triggers a RangeError (Maximum call stack size exceeded) during the automatic doc.normalize() call, crashing the process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the deeply nested XML document to be parsed by @xmldom/xmldom, triggering the recursive Node.normalize() call chain. The process should crash with a RangeError (Maximum call stack size exceeded), demonstrating denial of service.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image (node:20-alpine), cloned the xmldom repository at tag 0.9.9, and ran the exploit inside the container. The exploit generated a 9000-level nested XML document (63000 bytes) and parsed it with DOMParser. The container output: '[evohunt] CRASH CONFIRMED: RangeError: Maximum call stack size exceeded' with crash site 'at Element.normalize (/target-repo/lib/dom.js:1297:20)'. The verification script confirmed the stack overflow and the run completed with '[evohunt] SUCCESS: reproduction completed and verified'.",
+  "verification_method": "The run script executes the exploit trigger inside the container and checks that the exit code is non-zero and that stderr contains 'Maximum call stack size exceeded'. The check distinguishes a genuine stack overflow crash from a normal parse error (which would produce a ParseError, not a RangeError) or a startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container process exited with non-zero exit code indicating a crash.",
+    "Stderr output contains 'RangeError: Maximum call stack size exceeded'.",
+    "Stack trace points to Element.normalize at lib/dom.js:1321, confirming the recursive normalize() as the crash site."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0.9.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

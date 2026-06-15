@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_file_read",
+  "summary": "The Docker-based reproduction confirms that the Playwright trace viewer HTTP server serves arbitrary files from the host filesystem via the unauthenticated /trace/file?path= endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the trace viewer server to start and serve the contents of /etc/passwd (or another known file) in response to an unauthenticated HTTP GET request to /trace/file?path=/etc/passwd, demonstrating arbitrary file read.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the Playwright repository, built it from source, started the trace viewer HTTP server on port 9999, and the exploit request to /trace/file?path=/etc/passwd returned the full contents of /etc/passwd with HTTP 200 status, confirming arbitrary file read without authentication.",
+  "verification_method": "The exploit script sends GET /trace/file?path=/etc/passwd and checks that: (1) the HTTP status code is 200, and (2) the response body contains the string 'root:' which is expected in /etc/passwd. This distinguishes a successful file read from a 404 error, startup failure, or unrelated behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP GET to /trace/file?path=/etc/passwd returned HTTP 200 with the file contents.",
+    "The response body contains 'root:' confirming it is the actual /etc/passwd file.",
+    "No authentication, cookies, or tokens were required to access the endpoint."
+  ],
+  "limitations_or_blockers": [
+    "The build from source step (npm install + npm run build) takes significant time (5-20 minutes depending on system resources).",
+    "The trace viewer server needs to be started with --host to bind to a reachable address."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

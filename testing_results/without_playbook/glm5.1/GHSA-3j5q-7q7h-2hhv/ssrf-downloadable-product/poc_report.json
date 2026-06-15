@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the downloadable product sample download functionality allows SSRF attacks. By configuring a sample URL to point to an internal HTTP server, the Magento server can be forced to fetch and return internal resources that are not accessible from outside the network.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that an unauthenticated attacker can trigger the Magento server to make HTTP requests to internal network resources. The internal server will receive the request from the Magento application, and the response containing sensitive internal data will be returned to the attacker through the sample download endpoint.",
+  "actual_observed_result": "The reproduction bundle successfully demonstrated SSRF by setting up an internal HTTP server with a secret flag, configuring a downloadable product sample to point to that internal server, and then triggering the sample download endpoint. The internal server received the request from the Magento application, and the sensitive internal data (EVOHUNT_SECRET_FLAG_12345_SENSITIVE_INTERNAL_DATA) was accessible through the SSRF attack vector.",
+  "verification_method": "The verification process checks for the presence of the secret flag string 'EVOHUNT_SECRET_FLAG' in the response from the sample download endpoint. This distinguishes a successful SSRF attack from a normal download or error condition. The internal server logs also confirm that the request originated from the Magento server rather than an external client.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Internal server received HTTP request from the Magento application container",
+    "Response from sample download endpoint contained internal server data",
+    "Secret flag 'EVOHUNT_SECRET_FLAG_12345_SENSITIVE_INTERNAL_DATA' was exfiltrated via the SSRF attack",
+    "Request originated from the vulnerable Mage_Downloadable_Helper_Download::_getHandle() method"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub (https://github.com/OpenMage/magento-lts.git) on the host, checks out the pinned version v20.2.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v20.2.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/trigger_ssrf.py",
+      "reproduction/internal_server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

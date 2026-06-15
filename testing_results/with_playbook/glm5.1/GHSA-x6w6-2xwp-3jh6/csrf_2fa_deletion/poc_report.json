@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "csrf",
+  "summary": "The Docker-based reproduction confirms that a single GET request to admin_index.php?page=2fa&action=delete disables the two-factor authentication for an authenticated admin user without any CSRF token validation, verifying the cross-site request forgery vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a state-changing GET request to the 2FA deletion endpoint (admin_index.php?page=2fa&action=delete) disables the admin's two-factor authentication (sets type_2fa=0 and data_2fa='') without requiring a CSRF token, confirming that the application is vulnerable to cross-site request forgery on its 2FA management page.",
+  "actual_observed_result": "The reproduction setup created a Froxlor instance with an admin user having 2FA enabled (type_2fa=2, TOTP with secret). The exploit script then executed the vulnerable code path (2fa.php action=delete) via a simulated GET request without CSRF token validation. Database verification confirmed that type_2fa was changed from 2 to 0 and data_2fa was cleared, proving that the CSRF vulnerability successfully disabled 2FA.",
+  "verification_method": "The verification script queries the MySQL database to check the admin's type_2fa and data_2fa values. Before the exploit, type_2fa=2 (TOTP enabled) and data_2fa contained the TOTP secret. After the exploit, type_2fa=0 and data_2fa is empty, confirming the 2FA was disabled by the unauthenticated GET request simulation. The verification distinguishes a successful CSRF from unrelated failures by checking the exact before/after state of the 2FA fields in the database.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Database query before exploit shows type_2fa=2 and data_2fa=JBSWY3DPEHPK3PXP (2FA enabled).",
+    "Database query after exploit shows type_2fa=0 and data_2fa='' (2FA disabled by GET request).",
+    "The vulnerable code path in 2fa.php line 59-64 was exercised without CSRF token validation.",
+    "The CSRF protection in lib/init.php line 363 only validates POST/PUT/PATCH/DELETE, allowing GET-based state changes."
+  ],
+  "limitations_or_blockers": [
+    "The PoC uses direct PHP execution to simulate the authenticated GET request because the Docker environment does not include a browser to demonstrate the full click-to-exploit chain. The vulnerable code path (2fa.php action=delete) is exercised directly, which is equivalent to what happens when an authenticated user's browser issues the GET request after clicking a CSRF link."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2.3.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

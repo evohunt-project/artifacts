@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cross_site_scripting",
+  "summary": "The Docker-based reproduction confirms that a malicious ONNX model with a crafted doc_string value can inject arbitrary JavaScript into the generated graph visualization file when processed by net_drawer with the --embed_docstring flag.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a malicious ONNX model with an XSS payload in the doc_string field, process it with net_drawer --embed_docstring, and demonstrate that the malicious JavaScript is embedded in the output file. This would execute in a victim's browser when viewing the generated SVG.",
+  "actual_observed_result": "The reproduction successfully created a malicious ONNX model with doc_string containing JavaScript code. When processed by net_drawer with --embed_docstring, the generated output.dot file contained the unsanitized javascript:alert(...) URL with the injected payload. The verification script confirmed the XSS payload is present in the output file, demonstrating that an attacker can inject arbitrary JavaScript.",
+  "verification_method": "The verify.sh script searches the generated output.dot file for the exact XSS payload string 'javascript:alert.*XSS_POC_SUCCESS'. This distinguishes successful JavaScript injection from normal model processing errors or unrelated output. The presence of the javascript: URL with the injected payload confirms the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious ONNX model was successfully created with doc_string field containing the XSS payload: ');alert('XSS_POC_SUCCESS');//",
+    "net_drawer processed the model with --embed_docstring flag, generating output.dot file",
+    "The output.dot file contains the unsanitized javascript:alert URL with the injected XSS payload",
+    "The verification script confirmed the payload is present and would execute in a browser context"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the ONNX repository from GitHub on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_model.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

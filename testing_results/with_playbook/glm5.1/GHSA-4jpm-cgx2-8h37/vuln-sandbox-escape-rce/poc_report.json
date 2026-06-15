@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sandbox_escape_rce",
+  "summary": "The Docker-based reproduction confirms that the NodeVM sandbox can be bypassed via constructor chain access in the default Flowise configuration, allowing arbitrary system command execution without environment variable changes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should execute the custom function using constructor chain bypass to access child_process and emit the output of 'id', 'whoami', and '/etc/passwd' contents from inside the container, demonstrating Remote Code Execution in the default deployment.",
+  "actual_observed_result": "The reproduction successfully built and started Flowise server in default configuration, created a malicious chatflow with a custom function that uses constructor chain bypass (this.constructor.constructor('return process')().mainModule.require('child_process')), executed system commands (id, whoami, cat /etc/passwd), and captured the output demonstrating full command execution on the server without any environment variable changes.",
+  "verification_method": "The verify.sh script checks for specific proof strings in the exploit output (uid=, root, /etc/passwd) to distinguish genuine command execution from sandbox restrictions. The presence of these strings confirms the constructor chain bypass successfully escaped the NodeVM sandbox in default configuration.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show successful authentication and chatflow creation",
+    "Prediction response contains output from id command showing uid/gid values",
+    "Output includes 'whoami' command result",
+    "Output includes contents of /etc/passwd demonstrating arbitrary file read",
+    "exploit_success.txt file contains concatenated command outputs",
+    "Sandbox escape achieved via constructor chain without ALLOW_BUILTIN_DEP environment variable"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Flowise repository from GitHub on the host, checks out commit 378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97 (v3.1.0), and mounts that checkout into the container at /target-repo",
+    "pinned_commit_or_ref": "378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

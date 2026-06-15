@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the /rest/workflows/from-url endpoint fetches an arbitrary internal URL and returns the response body to the authenticated attacker, demonstrating SSRF with data exfiltration from a simulated internal service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The SSRF endpoint should fetch data from a simulated internal HTTP server running on localhost and return it to the attacker, proving that internal services can be probed and their data exfiltrated through n8n.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched n8n, created an owner account, started a fake internal HTTP server with secret data, sent an authenticated request to /rest/workflows/from-url pointing at the internal server, and the response contained the secret data from the internal server.",
+  "verification_method": "The verify.sh script starts a fake internal server that serves a JSON response containing a unique proof string EVOHUNT_SSRF_POC_CONFIRMED. After triggering the SSRF, the script checks whether the n8n API response contains this exact proof string, distinguishing a real SSRF from a generic error or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The n8n /rest/workflows/from-url endpoint returned HTTP 200 with a response body containing data from the internal HTTP server.",
+    "The proof string EVOHUNT_SSRF_POC_CONFIRMED was present in the API response, confirming the server fetched the internal URL.",
+    "The response included both the workflow-format fields (nodes, connections) and the exfiltrated secret metadata from the internal server."
+  ],
+  "limitations_or_blockers": [
+    "Building n8n from source inside the Docker container requires significant time (approximately 5-15 minutes depending on resources) due to pnpm install and turbo build.",
+    "The SSRF demonstration uses a localhost internal server; in real deployments the target would be cloud metadata endpoints (169.254.169.254) or internal network services."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository from GitHub, checks out the pinned commit n8n@1.123.1, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@1.123.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/internal-server.js"
+    ]
+  }
+}

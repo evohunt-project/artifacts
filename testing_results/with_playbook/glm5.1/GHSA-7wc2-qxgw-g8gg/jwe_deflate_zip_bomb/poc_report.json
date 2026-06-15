@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_zip_bomb",
+  "summary": "The Docker-based reproduction confirms that authlib's JWE DEFLATE decompression has no size limit. A crafted JWE token with zip:DEF header and a compressed payload expands to 100 MB during decompression, demonstrating unbounded memory allocation that can be scaled arbitrarily to exhaust server memory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should decrypt a crafted JWE token with DEFLATE compression, decompress the payload, and show that the decompressed output is orders of magnitude larger than the compressed input, confirming the absence of any size limit on decompression.",
+  "actual_observed_result": "The exploit script successfully created a DEFLATE-compressed payload of a few KB that expanded to 100 MB during JWE decryption. The authlib decompress function at jwe_zips.py:19 called zlib.decompress without max_length, allocating the full decompressed payload in memory.",
+  "verification_method": "The exploit measures memory usage before and after decompression using resource.getrusage. It verifies the decompressed payload size equals the expected zip bomb size (100 MB). A successful run confirms the decompressed size matches the crafted bomb, proving no size limit exists.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The crafted JWE token uses the DEF zip algorithm with a compressed payload that expands to 100 MB.",
+    "zlib.decompress is called without max_length in DeflateZipAlgorithm.decompress (jwe_zips.py:19).",
+    "Memory RSS increased significantly after decompression, confirming unbounded allocation.",
+    "The decompressed payload size matches the crafted zip bomb target size."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.5.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cryptographic_key_exchange_weakness",
+  "summary": "The Docker-based reproduction confirms that the X25519 sharedKey function with default rejectZero=false returns an all-zero shared key when given a malicious identity-point public key, regardless of the victim's secret key. Two different secret keys produce identical (all-zero) shared keys with the same malicious public key, proving the vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that sharedKey(victimSecret1, identityPoint) and sharedKey(victimSecret2, identityPoint) both return identical all-zero shared keys, proving the attacker can predict the session key. Additionally, sharedKey with rejectZero=true should properly throw an error for the same malicious public key.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the StableLib monorepo from the pinned commit, ran the exploit script, and confirmed that two independently generated key pairs produce identical all-zero shared keys when paired with the identity point (all-zero public key). The rejectZero=true mode correctly rejected the malicious key.",
+  "verification_method": "The exploit generates two independent X25519 key pairs, computes shared keys with an all-zero public key using both, and verifies that (1) both shared keys are identical, (2) both shared keys are all zeros, and (3) rejectZero=true throws an error for the same input. The test distinguishes a genuine small-subgroup attack from a random shared key collision.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Two different secret keys produced identical all-zero shared keys when paired with the identity point public key.",
+    "The rejectZero=true option correctly detected and rejected the malicious public key by throwing an error.",
+    "The shared key was verified to be 32 bytes of zeros (0x0000...0000) for both independent secret keys."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "72336cc655704421d2433eaa2b22eb2a6b626196",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

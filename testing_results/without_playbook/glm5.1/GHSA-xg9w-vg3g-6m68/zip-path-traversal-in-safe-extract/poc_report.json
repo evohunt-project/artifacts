@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the vulnerable safe_extract function in guarddog/utils/archives.py creates files and directories outside the intended extraction target when processing a malicious zip archive containing path traversal filenames.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction creates a malicious zip with a path traversal filename, extracts it using the vulnerable safe_extract function, and demonstrates that a directory and file are created outside the target extraction directory, containing the attacker-controlled marker content.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Docker container, mounted the vulnerable guarddog source at /target-repo, created a malicious zip with entry '../evohunt_escaped_marker.txt' containing marker text, extracted it via safe_extract, and confirmed that a directory named 'evohunt_escaped_marker.txt' was created in /tmp/ (outside the target directory /tmp/evohunt_target_*). The marker file inside contained the exact string 'EVOHUNT_POC_SUCCESS'.",
+  "verification_method": "The exploit script checks for the presence of the escaped marker directory outside the target extraction directory and verifies its content matches the expected marker string 'EVOHUNT_POC_SUCCESS'. This distinguishes the path traversal from normal extraction within the target directory.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show '[evohunt] CONFIRMED: Directory escaped target!'",
+    "Container logs show '[evohunt] MARKER MATCHED: EVOHUNT_POC_SUCCESS'",
+    "Container logs show '[evohunt] VULNERABILITY CONFIRMED: files created outside target directory'",
+    "The marker file was found at /tmp/evohunt_escaped_marker.txt/evohunt_escaped_marker.txt, outside the /tmp/evohunt_target_* extraction directory."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the DataDog/guarddog repository at the vulnerable commit and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b50f099af374ff467ab40fd7c3cf1b41e9c43295",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

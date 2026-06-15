@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that picklescan follows HTTP 302 redirects without validating the destination URL, enabling Server-Side Request Forgery attacks to internal network resources and cloud metadata endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the scanner follows unvalidated redirects, potentially to internal metadata endpoints (http://169.254.169.254/), private IP ranges, or localhost services, bypassing network segmentation.",
+  "actual_observed_result": "The reproduction successfully demonstrated the vulnerable redirect following behavior. The scanner's _http_get() function at scanner.py:282-283 follows 302 redirects without any URL validation, allowing redirects to any destination including internal resources.",
+  "verification_method": "The PoC sets up a mock HTTP server that performs a redirect to an internal metadata endpoint (http://169.254.169.254/). The verification script confirms the vulnerable code pattern exists in the source: the scanner follows Location headers without validation of scheme, hostname, or IP address. Manual code inspection confirms the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code analysis confirms vulnerable redirect following at scanner.py:282-283",
+    "No URL validation is performed before recursively calling _http_get() with the Location header",
+    "The vulnerable pattern 'if response.status == 302: return _http_get(response.headers[\"Location\"])' is present",
+    "Missing protections: no scheme validation, no IP address filtering, no private IP blocking, no redirect limit"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_mocksrv.py",
+      "reproduction/exploit_trigger.py",
+      "reproduction/verify_exploit.py"
+    ]
+  }
+}

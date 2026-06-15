@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the unsanitized 'image' parameter in image404Raw.php allows an unauthenticated attacker to read arbitrary image files from the server filesystem outside the web root. A secret JPEG placed in /tmp/evohunt-secret/ was fully retrieved via a simple GET request containing '../' path traversal sequences.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should place a secret JPEG image in /tmp/evohunt-secret/ (outside the web root) and then retrieve it via GET /view/img/image404Raw.php?image=../../../tmp/evohunt-secret/secret.jpg. The MD5 hash of the retrieved file should match the original, proving the path traversal allows reading files outside the intended directory.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the AVideo repository, built a Docker image with PHP and GD, created a secret JPEG in /tmp/evohunt-secret/, started the PHP built-in server, and sent the path traversal request. The server returned HTTP 200 with the full JPEG content. The MD5 hash of the retrieved file matched the original exactly, confirming the file was read from outside the web root.",
+  "verification_method": "The verify.sh script computes the MD5 hash of the original secret image before the request and the MD5 hash of the HTTP response body after the request. If both hashes match and the HTTP status is 200, the path traversal is confirmed. This distinguishes a real path traversal (identical file content returned) from a generic error response, redirect, or placeholder image.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 200 response from the path traversal URL confirming the server served the file.",
+    "MD5 hash of the retrieved JPEG matches the original secret image placed in /tmp/evohunt-secret/.",
+    "The retrieved file is a valid JPEG image confirmed by its JFIF header and GD-compatibility.",
+    "The file was placed in /tmp/ which is outside the web server document root /target-repo/."
+  ],
+  "limitations_or_blockers": [
+    "The file read via image404Raw.php is limited to files that pass PHP's getimagesize() check (valid image formats only). Non-image files such as configuration.php cannot be directly read through this endpoint.",
+    "The file write via image404.php requires a valid video thumbnail to exist as the source file, and the written content is limited to GD-processed JPEG images, not arbitrary file content."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/prepare.php"
+    ]
+  }
+}

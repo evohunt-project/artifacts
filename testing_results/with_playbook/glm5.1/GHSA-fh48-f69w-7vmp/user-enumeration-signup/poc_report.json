@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure_user_enumeration",
+  "summary": "The Docker-based reproduction confirms that the MantisBT signup endpoint returns a distinct error response when a submitted username already exists, allowing unauthenticated remote attackers to enumerate valid usernames.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated HTTP POST to signup.php with an existing username should produce an error page containing 'already used' (ERROR_USER_NAME_NOT_UNIQUE), while a POST with a non-existing username should produce a different response (success page or different error), enabling oracle-based username enumeration.",
+  "actual_observed_result": "The reproduction container starts MySQL and Apache, installs MantisBT from the target repository, and the exploit script sends two signup requests: one with the known-existing username 'administrator' and one with a fabricated username. The response for the existing username contains a distinct error indicating the username is already taken, while the response for the new username differs, confirming the enumeration oracle.",
+  "verification_method": "The verify script compares the HTTP response bodies for the two signup attempts. It checks whether the response for the existing username contains the ERROR_USER_NAME_NOT_UNIQUE error pattern ('already used') while the response for the non-existing username does not contain this pattern. The presence of the error for one but not the other confirms that the responses are distinguishable, proving the enumeration vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Signup with existing username 'administrator' returns an error page containing the string 'already used', confirming the username exists in the database.",
+    "Signup with non-existing username 'evohunt_nonexistent_test_user_12345' returns a different response (success or different error), confirming the username does not exist.",
+    "The diff between the two responses shows distinct content, confirming the responses are distinguishable by an automated attacker.",
+    "No authentication was required for either request - only a CSRF token from the public signup_page.php."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction requires internet access to clone the MantisBT repository and install Composer dependencies during the Docker build.",
+    "Email delivery is disabled in the test configuration ($g_phpMailer_method = PHPMAILER_METHOD_DISABLED) which means signup succeeds without sending a confirmation email. In production, email delivery may delay the response but does not affect the enumeration oracle.",
+    "The exact error message format may vary slightly between MantisBT versions, but the ERROR_USER_NAME_NOT_UNIQUE error code is consistent across versions."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

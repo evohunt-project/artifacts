@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that a local attacker can send INTERNALCMD performShutdown to the Haraka SMTP server without any authentication, causing immediate server termination via process.exit(0). The internalcmd_key is not configured by default, allowing the command to execute without a key.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The Haraka SMTP server process should terminate immediately after receiving the INTERNALCMD performShutdown command from a local connection. The verification script should confirm the process is no longer running.",
+  "actual_observed_result": "After sending INTERNALCMD performShutdown from localhost, the Haraka process terminated. The verification confirmed the PID no longer exists, proving the server was shut down by the unauthenticated command.",
+  "verification_method": "The verify.sh script starts Haraka, records its PID, runs the exploit script that sends INTERNALCMD performShutdown from localhost, waits 2 seconds, then checks if the process is still alive using kill -0. If the process is dead, the exploit succeeded. The check distinguishes between a successful shutdown (process dead) and an unrelated startup failure (process dead before exploit, caught by the port check).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Haraka SMTP server started and accepted connections on port 25",
+    "INTERNALCMD performShutdown was sent from localhost without any authentication key",
+    "The Haraka process terminated after receiving the command",
+    "The verification script confirmed the process PID no longer exists"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.1.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

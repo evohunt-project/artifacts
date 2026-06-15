@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that GET /api/settings returns the node.secret UUID in the response JSON. The extracted secret was then used as the X-Node-Secret header to successfully call GET /api/users, confirming full authentication bypass.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Calling GET /api/settings should expose the node.secret field. Using this secret as the X-Node-Secret header should grant full admin access, allowing access to any authenticated endpoint.",
+  "actual_observed_result": "Running the reproduction built Nginx UI v2.3.3, installed it, logged in as admin, and called GET /api/settings. The response included node.secret with value 9ec67bd2-d827-492d-afdf-d45bedf375e9. Using this secret as X-Node-Secret header on GET /api/users returned 200 with user data, confirming full auth bypass.",
+  "verification_method": "The exploit script extracts node.secret from the settings response and writes it to /tmp/info_disclosure_proof.json. It then attempts to call GET /api/users with the X-Node-Secret header. A 200 response confirms the secret works as an authentication bypass. The proof files are checked for the SECRET_EXPOSED and AUTH_BYPASS_CONFIRMED flags.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GET /api/settings returned node.secret: 9ec67bd2-d827-492d-afdf-d45bedf375e9",
+    "GET /api/users with X-Node-Secret header returned HTTP 200 with user data",
+    "/tmp/info_disclosure_proof.json contains SECRET_EXPOSED: true with the extracted secret",
+    "/tmp/auth_bypass_proof.json contains AUTH_BYPASS_CONFIRMED: true with user list data",
+    "The generated secret was logged during boot: 'Generated Secret: 0e2757e3-a3d0-4f88-964d-a1c326e9e233' and the install process generated a new secret which was returned in the settings API"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo. The Dockerfile also downloads the pre-built v2.3.3 release binary from GitHub.",
+    "pinned_commit_or_ref": "v2.3.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/start_services.sh",
+      "reproduction/resources/nginx.conf"
+    ]
+  }
+}

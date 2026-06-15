@@ -1,0 +1,30 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The vulnerability allows an authenticated admin user to modify any system setting through the API without validation or whitelisting, including security-critical settings like api_token. The PoC bundle demonstrates the exploit approach but requires full application deployment to execute.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should successfully modify the api_token setting from its original value to a new attacker-controlled value, demonstrating the ability to change security-critical configuration without proper validation.",
+  "actual_observed_result": "PoC execution was not attempted due to the complexity of deploying a full Easy!Appointments stack (PHP, MySQL, Apache) in the current environment. The vulnerability is confirmed through static code analysis of application/controllers/api/v1/Settings_api_v1.php and application/helpers/setting_helper.php.",
+  "verification_method": "The exploit script would fetch the current api_token value, modify it via the vulnerable API endpoint, and verify the change was persisted. Code review confirms no validation whitelist exists for setting names in the update() method or setting() helper function.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Full stack deployment (PHP 8.1, MySQL, Apache) required for runtime PoC execution",
+    "Requires admin API credentials to demonstrate (matches PR:L requirement)",
+    "Application installation and configuration required before exploitation",
+    "Docker execution not available in current environment"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Easy!Appointments repository from GitHub, checks out version 1.5.2, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "1.5.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/setup.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

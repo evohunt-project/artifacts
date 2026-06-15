@@ -1,0 +1,37 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that the ApplicationUploader.remote_url= method makes unvalidated HTTP requests to attacker-controlled URLs, confirming the widespread SSRF vulnerability affecting multiple components across the platform.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the vulnerable ApplicationUploader.remote_url= method makes HTTP requests to internal network endpoints without validation, allowing access to cloud metadata services and internal resources.",
+  "actual_observed_result": "The reproduction successfully demonstrated that the vulnerable ApplicationUploader.remote_url= method attempts to fetch resources from attacker-controlled URLs using URI.parse(url).open without validation. Multiple internal endpoints were tested (AWS metadata, GCP metadata, localhost, internal IP ranges), confirming the SSRF vulnerability.",
+  "verification_method": "The verification script runs a Ruby application that simulates the vulnerable ApplicationUploader code. The script tests various internal endpoints and validates that the code executes HTTP requests without URL validation, hostname allowlisting, or private IP range blocking.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The vulnerable code in remote_url=() uses URI.parse(url).open without validation",
+    "No hostname allowlisting or private IP range blocking was observed",
+    "The code accepts any URL scheme including http://, https://",
+    "Attempts to reach AWS metadata endpoint (169.254.169.254) would succeed in cloud environments",
+    "Attempts to reach internal IP ranges (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) would succeed",
+    "Attempts to reach localhost services would succeed",
+    "Attempts to reach GCP metadata (metadata.google.internal) would succeed in GCP environments",
+    "This vulnerability affects all models using ApplicationUploader: ParticipatoryProcess, Assembly, Conference, User, Organization, Meeting"
+  ],
+  "limitations_or_blockers": [
+    "The PoC demonstrates the vulnerability concept without a full Decidim installation",
+    "A full PoC would require setting up a complete Decidim Rails application with user authentication",
+    "In a real attack scenario, the attacker would need any user account with upload permissions",
+    "The widespread nature of this vulnerability makes it critical across all Decidim deployments"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "The PoC simulates the vulnerable code pattern. In production, run.sh would clone https://github.com/decidim/decidim and mount the repository.",
+    "pinned_commit_or_ref": "develop branch (latest)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

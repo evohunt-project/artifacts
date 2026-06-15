@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction constructs a 10000-level-deep nested ASN.1 SEQUENCE blob (~30 KB), feeds it to Bouncy Castle's ASN1InputStream.readObject(), and confirms that the unbounded recursive parsing triggers a JVM StackOverflowError, crashing the parsing thread.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Parsing the crafted deeply nested ASN.1 structure should trigger a StackOverflowError inside the Bouncy Castle ASN1InputStream recursive parsing path, demonstrating that an attacker can cause denial of service with a small payload.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the Bouncy Castle repository, compiled the core module, built the exploit, and executed it against ASN1InputStream.readObject(). The JVM threw a StackOverflowError when parsing the deeply nested SEQUENCE, and the exploit caught the error and emitted the EVOHUNT_POC_SUCCESS proof signal.",
+  "verification_method": "The exploit program catches java.lang.StackOverflowError during ASN1InputStream.readObject() and prints EVOHUNT_POC_SUCCESS on success or EVOHUNT_POC_FAIL if parsing completes without error. The run.sh script checks for the exact proof string in the container output, distinguishing a genuine stack overflow from unrelated startup failures or compilation errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit emitted EVOHUNT_POC_SUCCESS after catching StackOverflowError during ASN1InputStream.readObject().",
+    "The StackOverflowError occurred in the ASN1InputStream recursive parsing path, confirming the unbounded-recursion vulnerability.",
+    "The crafted ASN.1 blob was only tens of kilobytes, demonstrating the low attack complexity."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Bouncy Castle Java repository on the host, checks out the r1rv84 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "r1rv84",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Exploit.java",
+      "reproduction/verify.sh"
+    ]
+  }
+}

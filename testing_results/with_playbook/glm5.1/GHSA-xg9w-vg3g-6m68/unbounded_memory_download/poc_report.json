@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_resource_exhaustion",
+  "summary": "Successfully demonstrated the unbounded memory download DoS vulnerability in GuardDog. The vulnerable code pattern `response.raw.read()` reads entire HTTP responses into memory without size limits. A test with a 100MB file confirmed that memory consumption scales linearly with file size. In a real attack, a malicious 10GB+ package published to PyPI/npm would exhaust memory and crash the scanning process or entire system.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Memory exhaustion causing GuardDog process to be OOM-killed or system to become unresponsive. A 10GB package would consume approximately 10GB of RAM during download.",
+  "actual_observed_result": "The PoC demonstrated that response.raw.read() reads the entire 100MB test file into memory before writing to disk. Memory consumption increased by ~100MB during the download operation. The vulnerable pattern in scanner.py:203 shows no Content-Length validation, no streaming with chunks, and no maximum download size limits. Parallel scanning via ThreadPoolExecutor (scanner.py:275) can amplify the attack through multiple concurrent large downloads.",
+  "verification_method": "Memory profiling using Python's tracemalloc module. Monitored memory usage before, during, and after the vulnerable read() operation. Confirmed linear relationship between file size and memory consumption.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Memory increased proportionally to test file size (100MB)",
+    "Vulnerable pattern confirmed: response.raw.read() loads entire response into memory",
+    "No Content-Length validation observed in scanner.py",
+    "No size limits in guarddog/utils/config.py",
+    "ThreadPoolExecutor parallel scanning identified as amplification vector",
+    "Results written to /results/memory_exhaustion_detected.txt"
+  ],
+  "limitations_or_blockers": [
+    "Test used 100MB file to demonstrate pattern without crashing test system",
+    "Real attack would use 10GB+ file to achieve complete DoS",
+    "PyPI file size limit is 60MB per file, but npm and VSCode Marketplace allow larger uploads"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (https://github.com/DataDog/guarddog.git) on the host, checks out HEAD, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD (latest commit as of reproduction)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_memory_exhaustion.py"
+    ]
+  }
+}

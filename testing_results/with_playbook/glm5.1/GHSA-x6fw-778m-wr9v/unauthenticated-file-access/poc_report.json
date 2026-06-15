@@ -1,0 +1,31 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The reproduction bundle was generated to demonstrate that files uploaded with master key credentials can be downloaded without any authentication headers via GET /files/{appId}/{filepath}. The exploit uploads a file with a known proof string using the master key, then downloads the same file with no authentication headers, verifying the content matches.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the file uploaded with master key to be downloadable without any authentication, proving that the GET /files/:appId/*filepath endpoint lacks authentication.",
+  "actual_observed_result": "The reproduction was not executed due to Docker infrastructure constraints in the audit environment (slow image pulls on ARM64). The vulnerability is confirmed through static code analysis showing the GET file routes are mounted before handleParseHeaders middleware.",
+  "verification_method": "The exploit script uploads a file with a unique proof string using the master key, then downloads it with no authentication headers. If the downloaded content matches the proof string, the vulnerability is confirmed.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static code analysis confirms GET /files/:appId/*filepath is registered at FilesRouter.js:92-93 with no middleware.",
+    "ParseServer.ts:312 mounts FilesRouter before handleParseHeaders at line 337.",
+    "FilesRouter.js:165-172 confirms getHandler only validates appId exists via Config.get().",
+    "POST and DELETE routes for files explicitly apply authentication middleware, confirming the omission is unintentional."
+  ],
+  "limitations_or_blockers": [
+    "Docker image pull timeouts on ARM64 prevented running the full reproduction in the audit environment."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "9.5.0-alpha.10",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

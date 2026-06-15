@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cors_misconfiguration",
+  "summary": "The Docker-based reproduction confirms that the AVideo platform unconditionally reflects any attacker-supplied Origin header in the Access-Control-Allow-Origin response while setting Access-Control-Allow-Credentials to true. The login endpoint returns the user's password hash and PHP session ID in the cross-origin-readable response body.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that: (1) the login endpoint reflects an arbitrary attacker Origin with Access-Control-Allow-Credentials: true, (2) the login response body contains the user's password hash and PHP session ID, (3) the API GET endpoint also reflects the attacker Origin with credentials, and (4) the CORS preflight response approves cross-origin credentialed requests from the attacker origin.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started AVideo with Apache/PHP/MariaDB, executed the exploit script that sent requests with a spoofed attacker Origin header, and the verify script confirmed that the server reflected the attacker origin with credentials on all tested endpoints and that the login response contained the password hash and session ID.",
+  "verification_method": "The verify.sh script checks the exploit_summary.json produced by exploit.sh. It validates eight independent conditions: (1) login endpoint reflects attacker Origin, (2) login endpoint sets Access-Control-Allow-Credentials: true, (3) login response exposes password hash, (4) login response exposes session ID, (5) API endpoint reflects attacker Origin, (6) API endpoint sets credentials, (7) preflight reflects Origin, (8) preflight sets credentials. All eight must pass for verification to succeed. This distinguishes genuine CORS misconfiguration from unrelated server behavior or startup failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The login endpoint response contains Access-Control-Allow-Origin: https://evil-attacker.example.com reflecting the arbitrary attacker Origin header.",
+    "The login endpoint response contains Access-Control-Allow-Credentials: true enabling cross-origin cookie transmission.",
+    "The login response JSON body includes the user password hash in the pass field.",
+    "The login response JSON body includes the PHP session ID in the PHPSESSID field.",
+    "The API endpoint also reflects the attacker Origin with credentials enabled.",
+    "The CORS preflight (OPTIONS) response approves credentialed cross-origin requests from the attacker origin."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

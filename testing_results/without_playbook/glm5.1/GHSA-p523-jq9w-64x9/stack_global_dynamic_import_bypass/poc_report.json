@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "static_analysis_bypass",
+  "summary": "The Docker-based reproduction confirms that the STACK_GLOBAL opcode enables bypassing Fickling's UNSAFE_MODULES static analysis. Module names constructed dynamically from stack values evade the blocklist, allowing arbitrary code execution when loading malicious pickle files.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that: (1) Normal unsafe imports using Global opcode are detected by static analysis, (2) StackGlobal with dynamically constructed module names bypasses the UNSAFE_MODULES blocklist, (3) Arbitrary module imports including 'os.system' can be performed without detection, enabling code execution when the pickle is loaded.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the Docker container, installed Fickling, and executed the exploit. Phase 1 confirmed that normal unsafe imports (Global('os', 'system')) are correctly detected as LIKELY_OVERTLY_MALICIOUS. Phase 2 demonstrated that StackGlobal with simple string values bypasses detection, showing LIKELY_SAFE severity. Phase 3 showed the advanced bypass using itemgetter to construct 'os' and 'system' from character indices, also evading detection with LIKELY_SAFE severity. The exploit successfully demonstrated arbitrary module import capability bypassing static analysis.",
+  "verification_method": "The reproduction script executes three phases: (1) Confirms normal detection works, (2) Tests simple StackGlobal bypass, (3) Tests advanced StackGlobal bypass with dynamic name construction. Each phase checks the severity level returned by check_safety(). A bypass is confirmed when severity <= LIKELY_SAFE for imports that should be blocked. The exit code 0 confirms successful demonstration of the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Phase 1 output confirmed LIKELY_OVERTLY_MALICIOUS severity for normal Global('os', 'system') import, demonstrating that the blocklist works for static imports.",
+    "Phase 2 output showed LIKELY_SAFE severity for StackGlobal('os', 'system'), confirming the bypass works with simple string values on the stack.",
+    "Phase 3 output demonstrated LIKELY_SAFE severity for StackGlobal with dynamically constructed module names using itemgetter and character indices, showing advanced bypass techniques.",
+    "Exit code 0 confirmed successful exploitation and demonstration of the vulnerability.",
+    "Docker build and run completed without errors, confirming the reproduction environment is self-contained."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (https://github.com/trailofbits/fickling.git) on the host, checks out the master branch, and builds the Docker image with the repository copied into the container.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

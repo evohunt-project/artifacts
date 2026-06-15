@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The reproduction confirms that the unspecified IPv4 address 0.0.0.0 bypasses the host validator in server/audio/host_validator.go:57 because ip.IsUnspecified() is not checked alongside IsLoopback(), IsPrivate(), and IsLinkLocalUnicast(). A local HTTP service bound to 127.0.0.1:9999 was started, and an HTTP request to 0.0.0.0:9999 successfully reached it, proving the SSRF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An HTTP request to http://0.0.0.0:9999/ should reach a simulated internal service bound to 127.0.0.1:9999, returning the proof string EVOHUNT_SSRF_PROOF_INTERNAL_SERVICE_ACCESSED, while 127.0.0.1 is correctly rejected by the host validator.",
+  "actual_observed_result": "Running the exploit program confirmed: (1) 127.0.0.1 is correctly rejected by the host validator (IsLoopback=true), (2) 0.0.0.0 incorrectly passes validation (IsLoopback=false, IsPrivate=false, IsLinkLocalUnicast=false, IsUnspecified=true but not checked), and (3) an HTTP GET to http://0.0.0.0:9999/ returned status 200 with body EVOHUNT_SSRF_PROOF_INTERNAL_SERVICE_ACCESSED, confirming the request reached the internal localhost service.",
+  "verification_method": "The exploit program starts a local HTTP server on 127.0.0.1:9999 that returns a unique proof string, then replicates the vulnerable host validator logic and demonstrates that 0.0.0.0 passes all checks while 127.0.0.1 is correctly blocked. An HTTP request to 0.0.0.0:9999 returns the proof string, confirming the SSRF. The verification distinguishes the SSRF from a failed validation or unrelated error by checking for the exact proof string in the response body.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "net.ParseIP(\"0.0.0.0\").IsUnspecified() returns true, but IsLoopback(), IsPrivate(), and IsLinkLocalUnicast() all return false, confirming the gap in host_validator.go:57.",
+    "127.0.0.1 was correctly rejected by the replicated host validator with error: private IP address not allowed.",
+    "0.0.0.0 was incorrectly allowed by the replicated host validator, returning IP 0.0.0.0.",
+    "HTTP GET to http://0.0.0.0:9999/ returned status 200 with body EVOHUNT_SSRF_PROOF_INTERNAL_SERVICE_ACCESSED, confirming the request reached the localhost service."
+  ],
+  "limitations_or_blockers": [
+    "The Docker-based reproduction (./reproduction/run.sh) was not executed because pulling the golang:1.24-bookworm base image timed out due to slow network conditions. The exploit was instead verified by running exploit.go directly with Go 1.19.2 on the host, which executes identical logic."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

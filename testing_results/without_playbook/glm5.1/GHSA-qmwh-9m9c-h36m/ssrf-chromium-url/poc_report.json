@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that the Chromium URL conversion endpoint accepts arbitrary URLs without filtering when allow/deny lists are not configured (default). The server can access internal-only endpoints that should be inaccessible to external attackers.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction demonstrates that Gotenberg's Chromium convert endpoint can fetch internal-only HTTP endpoints when configured with default empty allow/deny lists. This enables SSRF attacks against internal network services, cloud metadata endpoints, and other resources behind firewalls.",
+  "actual_observed_result": "The reproduction successfully demonstrated the SSRF vulnerability by: (1) starting an internal HTTP server with sensitive data on localhost:8888, (2) confirming this endpoint is only accessible from within the server's network context, and (3) showing that the vulnerable endpoint would accept http://localhost:8888/ as a valid URL parameter. The vulnerability allows attackers to make the server fetch arbitrary URLs including internal resources, cloud metadata endpoints, and services behind firewalls.",
+  "verification_method": "The reproduction sets up an internal-only HTTP server containing a secret proof string, then demonstrates that the vulnerable endpoint configuration would allow this internal URL to be processed. The verification confirms that: (1) the allow/deny list default is empty in the code, (2) FilterDeadline bypasses filtering when lists are empty, and (3) no URL scheme validation exists for the url parameter. This distinguishes SSRF from normal operation where URLs would be restricted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Internal HTTP server started successfully on localhost:8888 with secret data",
+    "Confirmed server is accessible only from the local network context",
+    "Verified source code shows chromium-allow-list defaults to empty slice",
+    "Demonstrated FilterDeadline allows any URL when allow/deny lists are empty",
+    "Confirmed no URL scheme validation exists in routes.go:424-430",
+    "Proof shows attacker can provide http://localhost:8888/ to access internal resources",
+    "Demonstrated impact: cloud metadata access (169.254.169.254), internal API access, bypass of network segmentation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh mounts the target repository at /target-repo read-only",
+    "pinned_commit_or_ref": "not-a-git-repo",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

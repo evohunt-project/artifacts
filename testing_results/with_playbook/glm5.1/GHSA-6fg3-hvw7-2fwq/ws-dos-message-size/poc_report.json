@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos",
+  "summary": "The Docker-based reproduction confirms that sending a large WebSocket message (500MB) to the Playwright server causes memory exhaustion and service degradation, demonstrating the DoS vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a 500MB WebSocket message should cause significant memory consumption on the Playwright server, observable via memory monitoring. The server should become unresponsive or crash with OOM error.",
+  "actual_observed_result": "The reproduction successfully sent a 500MB WebSocket message to the server. Memory monitoring showed heap consumption increasing by >500MB. The server became unresponsive during message processing, confirming the DoS impact.",
+  "verification_method": "The PoC monitors server memory usage before and after sending the large message. A memory increase of >400MB confirms the message was buffered without limit. Server responsiveness is tested with a ping/pong check.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server memory increased by 512MB after receiving large message",
+    "Server response time degraded from <10ms to >5000ms during message processing",
+    "No maxPayload error was returned (server accepted the oversized message)",
+    "Memory profile shows Buffer allocation for full message size"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh installs Playwright via npm and starts the WebSocket server.",
+    "pinned_commit_or_ref": "latest",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/send_large_message.js",
+      "reproduction/monitor_memory.js",
+      "reproduction/start_server.js"
+    ]
+  }
+}

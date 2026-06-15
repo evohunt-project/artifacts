@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction builds flagr from the pinned vulnerable source, starts it with default (no-auth) configuration, and demonstrates that an unauthenticated network attacker can create feature flags, export the entire SQLite database, delete flags, and access pprof debug endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that all management endpoints are accessible without credentials: (1) creating a flag via POST /api/v1/flags returns 200, (2) exporting the database via GET /api/v1/export/sqlite returns a valid SQLite binary, (3) listing flags via GET /api/v1/flags includes the attacker-created flag, (4) deleting the flag via DELETE /api/v1/flags/{id} returns 200, and (5) accessing GET /debug/pprof/goroutine returns goroutine stack data.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository, built the reproduction Docker image with Go 1.24, launched the flagr service with default SQLite configuration, and successfully executed all exploit steps without credentials: flag creation returned 200 with the created flag, SQLite database export returned a valid binary file, flag listing included the injected flag, flag deletion returned 200, and pprof goroutine endpoint returned stack trace data.",
+  "verification_method": "The verify.sh script inside the container performs five sequential checks: (1) creates a flag with a unique key 'EVOHUNT_POC_VERIFY' and asserts the response contains that key, (2) exports the SQLite database and asserts the downloaded file starts with the SQLite magic header bytes, (3) lists all flags and asserts the created flag appears, (4) deletes the flag and asserts the response status is 200, and (5) accesses pprof goroutine endpoint and asserts the response contains the string 'goroutine'. Each check uses grep and file inspection to distinguish real exploit success from generic errors or startup failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "POST /api/v1/flags returned 200 with the created flag containing key 'EVOHUNT_POC_VERIFY', confirming unauthenticated write access.",
+    "GET /api/v1/export/sqlite returned 200 with a valid SQLite binary file (verified by SQLite header magic), confirming unauthenticated database exfiltration.",
+    "GET /api/v1/flags returned 200 with the list including the attacker-created flag, confirming unauthenticated read access.",
+    "DELETE /api/v1/flags/{id} returned 200, confirming unauthenticated destructive access.",
+    "GET /debug/pprof/goroutine returned 200 with goroutine stack data, confirming unauthenticated debug endpoint access."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "e0e180f604745d1c7070f76612b6bae49f6f0f87",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

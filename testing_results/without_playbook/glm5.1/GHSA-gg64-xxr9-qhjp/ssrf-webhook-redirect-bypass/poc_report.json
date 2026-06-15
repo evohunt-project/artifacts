@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that the webhook delivery HTTP client follows redirects without re-validating redirect targets against IsBlockedLocalHostname. A local redirect server simulates an attacker-controlled endpoint that redirects to an internal service on 127.0.0.1:9999, proving the SSRF bypass.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC program starts an internal service on 127.0.0.1:9999 and a redirect server on 127.0.0.1:8888. The redirect server returns 302 to the internal service. Using the replicated IsBlockedLocalHostname logic from the target repo, the program shows that while 127.0.0.1 is correctly identified as blocked by the SSRF check, the HTTP client follows the redirect from port 8888 to 9999 without re-checking. The internal service receives the request, confirming SSRF.",
+  "actual_observed_result": "Running the PoC confirmed: (1) IsBlockedLocalHostname('127.0.0.1', nil) = true (correctly blocked), (2) the redirect server at 127.0.0.1:8888 received the POST and returned 302 to http://127.0.0.1:9999/evohunt-ssrf-proof, (3) the http.Client followed the redirect and the internal service at 127.0.0.1:9999 received the request with final response status 200, (4) the proof signal [evohunt] SUCCESS: SSRF bypass via redirect confirmed! was emitted.",
+  "verification_method": "The verify.sh script first validates that the target repo contains the expected source files (IsBlockedLocalHostname in netutil.go, http.Client in httplib.go, and the IsBlockedLocalHostname check in webhook.go). It then builds and runs main.go which replicates the exact IsBlockedLocalHostname logic from the target repo. The program starts two local servers, uses Go's standard http.Client (matching httplib.go:336 behavior) to send a POST that gets redirected, and verifies the internal server received the request. Success is indicated by the exact string '[evohunt] SUCCESS: SSRF bypass via redirect confirmed!'.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "IsBlockedLocalHostname('127.0.0.1', nil) = true, confirming the SSRF check correctly identifies local addresses",
+    "The redirect server at 127.0.0.1:8888 received the POST request and sent 302 redirect to http://127.0.0.1:9999/evohunt-ssrf-proof",
+    "The http.Client followed the redirect and reached 127.0.0.1:9999 (final response URL: http://127.0.0.1:9999/evohunt-ssrf-proof)",
+    "The internal service at 127.0.0.1:9999 received the redirected HTTP request (SSRF proof)"
+  ],
+  "limitations_or_blockers": [
+    "The PoC simulates the redirect scenario locally. In a real attack, the initial webhook URL would point to an external attacker-controlled server (e.g., attacker.com) that resolves to a public IP and passes IsBlockedLocalHostname. The redirect mechanism is identical to production behavior."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/main.go",
+      "reproduction/go.mod",
+      "reproduction/verify.sh"
+    ]
+  }
+}

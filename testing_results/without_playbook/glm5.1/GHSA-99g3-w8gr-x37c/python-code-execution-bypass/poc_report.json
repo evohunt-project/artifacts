@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_execution_bypass",
+  "summary": "The Docker-based reproduction confirms that the AST validation in python_tools.execute_code can be bypassed using getattr(__builtins__, '__import__'), allowing arbitrary code execution. The malicious payload passes all validation checks and successfully executes system commands.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the malicious Python code payload to bypass AST validation and execute arbitrary commands, demonstrating that the sandbox isolation can be escaped.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, executed the malicious payload through execute_code(), and confirmed that the proof-of-concept command executed successfully despite AST validation.",
+  "verification_method": "The reproduction creates a marker file (/tmp/poc_ast_bypass_marker) using the malicious payload. The verification checks for the presence and content of this marker file to confirm successful exploitation, distinguishing from validation failures or sandbox errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The marker file /tmp/poc_ast_bypass_marker was created with expected content 'EvOHunt-POC-AST-BYPASS-67a9e49f'.",
+    "The bypass payload 'getattr(__builtins__, '__import__')('os').system(...)' passed _validate_code_ast() checks.",
+    "The execute_code function executed the payload without raising validation errors.",
+    "The 'id' command output was captured, confirming actual code execution occurred."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the PraisonAI repository from the session directory and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "baseline_dry_run_snapshot",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_bypass.py",
+      "reproduction/verify_poc.sh"
+    ]
+  }
+}

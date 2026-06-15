@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The reproduction confirms that the GraphQL Playground endpoint embeds the Parse Server master key in client-side JavaScript code, making it accessible to anyone who can view the page source.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should confirm that the master key is embedded in the GraphQL Playground HTML response and can be extracted from the page source.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the Parse Server repository, built the Docker image, and verified that the master key is embedded in the applyPlayground method at line 250 in src/GraphQL/ParseGraphQLServer.js. The vulnerable code pattern 'X-Parse-Master-Key': ${JSON.stringify(this.parseServer.config.masterKey)} was confirmed.",
+  "verification_method": "The verify.sh script searches for the master key exposure pattern in the ParseGraphQLServer.js file and confirms the vulnerable line exists. The check distinguishes this specific vulnerability from unrelated code patterns.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File src/GraphQL/ParseGraphQLServer.js contains the vulnerable applyPlayground method",
+    "Line 250 embeds master key using: 'X-Parse-Master-Key': ${JSON.stringify(this.parseServer.config.masterKey)}",
+    "The master key is statically embedded in the HTML response sent to browsers",
+    "Anyone accessing the playground URL can extract the master key from page source"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the alpha branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "alpha",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

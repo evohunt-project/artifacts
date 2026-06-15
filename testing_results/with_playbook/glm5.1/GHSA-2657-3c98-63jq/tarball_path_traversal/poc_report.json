@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that a malicious npm package tarball with '../' path traversal entries causes the esm.sh server's extractPackageTarball function to write files outside the intended package directory. The proof file /tmp/evohunt-pwned.js is created containing the attacker-controlled proof marker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Requesting a malicious npm package from the esm.sh server should cause the extractPackageTarball function to write a file at /tmp/evohunt-pwned.js (outside the intended npm package directory) containing the proof marker string EVOHUNT_POC_PATH_TRAVERSAL_SUCCESS.",
+  "actual_observed_result": "The esm.sh server downloaded the malicious tarball from the mock npm registry, extracted it, and the path traversal entry 'package/../../../../../../../../../../../../../../../../../../tmp/evohunt-pwned.js' was resolved by path.Join to '/tmp/evohunt-pwned.js'. The file was created with the proof marker content, confirming arbitrary file write.",
+  "verification_method": "The verify.sh script checks for the existence of /tmp/evohunt-pwned.js and verifies it contains the exact proof marker string 'EVOHUNT_POC_PATH_TRAVERSAL_SUCCESS'. This distinguishes a genuine path traversal write from normal package extraction (which only writes inside the package directory) or a server startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The file /tmp/evohunt-pwned.js exists outside the intended package directory at /esm/npm/evil-pkg@1.0.0/node_modules/evil-pkg/",
+    "The file contains the proof marker string 'EVOHUNT_POC_PATH_TRAVERSAL_SUCCESS' confirming it was written by the malicious tarball extraction",
+    "The malicious tarball entry used 20 levels of '../' to traverse from the package directory to the filesystem root"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (esm-dev/esm.sh) on the host, checks out the v136_1 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v136_1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_tarball.py",
+      "reproduction/mock_registry.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

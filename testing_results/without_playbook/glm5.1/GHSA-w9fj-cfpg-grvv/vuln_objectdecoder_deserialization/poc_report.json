@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that a Netty server using ObjectDecoder in its channel pipeline will deserialize arbitrary Java objects from network input without class filtering, allowing an attacker-controlled serialized payload to execute arbitrary code on the server through a custom readObject() method.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the vulnerable Netty server to deserialize the attacker-controlled ExploitPayload object, which executes an arbitrary command in its readObject() method and creates a proof marker file at /tmp/evohunt-proof inside the container.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started the vulnerable Netty server with ObjectDecoder, sent the crafted serialized payload via TCP, and the server deserialized the ExploitPayload object triggering arbitrary command execution. The proof marker file /tmp/evohunt-proof was created inside the container confirming the exploit.",
+  "verification_method": "The verify.sh script checks for the existence and content of /tmp/evohunt-proof inside the container. This file is only created by the ExploitPayload.readObject() method during deserialization, distinguishing genuine code execution from a startup failure, connection error, or parser exception.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show the server receiving and deserializing the ExploitPayload object.",
+    "The proof marker file /tmp/evohunt-proof exists and contains the expected confirmation string.",
+    "The server's standard output includes the [evohunt] proof string emitted by the deserialized ExploitPayload.",
+    "The deserialization occurred at the codec layer before any application handler processed the message."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Netty repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "netty-4.1.108.Final",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/VulnerableServer.java",
+      "reproduction/ExploitPayload.java",
+      "reproduction/ExploitClient.java",
+      "reproduction/pom.xml"
+    ]
+  }
+}

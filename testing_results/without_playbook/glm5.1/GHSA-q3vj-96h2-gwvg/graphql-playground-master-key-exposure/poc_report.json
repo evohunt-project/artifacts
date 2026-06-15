@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that the unauthenticated GraphQL playground endpoint exposes the Parse Server master key in its HTML source, and that the extracted master key can be used to perform administrative operations against the server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated GET request to the playground path should return HTML containing the master key in an inline script tag. Extracting and using the key with a master-key-only API endpoint (e.g., listing schemas) should succeed.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the parse-server from source, started it with mountPlayground enabled, issued an unauthenticated GET to /playground, extracted the master key from the inline JavaScript, and used the extracted key to successfully call the master-key-only /schemas endpoint. The expected proof string was emitted.",
+  "verification_method": "The verification script extracts the master key from the playground HTML using a regex search on the response body, then issues a master-key-only API request (GET /schemas) using the extracted key. Success is confirmed when the API returns a valid JSON response containing 'results'. The check distinguishes master key compromise from a generic server error or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The playground HTML response contains the string 'X-Parse-Master-Key': \"<actual_key>\" in an inline script tag.",
+    "The extracted master key matches the configured test master key exactly.",
+    "The GET /schemas request using the extracted key returned a valid response, confirming the key grants administrative access.",
+    "The server processed the request without authentication headers on the playground endpoint."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the 8.6.28 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.28",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

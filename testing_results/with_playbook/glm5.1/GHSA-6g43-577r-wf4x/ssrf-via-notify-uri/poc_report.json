@@ -1,0 +1,29 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "The PoC demonstrates that an attacker-controlled notifyUri stored during charging session creation is used without validation to make an outbound HTTP POST when a recharge notification is triggered, constituting a Server-Side Request Forgery.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The CHF server should make an outbound HTTP POST to the attacker-specified URL (http://127.0.0.1:8888/ssrf-proof), proving that the server can be used as an SSRF proxy to reach internal or arbitrary network endpoints.",
+  "actual_observed_result": "Not yet executed. The reproduction bundle is prepared and self-contained for future rerun.",
+  "verification_method": "The verify.sh helper starts a TCP listener on port 8888 before triggering the exploit. After the PUT /recharging request, the listener checks whether an inbound HTTP connection was received on the /ssrf-proof path. A successful connection confirms the SSRF; absence of a connection after a 10-second timeout indicates the exploit did not trigger.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The CHF requires Go toolchain and MongoDB to build and run. The go.mod declares go 1.25.5 which may not be available on all Docker base images; the build script adjusts the version directive.",
+    "The CHF requires NRF registration; the server starts anyway but logs an error, which does not block the HTTP endpoints.",
+    "The Diameter handlers for rating and ABMF are not needed for the SSRF path, so the exploit works without external Diameter servers."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh",
+      "reproduction/chfcfg_test.yaml"
+    ]
+  }
+}

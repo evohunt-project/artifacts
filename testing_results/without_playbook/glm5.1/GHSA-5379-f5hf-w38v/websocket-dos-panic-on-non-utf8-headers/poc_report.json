@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The PoC demonstrates that a malicious WebSocket server sending non-UTF-8 bytes in the Sec-WebSocket-Protocol response header causes the Deno client runtime to panic via HeaderValue::to_str().unwrap(), terminating the process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the malicious WebSocket server to respond with a non-UTF-8 Sec-WebSocket-Protocol header value, triggering a panic in the Deno process when it calls to_str().unwrap() on the invalid header.",
+  "actual_observed_result": "The PoC has not been executed yet. The reproduction bundle is designed to build Deno from source, start a malicious WebSocket server that sends 0x80 in the Sec-WebSocket-Protocol header, and run a Deno client script that connects to it. The expected result is a non-zero exit code from the Deno process.",
+  "verification_method": "The verify.sh script checks the Deno process exit code. A non-zero exit code (caused by the panic) indicates successful reproduction. The script distinguishes the panic from a clean exit by checking exit code != 0.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Building Deno from source requires significant time (30+ minutes) and resources (16GB+ RAM recommended). The Docker image must install Rust 1.90.0, LLVM/Clang 17, CMake, and protobuf compiler.",
+    "The reproduction has not been executed in this session due to build time constraints."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Deno repository on the host, checks out tag v2.5.6, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.5.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_server.py",
+      "reproduction/trigger.ts",
+      "reproduction/verify.sh"
+    ]
+  }
+}

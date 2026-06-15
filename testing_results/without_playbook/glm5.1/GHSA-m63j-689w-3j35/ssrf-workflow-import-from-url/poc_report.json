@@ -1,0 +1,29 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "Docker-based reproduction bundle demonstrates SSRF via the /rest/workflows/from-url endpoint. A mock internal service runs on localhost:9999 inside the container. After setting up an n8n owner account, the exploit sends a GET request to /rest/workflows/from-url targeting the internal mock service, proving that an authenticated user can make n8n fetch arbitrary internal URLs without SSRF protection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The /rest/workflows/from-url endpoint should fetch data from the mock internal service at http://127.0.0.1:9999/ and return the response body to the attacker, including the EVOHUNT_SSRF_PROOF marker string that confirms internal service access.",
+  "actual_observed_result": "Reproduction bundle generated but not executed in this session. Docker build and run required to verify.",
+  "verification_method": "The verify.sh script starts a mock HTTP service on 127.0.0.1:9999 that returns JSON matching the n8n workflow format with an embedded proof string (EVOHUNT_SSRF_PROOF). After authenticating as the n8n owner, the exploit sends GET /rest/workflows/from-url?url=http://127.0.0.1:9999/&projectId=<id>. Success is confirmed when the proof string appears in the endpoint response, proving the server fetched the internal resource and returned it to the client. Failure modes (connection refused to mock service, authentication failure, scope denial) are distinguishable from the SSRF success signal.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Reproduction requires Docker to be available on the host.",
+    "n8n startup can take up to 60 seconds in a fresh container.",
+    "The n8n version pinned in the Dockerfile must match the vulnerable code."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "n8n@2.14.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh",
+      "reproduction/mock-service.js"
+    ]
+  }
+}

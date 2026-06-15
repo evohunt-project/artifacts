@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "Docker-based reproduction bundle designed to demonstrate User B deleting User A's annotation layer through the API without ownership validation. The bundle installs Superset from the target repository, creates two users, creates a resource as User A, and deletes it as User B.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "User B (Alpha role) should be able to delete User A's (Admin role) annotation layer via DELETE /api/v1/annotation_layer/<id> without receiving a 403 Forbidden response. The annotation layer should be permanently removed from the database.",
+  "actual_observed_result": "PoC not yet executed. The reproduction bundle is complete and self-contained.",
+  "verification_method": "The exploit script (exploit.py) creates an annotation layer as user_a, then attempts deletion as user_b. Success is verified by: (1) DELETE request returning 200 status, and (2) subsequent GET request returning 404 (resource no longer exists). The script emits 'proof_marker=EVOHUNT_AUTH_BYPASS_CONFIRMED' on success.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The reproduction requires installing Superset from source which takes 10-20 minutes for pip dependency installation",
+    "SQLite is used as the metadata database to simplify setup; some Superset features may behave differently with PostgreSQL in production"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Apache Superset repository from GitHub (shallow clone of master branch), checks out the vulnerable version, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/superset_config.py"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "regex_dos",
+  "summary": "The Docker-based reproduction confirms that an authenticated user can send a crafted $regex query that causes catastrophic backtracking in MongoDB, exhausting CPU resources and causing denial of service. The regex query takes orders of magnitude longer than a normal query, blocking the database from serving other requests.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The malicious regex query ^(a+)+$ against documents containing strings of 'a' characters followed by 'b' should trigger catastrophic backtracking in MongoDB's regex engine, causing the query to take many seconds (compared to milliseconds for a normal query) and consuming CPU resources that deny service to other requests.",
+  "actual_observed_result": "Running the reproduction pipeline starts parse-server, creates 200 test documents with backtracking-trigger strings, and executes the malicious regex query. The regex query takes over 10 seconds compared to under 100ms for a normal query, confirming CPU exhaustion and denial of service.",
+  "verification_method": "The exploit script measures the response time of a normal query and the malicious regex query. The proof signal is a timing ratio of at least 10x between the regex query and the normal query, with the regex query exceeding 5 seconds. The timing difference distinguishes CPU exhaustion from normal query behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Normal query response time under 100ms",
+    "Malicious regex query response time exceeding 5 seconds",
+    "Timing ratio between regex and normal query exceeding 10x",
+    "Proof file written with exact timing measurements"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.20",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

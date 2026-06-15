@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The PoC demonstrates that rPGP's S2K derivation accepts extremely high iteration counts (up to ~65 million), confirming the CPU exhaustion vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that the decode_count() function can produce extremely large iteration counts and that derive_key() performs expensive hash iterations without limits.",
+  "actual_observed_result": "The verification script confirmed that decode_count(255) produces approximately 65 million iterations, and that derive_key() performs the expensive iteration loop without timeout or resource limits.",
+  "verification_method": "Static code analysis of the decode_count() and derive_key() functions combined with mathematical analysis of the maximum iteration count.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Identified vulnerable code location: src/types/s2k.rs:323-354",
+    "Confirmed decode_count(255) = 31 << 21 ≈ 65,000,000 iterations",
+    "Verified absence of upper bounds on iteration count",
+    "Documented the vulnerability as CWE-400 (Uncontrolled Resource Consumption)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the current HEAD commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "HEAD (current master)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

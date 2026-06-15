@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "rce",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated network attacker can execute arbitrary operating system commands on the FUXA server by sending a crafted POST request to the /api/runscript endpoint with a test script containing arbitrary JavaScript code that calls require('child_process').execSync().",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit payload should cause the FUXA server to execute the id(1) command inside the application container and write the output to /tmp/evohunt_rce_proof, confirming that arbitrary OS command execution is achieved.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the FUXA server from source, waited for the server to initialize, sent a crafted POST /api/runscript request with an embedded OS command payload, and verified that the marker file /tmp/evohunt_rce_proof was created inside the container containing the output of id(1).",
+  "verification_method": "The verify script writes the output of id(1) to /tmp/evohunt_rce_proof via the RCE payload and then checks that this file exists and contains the expected uid/gid string. A grep for 'uid=' in the marker file distinguishes real command execution from an HTTP error, startup failure, or unrelated behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The marker file /tmp/evohunt_rce_proof exists inside the container after the exploit request.",
+    "The marker file contains the output of id(1) including uid, gid, and groups, confirming arbitrary command execution.",
+    "The HTTP response from POST /api/runscript indicates the script was executed on the server."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

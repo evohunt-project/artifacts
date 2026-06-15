@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_bypass",
+  "summary": "The reproduction demonstrates that EXT opcode pickles crash Fickling's safety analysis with AttributeError, allowing malicious code to bypass detection and execute successfully upon unpickling.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show: (1) Fickling crashes with AttributeError when analyzing EXT opcode pickle, (2) No safety warnings are produced, (3) The malicious os.system('id') command executes successfully when unpickling.",
+  "actual_observed_result": "The PoC script successfully created a malicious pickle using EXT1 opcode with code 77 (mapped to os.system). When analyzed with fickling.check_safety(), an AttributeError crash occurred: 'Import' object has no attribute 'module'. No safety analysis results were produced. When unpickled with pickle.loads(), the os.system('id') command executed successfully and returned 0, outputting the user ID information.",
+  "verification_method": "The PoC script checks for AttributeError exception when calling check_safety() and verifies successful code execution by unpickling the payload. The crash in safety analysis and successful unpickling prove the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "AttributeError exception caught: 'Import' object has no attribute 'module'",
+    "Fickling safety analysis did not produce any severity warnings",
+    "Pickle disassembly shows EXT1 opcode with code 77",
+    "Unpickling executed os.system('id') successfully with return value 0",
+    "System command output displayed user ID and group information"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host, checks out the current HEAD commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

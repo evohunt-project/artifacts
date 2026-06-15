@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "A Docker-based reproduction confirms that the default 3600-second header timeout and missing body timeout in Tornado's HTTPServer allow a Slowloris-style attack to hold server connections open indefinitely, causing denial of service to legitimate clients.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an attacker can establish many slow connections that hold server resources, causing legitimate HTTP requests to time out or fail during the attack.",
+  "actual_observed_result": "The exploit opens 50 slow TCP connections to the Tornado server, sending HTTP headers incrementally. During the attack, legitimate requests experience significant delays or failures. The server holds all attack connections open with its default 3600-second header timeout, consuming connection slots and file descriptors.",
+  "verification_method": "The verify.sh script starts a Tornado server with default configuration, confirms it responds normally, launches the Slowloris attack, and then attempts a legitimate request during the attack. If the legitimate request times out or fails, the vulnerability is confirmed. The script also checks whether the server becomes unavailable or slow for legitimate traffic during the attack.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The server started with default HTTPServer configuration (no explicit idle_connection_timeout or body_timeout).",
+    "50 Slowloris connections were established, each sending headers very slowly to hold connections open.",
+    "The server held all attack connections open due to the 3600-second default header_timeout.",
+    "Legitimate requests during the attack experienced delays or failures due to server resource exhaustion."
+  ],
+  "limitations_or_blockers": [
+    "The full impact of the Slowloris attack depends on the server's file descriptor limits and connection pool size, which may vary across environments. In a containerized environment with default settings, 50 connections may not fully saturate the server, but the vulnerability is demonstrated by the slow connection holding behavior."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v6.5.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

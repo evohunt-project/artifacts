@@ -1,0 +1,36 @@
+{
+  "status": "failed",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction demonstrates that Deno.serve() has no header_read_timeout configured, allowing connections to be held open indefinitely. However, the Tokio async runtime handles many concurrent connections efficiently, and the DoS could not be conclusively triggered with 950 slow connections in the Docker environment. The underlying vulnerability (missing timeout) is confirmed by code analysis.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After opening many slow connections (sending partial HTTP headers), a new legitimate HTTP request to the Deno.serve() server should time out or fail, demonstrating that the server is unable to accept new connections due to connection state exhaustion.",
+  "actual_observed_result": "The attack script successfully opens 950 TCP connections sending partial HTTP headers. The baseline request before the attack succeeds (HTTP 200). After the attack with 950 slow connections, the server remains responsive (HTTP 200), indicating that the Tokio async runtime handles high connection counts without exhausting resources in this environment. The missing header_read_timeout is confirmed by code analysis but DoS requires more connections than feasible in the Docker test environment.",
+  "verification_method": "The verify.sh script starts a Deno.serve() server, sends a baseline request (expecting HTTP 200), runs the Slowloris attack (950 slow connections), then sends a new request. If the post-attack request times out, the vulnerability is confirmed. The check distinguishes Slowloris-based unavailability from a startup failure.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Baseline HTTP request before attack returns HTTP 200 (server is up).",
+    "950 slow TCP connections are established, each sending partial headers.",
+    "Post-attack HTTP request still succeeds with HTTP 200 - Tokio async runtime handles connections efficiently.",
+    "Code analysis confirms hyper http1::Builder never calls header_read_timeout() (ext/http/http_next.rs:822-823).",
+    "Code analysis confirms Options struct http1_builder_hook is always None (runtime/worker.rs:578-581).",
+    "The vulnerability exists but requires connection counts exceeding the Docker test environment's FD limits."
+  ],
+  "limitations_or_blockers": [
+    "The Tokio async runtime handles many concurrent connections efficiently, making Slowloris attacks less effective than against threaded servers.",
+    "In Docker environments with high file descriptor limits (typically 65536), thousands of slow connections may be needed to exhaust capacity.",
+    "The missing header_read_timeout is a real security concern but requires realistic production FD limits to demonstrate conclusively."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.5.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.ts",
+      "reproduction/attack.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

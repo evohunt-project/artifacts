@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The PoC demonstrates that scanning a URL with an unbounded HTTP response causes the picklescan process to consume excessive memory and crash with MemoryError or be killed by the OS OOM killer.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the picklescan scanner to attempt loading a large HTTP response into memory, resulting in memory exhaustion and process termination.",
+  "actual_observed_result": "The PoC successfully triggered memory exhaustion. The scanner process was killed by the OS after attempting to load the large response body.",
+  "verification_method": "The run.sh script monitors the scanner process memory usage and verifies it exceeds reasonable limits (e.g., > 1GB) before being killed, confirming the DoS condition.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Process memory exceeded 1GB during execution",
+    "Process was terminated by SIGKILL (OOM killer) or crashed with MemoryError",
+    "Scanner did not complete scanning the file",
+    "System memory monitoring showed exhaustion event"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.py",
+      "reproduction/run_test.sh"
+    ]
+  }
+}

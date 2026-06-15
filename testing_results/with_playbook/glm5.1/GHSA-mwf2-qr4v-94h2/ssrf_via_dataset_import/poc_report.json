@@ -1,0 +1,37 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "Local code-level verification confirmed the SSRF mechanism: the default DATASET_IMPORT_ALLOWED_DATA_URLS=[r\".*\"] allows any URL through validate_data_uri(), and urllib.request.urlopen() fetches the attacker-specified URL. A local test started an internal HTTP server, passed its URL through the vulnerable validation + fetch chain, and confirmed the server received the request. Docker-based end-to-end PoC requires Superset image build.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The Superset server should fetch the internal URL (http://127.0.0.1:18888/secret-internal-endpoint) and the internal server should record the request, proving that DATASET_IMPORT_ALLOWED_DATA_URLS=[r\".*\"] allows arbitrary URL fetching from the server's network context.",
+  "actual_observed_result": "Local verification confirmed: a mock internal HTTP server at 127.0.0.1:18899 received a request after the SSRF URL passed through validate_data_uri() (matched by r\".*\") and was fetched by urllib.request.urlopen(). Docker-based end-to-end PoC not executed due to Docker network constraints preventing image build.",
+  "verification_method": "Local code-level test: (1) started internal HTTP server recording requests, (2) called validate_data_uri() with internal URL confirming r\".*\" allows it, (3) called urllib.request.urlopen() confirming fetch occurs, (4) verified proof file written by internal server. Docker verify.sh additionally checks target repo source for vulnerable config.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Local test confirmed: DATASET_IMPORT_ALLOWED_DATA_URLS=[r\".*\"] allows any URL through validate_data_uri()",
+    "Local test confirmed: urllib.request.urlopen() successfully fetches internal URLs after validation",
+    "Internal server proof file confirmed: SSRF_REQUEST_RECEIVED path=/secret-metadata-endpoint",
+    "Static analysis confirms full data flow: POST /api/v1/dataset/import/ -> ImportDatasetsCommand -> load_data() -> request.urlopen(data_uri)",
+    "Alpha role permission (can_write on Dataset) confirmed in security/manager.py"
+  ],
+  "limitations_or_blockers": [
+    "Docker image build could not complete due to network constraints preventing apt-get and pip install",
+    "End-to-end PoC through HTTP API requires running Superset instance with database, users, and permissions configured"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/internal_server.py",
+      "reproduction/build_bundle.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup_superset.sh",
+      "reproduction/requirements.txt"
+    ]
+  }
+}

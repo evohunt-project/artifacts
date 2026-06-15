@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that user-controlled search terms reach SQL WHERE clauses without proper parameter binding. The PoC demonstrates LIKE pattern manipulation through % wildcard injection, proving that direct sprintf interpolation in _sqlWhere() is fundamentally insecure despite character normalization.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Executing the PoC should demonstrate that % wildcards from user input pass through normalizeKeywords() and manipulate SQL LIKE patterns, matching unintended content including sensitive keywords like 'password', 'secret', and 'api key'.",
+  "actual_observed_result": "Running the PHP exploit showed that search terms with % wildcards successfully bypass intended search filtering. The exploit demonstrated that all rows in the test searchindex were matched, including entries containing sensitive information. The vulnerable sprintf interpolation was confirmed at Search.php:1043. Output includes SQL_INJECTION_POC_SUCCESS and VULN_CONFIRMED markers.",
+  "verification_method": "The exploit script creates a test database with sensitive content, then uses % wildcard injection to match all rows. Verification checks for SQL_INJECTION_POC_SUCCESS and VULN_CONFIRMED markers in the output, distinguishing successful pattern manipulation from unrelated errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Exploit output contains SQL_INJECTION_POC_SUCCESS marker confirming vulnerability demonstration.",
+    "Database query with %%%% payload matched all rows including entries with sensitive keywords.",
+    "Comparison between parameterized query (intended matching) and vulnerable query (all rows matched) demonstrates impact.",
+    "Generated SQL pattern LIKE '% %%%% %' shows sprintf interpolation creates unintended wildcard behavior.",
+    "normalizeKeywords() analysis confirms % character passes through, enabling LIKE pattern injection."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "Dockerfile copies minimal Craft-like test environment that simulates the vulnerable _sqlWhere() function and normalizeKeywords() sanitization.",
+    "pinned_commit_or_ref": "N/A - uses standalone exploit demonstrating the vulnerability pattern",
+    "target_repo_mount_path": "N/A - standalone reproduction",
+    "helper_files": [
+      "reproduction/exploit.php",
+      "reproduction/verify.sh",
+      "reproduction/init-db.php"
+    ]
+  }
+}

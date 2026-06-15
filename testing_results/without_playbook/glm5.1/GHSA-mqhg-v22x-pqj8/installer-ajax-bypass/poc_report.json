@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "auth_bypass",
+  "summary": "The Docker-based reproduction confirms that the CanInstall middleware AJAX bypass allows an unauthenticated attacker to overwrite the superadmin account on a fully installed Bagisto instance by sending a POST request with the X-Requested-With: XMLHttpRequest header.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the attacker-controlled POST request to bypass the CanInstall middleware and overwrite the superadmin account (id=1) in the admins table, changing the email from admin@example.com to evil@attacker.com.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds the Docker image, installs Bagisto, marks it as installed, then sends a POST request to /install/api/admin-config-setup with the X-Requested-With header. The admin account email in the database changes from admin@example.com to evil@attacker.com, confirming the middleware bypass.",
+  "verification_method": "The verify.sh script checks the admins table in MySQL before and after the exploit. It confirms the admin email changed to the attacker-controlled value evil@attacker.com, proving the CanInstall middleware bypass and admin account takeover.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The original admin email (admin@example.com) was recorded before the exploit.",
+    "The POST /install/api/admin-config-setup request with X-Requested-With: XMLHttpRequest returned HTTP 200.",
+    "After the exploit, the admins table shows email=evil@attacker.com for id=1, confirming the superadmin account was overwritten.",
+    "The application was marked as fully installed (storage/installed file exists) before the exploit was executed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.3.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_app.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/entrypoint.sh",
+      "reproduction/nginx.conf",
+      "reproduction/supervisord.conf"
+    ]
+  }
+}

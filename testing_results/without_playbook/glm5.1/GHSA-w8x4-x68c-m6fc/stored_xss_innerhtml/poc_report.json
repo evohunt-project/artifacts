@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xss",
+  "summary": "The Docker-based reproduction confirms that html2pdf.js executes attacker-controlled JavaScript through the incomplete innerHTML sanitization when processing HTML strings.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted HTML payload to trigger JavaScript execution through an event handler (onerror) that was not removed by the script-tag-only sanitization.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched a headless browser environment, loaded html2pdf.js with the crafted XSS payload, and confirmed JavaScript execution through console output showing the attacker-controlled proof string.",
+  "verification_method": "The reproduction uses a headless browser to load html2pdf.js and execute the XSS payload. Success is verified by checking browser console output for the attacker-controlled proof string, demonstrating that JavaScript executed in the page context.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Browser console contains the attacker-controlled proof string 'XSS_PROOF_EVOHUNT_POC_SUCCESS'",
+    "The XSS payload executed despite script-tag removal, proving incomplete sanitization",
+    "No error conditions or exceptions occurred during normal html2pdf processing"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.13.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/xss_test.html",
+      "reproduction/test_xss.js"
+    ]
+  }
+}

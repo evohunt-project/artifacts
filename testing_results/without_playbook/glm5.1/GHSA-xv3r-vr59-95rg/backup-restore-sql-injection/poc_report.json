@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that the Backup::restore endpoint executes arbitrary SQL commands from an uploaded ZIP file without validation, demonstrating SQL injection capability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should upload a crafted backup ZIP containing malicious SQL commands. The PoC should execute SQL commands that create a marker table or insert test data, demonstrating arbitrary SQL execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the CI4MS application, uploaded the crafted backup ZIP via the Backup::restore endpoint, and successfully executed SQL commands that created a marker table in the database, confirming the SQL injection vulnerability.",
+  "verification_method": "The run script checks for the existence of a marker table or test data inserted by the malicious SQL. The presence of this marker confirms successful SQL injection exploitation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The crafted backup ZIP was successfully uploaded via the authenticated Backup::restore endpoint.",
+    "SQL commands were executed on the database, creating a marker table.",
+    "The marker table contains the expected test data, confirming attacker-controlled SQL execution.",
+    "The application logs show the backup restore process completed without errors."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

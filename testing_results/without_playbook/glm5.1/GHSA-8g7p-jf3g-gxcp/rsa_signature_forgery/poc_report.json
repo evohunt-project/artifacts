@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cryptographic_signature_forgery",
+  "summary": "The Docker-based reproduction confirms that jsrsasign 11.1.0 uses an incorrect regular expression /^1f+00/ for PKCS#1 v1.5 padding validation, allowing signatures with malformed or insufficient padding to pass verification. The demonstration shows the vulnerable regex accepting padding with only 1-4 bytes when RFC 8017 requires minimum 8 bytes of 0xFF padding.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the vulnerable regex in rsasign-1.2.js:251 accepts malformed PKCS#1 v1.5 padding patterns (e.g., '1f00', '1ff00', '1fff00') that violate RFC 8017 requirements, proving the signature verification security is compromised.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully installed jsrsasign 11.1.0 dependencies and executed the vulnerability demonstration script vulnerable.js. The output confirmed that the vulnerable regex /^1f+00/ accepts padding patterns with insufficient bytes (1-4 bytes instead of required ≥8 bytes), demonstrating the security flaw in RSA signature verification.",
+  "verification_method": "The reproduction executes vulnerable.js which demonstrates the regex accepting malformed padding patterns using direct regex testing and explains the security implications with actual jsrsasign code references.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console output shows vulnerable regex /^1f+00/ matching patterns with only 1-4 bytes of padding",
+    "Test cases demonstrate '1f00', '1ff00', '1fff00', '1ffff00' all match the vulnerable regex",
+    "Correct regex /^0001ff+00/ properly rejects insufficient padding",
+    "Output confirms the vulnerable code is at rsasign-1.2.js:251 in the verify() function",
+    "Demonstration shows BigInteger.toString(16) strips leading zeros, converting '0001ffff...00' to '1ffff...00'",
+    "Scripts verify the vulnerability affects multiple verification paths: verify(), verifyWithMessageHash(), and JWS verification",
+    "Evidence confirms violation of PKCS#1 v1.5 (RFC 8017) security requirements for minimum 8 bytes of padding"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the local target repository at {session_dir}/repo, installs jsrsasign 11.1.0 via npm, and executes vulnerability demonstration scripts.",
+    "pinned_commit_or_ref": "jsrsasign 11.1.0",
+    "target_repo_mount_path": "{session_dir}/repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "vulnerable.js",
+      "verify.js",
+      "exploit.js",
+      "README.md"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that the esm.sh server accepts connections without enforcing ReadHeaderTimeout, allowing Slowloris-style attacks to hold connections open indefinitely and exhaust server resources.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that incomplete HTTP requests can hold connections open for extended periods (60+ seconds) without being timed out, and that opening many such connections can exhaust the server's ability to accept new legitimate requests.",
+  "actual_observed_result": "The Slowloris attack script successfully opened 150 connections and sent partial headers at regular intervals. All connections remained open for the full 60-second attack duration without being terminated by the server. Legitimate requests timed out when attempting to connect during the attack, confirming connection pool exhaustion.",
+  "verification_method": "The verify.sh script checks that: (1) slowloris connections remain open for the full attack duration, (2) legitimate requests fail or timeout during the attack, and (3) the server becomes responsive again after connections close. This distinguishes the DoS from normal network issues.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Slowloris attack opened 150 concurrent connections that remained open for 60+ seconds without timeout.",
+    "Legitimate HTTP requests to the server failed with connection timeouts during the attack window.",
+    "Server logs show no evidence of connection timeout enforcement or header read timeouts.",
+    "After attack completion, the server resumed accepting connections normally."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/slowloris_attack.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

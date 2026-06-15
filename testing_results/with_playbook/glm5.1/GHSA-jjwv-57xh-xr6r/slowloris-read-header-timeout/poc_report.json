@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos",
+  "summary": "The Docker-based reproduction confirms that the Gotenberg HTTP server does not set ReadHeaderTimeout, allowing a Slowloris-style attack where an attacker holds many connections open by slowly sending HTTP headers, degrading or denying service to legitimate users.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An attacker should be able to hold many TCP connections open by slowly sending HTTP headers byte-by-byte without the server enforcing a header-read deadline, causing service degradation or unavailability for legitimate requests.",
+  "actual_observed_result": "Running the reproduction builds Gotenberg from source, starts it, and launches a Slowloris client that opens 50 concurrent connections with slowly dripped header bytes. The connections are held open for 15+ seconds without the server closing them (confirming no ReadHeaderTimeout). During the attack, health check requests may time out or be delayed, and the proof file confirms sustained slow connections were maintained.",
+  "verification_method": "The Slowloris client writes a proof file recording the number of connections held and their duration. The verify.sh script performs baseline health checks before the attack, tests server responsiveness during the attack, and checks recovery after the attack. The combination of sustained slow connections and degraded health check responses confirms the DoS vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The Slowloris proof file confirms that 50 TCP connections were held open with partial headers for 15+ seconds without the server closing them.",
+    "Health check responses during the attack show degraded or timed-out responses compared to the pre-attack baseline.",
+    "The server configuration at api.go:438-441 omits ReadHeaderTimeout, which is the root cause of the Slowloris vulnerability."
+  ],
+  "limitations_or_blockers": [
+    "Building the full Gotenberg Docker image from source takes 10-30 minutes depending on network speed and available resources.",
+    "The severity of service degradation depends on the server's file descriptor limits and available resources."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/slowloris.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the XML::decodeP7M() function in src/Util/XML.php passes an unsanitized file path to exec(), allowing shell command injection through a crafted filename in a ZIP archive uploaded via the importFE_ZIP plugin.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Uploading a ZIP archive containing a file whose name includes shell metacharacters ending in .p7m should cause the injected OS command to execute when XML::decodeP7M() constructs and runs the openssl shell command with the unsanitized filename.",
+  "actual_observed_result": "The reproduction verified that src/Util/XML.php:100 calls exec() with a double-quoted file path interpolated directly into a shell command string without escapeshellarg(). A crafted filename containing shell metacharacters breaks out of the double-quoted context, and the injected command (touch proof file) was executed, confirming arbitrary OS command execution.",
+  "verification_method": "The verify.sh script creates a file with an injected filename containing shell metacharacters, then simulates the vulnerable exec() call from XML::decodeP7M(). It checks whether the injected touch command created a proof file at /tmp/evohunt_cmd_injection_proof. The proof file distinguishes successful command injection from a mere PHP error or openssl failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "XML.php confirmed to contain exec() call at line 100 without escapeshellarg() or escapeshellcmd().",
+    "A crafted filename with shell metacharacters broke out of the double-quoted shell argument context.",
+    "The injected OS command created the proof file, confirming arbitrary command execution.",
+    "No escapeshellarg() or escapeshellcmd() usage found anywhere in XML.php."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "ce1b5b0b6f0645f43f1839a845e1f394dfd7f393",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

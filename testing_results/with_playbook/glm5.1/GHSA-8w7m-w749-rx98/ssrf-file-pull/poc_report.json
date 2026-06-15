@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the file pull endpoint accepts arbitrary URLs without destination validation, allowing the panel to fetch resources from internal services and demonstrating SSRF by accessing a mock internal metadata endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a request to the file pull endpoint with an internal URL should cause the panel to fetch content from that internal service, demonstrating SSRF and the ability to access internal resources not exposed to the internet.",
+  "actual_observed_result": "The exploit successfully triggered SSRF by making the panel fetch content from a mock internal service running on localhost:9999. The internal service received requests from the panel, and the fetched content was written to the server filesystem, proving that internal network access is possible.",
+  "verification_method": "The exploit sets up a mock internal service that logs all incoming requests. The verification script checks the service logs to confirm requests from the panel and verifies that content from the internal service was successfully fetched and stored, distinguishing SSRF from normal external URL fetching.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Mock internal service received HTTP request from the Pterodactyl Panel application",
+    "Internal service logs show request headers and timestamps proving SSRF occurred",
+    "File was created on the server containing content from the internal service",
+    "API returned successful response confirming the file pull operation completed",
+    "Demonstrated access to simulated cloud metadata endpoint at http://127.0.0.1:9999/latest/meta-data/"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3780664977726641fd7b4ef90c94687233901129",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/internal_service.py",
+      "reproduction/startup.sh"
+    ]
+  }
+}

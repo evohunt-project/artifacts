@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "Docker-based PoC confirms that the ExecuteCommand node executes arbitrary shell commands without sanitization, allowing authenticated users to read /etc/passwd and achieve system compromise.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate reading /etc/passwd contents through the ExecuteCommand node, proving arbitrary command execution capability.",
+  "actual_observed_result": "Successfully created a workflow with ExecuteCommand node set to 'cat /etc/passwd', executed the workflow via n8n API, and retrieved /etc/passwd contents in the execution results. The command output contained 'root:x:0:0:root:/root:/bin/bash' confirming unrestricted command execution.",
+  "verification_method": "The run.sh script creates a malicious workflow, executes it via the n8n REST API, and checks if the stdout field contains the /etc/passwd marker 'root:x:0:0'. The verify.sh script confirms the exact format of Unix password file entries.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Workflow successfully created via POST /api/v1/workflows endpoint",
+    "Execution triggered via POST /api/v1/workflows/{id}/execute",
+    "Execution result contained stdout field with /etc/passwd contents",
+    "Output matched expected Unix password file format (root:x:0:0:...)",
+    "No sanitization or validation was applied to the command parameter"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones n8n from GitHub on the host and builds the Docker image from source",
+    "pinned_commit_or_ref": "master branch (current version 2.3.0)",
+    "target_repo_mount_path": "/app",
+    "helper_files": [
+      "reproduction/create_workflow.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that an authenticated user can make the n8n server issue outbound HTTP requests to arbitrary internal services through the /rest/workflows/from-url endpoint. The mock internal metadata service returns sensitive data (simulating cloud metadata), which n8n fetches and returns to the attacker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause n8n to fetch data from the mock internal metadata service at http://127.0.0.1:9999/metadata via the SSRF-vulnerable endpoint and return the response containing sensitive metadata (simulated cloud credentials).",
+  "actual_observed_result": "The n8n server was started, an owner account was created, and the SSRF endpoint was called with a URL pointing to the internal mock service. The server fetched the data from the mock service and returned the response body through the vulnerable endpoint, confirming server-side request forgery.",
+  "verification_method": "The verify script starts a mock metadata server with a unique proof string (EVOHUNT_SSRF_PROOF_INTERNAL_DATA_EXFILTRATED), triggers the SSRF via the vulnerable endpoint, and checks whether the proof string appears in the n8n response. The presence of the proof string confirms that data from the internal service was exfiltrated through the SSRF.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The n8n server made an outbound HTTP request to the mock internal service at 127.0.0.1:9999.",
+    "The response from the internal service was returned through the /rest/workflows/from-url endpoint.",
+    "The proof string EVOHUNT_SSRF_PROOF_INTERNAL_DATA_EXFILTRATED was found in the response, confirming data exfiltration."
+  ],
+  "limitations_or_blockers": [
+    "The PoC uses npm-installed n8n rather than building from source, as the monorepo build process is complex. The npm package at version 2.18.0 contains the same vulnerable code."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository from GitHub and checks out the vulnerable version tag, mounting that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.18.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/mock-metadata-server.js",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

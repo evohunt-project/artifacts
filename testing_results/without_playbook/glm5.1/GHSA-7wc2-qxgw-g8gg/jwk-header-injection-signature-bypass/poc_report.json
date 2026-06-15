@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that an attacker can forge a JWT by embedding their own RSA public JWK in the token header and signing with the matching private key. When JsonWebSignature.deserialize_compact(token, key=None) is called, the library extracts the attacker-controlled JWK from the header and uses it for signature verification, causing the forged token to be accepted as valid.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should produce a forged JWT that passes signature verification through JWK header injection. The proof signal EVOHUNT_PROOF_JWK_HEADER_INJECTION_SUCCESSFUL should appear in the output, confirming that deserialize_compact(token, key=None) accepted a token signed with an attacker-controlled key.",
+  "actual_observed_result": "Running the Docker-based reproduction built the Python environment, generated an attacker RSA key pair, created a forged JWT with the attacker's JWK in the header, signed it with the attacker's private key, and confirmed that deserialize_compact(token, key=None) accepted the forged token. The proof signal EVOHUNT_PROOF_JWK_HEADER_INJECTION_SUCCESSFUL was emitted and detected by the verification script.",
+  "verification_method": "The verify.sh script runs exploit.py inside the container and checks for the exact proof string EVOHUNT_PROOF_JWK_HEADER_INJECTION_SUCCESSFUL in the output. This distinguishes a successful JWK header injection from a generic error, startup failure, or unrelated crash. The exploit also prints the decoded payload to confirm the forged claims were accepted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output shows 'VULNERABLE: Signature verified with attacker-injected JWK!'",
+    "Container output shows the decoded payload: b'{\"sub\":\"admin\",\"iss\":\"https://victim.example.com\",\"role\":\"superuser\"}'",
+    "Verification script confirmed the proof signal EVOHUNT_PROOF_JWK_HEADER_INJECTION_SUCCESSFUL was present",
+    "The exploit ran without errors, confirming the library accepted the forged token through JWK header injection"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref v1.5.2, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.5.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

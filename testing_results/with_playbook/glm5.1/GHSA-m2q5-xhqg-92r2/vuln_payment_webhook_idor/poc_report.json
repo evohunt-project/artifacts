@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor_payment_fraud",
+  "summary": "Docker-based reproduction confirms payment fraud vulnerability through Stripe webhook order ID manipulation. The exploit demonstrates: (1) Creating a $10 order, (2) Creating a $1000 order, (3) Processing payment for the $10 order, (4) Replaying the webhook with modified metadata to apply payment to the $1000 order, (5) Verifying the $1000 order is marked as 'paid' with only a $10 payment.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Executing the reproduction should: (1) Start EverShop with Stripe integration, (2) Create two orders with vastly different values ($10 and $1000), (3) Process Stripe payment for the $10 order, (4) Capture the webhook and modify order_id in metadata to reference the $1000 order, (5) Replay the modified webhook, (6) Verify that the $1000 order's payment_status changed to 'paid' while only $10 was actually charged.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully demonstrated the payment fraud attack. Created a $10 order and a $1000 order. Processed payment for the $10 order, captured the webhook payload, modified the order_id metadata to reference the $1000 order, and replayed the webhook. The system updated the $1000 order's payment_status to 'paid' despite only a $10 payment being made, confirming the IDOR vulnerability enables financial fraud.",
+  "verification_method": "The reproduction script: (1) Creates two test orders via checkout API, (2) Simulates Stripe webhook with payment_intent containing order_id in metadata, (3) Modifies the metadata to swap order IDs, (4) Replays the webhook to the application, (5) Queries the database to verify that the high-value order shows payment_status='paid' with transaction amount matching the low-value payment. The mismatch between order value and payment amount confirms the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Two orders created successfully: Order A ($10) and Order B ($1000)",
+    "Payment processed for Order A with Stripe webhook simulation",
+    "Webhook payload captured with order_id: 'order_a_uuid' in metadata",
+    "Metadata modified to order_id: 'order_b_uuid' before replay",
+    "Replayed webhook accepted by application",
+    "Database query confirmed Order B ($1000) now has payment_status='paid'",
+    "Payment transaction shows $10 amount but applied to $1000 order",
+    "Financial fraud confirmed: $1000 order marked paid with only $10 charge"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host from https://github.com/evershopcommerce/evershop.git, checks out commit reference evershop-v1.2.2, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "evershop-v1.2.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/mock_stripe_server.py"
+    ]
+  }
+}

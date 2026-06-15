@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The reproduction confirms that CoreDNS processes an unlimited number of DNS queries on a single TCP connection, overriding the miekg/dns library's safe default of 128 queries per connection. A single TCP connection was used to send 500 queries, all of which received responses, proving the MaxTCPQueries=-1 setting enables unbounded resource consumption.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a single TCP connection to CoreDNS can process at least 500 queries without being terminated by a per-connection query limit. The miekg/dns library's safe default limit of 128 queries should be exceeded, confirming the MaxTCPQueries=-1 vulnerability.",
+  "actual_observed_result": "Running the exploit locally against CoreDNS 1.14.3 built from the target repository: 500 out of 500 queries were successfully processed and responded to on a single TCP connection. The connection remained open and functional throughout the entire test, confirming that no per-connection query limit is enforced.",
+  "verification_method": "The exploit opens a single TCP connection to the DNS server on port 5353, sends 500 sequential DNS A queries for unique random subdomains (test0000.example.com through test0499.example.com), and counts the number of valid DNS responses received. If the response count exceeds 128 (the miekg/dns safe default), the vulnerability is confirmed. This distinguishes the vulnerability from a normal DNS query limit where the connection would be closed after 128 queries.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "500 out of 500 DNS queries processed on a single TCP connection without the server closing the connection",
+    "All 500 queries received valid DNS responses, confirming the full plugin chain was exercised for each query",
+    "The miekg/dns library's safe default of 128 queries per connection was exceeded by nearly 4x",
+    "CoreDNS version confirmed: CoreDNS-1.14.3, darwin/arm64, go1.25.0"
+  ],
+  "limitations_or_blockers": [
+    "Docker Desktop image persistence issues prevented full Docker-based reproduction; vulnerability was verified through direct local execution of the same exploit logic"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, builds CoreDNS for linux/arm64 in a golang container, then builds the reproduction image with the binary and runs the exploit.",
+    "pinned_commit_or_ref": "v1.14.3",
+    "target_repo_mount_path": "/app",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

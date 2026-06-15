@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that sending an unauthenticated POST request to /api/server/shutdown terminates the Netmaker server process via SIGINT, causing complete denial of service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending POST /api/server/shutdown without any credentials should cause the server process to receive SIGINT and terminate, making all network management functionality unavailable.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Netmaker server from the pinned source, started it, waited for it to become healthy, sent an unauthenticated POST to /api/server/shutdown, and verified the server process terminated and was no longer responding on port 8081.",
+  "verification_method": "The verify.sh script builds the server, starts it, waits for the health endpoint to confirm readiness, sends the unauthenticated shutdown request, then polls the server PID to confirm the process is dead and attempts a final health check to confirm the port is no longer responding. This distinguishes a genuine shutdown from a transient error or network timeout.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated POST /api/server/shutdown returned HTTP 200 before the server terminated.",
+    "The server process PID was no longer alive after the shutdown request (kill -0 check failed).",
+    "A subsequent health check on port 8081 failed, confirming the server was no longer responding."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

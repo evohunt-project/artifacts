@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "protection_mechanism_failure",
+  "summary": "The Docker-based reproduction confirms that Fickling's incomplete module blocklist fails to detect importlib.import_module as overtly malicious. The malicious pickle payload successfully imports the os module when unpickled, but Fickling only classifies it as SUSPICIOUS (severity 2/5) instead of LIKELY_OVERTLY_MALICIOUS (severity 4/5).",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that a malicious pickle using importlib.import_module('os') evades Fickling's detection (classified as SUSPICIOUS) and successfully imports the os module when unpickled, establishing an arbitrary code execution pathway.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the target Fickling library, created a malicious pickle payload using importlib.import_module('os'), verified that Fickling detects it as only SUSPICIOUS (not OVERTLY_MALICIOUS), and confirmed successful unpickling to the os module.",
+  "verification_method": "The exploit script creates a malicious pickle payload, runs Fickling's check_safety() on it, verifies the severity is below LIKELY_OVERTLY_MALICIOUS (bypass successful), then unpickles the payload and verifies it successfully imports the os module (exploit successful).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Fickling check_safety() returns Severity.SUSPICIOUS (level 2/5) for the importlib.import_module('os') payload",
+    "Payload successfully unpickles to the os module, confirming the bypass works",
+    "The detection gap allows arbitrary code execution vectors to evade proper classification"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Fickling repository from GitHub on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

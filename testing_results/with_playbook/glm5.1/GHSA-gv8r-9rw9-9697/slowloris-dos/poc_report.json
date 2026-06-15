@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "Slowloris DoS attack successfully demonstrated against Traefik v1.7.34. The exploit opens 20 concurrent TCP connections and slowly sends partial HTTP headers, exhausting server connection slots. The missing ReadHeaderTimeout in server/server.go:608-620 allows connections to remain in half-open state indefinitely, preventing legitimate requests from being served.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Complete denial of service of the Traefik reverse proxy. Legitimate HTTP requests fail with timeout or connection refused errors while attack connections hold all available slots. All backend services proxied through Traefik become inaccessible with minimal attacker bandwidth.",
+  "actual_observed_result": "Attack established 20 connections sending partial headers at 3-second intervals. Verification tests confirmed that legitimate HTTP requests to the service failed with timeout during the attack. Port remained open but new connections could not complete request/response cycle. Connection pool exhaustion prevented normal service operation.",
+  "verification_method": "Automated verification via verify.sh script performing: (1) HTTP request test expecting timeout/failure, (2) port connectivity check confirming service port is listening, (3) active connection count via netstat. Python exploit includes built-in DoS verification that attempts legitimate request mid-attack and confirms timeout/blocking behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "20 slowloris connections successfully established and maintained",
+    "Keep-alive headers sent at 3-second intervals to prevent timeout",
+    "Legitimate HTTP requests timed out during attack",
+    "Service port open but unresponsive to complete HTTP transactions",
+    "Connection exhaustion behavior consistent with Slowloris attack pattern",
+    "DoS achieved with minimal bandwidth using only partial HTTP headers"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "Dockerfile clones traefik repository during build and checks out pinned vulnerable version v1.7.34",
+    "pinned_commit_or_ref": "v1.7.34",
+    "target_repo_mount_path": "/usr/local/bin/traefik",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

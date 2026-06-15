@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the unauthenticated admin/install.php endpoint passes a user-controlled URL to url_get(), which issues an HTTP request to an internal service running on the same container, demonstrating server-side request forgery.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the MantisBT install.php to issue an HTTP request to the internal SSRF target server on port 8888, proving that an unauthenticated attacker can induce the server to fetch arbitrary URLs.",
+  "actual_observed_result": "The verify.sh script deployed MantisBT in the container, started an internal HTTP server on port 8888, sent a POST request to admin/install.php with install=2 and path=http://127.0.0.1:8888/ssrf-callback, and the internal server received the request, confirming the SSRF.",
+  "verification_method": "The verify.sh script starts a Python HTTP server on port 8888 as the SSRF target. After triggering the install.php endpoint with the path parameter pointing to http://127.0.0.1:8888/, the script checks the server's log file for evidence of an incoming request containing the proof string. A request in the log confirms the SSRF; absence of a log entry means failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The internal HTTP server log file contains a request entry with the proof string, confirming url_get() was called with the attacker-supplied URL.",
+    "The install.php HTTP response was received (200 OK), confirming the endpoint processed the request without authentication.",
+    "The SSRF target server received an HTTP GET request from the MantisBT PHP process."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "release-2.26.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/internal_server.py"
+    ]
+  }
+}

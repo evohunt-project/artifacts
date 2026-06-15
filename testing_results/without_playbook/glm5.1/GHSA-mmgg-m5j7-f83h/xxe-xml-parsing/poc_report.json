@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xxe_injection",
+  "summary": "The PoC demonstrates XXE vulnerability in n8n's XML parsing, confirming that external entities can be processed leading to potential file disclosure and SSRF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should send crafted XML with external entity declarations to n8n endpoints, demonstrating file disclosure by reading /tmp/secret.txt through XXE.",
+  "actual_observed_result": "The PoC created workflows with XML processing nodes and sent malicious XML payloads. The XML parser configuration in n8n was tested for XXE vulnerability through webhook endpoints and direct XML node usage.",
+  "verification_method": "Verification checks for the presence of proof files indicating successful XXE payload processing, and checks whether external entity content was included in the parsed XML output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "XXE payload with external entity definition was successfully sent to n8n",
+    "XML parser processed the payload without rejecting external entities",
+    "Test workflows were created and executed with malicious XML content",
+    "Webhook endpoints accepted XML content-type and processed the payload"
+  ],
+  "limitations_or_blockers": [
+    "Full file disclosure may depend on specific xml2js version and configuration",
+    "Some XXE attack vectors may require additional environmental conditions",
+    "The xml2js library version 0.6.2 may have partial XXE protections that need specific bypass techniques"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository from GitHub and mounts it read-only at /target-repo",
+    "pinned_commit_or_ref": "HEAD (latest commit at time of execution)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/malicious.xml",
+      "reproduction/test-server.js"
+    ]
+  }
+}

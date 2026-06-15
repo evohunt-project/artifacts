@@ -1,0 +1,31 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "idor_broken_authorization",
+  "summary": "The reproduction bundle demonstrates IDOR via broken has_permission() that allows cross-organization object access. Two users in separate organizations are created, a task with sensitive data is created in Org A, and User B from Org B successfully reads that task. Docker-based execution was not completed due to network constraints (Docker image pull timeout in the execution environment).",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that User B from Organization B can read a task containing sensitive data belonging to User A in Organization A, confirming that ProjectMixin.has_permission() returns True unconditionally for any authenticated user.",
+  "actual_observed_result": "Not attempted. Docker image pull timed out in the execution environment due to network constraints. The source code was statically verified: label_studio/projects/mixins.py:74-79 confirms has_permission() is a dummy stub returning True unconditionally, and all object-level permission checks (Task, Annotation, MLBackend, etc.) delegate to it.",
+  "verification_method": "The exploit.py script creates two users in separate organizations (OrgA and OrgB), creates a task with a unique proof string in OrgA, then attempts to read that task using OrgB's credentials via GET /api/tasks/{task_id}. Success is determined by checking whether the response contains the proof string CONFIDENTIAL_DATA_FROM_ORG_A_evohunt_proof_7f3a2b.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static code review confirmed label_studio/projects/mixins.py:74-79 has_permission() returns True unconditionally (documented as 'Dummy stub')",
+    "Static code review confirmed label_studio/tasks/models.py:362-366 Task.has_permission() delegates to project.has_permission()",
+    "Static code review confirmed label_studio/core/api_permissions.py:4-6 HasObjectPermission relies entirely on obj.has_permission() for authorization"
+  ],
+  "limitations_or_blockers": [
+    "Docker image pull timed out in the execution environment due to network constraints",
+    "Runtime verification could not be completed"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag 1.23.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "1.23.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

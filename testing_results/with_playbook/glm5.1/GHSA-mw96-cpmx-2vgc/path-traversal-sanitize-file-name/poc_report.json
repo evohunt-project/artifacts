@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that Rollup's sanitizeFileName function fails to block '..' directory traversal sequences. A plugin calling this.emitFile() with a fileName containing embedded '..' (e.g., 'subdir/../../proof.txt') passes the isPathFragment validation and results in a file written outside the configured output directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the plugin's emitFile call with a crafted fileName to bypass the isPathFragment guard and write a proof file outside the configured output directory (dist/), demonstrating that path traversal is possible through the sanitizeFileName gap.",
+  "actual_observed_result": "Running the exploit script built Rollup and executed a plugin that called this.emitFile({ type: 'asset', fileName: 'subdir/../../EVOUNT_PATH_TRAVERSAL_PROOF_7a3f9b2c.txt', source: '...' }). The proof file was created at the workspace root (one directory above dist/) instead of inside dist/subdir/. The output directory contained only main.js, confirming the emitted file escaped via '..' path normalization.",
+  "verification_method": "The exploit script writes a proof file with a unique identifier (EVOUNT_PATH_TRAVERSAL_PROOF_7a3f9b2c). The verification checks: (1) the proof file exists at the workspace root (outside dist/), (2) the proof file does NOT exist inside the dist/ directory, (3) the dist/ directory only contains the legitimate main.js output. This distinguishes path traversal from a normal file write.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof file EVOUNT_PATH_TRAVERSAL_PROOF_7a3f9b2c.txt was created at the workspace root, outside the dist/ output directory.",
+    "The dist/ output directory contained only ['main.js'], confirming the emitted asset was not placed inside the output directory.",
+    "The proof file contains the expected content: 'This file was written outside the output directory via path traversal in sanitizeFileName.'"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the v4.58.0 tag, builds rollup, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v4.58.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

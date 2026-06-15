@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor",
+  "summary": "The Docker-based reproduction confirms that a low-privilege user can download files uploaded by other users by iterating the file_id parameter in view.php without any module-level authorization check.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A file uploaded by the admin user containing a known secret string should be downloadable by a different low-privilege user via view.php?file_id=<ID>&download=1, with the secret string present in the response body.",
+  "actual_observed_result": "The low-privilege testuser successfully downloaded the file uploaded by admin via view.php with the file_id parameter, and the response body contained the expected secret string, confirming unauthorized cross-user file access.",
+  "verification_method": "A unique secret string (EVOHUNT_IDOR_SECRET_7f3a9b2c) is written into a file uploaded by the admin user. The exploit script then authenticates as a different low-privilege user and attempts to download the file via view.php. If the secret string appears in the response, the IDOR is confirmed. This distinguishes real unauthorized access from login redirects or error pages.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The admin user uploaded a file with a unique secret marker string.",
+    "The testuser (low-privilege) accessed view.php?file_id=<ID>&download=1 and received the file content.",
+    "The secret marker string was found in the response, confirming the file was read without authorization checks."
+  ],
+  "limitations_or_blockers": [
+    "The installation step requires composer install which downloads dependencies from the internet.",
+    "File ID iteration is required if the exact file_id is not known; the exploit probes file_id values 1-19 as a fallback."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.9.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/setup.sh",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/php.ini"
+    ]
+  }
+}

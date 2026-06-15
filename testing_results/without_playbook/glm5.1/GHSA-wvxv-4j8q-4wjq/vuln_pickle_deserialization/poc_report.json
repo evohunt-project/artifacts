@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "insecure_deserialization",
+  "summary": "The Docker-based reproduction confirms that Glances executes arbitrary code when deserializing the version cache pickle file. The malicious pickle payload triggered code execution during the automatic version check on startup and created a proof file demonstrating the vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the malicious pickle payload to be deserialized when Glances performs the version check during startup, executing arbitrary Python code and creating a proof file demonstrating code execution.",
+  "actual_observed_result": "The reproduction successfully created a malicious pickle payload with a __reduce__ method that executes arbitrary commands, placed it in the cache location, and started Glances to trigger deserialization. The expected proof file at /tmp/pwned_pickle.txt was created, containing evidence of code execution including system commands and user context.",
+  "verification_method": "The verify.sh script checks for the existence and content of /tmp/pwned_pickle.txt. It verifies that the file contains the 'VULNERABILITY_CONFIRMED' marker string, which can only appear if the malicious pickle's __reduce__ method was actually executed during deserialization. This distinguishes successful RCE from cache misses or other unrelated behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/pwned_pickle.txt was successfully created",
+    "The file contains 'VULNERABILITY_CONFIRMED: Pickle deserialization RCE'",
+    "The file contains output from 'id' and 'whoami' commands, showing the execution context",
+    "This proves arbitrary code execution occurred during pickle deserialization"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the develop branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "develop",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_pickle.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

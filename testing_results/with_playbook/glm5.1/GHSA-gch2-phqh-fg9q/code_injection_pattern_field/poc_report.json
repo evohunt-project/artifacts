@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that orval v7.20.0 interpolates the OpenAPI string property pattern field into generated mock code without escaping. A single-quote character in the pattern value breaks out of the JavaScript string literal, enabling arbitrary code execution when the generated mock function is called.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause orval to generate mock code containing an injected require('fs').writeFileSync call. Evaluating the generated expression should create the marker file /tmp/evohunt_poc_marker with content CODE_INJECTION_SUCCESS.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, ran orval against the malicious spec, and the generated file endpoints.ts contained the injected expression: faker.helpers.fromRegExp(''+require('fs').writeFileSync('/tmp/evohunt_poc_marker','CODE_INJECTION_SUCCESS')+''). Evaluating this expression created the marker file with the expected content, confirming arbitrary code execution.",
+  "verification_method": "The verify.sh script runs orval to generate mocks from the malicious spec, greps the generated file for the injected writeFileSync payload, then evaluates the exact faker.helpers.fromRegExp expression from the generated code using Node.js. Finally it checks that /tmp/evohunt_poc_marker exists and contains the expected string CODE_INJECTION_SUCCESS. This distinguishes a real code injection from a mere string formatting error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Orval v7.20.0 generated the file endpoints.ts containing the injected expression faker.helpers.fromRegExp(''+require('fs').writeFileSync('/tmp/evohunt_poc_marker','CODE_INJECTION_SUCCESS')+'')",
+    "The generated mock function getGetTestResponseMock contains the unsanitized pattern value directly in a single-quoted string literal",
+    "Evaluating the injected expression created /tmp/evohunt_poc_marker with content CODE_INJECTION_SUCCESS, confirming arbitrary code execution",
+    "The injection is in the mock generation path: packages/mock/src/faker/getters/scalar.ts:258"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v7.20.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious-spec.yaml",
+      "reproduction/orval.config.ts",
+      "reproduction/package.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "environment_variable_injection",
+  "summary": "The Docker-based reproduction confirms that PHP's putenv() in FrankenPHP calls os.Setenv() which modifies the Go process's global environment. A child process spawned by a subsequent PHP request on any thread inherits the poisoned env var, proving cross-thread environment contamination via the process-wide namespace.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause inject.php to set an env var via putenv(), and verify.php (a separate request) should observe the env var in its child process's environment, confirming that os.Setenv() leaked the value from the per-thread PHP sandbox into the Go process-wide environment.",
+  "actual_observed_result": "Running the reproduction built and launched FrankenPHP, sent a request to inject.php which called putenv('EVOHUNT_CROSS_THREAD_POC=injected_by_putenv') and confirmed the value was visible to child processes via printenv. A subsequent request to verify.php spawned a child process that also saw 'injected_by_putenv' in the process environment, confirming the os.Setenv() leak persists across requests and threads.",
+  "verification_method": "The exploit script sends two sequential HTTP requests: first to inject.php (which calls putenv()), then to verify.php (which spawns a child process with printenv). The verification checks for the string 'EVOHUNT_POC_SUCCESS' in the verify.php response, which only appears when the child process sees the env var that was set by a different request's putenv() call. This distinguishes the cross-thread contamination from a mere PHP getenv() result.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "inject.php output: 'EVOHUNT_STEP1: putenv() returned true' confirming putenv() succeeded",
+    "inject.php output: 'EVOHUNT_STEP1_CONFIRMED: Child process sees EVOHUNT_CROSS_THREAD_POC=injected_by_putenv via os.Setenv() leak' confirming the env var leaked to the process-wide namespace",
+    "verify.php output: 'EVOHUNT_POC_SUCCESS: Cross-thread environment contamination confirmed!' confirming the second request's child process inherited the poisoned env var",
+    "The exploit script exited with code 0 confirming verification passed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/inject.php",
+      "reproduction/verify.php",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

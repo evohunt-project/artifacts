@@ -1,0 +1,72 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T17:12:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9de8c3d2",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-rhr9-hgcm-x289/GHSA-rhr9-hgcm-x289.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated-server-shutdown",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9de8c3d2/unauthenticated-server-shutdown",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9de8c3d2/unauthenticated-server-shutdown/vulnerability_report.json",
+      "title": "Unauthenticated server shutdown via POST /api/server/shutdown",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": true,
+      "advisory_match_reason": "Finding identifies the exact advisory-described vulnerability: same endpoint (POST /api/server/shutdown), same root cause (unauthenticated syscall.Kill with SIGINT), same impact (server termination causing cyclic DoS with ~3-second restart intervals). The vulnerable code at controllers/server.go:44 directly calls syscall.Kill(syscall.Getpid(), syscall.SIGINT) without any authentication check, matching the advisory description.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier3",
+    "target_match": "match",
+    "runtime_evidence": "failed_or_none",
+    "selected_finding": {
+      "folder_name": "unauthenticated-server-shutdown",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9de8c3d2/unauthenticated-server-shutdown",
+      "status": "qualifying_vuln",
+      "title": "Unauthenticated server shutdown via POST /api/server/shutdown",
+      "vulnerability_type": "denial_of_service"
+    },
+    "reason": "The finding matches the advisory-described vulnerability exactly: the POST /api/server/shutdown endpoint lacks authentication and directly invokes syscall.Kill with SIGINT to terminate the Netmaker server, causing denial of service. The original poc_report.json confirms the vulnerability was successfully reproduced: unauthenticated POST request returned HTTP 200 with 'sending interruption' message, server process terminated, and health endpoint became unreachable. However, PoC re-execution failed due to network connectivity issues (unable to clone target repository from GitHub), so runtime predicates could not be satisfied during this judgement run.",
+    "evidence": [
+      "vulnerability_report.json identifies the exact vulnerable endpoint (/api/server/shutdown) and root cause (syscall.Kill without authentication at controllers/server.go:44)",
+      "poc_report.json confirms successful reproduction: unauthenticated POST returns 200, server terminates, health endpoint unreachable",
+      "Advisory describes the same vulnerability: /api/server/shutdown endpoint allows unauthenticated termination via SIGINT, causing cyclic DoS"
+    ],
+    "blockers_to_higher_tier": [
+      "Network connectivity failure prevented PoC re-execution: unable to clone target repository from GitHub due to connection timeout",
+      "Cannot satisfy runtime predicates (exploit_success_predicate or bug_activation_predicate) without fresh PoC execution under judge artifact directory"
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "unauthenticated-server-shutdown",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9de8c3d2/unauthenticated-server-shutdown",
+      "executed": false,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9de8c3d2/.judge/poc_runs/unauthenticated-server-shutdown/reproduction",
+      "exit_code": null,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9de8c3d2/.judge/poc_runs/unauthenticated-server-shutdown/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9de8c3d2/.judge/poc_runs/unauthenticated-server-shutdown/poc_execution.json",
+      "observed_effect": "Network connectivity failure during git clone prevented PoC execution. Original poc_report.json confirms successful verification: unauthenticated POST to /api/server/shutdown returns 200 with 'sending interruption' message, server process terminates, health endpoint becomes unreachable.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    }
+  ],
+  "open_world_findings": []
+}

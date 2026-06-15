@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "hardcoded_credentials",
+  "summary": "The Docker-based reproduction confirms that using the hardcoded JWT secret 'frangoteam751' allows forging valid authentication tokens with administrative privileges, granting unauthorized access to admin-only endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate forging a JWT token with admin privileges using the hardcoded secret, and successfully accessing admin-only endpoints with the forged token.",
+  "actual_observed_result": "Running ./reproduction/run.sh used the hardcoded JWT secret to forge an admin token, sent the forged token to /api/users endpoint, and successfully accessed administrative functions without proper authentication.",
+  "verification_method": "The run.sh script generates a forged JWT token using the hardcoded secret and attempts to access admin-only endpoints. Successful response with administrative data confirms the authentication bypass. The verification distinguishes token forgery from legitimate authentication.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Forged JWT token successfully created using hardcoded secret 'frangoteam751'",
+    "Admin-only endpoint /api/users responded with user list data using forged token",
+    "No legitimate authentication credentials were required for administrative access",
+    "The SCADA system granted full admin privileges based on forged token claims"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and builds the Docker image from that source.",
+    "pinned_commit_or_ref": "37ebc5ead6e5b7115507d2289784d0aa28c93630",
+    "target_repo_mount_path": "/app/FUXA",
+    "helper_files": [
+      "reproduction/forge_token.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that Gotenberg's Chromium URL conversion endpoint fetches an arbitrary HTTP URL from a simulated internal service without authentication, and returns the internal service's response content as a PDF to the attacker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause Gotenberg to fetch content from a simulated internal HTTP server (representing a private network service) via the Chromium URL conversion route and return the internal service's secret content rendered as a PDF.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Gotenberg Docker image from source, started the service with default settings (no auth, no URL restrictions), started a mock internal HTTP server on the Docker network, sent a POST request to /forms/chromium/convert/url pointing to the internal server, and received a PDF containing the internal server's secret proof string.",
+  "verification_method": "The run script extracts text from the returned PDF using pdftotext and checks for the exact proof string 'EVOHUNT-SSRF-PROOF' emitted by the mock internal server. This distinguishes a successful SSRF from a generic error response or Gotenberg startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The PDF returned by Gotenberg contains the secret proof string 'EVOHUNT-SSRF-PROOF' from the simulated internal HTTP server.",
+    "The mock internal server log confirms the request came from the Gotenberg container, not directly from the host.",
+    "No authentication was required to trigger the URL fetch, confirming the default unauthenticated SSRF."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version, and uses the source to build the Gotenberg Docker image.",
+    "pinned_commit_or_ref": "snapshot",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/internal_server.py"
+    ]
+  }
+}

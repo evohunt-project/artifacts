@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction imports DtaDataInfo from the target repository and demonstrates that requests.get() is called with an attacker-controlled URL. A local proof HTTP server confirms it received the SSRF request, verifying the server can be used as an unauthorized HTTP proxy.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause DtaDataInfo._read_data() to call requests.get() with the attacker-supplied URL, and the local proof HTTP server should receive a GET request for /ssrf-proof-token.dta.",
+  "actual_observed_result": "Running the exploit against the target repository confirmed that DtaDataInfo._read_data() issued an HTTP GET request to the attacker-controlled URL. The local proof HTTP server received the request for /ssrf-proof-token.dta, emitting the EVOHUNT_SSRF_PROOF:SUCCESS signal.",
+  "verification_method": "The exploit starts a local HTTP server on 127.0.0.1:18888, then calls DtaDataInfo with a URL pointing to that server. It checks whether the server received the expected GET request for /ssrf-proof-token.dta. This distinguishes a genuine SSRF from a connection error, parser failure, or unrelated network activity.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The local proof HTTP server received GET /ssrf-proof-token.dta from DtaDataInfo._read_data().",
+    "requests.get() was invoked with the full attacker-controlled URL inside the target repository code.",
+    "The exploit exited with code 0 after printing EVOHUNT_SSRF_PROOF:SUCCESS."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.12.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

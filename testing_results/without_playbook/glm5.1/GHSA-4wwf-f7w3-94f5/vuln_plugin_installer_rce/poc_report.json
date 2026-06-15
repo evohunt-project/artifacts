@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection_rce",
+  "summary": "The Docker-based reproduction confirms that a malicious plugin with a crafted manifest.json can successfully add sudoers rules granting passwordless sudo access and execute arbitrary commands with root privileges.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Installing a malicious plugin should add sudoers rules that grant the www-data user passwordless sudo access, demonstrating arbitrary privilege escalation and system compromise.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the target RaspAP application, uploaded the malicious plugin manifest via the plugin installation endpoint, and verified that sudoers rules were added to /etc/sudoers.d/ granting passwordless sudo access. The attacker can now execute arbitrary commands with root privileges.",
+  "verification_method": "The run script checks for the presence of the malicious sudoers file in /etc/sudoers.d/ and verifies that the www-data user can execute sudo commands without a password. This confirms successful privilege escalation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious sudoers file was successfully created in /etc/sudoers.d/ with attacker-controlled content",
+    "The www-data user was granted passwordless sudo access as specified in the malicious manifest",
+    "Plugin installation executed sudo operations based on attacker-controlled manifest without proper validation",
+    "No authentication or integrity checks were performed on the plugin repository URL"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious_manifest.json",
+      "reproduction/create_malicious_plugin.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

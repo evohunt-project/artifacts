@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "host_header_injection_account_takeover",
+  "summary": "The Docker-based reproduction confirms that the CI4MS application dynamically constructs its baseURL from the attacker-controlled HTTP Host header without validation. The verify script demonstrates that the baseURL is poisoned at runtime, the allowedHostnames whitelist is empty, magic link logins are enabled, and the magic link email template uses url_to() which resolves through the poisoned baseURL. An unauthenticated attacker can exploit this to hijack magic link tokens and take over any account.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that the application's baseURL is dynamically controlled by the Host header, no host validation exists, and the magic link email embeds a URL derived from the poisoned baseURL. This confirms the feasibility of token hijacking and full account takeover.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, installed dependencies, and ran the verification script. The verification confirmed 6/6 proofs: (1) App.php uses HTTP_HOST for baseURL construction, (2) allowedHostnames is empty, (3) magic link logins are enabled, (4) magic link email uses url_to('verify-magic-link'), (5) Email config derives sender from HTTP_HOST, (6) runtime PHP demonstration confirms baseURL contains attacker domain when Host header is spoofed.",
+  "verification_method": "The verification script (verify.sh) checks six independent proofs: source code grep for HTTP_HOST usage in App.php, empty allowedHostnames check, magic link enabled check, url_to usage in email template, HTTP_HOST in Email config, and a runtime PHP script that instantiates the App config with a spoofed Host header and confirms the baseURL contains the attacker's domain. The verification passes when at least 4 of 6 proofs are confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "app/Config/App.php:129-132 uses $_SERVER['HTTP_HOST'] to set baseURL without validation",
+    "app/Config/App.php:32 declares allowedHostnames as empty array (no whitelist)",
+    "modules/Auth/Config/Auth.php:184 has allowMagicLinkLogins = true",
+    "modules/Auth/Views/Email/magic_link_email.php:33 embeds url_to('verify-magic-link')?token=$token",
+    "app/Config/Email.php:142-143 derives fromEmail/fromName from $_SERVER['HTTP_HOST']",
+    "Runtime PHP proof: instantiating Config\\App with Host: evil-attacker.com produces baseURL http://evil-attacker.com/"
+  ],
+  "limitations_or_blockers": [
+    "The PoC demonstrates the vulnerability mechanism through code analysis and runtime baseURL poisoning. A full end-to-end exploit would require a running CI4MS instance with email delivery configured, an attacker-controlled domain, and a victim user who clicks the poisoned link. The core vulnerability (unvalidated Host header flowing into security-critical URLs) is confirmed."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0.31.5.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

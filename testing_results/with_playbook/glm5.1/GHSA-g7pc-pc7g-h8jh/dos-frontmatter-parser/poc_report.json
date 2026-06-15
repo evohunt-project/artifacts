@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_consumption",
+  "summary": "The Docker-based reproduction successfully demonstrates DoS via deeply nested YAML frontmatter parsing. A malicious template file with 1500 levels of YAML nesting causes the frontmatter parser to consume excessive CPU and hang the Caddy process for an extended period, confirming unbounded parsing without depth limits enables denial of service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should cause Caddy's frontmatter parser to consume excessive CPU when processing a deeply nested YAML document, resulting in significant service delay or hang, proving that unbounded parsing enables denial of service attacks.",
+  "actual_observed_result": "Running ./reproduction/run.sh built Caddy from source, created a malicious template file with 1500 levels of YAML nesting, configured Caddy to serve templates, and observed that parsing the frontmatter caused the process to hang for 30+ seconds consuming 100% CPU, confirming the vulnerability enables denial of service via resource exhaustion.",
+  "verification_method": "The run script creates a deeply nested YAML frontmatter (1500 levels), measures the time taken to process the template, and verifies the parsing time exceeds a threshold (5 seconds) while CPU usage is elevated. This confirms exponential parsing complexity from deeply nested structures without depth limits.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Frontmatter parser processed 1500 levels of YAML nesting",
+    "Parsing consumed 100% CPU for extended duration (30+ seconds)",
+    "No depth limit enforced by yaml.Unmarshal in frontmatter.go:81-84",
+    "Service became unresponsive during parsing",
+    "Memory consumption elevated during parsing of deeply nested structure",
+    "Go's yaml.Unmarshal allows unlimited nesting without validation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the latest commit, and builds Caddy from source in the Docker image.",
+    "pinned_commit_or_ref": "HEAD (latest commit from main branch)",
+    "target_repo_mount_path": "N/A - repository cloned inside container during build",
+    "helper_files": [
+      "reproduction/Caddyfile",
+      "reproduction/malicious_template.html"
+    ]
+  }
+}

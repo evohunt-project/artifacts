@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based PoC successfully demonstrates that an authenticated user can execute arbitrary OS commands through the ExecuteCommand node, confirming complete system compromise capability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should create a workflow with an ExecuteCommand node containing a malicious command, execute the workflow, and demonstrate command execution by reading /etc/passwd and displaying user identity information.",
+  "actual_observed_result": "The PoC successfully created a workflow via the n8n API, executed the malicious command through the ExecuteCommand node, and retrieved output showing successful command execution including /etc/passwd contents and user identity (uid/gid).",
+  "verification_method": "The verification script checks for four proof signals: (1) the proof string 'EVOHUNT_POC_SUCCESSFUL', (2) user execution context, (3) /etc/passwd file disclosure, and (4) successful execution of the 'id' command. All checks must pass for confirmation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Command output contains 'EVOHUNT_POC_SUCCESSFUL' proof string",
+    "Command output includes /etc/passwd file contents (first 5 lines)",
+    "Command output shows user identity (uid, gid, groups) from 'id' command",
+    "Command output shows current user from 'whoami' command",
+    "Workflow was successfully created and executed via authenticated API access"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository from GitHub, checks out the latest commit, and mounts it read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD (latest commit at time of execution)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/setup-n8n.sh"
+    ]
+  }
+}

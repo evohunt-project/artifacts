@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T17:09:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_90f22980",
+  "advisory_path": "/Users/mac/ResearchSpace/advisory-database/advisories/github-reviewed/2026/04/GHSA-2x79-gwq3-vxxm/GHSA-2x79-gwq3-vxxm.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "vuln_websocket_integer_overflow",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_90f22980/vuln_websocket_integer_overflow",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_90f22980/vuln_websocket_integer_overflow/vulnerability_report.json",
+      "title": "WebSocket message length integer overflow enables memory exhaustion denial of service",
+      "vulnerability_type": "integer_overflow",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes a WebSocket frame parser integer overflow vulnerability in lib/facil/http/parsers/websocket_parser.h, while the advisory describes a completely different vulnerability: a JSON parser infinite loop bug in lib/facil/fiobj/fio_json_parser.h triggered by input starting with 'i' or 'I'. These are different parsers (WebSocket vs JSON), different code locations, different root causes (integer overflow vs infinite loop), and different CWEs (CWE-190/CWE-400 vs CWE-400/CWE-835). The finding does not identify the advisory-described vulnerable code or root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The advisory describes CVE-2026-41146: a JSON parser infinite loop vulnerability in fio_json_parse when encountering nested JSON values starting with 'i' or 'I', affecting facil.io and the iodine Ruby gem. The only qualifying finding reports a completely different vulnerability: a WebSocket frame parser integer overflow in websocket_parser.h that accepts exabyte-scale payload lengths without proper validation. These vulnerabilities have different root causes (infinite loop in numeral handling vs integer overflow in length validation), different parsers (JSON parser in lib/facil/fiobj/fio_json_parser.h vs WebSocket parser in lib/facil/http/parsers/websocket_parser.h), different attack vectors (malformed JSON vs malformed WebSocket frame), and different security consequences (CPU spin vs memory exhaustion). No qualifying finding identifies the advisory-described vulnerable code or root cause.",
+    "evidence": [
+      "Advisory CVE-2026-41146: JSON parser infinite loop in lib/facil/fiobj/fio_json_parser.h lines 434-468, triggered by input '[i' or '[\"\"i' that enters infinite loop in numeral handling",
+      "Finding: WebSocket parser integer overflow in lib/facil/http/parsers/websocket_parser.h lines 407-409, accepting payload lengths up to 2^62-1 bytes without memory validation",
+      "Advisory affects both facil.io and iodine gem via vendored parser; finding only affects facil.io WebSocket functionality",
+      "Advisory CWEs: CWE-400 (uncontrolled resource consumption), CWE-835 (loop with unreachable exit condition); Finding CWEs: CWE-190 (integer overflow), CWE-400",
+      "Different vulnerable code paths: JSON parser at fio_json_parser.h vs WebSocket parser at websocket_parser.h"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_90f22980/vuln_websocket_integer_overflow",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_90f22980/vuln_websocket_integer_overflow/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_90f22980/vuln_websocket_integer_overflow/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

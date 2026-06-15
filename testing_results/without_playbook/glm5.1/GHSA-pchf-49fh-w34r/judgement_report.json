@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T07:35:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b0bdcbc5",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-pchf-49fh-w34r/GHSA-pchf-49fh-w34r.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "collab-privilege-escalation",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b0bdcbc5/collab-privilege-escalation",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b0bdcbc5/collab-privilege-escalation/vulnerability_report.json",
+      "title": "Collaborator privilege escalation via unrestricted access-level grant in collab add",
+      "vulnerability_type": "privilege_escalation",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding identifies a missing access-level restriction in the repo collab add command (pkg/ssh/cmd/collab.go), allowing a read-write collaborator to grant admin-access. The advisory describes an SSH authentication bypass where user identity from a failed public-key offer is not cleared from the session context. These are different vulnerable code paths, different root causes (authorization check omission vs. session context state not cleared on auth failure), and different vulnerability classes (privilege escalation vs. authentication bypass).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "ssrf-repo-import",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b0bdcbc5/ssrf-repo-import",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b0bdcbc5/ssrf-repo-import/vulnerability_report.json",
+      "title": "SSRF via unvalidated remote URL in repository import",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding identifies SSRF via unvalidated URLs in the repo import command (pkg/backend/repo.go:132 git.Clone). The advisory describes an SSH authentication bypass where the session context retains user identity from a failed public-key offer. Different vulnerable code, different root cause (missing URL validation vs. session state not cleared on auth failure), and different vulnerability class (SSRF vs. authentication bypass).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The advisory describes an authentication bypass in Soft Serve's SSH handshake where user identity stored during the public-key offer phase is not cleared when authentication fails (CWE-289). No qualifying finding identifies this root cause. collab-privilege-escalation is an authorization flaw in the repo collab add command (missing access-level check). ssrf-repo-import is an SSRF via unvalidated URLs in repo import. Neither matches the advisory's SSH authentication session-context root cause or the vulnerable SSH handshake/authentication code.",
+    "evidence": [
+      "Advisory root cause: SSH handshake offer-phase user identity retained in session context on auth failure, enabling impersonation of any user including admin.",
+      "Advisory affected component: SSH authentication/session handling in github.com/charmbracelet/soft-serve (Go).",
+      "collab-privilege-escalation root cause: checkIfReadableAndCollab in pkg/ssh/cmd/collab.go does not restrict the access level being granted — authorization flaw, not authentication bypass.",
+      "ssrf-repo-import root cause: git.Clone in pkg/backend/repo.go:132 called with unvalidated remote URL — SSRF, not authentication bypass."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b0bdcbc5/collab-privilege-escalation",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b0bdcbc5/collab-privilege-escalation/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b0bdcbc5/collab-privilege-escalation/poc_report.json",
+      "poc_report_status": "not_attempted"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b0bdcbc5/ssrf-repo-import",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b0bdcbc5/ssrf-repo-import/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b0bdcbc5/ssrf-repo-import/poc_report.json",
+      "poc_report_status": "not_attempted"
+    }
+  ]
+}

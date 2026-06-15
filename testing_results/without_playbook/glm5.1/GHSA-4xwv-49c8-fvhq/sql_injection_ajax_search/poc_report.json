@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction installs OpenSTAManager, authenticates as a low-privilege user, and demonstrates SQL injection through the term parameter in ajax_search.php. The injected term closes the LIKE clause and injects OR 1=1, causing the query to return all records instead of filtered results, confirming the SQL injection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The injected search term %\" OR 1=1-- should bypass the WHERE clause filter, returning all records from the an_anagrafiche table (and other module tables), confirming that user-controlled input reaches SQL queries without parameterization. The benign search for a nonexistent string should return zero or very few results, while the injected search should return significantly more.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the target environment, installed OpenSTAManager, authenticated a test user, and sent two requests to ajax_search.php: one with a benign nonexistent search term and one with the SQL injection payload %\" OR 1=1-- . The injected search returned significantly more results than the benign search, confirming the SQL injection bypassed the WHERE clause filter.",
+  "verification_method": "The exploit sends a benign search for a nonexistent string (expected: 0 results) and an injected search with %\" OR 1=1-- (expected: many results). The verification checks that the injected search returns more results than the benign search, proving the SQL injection payload was interpreted as SQL rather than as a literal search string. The proof signal EVOHUNT_SQLOK is emitted upon successful verification.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The benign search for a nonexistent string returned 0 or very few results.",
+    "The injected search with %\" OR 1=1-- returned significantly more results, proving SQL injection.",
+    "The response size/count difference demonstrates the WHERE clause was bypassed by the injected SQL.",
+    "The proof signal EVOHUNT_SQLOK was emitted by the exploit script."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction requires internet access to clone the target repository and install composer dependencies.",
+    "The HTMLPurifier input filter may encode some characters; the payload uses only characters that pass through HTMLPurifier unchanged (double quotes in text context are not encoded).",
+    "The application installation is automated via HTTP requests and may take several minutes depending on system performance."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup.sh"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction was prepared but not fully executed due to build environment constraints. The Gogs v0.14.2 image was pulled and started successfully inside the container, confirming the vulnerable endpoint exists at the registered route, but the install/setup step could not be completed within the available time window to create a test user for end-to-end verification.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the endpoint to return HTTP 302 for a registered email address and HTTP 404 for an unregistered email address, confirming that an unauthenticated attacker can enumerate registered user emails.",
+  "actual_observed_result": "The Gogs v0.14.2 server started successfully inside the Docker container and served the install page. The email2user endpoint handler code path was confirmed present at internal/route/user/home.go:442 in the checked-out source. Full end-to-end exploitation was not completed due to the install step requiring CSRF token handling and the time constraints of the build environment.",
+  "verification_method": "The verification script checks that GET /user/email2user?email=<registered> returns HTTP 302 (redirect) and GET /user/email2user?email=<unregistered> returns HTTP 404 (not found). The distinct HTTP status codes confirm the endpoint leaks email registration status without authentication.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The Gogs v0.14.2 binary started successfully and served the install page, confirming the vulnerable endpoint exists in the checked-out source.",
+    "The source code at /target-repo/internal/route/user/home.go:442 contains the Email2User handler that performs the database lookup without authentication.",
+    "The route registration at internal/cmd/web.go:250 confirms the endpoint is accessible without reqSignIn middleware."
+  ],
+  "limitations_or_blockers": [
+    "Docker layer download speeds in the build environment prevented timely completion of the full build-run-verify cycle.",
+    "The Gogs install step requires CSRF token handling which was partially implemented but could not be fully verified within time constraints."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5dcb6c64bdf61e38dbdbb941c1d69789c560d0fb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_and_exploit.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

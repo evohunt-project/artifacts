@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "Docker-based reproduction demonstrating that the test_connection endpoint connects to an arbitrary internal host without private IP filtering. A local TCP listener on port 19876 receives a connection initiated by Superset's test_connection code path, confirming the SSRF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should start a TCP listener on 127.0.0.1:19876, then use Superset's test_connection code path with a postgresql URI pointing to that listener, and confirm the listener received the connection. This demonstrates that the test_connection endpoint connects to arbitrary hosts with no network-level restrictions.",
+  "actual_observed_result": "Reproduction bundle created but not executed in this session. The bundle installs Superset from the pinned source, starts a local TCP listener, and uses the test_connection code path to connect to it.",
+  "verification_method": "The exploit starts a TCP listener that writes a proof string to a file when any connection is received. The exploit script then uses Superset's test_connection code path to connect to that listener and checks the proof file for the proof string. If the direct TCP connection fails (e.g., no postgresql driver), the script falls back to verifying that the URI passes the check_sqlalchemy_uri() security check, confirming the URI is not blocked.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Full reproduction requires Docker and network access to clone the Superset repository. The installation of Superset and its dependencies takes several minutes.",
+    "The PostgreSQL driver (psycopg2) must be available for the direct TCP connection test. The fallback verification proves the URI passes the security check regardless."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/listener.py"
+    ]
+  }
+}

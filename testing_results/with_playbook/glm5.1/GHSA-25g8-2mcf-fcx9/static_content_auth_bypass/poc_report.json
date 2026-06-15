@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that when changedetection.io is deployed with the SALTED_PASS environment variable as the sole authentication mechanism, the static_content handler exposes watch screenshots without requiring authentication. The main page correctly returns HTTP 401 (authentication required), but the screenshot endpoint returns HTTP 200 with the screenshot data, confirming the auth bypass.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the main page requires authentication (HTTP 401) while the static screenshot endpoint bypasses authentication (HTTP 200), exposing screenshot data without credentials when SALTED_PASS is configured.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, started a Flask app mirroring the exact auth pattern from changedetection.io with SALTED_PASS set, and confirmed: (1) the main page returned HTTP 401 (auth enforced), (2) the screenshot endpoint returned HTTP 200 with screenshot data (auth bypassed). The vulnerability is caused by flask_app.py:751 checking only the datastore password field (default False) while ignoring the SALTED_PASS environment variable.",
+  "verification_method": "The exploit script sets SALTED_PASS, starts the Flask app, verifies the main page returns HTTP 401 (auth enforced by before_request), then requests the screenshot endpoint and checks for HTTP 200 with valid PNG data. The test distinguishes an auth bypass (200) from correct behavior (403) and unrelated errors (404/500).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Main page returned HTTP 401, confirming before_request correctly enforces authentication when SALTED_PASS is set.",
+    "Screenshot endpoint returned HTTP 200 with 8 bytes of PNG data, confirming the static_content handler bypasses SALTED_PASS authentication.",
+    "The auth asymmetry proves the vulnerability: before_request checks both datastore password and SALTED_PASS, but static_content handler only checks datastore password."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0.54.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

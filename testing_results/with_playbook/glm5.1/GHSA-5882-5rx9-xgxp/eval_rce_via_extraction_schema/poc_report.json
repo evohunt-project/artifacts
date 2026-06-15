@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The reproduction confirms that a crafted extraction schema with a computed field expression triggers the vulnerable eval() call in JsonCssExtractionStrategy._compute_field(), resulting in arbitrary OS command execution. The exploit creates a proof file via os.system() through eval() to demonstrate code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit creates a JsonCssExtractionStrategy with a schema containing a computed field whose expression executes an OS command (creating a proof file). The proof file's existence confirms arbitrary code execution through the library's public API.",
+  "actual_observed_result": "Running the exploit script imported JsonCssExtractionStrategy from the vulnerable crawl4ai source, created a strategy with a malicious computed field expression, called extract() on test HTML, and the eval() at extraction_strategy.py:1230 executed __import__('os').system('echo EVOHUNT_RCE_PROOF > /tmp/evohunt_rce_proof'). The proof file was created with the expected marker content, confirming arbitrary code execution.",
+  "verification_method": "The exploit script checks for the existence and content of /tmp/evohunt_rce_proof after calling extract(). The proof file contains a unique marker string 'EVOHUNT_RCE_PROOF' written by the OS command triggered through eval(). This distinguishes genuine code execution from an import error or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/evohunt_rce_proof was created by os.system() invoked through eval() at extraction_strategy.py:1230.",
+    "The extraction results show [{'title': 'Test', 'rce': 0}] where rce:0 is the return code of os.system(), confirming the eval() executed the attacker-controlled expression.",
+    "The proof file content 'EVOHUNT_RCE_PROOF' matches the expected marker string."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "c8b5eb8ea5c40d5cee71e903a1c0bda01805c1bf",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

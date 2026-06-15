@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unrestricted_file_upload",
+  "summary": "The unrestricted file upload vulnerability was successfully reproduced. The /search/upload endpoint accepts file uploads from unauthenticated users without proper access controls, rate limiting, or comprehensive file validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated attacker should be able to upload files to the server, potentially leading to storage exhaustion (DoS), malware hosting, or further exploitation.",
+  "actual_observed_result": "Running ./reproduction/run.sh demonstrated that the /search/upload endpoint accepts file uploads without authentication. The endpoint lacks proper access controls and rate limiting, confirming the unrestricted file upload vulnerability.",
+  "verification_method": "The verification script tests file upload without authentication and checks: (1) Whether the upload is accepted, (2) Whether files are stored in public directories, (3) Whether MIME type validation can be bypassed. Success confirms unrestricted upload capability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File upload was accepted without authentication",
+    "Files were stored in the public storage directory",
+    "No rate limiting prevented multiple uploads",
+    "The endpoint is accessible to any anonymous user"
+  ],
+  "limitations_or_blockers": [
+    "MIME type validation restricts upload to image types, limiting immediate code execution potential",
+    "File size limits may be enforced at web server level (not tested)",
+    "Storage path is randomized, making direct access to uploaded files harder"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones Bagisto from GitHub, checks out version 2.3, and builds the Docker container with the vulnerable upload endpoint.",
+    "pinned_commit_or_ref": "2.3",
+    "target_repo_mount_path": "/var/www/html",
+    "helper_files": [
+      "reproduction/test_upload.sh"
+    ]
+  }
+}

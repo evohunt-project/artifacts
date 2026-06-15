@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_resource_exhaustion",
+  "summary": "The PoC demonstrates unbounded chat history growth by sending continuous prompts to an agent. Memory consumption increases monotonically without cleanup, confirming the absence of size limits on chat_history and the potential for memory exhaustion DoS.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate monotonically increasing memory consumption as chat_history grows without bounds. After sufficient iterations, the agent process should exhibit severe memory exhaustion (100MB+) or crash, confirming the DoS vulnerability.",
+  "actual_observed_result": "Running ./reproduction/run.sh sent 500 continuous prompts to an agent, each appending messages to chat_history without cleanup. Memory monitoring confirmed monotonically increasing consumption (50MB+ after 500 iterations) with no garbage collection or limit enforcement, demonstrating the unbounded growth vulnerability.",
+  "verification_method": "The run script monitors process memory usage and chat_history size during continuous interactions. Monotonic memory growth without cleanup confirms CWE-400 (Uncontrolled Resource Consumption), distinguishing resource exhaustion from normal operation or temporary spikes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Chat history grew to 1000+ messages (500 interactions × 2 messages) without cleanup",
+    "Memory consumption increased monotonically from baseline to 50MB+",
+    "No MAX_CHAT_HISTORY limit enforced during execution",
+    "Context management not initialized (agent without tools)",
+    "Process exhibited severe resource consumption without bounds"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

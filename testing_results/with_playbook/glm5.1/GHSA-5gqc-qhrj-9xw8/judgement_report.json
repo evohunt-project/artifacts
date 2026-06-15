@@ -1,0 +1,151 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T06:16:41.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-5gqc-qhrj-9xw8/GHSA-5gqc-qhrj-9xw8.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "internal-key-prefix-write",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/internal-key-prefix-write",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/internal-key-prefix-write/vulnerability_report.json",
+      "title": "Unauthenticated write to internal key prefix __oxia/ corrupts Oxia server metadata and session state",
+      "vulnerability_type": "data_integrity_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets public Write RPC prefix validation and Pebble writes to __oxia/ keys, not the advisory's session heartbeat blocking send and KeepAlive TOCTOU race.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "missing-input-validation",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/missing-input-validation",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/missing-input-validation/vulnerability_report.json",
+      "title": "Missing input validation for keys, values, and batch operations",
+      "vulnerability_type": "input_validation_missing",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding concerns generic request/key/value/batch validation in public read/write paths, not the advisory's session heartbeat and session manager locking race.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "panic-dos-comparison-type",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/panic-dos-comparison-type",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/panic-dos-comparison-type/vulnerability_report.json",
+      "title": "Unauthenticated panic via invalid KeyComparisonType in Read RPC crashes the Oxia server",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets an invalid KeyComparisonType panic in kv_pebble.go reached through Read RPC, not the advisory's KeepAlive/session heartbeat race in session.go and session_manager.go.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unbounded-resource-consumption",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/unbounded-resource-consumption",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/unbounded-resource-consumption/vulnerability_report.json",
+      "title": "Unbounded resource consumption in List and RangeScan operations",
+      "vulnerability_type": "dos_resource_exhaustion",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding concerns unbounded List, RangeScan, and Read iteration over keyspace data, not the advisory's heartbeat channel send and close race.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying final finding identifies the advisory-described root cause: a race between session heartbeat processing and session closure caused by a blocking heartbeatCh send in session.go and a KeepAlive TOCTOU gap in session_manager.go.",
+    "evidence": [
+      "The advisory describes Oxia server denial of service from session heartbeat handling: heartbeat() performs a blocking channel send while holding the session mutex, and KeepAlive() releases the session manager read lock before calling heartbeat().",
+      "The final qualifying finding internal-key-prefix-write targets public Write RPC writes to __oxia/-prefixed internal keys via db.applyPut and batch.Put.",
+      "The final qualifying finding missing-input-validation targets generic key, value, and batch validation in public read/write request handling.",
+      "The final qualifying finding panic-dos-comparison-type targets kv_pebble.go panic on an invalid KeyComparisonType in Read RPC.",
+      "The final qualifying finding unbounded-resource-consumption targets unbounded List, RangeScan, and Read iteration over stored keyspace data.",
+      "A focused search of final finding reports and logs found no qualifying finding for heartbeat, KeepAlive, session_manager, session.go, send on closed channel, or the advisory race condition."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/internal-key-prefix-write",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/internal-key-prefix-write/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/internal-key-prefix-write/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/missing-input-validation",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/missing-input-validation/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/missing-input-validation/poc_report.json",
+      "poc_report_status": "not_attempted"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/panic-dos-comparison-type",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/panic-dos-comparison-type/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/panic-dos-comparison-type/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/unbounded-resource-consumption",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/unbounded-resource-consumption/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_dbb81fec/unbounded-resource-consumption/poc_report.json",
+      "poc_report_status": "not_attempted"
+    }
+  ]
+}

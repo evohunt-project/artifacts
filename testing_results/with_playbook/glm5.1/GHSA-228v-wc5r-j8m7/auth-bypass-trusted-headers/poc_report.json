@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "Docker reproduction confirms authentication bypass through HTTP header spoofing, allowing complete impersonation of admin users and execution of privileged actions without valid credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Spoofing authentication headers should grant unauthorized access to admin actions and protected functionality, demonstrating complete authentication bypass.",
+  "actual_observed_result": "Successfully executed admin-only actions by setting X-Auth-User and X-Auth-Group headers to arbitrary values, creating proof files demonstrating unauthorized action execution.",
+  "verification_method": "Script sends requests with spoofed authentication headers and verifies creation of proof files from admin-only actions that should require valid admin credentials.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Admin actions executed with spoofed X-Auth-User header",
+    "Proof files created demonstrating unauthorized access",
+    "No validation of header values performed",
+    "Complete impersonation of any user possible",
+    "ACL checks bypassed through header manipulation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "Clones OliveTin, configures AuthHttpHeaderUsername, demonstrates header spoofing",
+    "pinned_commit_or_ref": "latest",
+    "target_repo_mount_path": "/app",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

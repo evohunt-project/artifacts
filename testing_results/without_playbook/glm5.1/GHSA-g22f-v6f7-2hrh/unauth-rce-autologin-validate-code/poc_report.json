@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "auth_bypass_rce",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can obtain a superuser JWT via the auto_login endpoint and then execute arbitrary Python code on the server through the validate/code endpoint's exec() sink, achieving full remote code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted validate/code payload to write an attacker-controlled proof string to /tmp/evohunt_proof.txt inside the Langflow container, demonstrating that arbitrary code execution occurred without any prior authentication.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started the Langflow server, exploited the auto_login endpoint to obtain a superuser JWT, sent a crafted function definition to /api/v1/validate/code that wrote the proof string via default-argument evaluation, and verified the proof file inside the container.",
+  "verification_method": "The exploit script writes a unique proof string (EVPHUNT_POC_PROOF_OF_RCE_2026) to /tmp/evohunt_proof.txt via the exec() sink. The verify.sh helper then checks that the file exists and contains exactly the expected proof string. This distinguishes real code execution from a startup failure, parser error, or unrelated crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The auto_login endpoint returned a valid superuser JWT without any authentication.",
+    "The validate/code endpoint accepted the crafted function definition and exec()'d it, triggering the default-argument side effect.",
+    "The proof file /tmp/evohunt_proof.txt was created inside the container with the exact expected content.",
+    "The verification helper confirmed the proof string matched, ruling out false positives from startup errors."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned version tag, and mounts that checkout into the container at /target-repo for reference.",
+    "pinned_commit_or_ref": "v1.7.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

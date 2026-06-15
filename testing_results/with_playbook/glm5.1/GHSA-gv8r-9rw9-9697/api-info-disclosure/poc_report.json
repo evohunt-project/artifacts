@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "Unauthenticated attacker accesses Traefik v1.7 /api endpoint and retrieves full configuration including backend URLs, internal IPs, and routing rules",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Full infrastructure visibility including backend service URLs, internal IPs, frontend routing rules, load balancer configurations, and potentially credentials - enabling targeted attacks on discovered services",
+  "actual_observed_result": "API endpoint /api responds without authentication and returns JSON configuration containing backend_urls, internal_ips, and internal_domains fields with sensitive infrastructure details",
+  "verification_method": "Automated checks in verify.sh confirm presence of sensitive data patterns (URLs, IPs, domains) in API response, exploit.py output validated for configuration disclosure",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "exposed_data.json contains full Traefik configuration with backend service URLs",
+    "Internal IP addresses (e.g., 10.0.0.x, 192.168.x.x ranges) present in API response",
+    "Backend URLs and routing rules accessible without any authentication",
+    "API responds to unauthenticated GET requests on port 8080"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

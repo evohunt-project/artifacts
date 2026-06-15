@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "oauth_csrf",
+  "summary": "The Docker-based reproduction confirms that OAuth callback handlers in all SSO providers accept arbitrary state parameters without validation, enabling CSRF attacks that can lead to account takeover.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the OAuth callback endpoint accepts requests with arbitrary state parameters, confirming the missing state validation that enables CSRF attacks.",
+  "actual_observed_result": "The reproduction successfully started Flowise and demonstrated that OAuth callback endpoints accept arbitrary state parameters without validation. Code analysis confirmed that state parameter validation is missing in all SSO providers (Google, GitHub, Auth0, Azure), violating OAuth 2.0 security requirements.",
+  "verification_method": "The verify.sh script checks for evidence of missing state validation including: (1) callback acceptance without error, (2) code analysis showing state parameter is referenced but not compared, and (3) absence of state validation logic in SSO provider implementations.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "OAuth callback endpoint accepts arbitrary state parameter",
+    "Server processes callback without state validation error",
+    "Code analysis shows state parameter is present but not validated",
+    "All SSO providers (Google, GitHub, Auth0, Azure) affected",
+    "oauth_csrf_success.txt documents the CSRF attack scenario"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Flowise repository from GitHub, checks out commit 378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97 (v3.1.0), and mounts that checkout into the container at /target-repo",
+    "pinned_commit_or_ref": "378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

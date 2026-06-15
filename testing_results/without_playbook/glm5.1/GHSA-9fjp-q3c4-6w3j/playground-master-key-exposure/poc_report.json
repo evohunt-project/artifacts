@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "credential_exposure",
+  "summary": "The Docker-based reproduction confirms that the GraphQL Playground endpoint exposes the Parse Server master key in cleartext within the HTML response. A single unauthenticated GET request to the Playground path returns HTML containing the master key embedded in JavaScript, which can be trivially extracted.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A GET request to the Playground endpoint should return HTML containing the configured master key as a literal JavaScript string value, enabling full administrative access to the Parse Server.",
+  "actual_observed_result": "The GET request to the Playground path returned HTML containing the master key 'evohuntMasterKey123!' embedded in the handleRequest function as `'X-Parse-Master-Key': \"evohuntMasterKey123!\"`. The key was extracted and verified to match the configured master key.",
+  "verification_method": "The verification script starts parse-server with a known master key, sends a GET request to the Playground endpoint, and searches the response body for the exact master key string. It confirms the key is present in the HTML and matches the configured value. This distinguishes a real credential leak from generic HTML content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The Playground HTML response contains the string 'X-Parse-Master-Key' followed by the master key value.",
+    "The extracted master key matches the configured master key 'evohuntMasterKey123!' exactly.",
+    "The response was obtained without any authentication headers beyond the application ID."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.54",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/start_server.js"
+    ]
+  }
+}

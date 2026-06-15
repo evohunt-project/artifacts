@@ -1,0 +1,72 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T17:07:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_38fa38bf",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-2v35-w6hq-6mfw/GHSA-2v35-w6hq-6mfw.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "stack_overflow_via_deep_nesting",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_38fa38bf/stack_overflow_via_deep_nesting",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_38fa38bf/stack_overflow_via_deep_nesting/vulnerability_report.json",
+      "title": "Stack overflow via recursive DOM traversal on deeply nested XML",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": true,
+      "advisory_match_reason": "Finding identifies the exact same root cause as the advisory: recursive DOM tree traversals in lib/dom.js without depth limits. The finding correctly identifies the normalize() method (lib/dom.js:1323) as the primary trigger, matching the advisory's first reported operation. The finding also identifies additional vulnerable operations (walkDOM, getElementsByTagName, cloneNode, importNode, textContent getter, isEqualNode) that share the same recursive root cause described in the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "stack_overflow_via_deep_nesting",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_38fa38bf/stack_overflow_via_deep_nesting",
+      "status": "qualifying_vuln",
+      "title": "Stack overflow via recursive DOM traversal on deeply nested XML",
+      "vulnerability_type": "denial_of_service"
+    },
+    "reason": "The finding identifies the exact vulnerability described in the advisory: uncontrolled recursion in DOM tree traversals causing stack overflow. The PoC successfully triggered a RangeError: Maximum call stack size exceeded when parsing a 15,000-level deeply nested XML document, confirming the advisory's denial-of-service impact. The vulnerable code path matches perfectly: DOMParser.parseFromString() calls normalize() at the end of parsing (lib/dom-parser.js:419), which recursively traverses the deeply nested tree without depth limits, exhausting the JavaScript call stack.",
+    "evidence": [
+      "Advisory describes uncontrolled recursion in lib/dom.js causing RangeError: Maximum call stack size exceeded",
+      "Finding identifies the same recursive normalize() method at lib/dom.js:1323 as the primary trigger",
+      "PoC generated 15,000-level deeply nested XML and parsed it using DOMParser.parseFromString()",
+      "PoC execution output: 'SUCCESS: Stack overflow triggered during XML parsing' followed by 'Error: Maximum call stack size exceeded'",
+      "PoC exit code 0 confirms the expected stack overflow error was caught and verified",
+      "The denial-of-service impact (VA:H) was achieved: the JavaScript process crashed due to call stack exhaustion"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "stack_overflow_via_deep_nesting",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_38fa38bf/stack_overflow_via_deep_nesting",
+      "executed": true,
+      "command": "node poc.js",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_38fa38bf/.judge/poc_runs/stack_overflow_via_deep_nesting/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_38fa38bf/.judge/poc_runs/stack_overflow_via_deep_nesting/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_38fa38bf/.judge/poc_runs/stack_overflow_via_deep_nesting/poc_execution.json",
+      "observed_effect": "Successfully triggered RangeError: Maximum call stack size exceeded during XML parsing of a 15,000-level deeply nested document. The DOMParser.parseFromString() method exhausted the JavaScript call stack through recursive normalize() traversal, causing the expected denial-of-service crash.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

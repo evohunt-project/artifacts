@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "tls_verification_bypass",
+  "summary": "The Docker-based reproduction confirms that the TLS certificate verification bypass in dcap-qvl's collateral fetching allows connections to HTTPS servers presenting self-signed certificates. The reproduction starts a mock PCCS server with a self-signed certificate and demonstrates that a client configured with danger_accept_invalid_certs(true) (the same setting used by the library) successfully connects, while a secure client with default TLS verification rejects the same certificate.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should prove that (1) a client using the same reqwest configuration as dcap-qvl (danger_accept_invalid_certs(true)) can connect to an HTTPS server with a self-signed certificate, and (2) a secure client with default TLS verification rejects the same self-signed certificate. This demonstrates that an attacker performing MITM can intercept collateral requests without detection.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started a mock HTTPS server with a self-signed certificate, and confirmed that the insecure client (matching dcap-qvl's configuration) successfully connected and received data from the server. The secure client correctly rejected the self-signed certificate with a certificate verification error. The source code at /target-repo/src/collateral.rs was verified to contain the danger_accept_invalid_certs(true) call.",
+  "verification_method": "The verify.sh script performs three checks: (1) it greps the mounted source code at /target-repo/src/collateral.rs for the exact vulnerability marker 'danger_accept_invalid_certs(true)', (2) it starts a Python HTTPS server with a self-signed certificate and confirms the insecure client can connect (HTTP 200), and (3) it confirms the secure client rejects the same server with a certificate verification error. The exploit succeeds only when the insecure connection succeeds AND the secure connection fails, proving the TLS bypass exists.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "grep of /target-repo/src/collateral.rs confirms danger_accept_invalid_certs(true) is present at the vulnerable code location.",
+    "The insecure SSL client (verify_mode=CERT_NONE, mimicking the library's configuration) successfully connected to the mock HTTPS server and received a 200 OK response with mock collateral data.",
+    "The secure SSL client (default verify_mode=CERT_REQUIRED) rejected the same server with an SSLError/CertificateError, confirming that proper TLS verification would catch this MITM.",
+    "The contrast between the two results proves that dcap-qvl's disabled TLS verification allows connections that should be rejected."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.3.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/mock_server.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that sending a malformed rechargingInfo parameter without an underscore causes a panic in the CHF service, demonstrating the denial of service vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a PUT request to /nchf-convergedcharging/v3/recharging/nounderScoreHere should cause the service to panic with 'index out of range' error, crashing the HTTP handler.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the CHF service, sent a malformed PUT request to the vulnerable endpoint, and the service panicked with 'runtime error: index out of range [1] with length 1' when processing the request.",
+  "verification_method": "The PoC sends a curl request with a malformed parameter and captures the panic in the service logs. Success is verified by checking that the panic message appears in the output, confirming the crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Service started and listening on HTTP port",
+    "Malformed PUT request sent with parameter 'malicious_value' (no underscore)",
+    "Service panic logged: runtime error: index out of range [1] with length 1",
+    "Stack trace points to internal/sbi/api_convergedcharging.go line 178",
+    "Service handler crashed, demonstrating denial of service"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the local repo directory mounted into the container at /target-repo.",
+    "pinned_commit_or_ref": "current repo state",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_dos.sh",
+      "reproduction/chfcfg.yaml"
+    ]
+  }
+}

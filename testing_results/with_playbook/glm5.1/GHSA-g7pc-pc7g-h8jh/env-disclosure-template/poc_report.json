@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure_environment_variables",
+  "summary": "The Docker-based reproduction successfully demonstrates environment variable disclosure via the template env function. A template file containing {{ env \"AWS_SECRET_ACCESS_KEY\" }} is processed by Caddy's template handler, and the rendered output exposes the AWS secret key and other sensitive environment variables, confirming the vulnerability allows reading any env var without restriction.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should cause Caddy's template processor to read the AWS_SECRET_ACCESS_KEY environment variable and render it into the HTML output, proving that templates can access any environment variable without validation or allowlist.",
+  "actual_observed_result": "Running ./reproduction/run.sh built Caddy from source, created a template file with env function calls, set sensitive environment variables in the container, and the HTTP response to localhost:8080/index.tpl contained the actual values of AWS_SECRET_ACCESS_KEY, DATABASE_URL, and API_KEY, confirming unrestricted environment variable access.",
+  "verification_method": "The run script checks if the HTTP response contains 'AKIAIOSFODNN7EXAMPLE' which is the fake AWS secret key set in the container environment. This distinguishes successful env var reading from an error or placeholder not being evaluated. The presence of actual env var values in template output confirms the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show Caddy started with template processing enabled",
+    "HTTP response contains actual AWS_SECRET_ACCESS_KEY value from environment",
+    "Response also contains DATABASE_URL and API_KEY demonstrating multiple env vars readable",
+    "Template {{ env }} function successfully executed and returned env var values",
+    "No restriction on which environment variables can be accessed",
+    "Both Go template env() and Sprig env/expandenv functions work"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the latest commit, and builds Caddy from source in the Docker image.",
+    "pinned_commit_or_ref": "HEAD (latest commit from main branch)",
+    "target_repo_mount_path": "N/A - repository cloned inside container during build",
+    "helper_files": [
+      "reproduction/Caddyfile",
+      "reproduction/site/index.tpl"
+    ]
+  }
+}

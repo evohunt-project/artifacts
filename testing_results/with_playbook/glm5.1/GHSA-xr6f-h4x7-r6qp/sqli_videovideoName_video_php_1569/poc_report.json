@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms the SQL injection vulnerability in the videoName parameter. The exploit sends a crafted payload using a backslash to bypass addcslashes() escaping, injecting a SLEEP() call that causes a measurable delay in the server response, proving that arbitrary SQL can be executed without authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted videoName parameter to reach the vulnerable SQL query at objects/video.php:1569 and execute SLEEP(5), resulting in a response delay of at least 5 seconds compared to the baseline request, confirming unauthenticated SQL injection.",
+  "actual_observed_result": "Running ./reproduction/run.sh built a Docker container with Apache+PHP+MySQL, set up the AVideo database with test data, and executed the time-based blind SQL injection exploit. The baseline request completed in under 2 seconds while the injected SLEEP(5) payload caused a response delay of 5+ seconds, confirming the SQL injection vulnerability.",
+  "verification_method": "The verification script measures the response time of a normal request versus a request with the SQL injection payload \\' OR (SELECT SLEEP(5))--. A delay of 5+ seconds in the injected request compared to the baseline confirms that the SLEEP() function was executed by MySQL, proving SQL injection. The script distinguishes the SQL injection delay from normal network latency by comparing against the baseline.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline request completes in under 2 seconds.",
+    "SQL injection payload \\' OR (SELECT SLEEP(5))-- causes a 5+ second delay, confirming MySQL SLEEP() execution.",
+    "The addcslashes() function at objects/video.php:1569 only escapes single-quotes but not backslashes, allowing the injection."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

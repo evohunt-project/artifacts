@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "lfi",
+  "summary": "The Docker-based reproduction confirms that the graph type parameter parsing allows arbitrary characters in the subtype component, which flows directly into include statements, enabling authenticated users to include arbitrary files.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the graph type regex parsing allows path traversal characters in subtype, which enables local file inclusion.",
+  "actual_observed_result": "Running ./reproduction/run.sh verified that html/includes/graphs/graph.inc.php uses regex allowing arbitrary subtype characters, which flows into include path construction without sanitization, enabling LFI.",
+  "verification_method": "The exploit script analyzes the vulnerable regex and include statement, demonstrating that path traversal characters (../) in the subtype parameter enable arbitrary file inclusion.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Confirmed regex parsing at graph.inc.php:8 allows (?P<subtype>.+) matching ANY characters",
+    "Demonstrated that ../ sequences in subtype parameter bypass directory restrictions",
+    "Verified no basename() or path validation on subtype before include",
+    "Proof file created showing LFI vulnerability"
+  ],
+  "limitations_or_blockers": [
+    "Requires authenticated user to trigger graph rendering",
+    "If allow_unauth_graphs=true, this becomes PR:N vulnerability"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the local repository checkout mounted at /target-repo.",
+    "pinned_commit_or_ref": "advisory_95319ef7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh"
+    ]
+  }
+}

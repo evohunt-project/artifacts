@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "weak_prng",
+  "summary": "The Docker-based reproduction confirms that ZooKeeper session passwords are fully deterministic. An exploit program connects to the server, receives a session ID and password, and then computes the same password using java.util.Random seeded with sessionId XOR 0xB3415C00. The computed password matches the server-assigned password exactly, proving the PRNG is predictable.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that the session password for any ZooKeeper session can be computed from the session ID alone, using the hardcoded constant 0xB3415C00 and java.util.Random. The computed password should match the server-assigned password byte-for-byte.",
+  "actual_observed_result": "Running ./reproduction/run.sh built a ZooKeeper server, started it, and ran the exploit program. The exploit connected to the server, received session ID 0x100001a268b0000 and password 772d57ac3877409cadde2f9241868f23. It then computed the password using new Random(sessionId ^ 0xB3415C00).nextBytes(16), which produced the identical password 772d57ac3877409cadde2f9241868f23. Passwords matched: true.",
+  "verification_method": "The exploit program (ExploitPRNG.java) establishes a TCP connection to the ZooKeeper client port, sends a binary ConnectRequest, reads the ConnectResponse to extract the session ID and server-assigned password, independently computes the expected password using java.util.Random with the known seed (sessionId ^ 0xB3415C00L), and performs a byte-for-byte comparison using Arrays.equals(). A match confirms the PRNG is deterministic and predictable.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server assigned session ID: 0x100001a268b0000 with password: 772d57ac3877409cadde2f9241868f23.",
+    "Computed password from session ID using new Random(sessionId ^ 0xB3415C00).nextBytes(16): 772d57ac3877409cadde2f9241868f23.",
+    "Arrays.equals(actualPassword, computedPassword) returned true, confirming byte-for-byte match.",
+    "This proves session passwords are fully deterministic given the session ID and the hardcoded constant."
+  ],
+  "limitations_or_blockers": [
+    "The session hijack reconnection (Step 5) was not completed because the server closed the connection during the reconnection attempt. The core proof of password predictability is fully established by the match in Step 4."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the branch-3.8 ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "branch-3.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/ExploitPRNG.java",
+      "reproduction/ExploitPRNG.class",
+      "reproduction/ExploitPRNG$ConnectResponse.class",
+      "reproduction/verify.sh"
+    ]
+  }
+}

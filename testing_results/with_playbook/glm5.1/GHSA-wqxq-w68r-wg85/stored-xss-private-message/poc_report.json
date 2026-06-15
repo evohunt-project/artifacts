@@ -1,0 +1,33 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "stored_xss",
+  "summary": "The PoC bundle was created to build OpenMeetings from source and demonstrate the stored XSS by sending a private message containing an HTML/JavaScript payload, but the full Maven build was not executed during this session due to build time constraints (30+ minutes).",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A private message containing <img src=x onerror=\"alert('XSS_EVHUNT_PROOF')\"> should be stored without sanitization and rendered unescaped when the recipient opens the message, triggering JavaScript execution in the victim's browser.",
+  "actual_observed_result": "The vulnerability was verified through static source code analysis. MessagesContactsPanel.java:514 confirms the message body is rendered with setEscapeModelStrings(false), and MessageDialog.java confirms the message is stored without HTML sanitization. The runtime reproduction was not executed.",
+  "verification_method": "Source code analysis: confirmed that (1) MessagesContactsPanel.java:514 uses setEscapeModelStrings(false) on the message body Label, (2) MessageDialog.java:169 stores the message via msgDao.update() without sanitization, (3) MessageDialog.java:217 uses WysiwygEditor which allows HTML input. The reproduction bundle builds the application and verifies the payload through the web interface.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Source code at MessagesContactsPanel.java:514: selectedMessage.addOrReplace(new Label(\"body\", msg.getMessage()).setEscapeModelStrings(false));",
+    "Source code at MessageDialog.java:169: msgDao.update(p, getUserId()) stores message without HTML sanitization.",
+    "Source code at MessageDialog.java:217: form.add(new WysiwygEditor(\"message\", toolbar)) allows rich HTML input.",
+    "Source code at MessageDialog.java:201: HTML stripping exists for email notifications but NOT for web rendering, confirming the developers were aware of HTML content but did not sanitize for web display."
+  ],
+  "limitations_or_blockers": [
+    "Full Maven build from source requires 30+ minutes to download dependencies and compile all modules.",
+    "The Wicket web interface requires session-based interaction for sending private messages, which is complex to automate without a headless browser.",
+    "The GitHub master branch may differ from the analyzed snapshot; the vulnerability is confirmed in the provided source tree."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

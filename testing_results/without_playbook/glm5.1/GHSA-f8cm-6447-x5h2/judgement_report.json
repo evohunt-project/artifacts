@@ -1,0 +1,108 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T07:26:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0142f6d0",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-f8cm-6447-x5h2/GHSA-f8cm-6447-x5h2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "arbitrary_file_read_via_loadfile",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0142f6d0/arbitrary_file_read_via_loadfile",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0142f6d0/arbitrary_file_read_via_loadfile/vulnerability_report.json",
+      "title": "Arbitrary file read via loadFile() in Node.js CJS build",
+      "vulnerability_type": "arbitrary_file_read",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same vulnerable loadFile() method and code locations (src/modules/fileloading.js:27,94,104; dist/jspdf.node.js:15903,15928) as the advisory. The advisory explicitly mentions loadFile() as the primary vulnerable method and the finding demonstrates the same missing path validation that allows arbitrary file read through fs.readFileSync().",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "H",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:H/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "arbitrary_file_write_via_save",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0142f6d0/arbitrary_file_write_via_save",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0142f6d0/arbitrary_file_write_via_save/vulnerability_report.json",
+      "title": "Arbitrary file write via save() in Node.js CJS build",
+      "vulnerability_type": "arbitrary_file_write",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes arbitrary file write through the save() method, which is a different vulnerability class (integrity impact vs confidentiality impact) than the advisory-described local file inclusion/path traversal through loadFile(). While both vulnerabilities exist in the same library and build type, the advisory specifically focuses on file read/inclusion, not file write.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "H",
+          "SI": "H",
+          "SA": "L"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:H/SI:H/SA:L"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier3",
+    "target_match": "match",
+    "runtime_evidence": "failed_or_none",
+    "selected_finding": {
+      "folder_name": "arbitrary_file_read_via_loadfile",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0142f6d0/arbitrary_file_read_via_loadfile",
+      "status": "qualifying_vuln",
+      "title": "Arbitrary file read via loadFile() in Node.js CJS build",
+      "vulnerability_type": "arbitrary_file_read"
+    },
+    "reason": "The arbitrary_file_read_via_loadfile finding matches the advisory-described vulnerable code/root cause. The advisory states 'User control of the first argument of the loadFile method in the node.js build allows local file inclusion/path traversal' and explicitly names loadFile as the vulnerable method. The finding identifies the same loadFile() function at src/modules/fileloading.js:27 and the underlying nodeReadFile() at lines 94-121 that calls fs.readFileSync() without path validation. The finding demonstrates the exact same vulnerability through addImage() and loadFile() paths. However, fresh PoC execution failed due to network connectivity issues preventing GitHub repository cloning. The original poc_report.json indicates successful execution with [EVOHUNT_POC_SUCCESS] signal, but the judge re-execution cannot produce fresh runtime evidence to satisfy Tier1 or Tier2 requirements.",
+    "evidence": [
+      "Advisory explicitly names loadFile() as the vulnerable method: 'User control of the first argument of the loadFile method in the node.js build allows local file inclusion/path traversal'",
+      "Finding identifies the same vulnerable function: loadFile() at src/modules/fileloading.js:27",
+      "Finding shows the vulnerable code path: nodeReadFile() at src/modules/fileloading.js:94-121 calls fs.readFileSync(url) without path validation",
+      "Advisory example attack vector uses addImage() which finding correctly identifies as an entry point that invokes loadFile()",
+      "Both advisory and finding correctly identify dist/jspdf.node.js and dist/jspdf.node.min.js as affected builds",
+      "Finding correctly identifies the same CWE classes: CWE-22 (Path Traversal), CWE-73 (External Control of File Name or Path)"
+    ],
+    "blockers_to_higher_tier": [
+      "Network connectivity failure prevented fresh PoC execution: 'Failed to connect to github.com port 443 after 50776 ms'",
+      "Cannot satisfy exploit_success_predicate or bug_activation_predicate with fresh runtime artifacts",
+      "Original poc_report.json shows successful execution, but judge re-execution requirements mandate fresh runtime evidence for Tier1/Tier2"
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "arbitrary_file_read_via_loadfile",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0142f6d0/arbitrary_file_read_via_loadfile",
+      "executed": false,
+      "command": null,
+      "cwd": null,
+      "exit_code": null,
+      "timed_out": false,
+      "log_path": null,
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0142f6d0/.judge/poc_runs/arbitrary_file_read_via_loadfile/poc_execution.json",
+      "observed_effect": "Network connectivity failure prevented PoC execution. The run.sh script failed to clone the target repository from GitHub due to connection timeout.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0142f6d0/arbitrary_file_write_via_save",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0142f6d0/arbitrary_file_write_via_save/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0142f6d0/arbitrary_file_write_via_save/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

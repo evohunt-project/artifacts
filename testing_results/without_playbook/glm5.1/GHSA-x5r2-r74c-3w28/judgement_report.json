@@ -1,0 +1,103 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T17:57:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-x5r2-r74c-3w28/GHSA-x5r2-r74c-3w28.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "missing-return-bypass-route-guard",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd/missing-return-bypass-route-guard",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd/missing-return-bypass-route-guard/vulnerability_report.json",
+      "title": "Missing return statements in influence data subscription handlers allow bypass of route guard and unauthorized deletion",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the exact same root cause as the advisory: missing return statement after c.String(http.StatusNotFound) in the influence data subscription handlers in api_datarepository.go. The advisory describes the GET handler (HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdGet) where the missing return allows unauthorized reading of Traffic Influence Subscriptions. The finding covers the same GET handler as well as the DELETE and PUT handlers with the identical missing-return bug pattern at the same code locations (api_datarepository.go:1226-1227 for GET, 1212-1213 for DELETE).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "ssrf-via-notification-callback",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd/ssrf-via-notification-callback",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd/ssrf-via-notification-callback/vulnerability_report.json",
+      "title": "Unvalidated notification URIs in subscription creation enable server-side request forgery",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes a different vulnerability (SSRF via unvalidated notificationUri/callbackReference in callback.go) with a different root cause (no URL validation on subscription fields) from the advisory's described vulnerability (missing return after 404 response in api_datarepository.go handlers). The vulnerable code, attack path, and security consequence are all distinct from the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "missing-return-bypass-route-guard",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd/missing-return-bypass-route-guard",
+      "status": "qualifying_vuln",
+      "title": "Missing return statements in influence data subscription handlers allow bypass of route guard and unauthorized deletion",
+      "vulnerability_type": "broken_access_control"
+    },
+    "reason": "The finding identifies the exact advisory root cause: missing return statement after c.String(http.StatusNotFound) in HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdGet in api_datarepository.go. A standalone PoC replicating the identical vulnerable handler pattern confirmed that a GET request with a wrong influenceId returns HTTP 404 status but the response body contains the full subscription data (dnns, notificationUri, supis), demonstrating the advisory-described unauthorized read of Traffic Influence Subscriptions. The PoC also confirmed the DELETE handler bypass where the subscription is deleted from in-memory state despite the 404 response.",
+    "evidence": [
+      "run.log line 11-12: GET with wrong influenceId (attacker-bypass) returned HTTP 404 status but response body contained full subscription data: 404 page not found{\"dnns\":[\"internet\"],\"notificationUri\":\"http://127.0.0.1:19999/notify\",\"supis\":[\"imsi-001010000000001\"]}",
+      "run.log line 15-16: CONFIRMED: Missing return allows unauthorized data read via GET handler - the exact advisory scenario",
+      "run.log line 26: List after delete returned [] confirming subscription was deleted despite 404 response (DELETE handler bypass)",
+      "run.log line 35: EVOHUNT_PROOF_SIGNAL:MISSING_RETURN_BYPASS_ROUTE_GUARD_CONFIRMED",
+      "vulnerability_report.json code_locations match advisory: api_datarepository.go:1226-1227 (GET handler missing return) corresponds to the advisory-described HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdGet"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "missing-return-bypass-route-guard",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd/missing-return-bypass-route-guard",
+      "executed": true,
+      "command": "GO111MODULE=off go run judge_poc/main.go",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd/.judge/poc_runs/missing-return-bypass-route-guard",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd/.judge/poc_runs/missing-return-bypass-route-guard/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd/.judge/poc_runs/missing-return-bypass-route-guard/poc_execution.json",
+      "observed_effect": "A standalone Go server replicating the exact vulnerable handler pattern from api_datarepository.go was built and executed. GET request to /nudr-dr/v2/application-data/influenceData/attacker-bypass/00000001 returned HTTP 404 status with response body containing both '404 page not found' and the full subscription JSON data (dnns, notificationUri, supis). This proves the advisory-described vulnerability: missing return after the 404 response allows the processor to execute and return subscription data despite the guard check. DELETE request to the same invalid path also deleted the subscription from in-memory state despite 404 response.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd/ssrf-via-notification-callback",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd/ssrf-via-notification-callback/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_9eed4ccd/ssrf-via-notification-callback/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

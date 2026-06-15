@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Information Exposure (CWE-200)",
+  "summary": "Docker-based reproduction confirms that GraphQL introspection query exposes complete API schema without authentication",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Complete API schema exposed including all types, queries, and mutations without authentication",
+  "actual_observed_result": "Introspection query returned full schema with multiple types, query definitions, and mutation definitions without requiring any session token or authentication headers",
+  "verification_method": "Parse introspection response JSON, count exposed types and operations, verify response contains __schema field with complete type definitions, confirm no authentication was required",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Introspection response contains __schema field with complete type system definition",
+    "Multiple GraphQL types exposed including User, Role, Session, File, and custom classes",
+    "Query and Mutation types enumerate all available operations",
+    "No X-Parse-Session-Token or authentication headers required for introspection query",
+    "Response time < 500ms demonstrating ease of exploitation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version, and mounts that checkout into the container",
+    "pinned_commit_or_ref": "parse-server-6.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/introspection_query.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

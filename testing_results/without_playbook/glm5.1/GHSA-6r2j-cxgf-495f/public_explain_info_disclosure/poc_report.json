@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that parse-server with default configuration allows any caller with only the application ID to issue explain=true on a find query and receive full MongoDB execution plan details including winningPlan, executionStats, totalDocsExamined, and collection scan information.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should allow an unauthenticated explain query to return MongoDB query execution plan details including winningPlan, executionStats, and totalDocsExamined without requiring the master key.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched parse-server with default settings, created a test class with sample data, issued a GET request to /classes/SecretData?explain=true with only the application ID header, and received a full MongoDB execution plan containing winningPlan, executionStats, totalDocsExamined, and COLLSCAN indicators.",
+  "verification_method": "The verify script issues the public explain query and checks the response body for MongoDB execution plan markers: winningPlan, executionStats, totalDocsExamined, COLLSCAN, and indexName. The presence of any of these markers confirms that database internals were disclosed without master key authentication.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The explain query response contains winningPlan describing MongoDB's chosen query execution strategy.",
+    "The response includes executionStats with totalDocsExamined and totalKeysExamined counters.",
+    "The response shows COLLSCAN when no index covers the query, revealing collection scan behavior.",
+    "All of the above was returned to a request that included only X-Parse-Application-Id without X-Parse-Master-Key."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version tag 8.6.20, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.20",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

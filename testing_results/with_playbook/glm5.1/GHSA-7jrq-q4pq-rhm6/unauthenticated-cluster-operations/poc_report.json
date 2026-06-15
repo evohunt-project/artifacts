@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that a freshly started Oxia standalone server accepts unauthenticated gRPC connections on all ports. The exploit uses the built-in Oxia CLI to write and read data on the public port, and list namespaces/nodes on the admin port, all without providing any credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that an unauthenticated client can write data, read data, and perform admin operations against the Oxia server without providing any credentials.",
+  "actual_observed_result": "The Oxia standalone server was started with default configuration. The client CLI successfully wrote a key-value pair, read it back, and listed cluster metadata on the admin port - all without any authentication credentials. No auth interceptor was active because the default configuration disables authentication.",
+  "verification_method": "The run script writes a unique proof key-value pair via the unauthenticated public port, reads it back, and checks that the returned value matches. It also attempts unauthenticated admin operations (listnamespaces, listnodes) on the admin port. Success is confirmed when data written without credentials is readable without credentials.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The Oxia client CLI wrote data to the public port (6648) without providing any authentication token.",
+    "The Oxia client CLI read data from the public port (6648) without providing any authentication token.",
+    "The Oxia admin CLI listed namespaces and nodes on the admin port (6651) without providing any authentication token.",
+    "All operations succeeded without authentication because auth.IsEnabled() returns false by default (authentication.go:48)."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "42be7c29268f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

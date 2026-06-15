@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "security_feature_bypass",
+  "summary": "The Docker-based reproduction confirms that the @envelop/rate-limiter plugin's onExecute enforcement is never invoked for GraphQL subscription operations. Queries to a @rateLimit(max:3) field are correctly throttled after 3 calls, while subscriptions to the same rate-limited field succeed without limit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that 5 queries to a @rateLimit(max:3) field result in rate-limit errors for the 4th and 5th attempts, while 5 subscriptions to the same field all succeed, proving the rate limiter is bypassed for subscriptions.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the target repository, created a test GraphQL schema with @rateLimit directives on both query and subscription fields, and confirmed that queries are rate-limited at the configured threshold while subscriptions bypass rate limiting entirely.",
+  "verification_method": "The exploit sends exactly 5 queries and 5 subscriptions to a @rateLimit(max:3) field. The verification checks that (a) at least one query is rate-limited with HTTP 429 status, and (b) zero subscriptions are rate-limited. The script exits with code 0 only when this contrast is observed, confirming the bypass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Query operations 1-3 succeed with data; queries 4-5 return rate-limit errors with HTTP 429 extensions.",
+    "All 5 subscription operations succeed without any rate-limit error, each returning an AsyncIterator.",
+    "The exit code 0 confirms the vulnerability signal was observed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8679e934a70c4e57bd22ad999d5a90b3dffe830f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.mjs"
+    ]
+  }
+}

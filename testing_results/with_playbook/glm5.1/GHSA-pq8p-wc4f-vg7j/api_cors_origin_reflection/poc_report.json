@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cors_misconfiguration",
+  "summary": "The Docker-based reproduction confirms that the AVideo API router reflects arbitrary Origin header values in the Access-Control-Allow-Origin response header. Combined with the bypassed same-domain check, this allows cross-origin requests to access the API with credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should show that the API response includes the Access-Control-Allow-Origin header reflecting the attacker-supplied Origin value, and that Access-Control-Allow-Credentials is set to true.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the AVideo application, then sent a request to the API endpoint with a spoofed Origin header (https://evil.example.com). The response included Access-Control-Allow-Origin: https://evil.example.com, confirming that the API reflects arbitrary origins without validation.",
+  "verification_method": "The verification script sends a request to the API endpoint with a controlled Origin header and checks the response headers for the reflected Access-Control-Allow-Origin value. It verifies that the reflected value matches the attacker-supplied Origin exactly.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The API response includes Access-Control-Allow-Origin: https://evil.example.com, reflecting the attacker-supplied Origin header.",
+    "The API response includes Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, HEAD, allowing all HTTP methods.",
+    "The API response includes Access-Control-Allow-Headers with multiple headers including Authorization.",
+    "The bypassSameDomainCheck=1 flag in the API endpoints disables the application's CSRF protection."
+  ],
+  "limitations_or_blockers": [
+    "The full exploit chain (cross-origin credential theft via victim browser) requires a browser context which cannot be fully simulated with curl alone. The PoC demonstrates the server-side CORS misconfiguration."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/setup_avideo.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

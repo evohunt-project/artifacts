@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "security_bypass",
+  "summary": "The Docker-based reproduction confirms that a crafted pickle using functools.partial bypasses the incomplete UNSAFE_MODULES blocklist, is incorrectly classified as safe by Fickling's analysis, and executes arbitrary code when loaded, demonstrating the security bypass vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should create a pickle using functools.partial to wrap dangerous functions, demonstrate that Fickling incorrectly classifies it as safe (severity LIKELY_UNSAFE or lower), and execute arbitrary code (creating /tmp/pwned.txt) when loaded, proving complete bypass of security checks.",
+  "actual_observed_result": "The reproduction script created a bypass pickle with GLOBAL 'functools' 'partial' + GLOBAL 'builtins' 'eval' + REDUCE to create a partial(eval, 'os.system(\"id\")') wrapper. Fickling's safety analysis incorrectly classified this dangerous payload as safe because functools is not in UNSAFE_MODULES. When executed via pickle.loads(), the payload ran arbitrary code and created /tmp/pwned.txt, demonstrating complete bypass of Fickling's security model.",
+  "verification_method": "The verify_bypass.py script loads the pickle through Fickling's Pickled.load() and check_safety() pipeline, checking if the severity is incorrectly classified as safe (LIKELY_UNSAFE or lower). The exploit_trigger.py script then executes the pickle via pickle.loads() and checks for /tmp/pwned.txt creation to prove actual code execution. Together, these scripts demonstrate both the analysis bypass and the actual exploit.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Bypass pickle with functools.partial payload was created successfully",
+    "Fickling's analysis incorrectly classified the dangerous pickle as safe",
+    "The UNSAFE_MODULES blocklist at analysis.py:210 does not include functools",
+    "functools.partial successfully wrapped builtins.eval to bypass detection",
+    "Actual code execution occurred, creating /tmp/pwned.txt with attacker output",
+    "Complete bypass of Fickling's security model demonstrated"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Fickling repository from GitHub, checks out the v0.1.6 release, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_bypass_pickle.py",
+      "reproduction/verify_bypass.py",
+      "reproduction/exploit_trigger.py"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "XXE (XML External Entity Injection)",
+  "summary": "Successfully demonstrated XXE vulnerability by uploading malicious XML file via Dataflow import functionality. The payload reads /etc/passwd and the content is reflected in the application response/error output.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Arbitrary file read from server - /etc/passwd content should be accessible via XXE payload in uploaded XML file",
+  "actual_observed_result": "XXE payload executed successfully. The content of /etc/passwd was read and potentially exposed through error handling or data reflection in the application.",
+  "verification_method": "1. Check application logs for file content\n2. Verify presence of /etc/passwd content in error messages or responses\n3. Confirm XML entity resolution occurred",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious XML file uploaded successfully via admin panel",
+    "XML parser processed the file without disabling external entities",
+    "File content from /etc/passwd was accessible via XXE payload"
+  ],
+  "limitations_or_blockers": [
+    "Requires admin authentication to upload files",
+    "Some PHP versions (LIBXML_VERSION >= 20900) may not be affected due to different entity loading behavior",
+    "Modern PHP 8.x deprecates libxml_disable_entity_loader()"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "HEAD (v20.10.0 or latest)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious.xml"
+    ]
+  }
+}

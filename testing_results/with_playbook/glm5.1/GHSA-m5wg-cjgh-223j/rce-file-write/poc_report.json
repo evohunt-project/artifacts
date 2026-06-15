@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_rce",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can write arbitrary PHP code to payment handler files via the /payment/api/editable/update endpoint. The written code is later executed when the payment service processes a request via require statements in PaymentService::payListener.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should allow writing arbitrary PHP content to server-side payment handler files (e.g., before_pay.php) without authentication. The overwritten file should contain attacker-controlled content that executes when the payment processing pipeline invokes require on the file.",
+  "actual_observed_result": "Running ./reproduction/run.sh built a Laravel application with the pay-uz package, sent an unauthenticated GET request to /payment/api/editable/update with file_name=before_pay and arbitrary PHP content, and confirmed that the file was overwritten with attacker-controlled code containing the proof string.",
+  "verification_method": "The exploit script writes a unique proof string (EVOHUNT_RCE_PROOF_<timestamp>) to a payment handler PHP file, then verifies the file content contains the proof string. If path traversal is tested, it checks that public/index.php was overwritten. The verification script confirms the proof string exists in either the payment handler file or the overwritten index.php.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The file at app/Http/Controllers/Payments/before_pay.php was overwritten with attacker-controlled PHP code containing the proof string.",
+    "The HTTP response from /payment/api/editable/update confirmed successful file write (success response).",
+    "The unauthenticated GET request bypassed CSRF protection because Route::any() accepts GET requests which are excluded from Laravel's VerifyCsrfToken middleware."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup-laravel.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

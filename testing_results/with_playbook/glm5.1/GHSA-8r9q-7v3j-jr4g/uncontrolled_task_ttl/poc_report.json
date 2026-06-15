@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_uncontrolled_consumption",
+  "summary": "The Docker-based reproduction confirms that clients can create tasks with unbounded TTL values, causing task objects to persist indefinitely in memory and enabling denial of service through resource exhaustion.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that creating tasks with extremely large TTL values causes memory accumulation without cleanup, confirming CWE-400/CWE-770 resource exhaustion vulnerability.",
+  "actual_observed_result": "Running ./reproduction/run.sh created multiple tasks with TTL values of 999999999999 milliseconds (31,000 years), and observed that these tasks remain in memory indefinitely without cleanup, demonstrating the DoS vulnerability.",
+  "verification_method": "The reproduction script creates tasks with unbounded TTL, monitors memory usage, and verifies that task cleanup timers are set to effectively infinite values, confirming the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Tasks created with TTL=999999999999 ms (31,000 years) accepted without validation",
+    "Task cleanup timers set to extremely large values",
+    "Memory accumulation as tasks persist indefinitely",
+    "No server-side bounds checking on TTL parameter"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out version 1.25.1, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.25.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_ttl_exhaustion.js"
+    ]
+  }
+}

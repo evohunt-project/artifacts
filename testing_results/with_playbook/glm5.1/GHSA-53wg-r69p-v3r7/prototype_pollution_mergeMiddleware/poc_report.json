@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Prototype Pollution (CWE-1321)",
+  "summary": "Successfully demonstrated prototype pollution via mergeMiddlewareMaps() by creating an application with __proto__ key in middlewares configuration, which polluted Object.prototype and affected all JavaScript objects.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Object.prototype should be polluted with attacker-controlled properties (isAdmin, polluted), demonstrating that malicious middleware configurations can affect all JavaScript objects in the application.",
+  "actual_observed_result": "Created application with __proto__ key in middlewares map. After merging, new empty objects inherited polluted properties from Object.prototype, confirming prototype pollution vulnerability.",
+  "verification_method": "Created test objects before and after middleware merging to verify Object.prototype pollution. Checked if empty objects ({}) inherited properties like isAdmin and polluted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Test object before pollution: {}",
+    "Test object after pollution: inherited __proto__.isAdmin and __proto__.polluted properties",
+    "mergeMiddlewareMaps() uses Ramda mergeDeepWith without key filtering",
+    "Middleware configuration from createApplication() successfully polluted Object.prototype"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones graphql-modules repository, checks out v3.1.0, and mounts it into container",
+    "pinned_commit_or_ref": "v3.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

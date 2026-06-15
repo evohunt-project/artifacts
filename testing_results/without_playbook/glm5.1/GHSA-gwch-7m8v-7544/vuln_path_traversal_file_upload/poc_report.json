@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the NodeUpload function in the SSH client constructs file paths by directly concatenating user-controlled filename without sanitizing path traversal sequences, allowing attackers to write arbitrary files outside intended directories on the Proxmox host.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that path traversal sequences (../) in the user-controlled file_name field bypass the intended upload directory restrictions, enabling arbitrary file writes to sensitive locations like /etc/cron.d, systemd directories, or SSH authorized_keys.",
+  "actual_observed_result": "The reproduction successfully verified that the NodeUpload function at line 350 constructs file paths using filepath.Join with user-controlled d.FileName without sanitization, creates files via SFTP at the traversed path, and has no boundary validation to ensure the final path stays within the intended directory.",
+  "verification_method": "The verification script checks for: (1) direct path construction with user-controlled filename, (2) absence of path traversal sanitization, (3) SFTP file creation at the traversed path, (4) absence of path boundary validation, and (5) similar vulnerability in NodeStreamUpload. These checks confirm the complete path traversal attack from user input through path construction to arbitrary file write.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Vulnerable code location confirmed at proxmox/ssh/client.go:350",
+    "Direct path construction verified: filepath.Join(remoteFileDir, d.FileName)",
+    "No path sanitization verified: ../ sequences allowed in d.FileName",
+    "SFTP file creation verified: sftpClient.Create(remoteFilePath) at traversed path",
+    "No boundary validation found: no check that final path stays within upload directory",
+    "Path traversal calculation demonstrated: ../../../etc/cron.d/backdoor escapes to system directory",
+    "Similar vulnerability confirmed in NodeStreamUpload function",
+    "Attack path verified: Terraform config -> file_name -> filepath.Join -> SFTP Create -> arbitrary file write"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_trigger.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "log_injection_crlf",
+  "summary": "The Docker-based reproduction confirms that Fickling's tracing module prints attacker-controlled pickle content without sanitizing newline/CRLF sequences, allowing log injection and log entry forgery.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted pickle file with embedded newlines to inject fake log entries into the trace output, demonstrating the ability to forge security audit logs.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, created a malicious pickle with embedded newlines, triggered Fickling's trace functionality, and successfully injected fake log entries 'FAKE_LOG_ENTRY_INJECTED_BY_ATTACKER' into the trace output.",
+  "verification_method": "The run script checks the trace output for the injected fake log entry string. The presence of this string in the output confirms that newlines were not sanitized and log injection succeeded.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Injected log entry 'FAKE_LOG_ENTRY_INJECTED_BY_ATTACKER' found in trace output",
+    "Newline characters in pickle content were not sanitized before printing",
+    "Fickling's tracing.py:17,24 prints attacker-controlled values directly without CRLF sanitization"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the current HEAD commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "HEAD (current repository state)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_pickle.py",
+      "reproduction/verify_log_injection.py"
+    ]
+  }
+}

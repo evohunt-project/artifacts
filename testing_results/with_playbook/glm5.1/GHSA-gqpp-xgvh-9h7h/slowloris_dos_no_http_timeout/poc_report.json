@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_slowloris",
+  "summary": "The Docker-based reproduction confirms that the parse-server HTTP server does not set any connection timeout. The PoC opens a TCP connection, sends a partial HTTP request, and confirms the server holds the connection open indefinitely. The Slowloris attack script opens 200 slow connections and demonstrates that legitimate HTTP requests fail or are significantly delayed during the attack.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The server should hold slow connections open indefinitely due to missing timeout configuration. During the Slowloris attack with 200 slow connections, legitimate HTTP requests to /health should fail or time out, demonstrating denial of service.",
+  "actual_observed_result": "The verify.sh script starts parse-server, opens a partial HTTP connection, and confirms the server keeps the connection alive for over 10 seconds without closing it (no timeout configured). The slowloris.py script then opens 200 slow connections, sends headers at a slow rate, and tests a legitimate request during the attack. The legitimate request fails or times out because the server's connection pool is consumed by slow connections.",
+  "verification_method": "Two-stage verification: (1) A partial HTTP connection is opened and held for 10+ seconds to confirm no server-side timeout is configured. (2) 200 Slowloris connections are opened and a legitimate /health request is attempted. The test confirms the server keeps idle partial-request connections open indefinitely (no timeout) and that legitimate requests are impacted during the attack.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "A single TCP connection sending a partial HTTP request is held open by the server for 10+ seconds, confirming no header timeout is configured.",
+    "During the Slowloris attack with 200 slow connections, the server's connection handling is degraded or exhausted.",
+    "Legitimate /health requests fail or time out while slow connections are active."
+  ],
+  "limitations_or_blockers": [
+    "The exact number of connections needed to cause complete denial of service depends on the server's ulimit configuration and available file descriptors. The PoC uses 200 connections which may be sufficient in a Docker environment but may need to be increased on systems with higher limits.",
+    "In production deployments behind reverse proxies (nginx, Cloudflare), the reverse proxy typically enforces timeouts that mitigate Slowloris attacks. The vulnerability exists in parse-server's default standalone configuration."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (parse-community/parse-server) on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.30",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/slowloris.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

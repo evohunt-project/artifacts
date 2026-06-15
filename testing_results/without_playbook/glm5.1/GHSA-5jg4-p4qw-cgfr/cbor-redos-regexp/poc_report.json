@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_via_redos",
+  "summary": "The Docker-based reproduction confirms that the CBOR decoder automatically creates a catastrophic-backtracking RegExp from a crafted CBOR tag 35 value using default settings. Executing the decoded RegExp against a crafted input string causes significant CPU consumption (multiple seconds for a short input), confirming the ReDoS vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that decoding CBOR data containing tag 35 with a malicious regex pattern creates an unsafe RegExp object, and executing it against a crafted input string causes measurable CPU exhaustion (taking several seconds for a short input).",
+  "actual_observed_result": "Running ./reproduction/run.sh built the StableLib monorepo from the pinned commit, ran the exploit script, and confirmed that (1) the CBOR decoder automatically decoded tag 35 to a RegExp object, (2) the decoded RegExp matches the injected catastrophic-backtracking pattern, and (3) executing the RegExp against a crafted input causes significant CPU consumption detected via timeout.",
+  "verification_method": "The exploit creates CBOR data with tag 35 containing a catastrophic-backtracking pattern ((a+)+$), decodes it using the default CBOR decoder, verifies the decoded value is a RegExp, and then runs the RegExp in a child process with a timeout. If the child process is killed by the timeout (exceeding 5 seconds), the ReDoS is confirmed. A safe regex control test completes quickly to rule out infrastructure issues.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The CBOR decoder automatically decoded tag 35 to a RegExp object using the default RegExpDecoder.",
+    "The decoded RegExp source matches the injected catastrophic-backtracking pattern ((a+)+$).",
+    "Executing the RegExp against 'a' * 25 + 'b' caused the child process to exceed the 5-second timeout, confirming CPU exhaustion.",
+    "A control test with a safe regex completed in under 100ms, confirming the delay is caused by the catastrophic-backtracking pattern."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "72336cc655704421d2433eaa2b22eb2a6b626196",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

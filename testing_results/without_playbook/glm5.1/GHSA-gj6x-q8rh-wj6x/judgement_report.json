@@ -1,0 +1,120 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-02/GHSA-gj6x-q8rh-wj6x/GHSA-gj6x-q8rh-wj6x.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "vuln_command_injection_editor",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_command_injection_editor",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_command_injection_editor/vulnerability_report.json",
+      "title": "Command injection via EDITOR environment variable in config edit command",
+      "vulnerability_type": "command_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes HTTP handlers in pdp/handlers.go, market/mk12/mk12_utils.go, and market/mk20/http/http.go passing raw database error messages to HTTP clients (CWE-209/CWE-532). This finding describes command injection via the EDITOR environment variable in cmd/curio/config.go — a completely different root cause, vulnerable code, files, and vulnerability class.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "vuln_missing_auth_remote_endpoints",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_missing_auth_remote_endpoints",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_missing_auth_remote_endpoints/vulnerability_report.json",
+      "title": "Missing authentication on critical sector file management endpoints allows unauthorized data access and deletion",
+      "vulnerability_type": "missing_authentication",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes err.Error() leaking database credentials through HTTP error responses in pdp/handlers.go and market handlers (CWE-209/CWE-532). This finding describes missing authentication on /remote/* endpoints in lib/paths/http_handler.go — different handlers, different files, different root cause (missing auth guard vs verbose error messages), different vulnerability class.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "vuln_ssrf_notify_url",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_ssrf_notify_url",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_ssrf_notify_url/vulnerability_report.json",
+      "title": "Server-side request forgery via user-controlled notify URL in PDP piece upload",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "While this finding touches the PDP component (pdp/handlers_upload.go), the advisory describes pdp/handlers.go passing err.Error() to HTTP responses to leak database credentials (CWE-209/CWE-532). This finding's root cause is unvalidated notify URLs stored in the database and later used for HTTP POST requests in tasks/pdp/notify_task.go (CWE-918/SSRF). Different files (pdp/handlers_upload.go vs pdp/handlers.go), different vulnerable operations (URL validation vs error message sanitization), different vulnerability class (SSRF vs information exposure through error messages).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "L",
+          "SC": "H",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:L/VA:L/SC:H/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The advisory (GHSA-gj6x-q8rh-wj6x) describes Curio HTTP handlers in pdp/handlers.go, market/mk12/mk12_utils.go, and market/mk20/http/http.go passing raw database error messages containing connection strings with plaintext passwords to HTTP clients via http.Error() (CWE-209/CWE-532). None of the three qualifying findings identify this root cause. Finding 1 is command injection via EDITOR env var in cmd/curio/config.go. Finding 2 is missing authentication on /remote/* endpoints in lib/paths/http_handler.go. Finding 3 is SSRF via unvalidated notify URL in pdp/handlers_upload.go and tasks/pdp/notify_task.go. All three describe different vulnerable code, different root causes, and different vulnerability classes than the advisory.",
+    "evidence": [
+      "Advisory root cause: pdp/handlers.go passes err.Error() to http.Error() leaking DB connection strings with passwords",
+      "Advisory affected files: pdp/handlers.go, market/mk12/mk12_utils.go, market/mk20/http/http.go",
+      "Advisory CWE: CWE-209 (Information Exposure Through Error Messages), CWE-532 (Insertion of Sensitive Information into Log File)",
+      "vuln_command_injection_editor: cmd/curio/config.go exec.Command(editor) — CWE-77 command injection, unrelated files and root cause",
+      "vuln_missing_auth_remote_endpoints: lib/paths/http_handler.go missing auth guards — CWE-306 missing authentication, unrelated files and root cause",
+      "vuln_ssrf_notify_url: pdp/handlers_upload.go unvalidated notify URL — CWE-918 SSRF, different PDP file and different root cause than pdp/handlers.go error message leaking"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_command_injection_editor",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_command_injection_editor/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_command_injection_editor/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_missing_auth_remote_endpoints",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_missing_auth_remote_endpoints/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_missing_auth_remote_endpoints/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_ssrf_notify_url",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_ssrf_notify_url/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2b5848b3/vuln_ssrf_notify_url/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

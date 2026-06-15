@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that the WebhooksController's process-webhook action is accessible without any authentication, allowing unauthenticated attackers to trigger webhook processing on payment gateways by sending crafted HTTP requests.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the webhook endpoint code path is reachable without authentication, that gateway IDs can be probed through different error responses, and that the controller processes attacker-controlled payloads against payment gateways.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, analyzed the WebhooksController source code from the target repository, and confirmed through static code analysis and simulated requests that the process-webhook action is in the $allowAnonymous list, CSRF validation is disabled, and the endpoint processes attacker-controlled gateway IDs and request payloads without any authentication.",
+  "verification_method": "The verify.sh script parses the WebhooksController.php source from the target repository and checks that: (1) $allowAnonymous contains 'process-webhook', (2) $enableCsrfValidation is false, (3) the action reads gateway from user input, and (4) processWebhook is called on the resolved gateway. It then confirms these code patterns exist in the actual target repository checkout.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Static analysis of WebhooksController.php confirms allowAnonymous includes 'process-webhook'.",
+    "Static analysis confirms enableCsrfValidation is set to false.",
+    "The action resolves gateway ID from request parameters without authentication.",
+    "The processWebhook method is called on the gateway object with the full request context forwarded.",
+    "Different exception types for invalid vs non-existent gateway IDs enable information disclosure through error response differentiation."
+  ],
+  "limitations_or_blockers": [
+    "Full end-to-end exploitation requires a running Craft CMS instance with configured payment gateways. The PoC verifies the vulnerability at the code level."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "5.5.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that the FrankenPHP admin API endpoints lack authentication checks, allowing any network attacker who can reach the admin API to restart workers (DoS) and view sensitive thread state information.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that the admin API endpoints /frankenphp/workers/restart and /frankenphp/threads have no authentication/authorization checks beyond HTTP method validation, allowing unauthorized access to administrative functions.",
+  "actual_observed_result": "The PoC successfully analyzed the admin.go source code and confirmed that both restartWorkers() and threads() functions lack any authentication or authorization checks. The only validation in restartWorkers() is the HTTP method check (POST required), and threads() has no validation at all.",
+  "verification_method": "The verification script examines the source code in caddy/admin.go to confirm the absence of authentication checks by searching for authentication-related keywords and analyzing the function implementations directly.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Confirmed restartWorkers() function (lines 35-45) only validates HTTP method, not authentication",
+    "Confirmed threads() function (lines 47-55) has no validation whatsoever",
+    "Demonstrated that both endpoints expose administrative functionality without authorization",
+    "Showed attack scenarios: POST to /frankenphp/workers/restart for DoS, GET to /frankenphp/threads for information disclosure"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_admin_api.sh"
+    ]
+  }
+}

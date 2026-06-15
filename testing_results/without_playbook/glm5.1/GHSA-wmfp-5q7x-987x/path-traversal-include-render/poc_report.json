@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that LiquidJS 10.24.0 allows arbitrary file read through path traversal in the include/render tags. The PoC successfully reads /etc/passwd from the filesystem by using path traversal sequences that bypass the default insecure containment check.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an attacker can read arbitrary files from the filesystem, specifically /etc/passwd, through the vulnerable include tag. The template engine should process the path traversal sequence and read the file content, which will be displayed as output.",
+  "actual_observed_result": "The PoC successfully executed and read /etc/passwd through the LiquidJS template engine. The path traversal exploit using {% include '../../../../etc/passwd' %} bypassed the default contains() check (which returns true) and the file content was rendered as template output. The verification script confirmed the presence of expected /etc/passwd content (root user entries) in the output.",
+  "verification_method": "The exploit writes a proof file containing 'EVOHUNT_PATH_TRAVERSAL_SUCCESSFUL' upon successful file read. The verification script checks for this proof file and validates that the read content contains expected /etc/passwd entries (root: user entries and /bin/ paths). This distinguishes actual path traversal from template parsing errors or unrelated failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The Docker container successfully installed LiquidJS v10.24.0 from npm",
+    "The exploit.js script created test templates in the partials directory",
+    "The path traversal payload {% include '../../../../etc/passwd' %} successfully read the file",
+    "The output contained actual /etc/passwd content with root user entries",
+    "The proof file /tmp/poc_success.txt was created with 'EVOHUNT_PATH_TRAVERSAL_SUCCESSFUL'",
+    "The verification confirmed the expected proof string and validated file content"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "Dockerfile installs liquidjs@10.24.0 directly from npm, ensuring the exact vulnerable version is used.",
+    "pinned_commit_or_ref": "liquidjs@10.24.0 (npm package)",
+    "target_repo_mount_path": "N/A - Uses npm package installation",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.js"
+    ]
+  }
+}

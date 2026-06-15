@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that OliveTin's default configuration allows unauthenticated remote command execution. An HTTP POST to the StartAction API without any authentication headers executes a configured shell command and the output is retrievable via the GetLogs API.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an unauthenticated network attacker can trigger shell command execution on the OliveTin host and retrieve the command output, confirming missing authentication for the critical command execution function.",
+  "actual_observed_result": "The reproduction started OliveTin v3000.14.0 (commit b2096d4) with default open configuration. An unauthenticated POST to /api/StartAction with {\"bindingId\": \"poc-read-file\"} returned executionTrackingId \"f2dd73dd-c1a9-48a8-a25b-3dd17c111d97\" and executed 'cat /etc/passwd' as guest. An unauthenticated POST to /api/ExecutionStatus returned the full /etc/passwd contents in the output field, with user='guest', exitCode=0, confirming unauthenticated command execution and output exfiltration.",
+  "verification_method": "The verification sends an unauthenticated StartAction request to execute 'cat /etc/passwd', then retrieves the result via the ExecutionStatus API. It checks that: (1) the StartAction response contains a tracking ID (request accepted), (2) the ExecutionStatus response shows user='guest' (no auth was used), (3) exitCode=0 (command ran successfully), and (4) the output field contains 'root:' (the command output). The string 'root:' in the output distinguishes genuine command execution from startup noise or error messages.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "StartAction returned {\"executionTrackingId\":\"f2dd73dd-c1a9-48a8-a25b-3dd17c111d97\"} without authentication headers.",
+    "ExecutionStatus showed user='guest', exitCode=0, confirming the command executed as an unauthenticated guest.",
+    "The output field contains the full contents of /etc/passwd including 'root:*:0:0:System Administrator'.",
+    "No authentication headers, cookies, or tokens were included in any API request."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b2096d4a8d598e862be793e7c58b0e869f4ab23b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/poc-config.yaml",
+      "reproduction/olivetin-binary"
+    ]
+  }
+}

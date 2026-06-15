@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cryptographic_failure",
+  "summary": "Successfully demonstrated that SSE-C encryption uses a deterministic nonce derived from MD5 hash, violating GCM security requirements and enabling nonce reuse attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Demonstrating that SSE-C encryption produces identical nonces for same bucket+key+customer_key combinations, violating NIST SP 800-38D requirements and enabling GCM nonce reuse attacks.",
+  "actual_observed_result": "The reproduction confirmed: (1) nonce is deterministic via MD5(bucket-key)[:12], (2) same bucket+key+customer_key produces identical nonce with 100% probability, (3) nonce is predictable before upload, (4) GCM nonce reuse enables plaintext recovery.",
+  "verification_method": "The exploit.py script calculates the expected nonce from MD5 hash and verifies that actual uploads produce the same nonce. The verify.sh script confirms the vulnerable code pattern and nonce reuse probability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Nonce deterministic calculation confirmed at ecfs.rs:1029-1033",
+    "100% nonce reuse demonstrated for same bucket+key+customer_key",
+    "Nonce is predictable via MD5(bucket-key)[:12]",
+    "NIST SP 800-38D violation: probability = 1, not ≤ 2^-32",
+    "GCM nonce reuse attack vector confirmed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh demonstrates the vulnerability using the target repository at advisory_03ce2d54/repo. For self-contained reproduction, the repository should be cloned and the vulnerable code checked out before mounting into container.",
+    "pinned_commit_or_ref": "current HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

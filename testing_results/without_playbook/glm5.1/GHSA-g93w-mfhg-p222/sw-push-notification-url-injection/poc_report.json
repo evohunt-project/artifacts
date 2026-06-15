@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "open_redirect_ssrf",
+  "summary": "The Docker-based reproduction confirms that the Angular service worker's handleClick method constructs URLs from push notification data (onActionClick[action].url) using new URL() without validating that the resulting URL is within the service worker's registration scope. The PoC reads the source from the checked-out repo, verifies the absence of scope validation, and demonstrates three attack vectors: cross-origin open redirect via openWindow, same-origin CSRF via sendRequest, and session hijacking via navigateLastFocusedOrOpen.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should confirm that (1) the vulnerable URL construction pattern exists in the Angular service worker driver.ts, (2) no scope validation is performed between URL construction and use in openWindow/navigate/fetch, and (3) attacker-controlled absolute URLs pass through new URL() without restriction, enabling open redirect, CSRF, and navigation hijacking.",
+  "actual_observed_result": "The test_exploit.mjs script read the Angular service worker driver source from /target-repo, confirmed the presence of the onActionClick URL construction pattern at driver.ts, verified the absence of scope validation checks, and demonstrated that three attack vectors (openWindow redirect, sendRequest CSRF, navigateLastFocusedOrOpen hijack) all produce URLs outside the service worker scope or with attacker-controlled paths.",
+  "verification_method": "The test script performs four verification phases: (1) source pattern matching to confirm the vulnerable code exists, (2) static analysis of the code between URL construction and use to confirm no scope validation is present, (3) live URL construction using new URL() with attacker-controlled inputs to demonstrate scope bypass, and (4) a final pass/fail verdict based on all checks. The script exits 0 with a proof string only when all vulnerability conditions are met.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source analysis confirmed onActionClick data access pattern, URL construction via new URL(), and three unsafe sink calls (openWindow, navigate, fetch) in driver.ts.",
+    "Static analysis of 30 lines following the URL construction confirmed no scope validation (startsWith, origin check) is performed before the URL is used.",
+    "URL construction demonstration confirmed that new URL('https://evil-phishing.com/steal-credentials', 'https://trusted-app.example.com/') resolves to the attacker URL, bypassing the scope base.",
+    "URL construction demonstration confirmed that new URL('/api/admin/delete-account?confirm=true', 'https://trusted-app.example.com/') resolves to a same-origin URL, enabling CSRF with cookies."
+  ],
+  "limitations_or_blockers": [
+    "The PoC demonstrates the vulnerability at the source code and URL construction level. A full end-to-end demonstration with a live push notification service and browser automation was not performed due to the complexity of setting up push notification infrastructure in a containerized environment."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "21.2.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_exploit.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

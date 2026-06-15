@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service_cpu_exhaustion",
+  "summary": "The reproduction builds CoreDNS with DNSSEC signing enabled, starts the server, and sends a stream of unique random subdomain queries with DO=1 to trigger per-query cryptographic signing. The PoC measures the latency difference between unique-name queries (forcing full ECDSA signing) and cached queries (no signing) to demonstrate the CPU exhaustion vector.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Unique random subdomain queries with DO=1 should be significantly slower than cached repeated queries because each unique name forces a full cryptographic signing operation (ECDSA P-256). The latency ratio should exceed 5x, confirming that per-query signing is CPU-bound and can be exploited for denial of service by sending many unique names.",
+  "actual_observed_result": "PoC was not executed in this session. The reproduction bundle was generated for independent execution via ./reproduction/run.sh.",
+  "verification_method": "The verify.sh script inside the container builds CoreDNS, generates DNSSEC keys, starts the server, then runs exploit.sh which sends 200 unique queries with DO=1 (triggering signing) and 200 cached queries with DO=1 (cache hits), measures total elapsed time for each batch, computes the latency ratio, and prints a proof string if the ratio exceeds 3x confirming per-query cryptographic overhead.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The PoC was not executed during this session due to build time constraints. The reproduction bundle is self-contained and can be run independently via ./reproduction/run.sh."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.14.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh",
+      "reproduction/db.example.com"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution",
+  "summary": "The PoC demonstrates that setIn() with a keyPath containing '__proto__' successfully pollutes Object.prototype, affecting all subsequent object creation in the JavaScript environment.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should execute setIn() with keyPath ['__proto__', 'polluted'], resulting in Object.prototype.polluted being set to 'POLLUTED_VALUE'. This should cause all new empty objects to inherit the polluted property.",
+  "actual_observed_result": "The PoC executed setIn with the malicious keyPath and verified that Object.prototype.polluted equals 'POLLUTED_VALUE' after the operation. Newly created empty objects {} inherit the polluted property.",
+  "verification_method": "The PoC script checks Object.prototype.polluted and ({}).polluted before and after the setIn operation. Success is determined by verifying that the property exists on Object.prototype and that new object literals inherit it.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console output shows Object.prototype.polluted is undefined before the attack",
+    "Console output shows Object.prototype.polluted equals 'POLLUTED_VALUE' after setIn execution",
+    "Newly created objects ({}).polluted inherit the polluted value",
+    "The vulnerability affects all objects in the JavaScript realm"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v5.1.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test-setin.js"
+    ]
+  }
+}

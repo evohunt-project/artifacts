@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_stack_overflow",
+  "summary": "The Docker-based reproduction confirms that passing a deeply nested JSON schema (5000 levels of anyOf nesting) to Grammar.from_json_schema() causes the C++ SchemaParser::Parse to recursively descend without a depth limit, overflowing the process stack and crashing with SIGSEGV.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the deeply nested JSON schema to trigger unbounded recursion in SchemaParser::Parse and ComputeCacheKey, resulting in a stack overflow that crashes the process with signal 11 (SIGSEGV) or signal 6 (SIGABRT).",
+  "actual_observed_result": "Running ./reproduction/run.sh built xgrammar from the vulnerable source, mounted the checkout into the container, and ran trigger.py which constructed a 5000-level nested anyOf JSON schema. The Python process crashed with a segmentation fault (exit code 139) when the C++ SchemaParser exhausted the stack.",
+  "verification_method": "The verify.sh script checks the exit code of trigger.py for crash signals: 139 (SIGSEGV), 134 (SIGABRT), 137 (SIGKILL/OOM), or 124 (timeout). A normal Python exception would produce exit code 1, while a C++ stack overflow produces 139 or 134, confirming the vulnerability is in the native C++ code.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The Python process exited with code 139 (SIGSEGV), indicating a stack overflow in the C++ SchemaParser.",
+    "The crash occurred in the C++ layer rather than raising a Python exception, confirming uncontrolled recursion in the native code.",
+    "The RecursionGuard mechanism exists in the codebase (structural_tag.cc) but was not applied to the JSON schema parser."
+  ],
+  "limitations_or_blockers": [
+    "The exact nesting depth required to trigger the crash depends on the default stack size of the container (typically 8MB on Linux). The default of 5000 levels is conservative and may need adjustment for different environments."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref v0.1.31, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.31",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/trigger.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

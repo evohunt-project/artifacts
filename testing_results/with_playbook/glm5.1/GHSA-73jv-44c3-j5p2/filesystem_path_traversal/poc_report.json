@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction authenticates as a low-privilege test user against the Ajenti panel, then uses the /api/filesystem/read/ endpoint with an absolute path to /etc/shadow and the /api/filesystem/write/ endpoint to create a file at an arbitrary location, confirming that the unsanitized path parameter allows full filesystem access as root.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An authenticated user with default filesystem:read permission should be able to read /etc/shadow (a file normally restricted to root) via GET /api/filesystem/read/etc/shadow, and with filesystem:write permission should be able to write an arbitrary file to a sensitive location such as /tmp/evohunt-proof via POST /api/filesystem/write/tmp/evohunt-proof.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started the Ajenti panel inside the container, authenticated as the test user, successfully read /etc/shadow through the vulnerable endpoint (response contained root: entries), and wrote a proof file to /tmp/evohunt-proof confirming arbitrary file write capability.",
+  "verification_method": "The verify.sh script checks three signals: (1) the /etc/shadow read response contains 'root:' confirming the file was actually read, (2) a proof file written via the write endpoint exists and contains the expected content, and (3) a chmod operation on a test file changes permissions as verified by stat. These distinguish real path traversal from generic errors, authentication failures, or unrelated crashes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The /api/filesystem/read/etc/shadow response body contains 'root:' prefixed shadow entries, proving the file was read as root.",
+    "A file /tmp/evohunt-proof was created via POST /api/filesystem/write/tmp/evohunt-proof with content 'EVOHUNT_PATH_TRAVERSAL_WRITE_PROOF' and verified to exist.",
+    "The test user was authenticated via the OS auth provider (su-based), confirming the attack requires only PR:L (low privileges)."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2.2.14",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

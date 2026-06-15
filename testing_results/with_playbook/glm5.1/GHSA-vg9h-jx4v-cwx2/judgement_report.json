@@ -1,0 +1,103 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T04:33:41.126Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-vg9h-jx4v-cwx2/GHSA-vg9h-jx4v-cwx2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "flask-debug-rce",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/flask-debug-rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/flask-debug-rce/vulnerability_report.json",
+      "title": "Flask debug mode enabled by default in web_app allows remote code execution via Werkzeug debugger",
+      "vulnerability_type": "debug_code_rce",
+      "advisory_match": true,
+      "advisory_match_reason": "Same Unfurl Flask debug-control path: web_app obtains a debug value from config/default handling and UnfurlApp passes it into app.run(debug=...), exposing the Werkzeug debugger when debug should be disabled.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unbounded-zlib-decompression-dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/unbounded-zlib-decompression-dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/unbounded-zlib-decompression-dos/vulnerability_report.json",
+      "title": "Unbounded zlib decompression in parse_compressed.py enables denial of service via crafted URL",
+      "vulnerability_type": "dos_resource_exhaustion",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause and vulnerable code: this finding concerns parse_compressed.py zlib.decompress() resource exhaustion, not app.py debug config parsing or Werkzeug debugger exposure.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "flask-debug-rce",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/flask-debug-rce",
+      "status": "qualifying_vuln",
+      "title": "Flask debug mode enabled by default in web_app allows remote code execution via Werkzeug debugger",
+      "vulnerability_type": "debug_code_rce"
+    },
+    "reason": "The selected finding identifies the same app.py debug-value flow that the advisory describes, and the copied PoC demonstrated the advisory impact: with unfurl.ini setting debug = False on the advisory-vulnerable parent commit, Flask still ran with Werkzeug debug mode enabled and exposed the debugger console.",
+    "evidence": [
+      "Advisory describes web_app reading debug from UNFURL_APP config as a string/default and UnfurlApp passing it to app.run(debug=...), making debug mode truthy.",
+      "flask-debug-rce/vulnerability_report.json cites app.py debug defaults and app.run(debug=unfurl_debug) as the vulnerable operation exposing the Werkzeug debugger.",
+      "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/.judge/poc_runs/flask-debug-rce/run.log: local fallback checked out advisory-vulnerable commit 6b8e97853090c909936a18d41228168b7a35fe94, launched Unfurl with unfurl.ini debug = False, and completed successfully.",
+      "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/.judge/poc_runs/flask-debug-rce/evidence/debug_false_evidence.json: configured_debug_value=False, server_ready=true, console_status=200, console_has_werkzeug=true, and success=true.",
+      "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/.judge/poc_runs/flask-debug-rce/evidence/server_runtime.log: Flask logged \"Debug mode: on\", \"Debugger is active\", and \"Debugger PIN\" while serving /console with HTTP 200."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "flask-debug-rce",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/flask-debug-rce",
+      "executed": true,
+      "command": "bash reproduction/local_debug_false_run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/.judge/poc_runs/flask-debug-rce/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/.judge/poc_runs/flask-debug-rce/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/.judge/poc_runs/flask-debug-rce/poc_execution.json",
+      "observed_effect": "The copied PoC checked out the advisory-vulnerable parent commit, started Unfurl with unfurl.ini containing debug = False, and still observed Flask Debug mode: on, Werkzeug Debugger is active, a Debugger PIN, and GET /console returning HTTP 200 with the Werkzeug debugger UI.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/unbounded-zlib-decompression-dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/unbounded-zlib-decompression-dos/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_930f69b4/unbounded-zlib-decompression-dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

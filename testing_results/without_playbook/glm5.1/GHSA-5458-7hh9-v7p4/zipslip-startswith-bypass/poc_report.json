@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that PF4J's Unzip.extract() writes files outside the intended extraction directory by exploiting the String.startsWith() boundary bypass. A ZIP named a.zip with entry ../ab/evil.txt results in the file being written to ab/evil.txt (sibling of the destination a/) instead of being rejected by the ZipSlip protection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause a file to be written outside the intended plugin extraction directory. Specifically, ab/evil.txt should appear in the test directory adjacent to (not inside) the a/ destination directory, proving the path boundary bypass in the startsWith() check.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned PF4J, built the project, and executed the exploit program. The exploit created a ZIP named a.zip containing entry ../ab/evil.txt. PF4J's Unzip.extract() processed the entry without throwing a ZipException, and the file was written to ab/evil.txt outside the a/ directory. The proof string EVOHUNT_PROOF=zipslip-startswith-bypass-confirmed was emitted.",
+  "verification_method": "The exploit program checks whether the file ab/evil.txt exists adjacent to the destination directory a/ after extraction. It distinguishes a genuine bypass (file exists outside destination) from a correctly blocked attempt (ZipException thrown or file only inside destination). The proof string EVOHUNT_PROOF=zipslip-startswith-bypass-confirmed is printed only when the bypass succeeds.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The file ab/evil.txt was created outside the destination directory a/ after Unzip.extract() processed the malicious ZIP.",
+    "No ZipException was thrown during extraction, confirming the startsWith() check was bypassed.",
+    "The proof string EVOHUNT_PROOF=zipslip-startswith-bypass-confirmed was emitted by the exploit program."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned vulnerable release tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "c668b4ad4fa93e5546b6101dc51bb40325a40725",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/ExploitZipSlip.java",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The reproduction confirms that the PowerLine writeTokens function accepts arbitrary environment variable names without validation. The exploit injected NODE_OPTIONS=--require /tmp/malicious.js via writeTokens, and a child Node.js process loaded the attacker-controlled module, writing a proof file to /tmp/evohunt_proof.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause writeTokens to set process.env.NODE_OPTIONS to an attacker-controlled --require value. A subsequent child Node.js process spawned in the same process environment should load the malicious module, demonstrating code execution via environment variable injection.",
+  "actual_observed_result": "Running the exploit imported the actual writeTokens function from the target repository's token-writer.ts, called it with envVar='NODE_OPTIONS' and value='--require /tmp/evohunt_malicious.js'. The function set process.env.NODE_OPTIONS without validation. A child node process (execSync) then loaded the malicious CJS module via --require, which wrote the proof string 'evohunt-node-options-code-exec-proof' to /tmp/evohunt_proof. The proof file was verified to exist with the expected content.",
+  "verification_method": "The exploit writes a CJS module that creates a proof file at /tmp/evohunt_proof containing the exact string 'evohunt-node-options-code-exec-proof'. After calling writeTokens with the injected NODE_OPTIONS, a child node process is spawned. The verification checks that the proof file exists and contains the expected proof string. This distinguishes actual code execution via NODE_OPTIONS injection from a mere env var assignment.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "process.env.NODE_OPTIONS was set to '--require /tmp/evohunt_malicious.js' after writeTokens completed",
+    "The pino logger confirmed the injection: 'Set env var NODE_OPTIONS'",
+    "The child Node.js process loaded /tmp/evohunt_malicious.js via --require (confirmed by stderr output)",
+    "The proof file /tmp/evohunt_proof was created with content 'evohunt-node-options-code-exec-proof'"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo. verify.sh copies the vulnerable source files to a working directory.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.ts",
+      "reproduction/verify.sh"
+    ]
+  }
+}

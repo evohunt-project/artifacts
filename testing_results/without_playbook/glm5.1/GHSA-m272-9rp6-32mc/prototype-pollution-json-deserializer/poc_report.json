@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution",
+  "summary": "The Docker-based reproduction confirms that a single crafted HTTP POST request to any oRPC procedure endpoint pollutes Object.prototype on the server process via the __proto__ path traversal in the deserialization metadata. The exploit uses meta type 2 (NaN) to assign a distinguishable value (NaN) to Object.prototype.polluted.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After sending a POST request with body {\"json\":{},\"meta\":[[2,\"__proto__\",\"polluted\"]]}}, the server's Object.prototype.polluted property should be set to NaN. A subsequent request to the same procedure should detect the polluted property on a freshly created empty object, demonstrating global prototype pollution that persists across all requests.",
+  "actual_observed_result": "Running ./reproduction/run.sh installed dependencies, started the oRPC server via tsx, sent the crafted payload to the /ping procedure endpoint, and verified prototype pollution. The first normal request returned {\"json\":\"pong\"}. The crafted payload request returned {\"json\":\"POLLUTED: polluted=NaN\"}, confirming the server handler detected the polluted property. A follow-up verification request also returned {\"json\":\"POLLUTED: polluted=NaN\"}, confirming the pollution persists on Object.prototype.",
+  "verification_method": "The server handler creates a fresh empty object literal ({}) and checks whether ({}).polluted is NaN using Number.isNaN(). Since the empty object has no own property named 'polluted', the value must come from the prototype chain. The handler returns 'POLLUTED: polluted=NaN' if the pollution succeeded, or 'pong' otherwise. The exploit.mjs script sends the crafted payload, then sends a verification request and checks the response for the string 'POLLUTED:'. This distinguishes genuine prototype pollution from a server startup failure, request parsing error, or unrelated crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The first POST request with a normal body returned {\"json\":\"pong\"}, confirming the server and procedure work correctly before the exploit.",
+    "The crafted POST request with body {\"json\":{},\"meta\":[[2,\"__proto__\",\"polluted\"]]} returned {\"json\":\"POLLUTED: polluted=NaN\"}, confirming the deserializer processed the malicious meta array and the handler detected the polluted prototype.",
+    "The follow-up verification request also returned {\"json\":\"POLLUTED: polluted=NaN\"}, confirming that Object.prototype.polluted = NaN persists globally across requests.",
+    "The server remained operational after the pollution, demonstrating the attack does not cause an immediate crash and the polluted state persists for all subsequent operations."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.13.5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/server.mjs",
+      "reproduction/exploit.mjs"
+    ]
+  }
+}

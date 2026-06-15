@@ -1,0 +1,89 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T05:36:31.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_82b44a61",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-44vg-5wv2-h2hg/GHSA-44vg-5wv2-h2hg.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "fstring_length_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_82b44a61/fstring_length_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_82b44a61/fstring_length_bypass/vulnerability_report.json",
+      "title": "Missing cumulative length update in _eval_joinedstr allows arbitrary-length string creation via f-strings",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets _eval_joinedstr cumulative output length enforcement for f-strings. The advisory targets sandbox escape through modules or disallowed functions returned from names, object attributes, containers, or callbacks.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "method_chaining_dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_82b44a61/method_chaining_dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_82b44a61/method_chaining_dos/vulnerability_report.json",
+      "title": "Chained string method calls bypass MAX_STRING_LENGTH without any length check on return values",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding uses _eval_attribute only to obtain ordinary string methods and alleges missing length checks on method return values. The advisory-specific root cause is lack of module and disallowed-function filtering for attributes and evaluated values, enabling access to objects such as os or sys.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described vulnerable code/root cause. GHSA-44vg-5wv2-h2hg concerns simpleeval sandbox escape where caller-supplied objects or modules expose dangerous modules/functions through attributes or callbacks; the 1.0.5 fix adds ModuleWrapper, rejects modules and disallowed functions returned by _eval, and blocks such results in _eval_attribute. The final findings instead describe MAX_STRING_LENGTH bypasses leading to possible availability impact.",
+    "evidence": [
+      "Advisory details describe modules or dangerous objects available as attrs from names, with examples such as os.path, pathlib, shutil, glob, statistics, numpy, and urllib.parse leaking os or sys.",
+      "The 1.0.5 patch adds ModuleWrapper and _check_disallowed_items, expands DISALLOW_FUNCTIONS with globals, locals, os.popen, and os.system, and rejects modules or disallowed functions from _eval_attribute.",
+      "fstring_length_bypass reports _eval_joinedstr failing to update cumulative length before joining formatted values, with no module or dangerous-function access path.",
+      "method_chaining_dos reports chained str.replace calls returning oversized strings without a post-call length check; it does not pass module objects in names, reach os/sys, or invoke a disallowed function."
+    ],
+    "blockers_to_higher_tier": [
+      "Tiered runtime evidence is not applicable because no qualifying finding matches the advisory root cause."
+    ]
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_82b44a61/fstring_length_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_82b44a61/fstring_length_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_82b44a61/fstring_length_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_82b44a61/method_chaining_dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_82b44a61/method_chaining_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_82b44a61/method_chaining_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

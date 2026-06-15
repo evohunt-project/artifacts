@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that the vulnerable ContextPayload.read() method at line 47 calls oi.readObject() on untrusted input from the RMI stream. A crafted serialized gadget is deserialized and executes arbitrary code (writes a marker file), demonstrating that an attacker with network access to the RMI port can achieve remote code execution through Java deserialization gadget chains.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit triggers the readObject() deserialization sink in ContextPayload.read() with a malicious gadget class. During deserialization, the gadget's readObject() method executes arbitrary code and creates a marker file at /tmp/evohunt-rce-marker, proving RCE.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, mounted the target repository, compiled the exploit, and executed it. The exploit verified the vulnerable oi.readObject() call exists in ContextPayload.java:47, created a serialized gadget payload, deserialized it via the same readObject() path used by ContextPayload.read(), and the gadget successfully wrote the RCE marker file during deserialization.",
+  "verification_method": "The exploit checks three conditions: (1) the vulnerable source file ContextPayload.java exists in /target-repo with the oi.readObject() call, (2) the @SuppressWarnings(\"BanSerializableRead\") annotation is present confirming developer awareness, and (3) a marker file /tmp/evohunt-rce-marker is created by the deserialization gadget, proving code execution during readObject(). The marker file contents include the username, working directory, and timestamp to distinguish a real exploit from unrelated behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The vulnerable source file ContextPayload.java was found in the target repo with oi.readObject() at line 47.",
+    "The @SuppressWarnings(\"BanSerializableRead\") annotation confirms the deserialization was flagged by static analysis but suppressed.",
+    "A serialized gadget object was created and deserialized through the same readObject() path used by ContextPayload.read().",
+    "The gadget's readObject() callback executed and created the marker file /tmp/evohunt-rce-marker with proof-of-execution details.",
+    "The marker file contains the process username, working directory, and timestamp, confirming code execution inside the container."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref v2.26.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.26.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Exploit.java",
+      "reproduction/verify.sh"
+    ]
+  }
+}

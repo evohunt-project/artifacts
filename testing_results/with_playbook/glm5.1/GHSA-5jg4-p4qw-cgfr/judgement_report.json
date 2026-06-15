@@ -1,0 +1,71 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T06:48:20.636Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b7da709d",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-5jg4-p4qw-cgfr/GHSA-5jg4-p4qw-cgfr.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "cbor-deep-nesting-dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b7da709d/cbor-deep-nesting-dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b7da709d/cbor-deep-nesting-dos/vulnerability_report.json",
+      "title": "CBOR decoder stack overflow via unbounded recursive nesting",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": true,
+      "advisory_match_reason": "Same @stablelib/cbor decoder root cause as the advisory: deeply nested attacker-controlled CBOR arrays drive unbounded recursive _decodeValue()/_decodeArray() calls with no maximum depth guard, causing JavaScript stack exhaustion.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "cbor-deep-nesting-dos",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b7da709d/cbor-deep-nesting-dos",
+      "status": "qualifying_vuln",
+      "title": "CBOR decoder stack overflow via unbounded recursive nesting",
+      "vulnerability_type": "denial_of_service"
+    },
+    "reason": "The selected qualifying finding identifies the advisory-described @stablelib/cbor recursive decoding flaw, and the copied PoC reproduced the advisory impact by making decode() process 15000 nested CBOR arrays and throw RangeError: Maximum call stack size exceeded.",
+    "evidence": [
+      "Advisory GHSA-5jg4-p4qw-cgfr describes @stablelib/cbor recursive decoding of nested arrays, maps, and tags without a maximum depth, causing stack exhaustion denial of service.",
+      "cbor-deep-nesting-dos/vulnerability_report.json identifies the same _decodeValue() to _decodeArray() recursive path and missing depth guard in packages/cbor/cbor.ts.",
+      ".judge/poc_runs/cbor-deep-nesting-dos/run.log records the copied PoC building @stablelib/cbor from pinned commit 0f153a63b7552a0e8721f640984113e419015026.",
+      ".judge/poc_runs/cbor-deep-nesting-dos/run.log records: testing CBOR decode with 15000 levels of nesting (15001 bytes).",
+      ".judge/poc_runs/cbor-deep-nesting-dos/run.log records: VULNERABLE: stack overflow from deeply nested CBOR (Maximum call stack size exceeded)."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "cbor-deep-nesting-dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b7da709d/cbor-deep-nesting-dos",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b7da709d/.judge/poc_runs/cbor-deep-nesting-dos/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b7da709d/.judge/poc_runs/cbor-deep-nesting-dos/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_b7da709d/.judge/poc_runs/cbor-deep-nesting-dos/poc_execution.json",
+      "observed_effect": "The copied PoC built the target cbor package and passed a 15001-byte payload with 15000 nested CBOR arrays into decode(); the run log shows RangeError stack exhaustion with message Maximum call stack size exceeded and the verification script exited 0.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

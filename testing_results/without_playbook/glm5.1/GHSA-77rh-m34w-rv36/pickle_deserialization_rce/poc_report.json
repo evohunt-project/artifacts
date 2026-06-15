@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that the vulnerable unpickle_object_from_file function executes arbitrary code when deserializing a malicious pickle payload.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the malicious pickle payload to be deserialized by the vulnerable function, triggering arbitrary command execution that creates a proof file in the container.",
+  "actual_observed_result": "The reproduction successfully created a malicious pickle payload, triggered deserialization via unpickle_object_from_file, and verified that the arbitrary code executed, creating the proof file with the expected content.",
+  "verification_method": "The reproduction checks for the existence and content of /tmp/pickle_exploit_proof file. The proof string 'EVOHUNT_PICKLE_RCE_SUCCESSFUL' confirms that arbitrary code executed during pickle deserialization.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious pickle file created at /tmp/malicious.pkl",
+    "Code execution triggered during unpickle_object_from_file call",
+    "Proof file /tmp/pickle_exploit_proof created with expected content",
+    "Container logs show successful exploit execution"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/create_malicious_pickle.py"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that a 64 MB file upload to a multer endpoint using default MemoryStorage is fully buffered in server memory (req.file.buffer.length = 67108864), demonstrating that no fileSize limit is enforced by default. An attacker could send a much larger payload to exhaust available memory and crash the server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the server to buffer the entire uploaded file in memory using MemoryStorage, confirming that no default file size limit prevents memory exhaustion. A larger payload would crash the server with an out-of-memory error.",
+  "actual_observed_result": "Running the Docker-based reproduction sent a 64 MB file via multipart/form-data. The server responded with { bytes: 67108864 }, confirming the entire file was buffered in req.file.buffer. The verification script confirmed the SIGNAL:full_buffer:67108864 marker in the server output.",
+  "verification_method": "The run script starts the vulnerable server, sends a 64 MB file upload, and checks that the server reports buffering the exact number of bytes sent. This confirms multer's MemoryStorage buffers the entire upload without any size limit. The verification distinguishes full buffering from rejected or partial uploads.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server output contains 'SIGNAL:full_buffer:67108864', confirming the entire 64 MB file was buffered in a single Buffer object in Node.js memory.",
+    "The server responded with JSON { status: 'buffered', bytes: 67108864 }, confirming req.file.buffer.length matched the uploaded file size.",
+    "No fileSize limit was enforced, demonstrating that multer defaults to Infinity and allows unbounded memory allocation."
+  ],
+  "limitations_or_blockers": [
+    "The PoC uses a 64 MB file to demonstrate the buffering behavior without actually crashing the server. A real attack would send a file larger than the server's available memory to trigger an out-of-memory crash."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.js",
+      "reproduction/attack.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T17:45:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_f146ee5c",
+  "advisory_path": "/Users/mac/ResearchSpace/advisory-database/advisories/github-reviewed/2026/04/GHSA-q5f4-99jv-pgg5/GHSA-q5f4-99jv-pgg5.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "ssrf-workflow-import-from-url",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_f146ee5c/ssrf-workflow-import-from-url",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_f146ee5c/ssrf-workflow-import-from-url/vulnerability_report.json",
+      "title": "SSRF via workflow import-from-url endpoint allows authenticated users to fetch arbitrary internal URLs",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes prototype pollution in the XML webhook body parser (xml2js library) leading to RCE via SSH operations chaining (CWE-1321). The finding describes a completely different SSRF vulnerability in the workflow import-from-url endpoint using axios.get() without SSRF protection. Different vulnerable component (webhook XML parser vs workflows.controller.ts), different attack vector (XML prototype pollution vs SSRF via URL parameter), different root cause (xml2js unsafe parsing vs missing SSRF validation), and different impact chain (prototype pollution -> RCE vs SSRF -> data exfiltration).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The advisory describes prototype pollution in the XML webhook body parser (xml2js library) that allows authenticated users to pollute the JavaScript object prototype and chain the pollution with the Git node's SSH operations to achieve RCE (CWE-1321). The only qualifying finding describes a completely different SSRF vulnerability in the GET /rest/workflows/from-url endpoint that uses axios.get() with a user-controlled URL parameter without SSRF protection. These are distinct vulnerabilities: different vulnerable code location (webhook XML parser vs workflows.controller.ts), different attack vector (crafted XML payload vs URL parameter), different root cause (xml2js unsafe prototype manipulation vs missing SSRF validation), different vulnerability class (prototype pollution vs SSRF), and different impact chain (prototype pollution chained to SSH operations leading to RCE vs SSRF leading to internal data exfiltration). No finding identifies the advisory-described vulnerable XML webhook parser or the prototype pollution root cause.",
+    "evidence": [
+      "Advisory GHSA-q5f4-99jv-pgg5 describes prototype pollution vulnerability in the xml2js library used for XML webhook body parsing (CWE-1321)",
+      "Advisory states the vulnerable component is the XML request body parser in n8n's webhook handler",
+      "Advisory states the attack vector is a crafted XML payload that pollutes the JavaScript object prototype",
+      "Advisory states the impact chain is prototype pollution chained with Git node SSH operations to achieve RCE",
+      "The ssrf-workflow-import-from-url finding describes a vulnerability in the GET /rest/workflows/from-url endpoint in workflows.controller.ts",
+      "The finding's vulnerable operation is axios.get(query.url) without SSRF protection (not XML parsing or prototype manipulation)",
+      "The finding's attack vector is a URL query parameter (not a crafted XML payload)",
+      "The finding's impact is SSRF/internal data exfiltration (not prototype pollution or RCE via SSH)"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_f146ee5c/ssrf-workflow-import-from-url",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_f146ee5c/ssrf-workflow-import-from-url/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_f146ee5c/ssrf-workflow-import-from-url/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

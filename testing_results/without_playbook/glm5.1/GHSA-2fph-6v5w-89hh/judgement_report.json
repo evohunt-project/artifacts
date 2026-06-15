@@ -1,0 +1,121 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T16:30:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-2fph-6v5w-89hh/GHSA-2fph-6v5w-89hh.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "graphql-csrf-bypass-public-schema",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/graphql-csrf-bypass-public-schema",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/graphql-csrf-bypass-public-schema/vulnerability_report.json",
+      "title": "GraphQL API endpoint disables CSRF protection and falls back to unauthenticated public token",
+      "vulnerability_type": "csrf_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "Finding describes CSRF bypass and unauthenticated GraphQL access in GraphqlController::actionApi. Advisory describes RCE via behavior injection in ElementIndexesController::actionFilterHud(). Different vulnerable component, different endpoint, different attack vector, different root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "session-info-csrf-token-leak",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/session-info-csrf-token-leak",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/session-info-csrf-token-leak/vulnerability_report.json",
+      "title": "Anonymous session-info endpoint leaks CSRF token and authenticated user data",
+      "vulnerability_type": "information_disclosure",
+      "advisory_match": false,
+      "advisory_match_reason": "Finding describes CSRF token disclosure from UsersController::actionSessionInfo. Advisory describes RCE via behavior injection in ElementIndexesController::actionFilterHud(). Different vulnerable component, different endpoint, different vulnerability class (information disclosure vs RCE), different root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unauthenticated-migration-trigger",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/unauthenticated-migration-trigger",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/unauthenticated-migration-trigger/vulnerability_report.json",
+      "title": "Anonymous migration endpoint with CSRF bypass enables unauthenticated database migration triggers",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": false,
+      "advisory_match_reason": "Finding describes DoS via unauthenticated migration trigger in AppController::actionMigrate. Advisory describes RCE via behavior injection in ElementIndexesController::actionFilterHud(). Different vulnerable component, different endpoint, different vulnerability class (DoS vs RCE), different root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "None of the qualifying findings identify the advisory-described vulnerable code/root cause. The advisory describes RCE via Yii2 behavior injection through the unsanitized fieldLayouts parameter in ElementIndexesController::actionFilterHud() (lines 493-494), where attacker-controlled config with 'as <name>' prefixed keys triggers unsafe object instantiation. The findings describe different vulnerabilities in different controllers: graphql-csrf-bypass-public-schema describes CSRF bypass in GraphqlController::actionApi, session-info-csrf-token-leak describes information disclosure in UsersController::actionSessionInfo, and unauthenticated-migration-trigger describes DoS in AppController::actionMigrate. None involve FieldLayout::createFromConfig(), behavior injection, or the fieldLayouts parameter.",
+    "evidence": [
+      "Advisory CVE-2026-33157 describes ElementIndexesController::actionFilterHud() as vulnerable location",
+      "Advisory describes behavior injection via fieldLayouts parameter passed to FieldLayout::createFromConfig() without cleanseConfig()",
+      "Advisory describes 'as <name>' prefixed keys enabling RCE through Yii2 behavior/event injection mechanism",
+      "graphql-csrf-bypass-public-schema finding targets GraphqlController::actionApi with CSRF bypass and public token fallback",
+      "session-info-csrf-token-leak finding targets UsersController::actionSessionInfo with CSRF token disclosure",
+      "unauthenticated-migration-trigger finding targets AppController::actionMigrate with DoS via maintenance mode",
+      "No finding mentions ElementIndexesController, FieldLayout::createFromConfig(), fieldLayouts parameter, or behavior injection"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/graphql-csrf-bypass-public-schema",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/graphql-csrf-bypass-public-schema/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/graphql-csrf-bypass-public-schema/poc_report.json",
+      "poc_report_status": "not_attempted"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/session-info-csrf-token-leak",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/session-info-csrf-token-leak/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/session-info-csrf-token-leak/poc_report.json",
+      "poc_report_status": "not_attempted"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/unauthenticated-migration-trigger",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/unauthenticated-migration-trigger/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_180ecacf/unauthenticated-migration-trigger/poc_report.json",
+      "poc_report_status": "not_attempted"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "incomplete_blocklist",
+  "summary": "The Docker-based reproduction confirms that a malicious pickle using importlib.import_module('os') to import the dangerous os module receives a significantly lower severity rating (SUSPICIOUS, severity 2) compared to the equivalent direct import (LIKELY_OVERTLY_MALICIOUS, severity 4). The unsafe_imports() analysis flags zero imports for the bypass pickle while flagging the direct import correctly.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate a 2-level severity downgrade: the importlib bypass pickle should receive severity SUSPICIOUS (2) with zero flagged unsafe imports, while the direct os import pickle should receive severity LIKELY_OVERTLY_MALICIOUS (4) with flagged unsafe imports.",
+  "actual_observed_result": "The reproduction confirmed: (1) Direct os.system pickle: LIKELY_OVERTLY_MALICIOUS (4), unsafe_imports flagged: 1. (2) importlib bypass pickle: SUSPICIOUS (2), unsafe_imports flagged: 0. Severity downgrade: 2 levels. The dangerous os module import via importlib goes completely undetected by the UnsafeImports analysis.",
+  "verification_method": "The exploit.py script creates two pickle files (bypass via importlib and direct os import), runs check_safety() on both, counts unsafe_imports() results for each, and verifies that: (1) the bypass has zero flagged unsafe imports, (2) the direct import has flagged unsafe imports, and (3) the severity downgrade is at least 2 levels. Exit code 0 confirms success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Direct os.system severity: LIKELY_OVERTLY_MALICIOUS (4) with 1 flagged unsafe import",
+    "importlib bypass severity: SUSPICIOUS (2) with 0 flagged unsafe imports",
+    "Severity downgrade: 2 levels (from 4 to 2)",
+    "importlib is missing from the unsafe_imports() hardcoded list at fickle.py:867-885",
+    "importlib is missing from UNSAFE_MODULES at analysis.py:210-227",
+    "import_module is added to likely_safe_imports causing OvertlyBadEvals to skip the call"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (trailofbits/fickling) on the host, checks out v0.1.6, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

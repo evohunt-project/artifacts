@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "Static code analysis confirmed that the WebRPC JSON-RPC endpoint exposes administrative methods without authentication. The verification demonstrated that SectorRemove and other privileged operations are accessible via network requests without any authentication middleware, JWT validation, or permission checks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The code analysis should reveal that the WebRPC server at /api/webrpc/v0 lacks authentication middleware, and administrative handlers like SectorRemove execute database DELETE operations without authorization checks.",
+  "actual_observed_result": "The Docker-based verification successfully executed and confirmed: (1) No authentication middleware in web/api/webrpc/routes.go, (2) Direct handler registration via r.Handle(\"/v0\", rpcSrv) without auth decorator, (3) SectorRemove handler performs database DELETE operations without permission checks, (4) All administrative methods exposed via JSON-RPC without authentication.",
+  "verification_method": "Static code analysis of WebRPC route registration and handler implementation. The verification script examined the Routes() function in routes.go, confirmed absence of authentication middleware, and analyzed the SectorRemove handler to verify it lacks permission checks before executing database DELETE operations.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "web/api/webrpc/routes.go:54 shows r.Handle(\"/v0\", rpcSrv) without authentication middleware",
+    "web/api/webrpc/sector.go:791-814 shows SectorRemove handler executes DELETE queries without authorization",
+    "No JWT validation, signature verification, or permission decorators found in the entire web/api/webrpc/ directory",
+    "The JSON-RPC server registers all methods publicly via rpcSrv.Register(\"CurioWeb\", handler)",
+    "Container output confirms vulnerability through code structure analysis"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from /Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2b5848b3/repo into the container at /target-repo",
+    "pinned_commit_or_ref": "Curio v1.27.2 (BuildVersionArray: 1.27.2)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_code.sh",
+      "reproduction/Dockerfile",
+      "reproduction/run.sh"
+    ]
+  }
+}

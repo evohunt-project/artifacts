@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "Docker reproduction confirms command injection through very_dangerous_raw_string argument type, allowing arbitrary shell command execution via multiple injection vectors.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the PoC should execute arbitrary commands inside the container through shell command injection, creating proof files demonstrating successful command execution.",
+  "actual_observed_result": "Executing ./reproduction/run.sh built OliveTin, started service, and successfully injected commands through multiple shell metacharacter payloads (;, $(), backticks, &&), creating proof files with command output.",
+  "verification_method": "Script executes multiple command injection payloads via StartAction API endpoint and verifies creation of proof files (/tmp/cmd_injection_proof*.txt) containing arbitrary command output (id, whoami, /etc/passwd, etc.).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof files created with command output (id, whoami, /etc/passwd)",
+    "Multiple injection vectors confirmed (;, $(), backticks, &&)",
+    "Commands executed as OliveTin process user",
+    "Shell metacharacters not sanitized in very_dangerous_raw_string type",
+    "Direct shell execution via sh -c confirmed in logs"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones OliveTin from GitHub, creates config with very_dangerous_raw_string argument, builds and runs container",
+    "pinned_commit_or_ref": "latest",
+    "target_repo_mount_path": "/app",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

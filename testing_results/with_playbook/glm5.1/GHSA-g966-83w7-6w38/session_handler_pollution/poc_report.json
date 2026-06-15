@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "access_control_bypass",
+  "summary": "The PoC demonstrates that Tenant B can access Tenant A's session data when both tenants share a FrankenPHP worker instance, confirming the session handler pollution vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Tenant B should NOT be able to access Tenant A's session data due to tenant isolation. The PoC demonstrates that Tenant B CAN read Tenant A's session data, proving the isolation failure.",
+  "actual_observed_result": "When running the PoC, Tenant B successfully reads session data that was written by Tenant A. The custom session handler set by Tenant A is incorrectly applied to Tenant B's requests, allowing cross-tenant data access.",
+  "verification_method": "Automated verification script checks that Tenant B's session data contains values written by Tenant A, which should be impossible in a properly isolated multi-tenant environment. The test fails isolation checks, confirming the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Tenant A sets custom session handler with isolated storage path",
+    "Tenant A writes session data: user='tenant_a_user', secret='tenant_a_secret'",
+    "Tenant B starts session WITHOUT setting custom handler",
+    "Tenant B reads session data and successfully retrieves Tenant A's values",
+    "Verification confirms cross-tenant session data leakage"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/custom_session_handler.php",
+      "reproduction/tenant_a_worker.php",
+      "reproduction/tenant_b_worker.php",
+      "reproduction/demo_attack.php",
+      "reproduction/verify.php"
+    ]
+  }
+}

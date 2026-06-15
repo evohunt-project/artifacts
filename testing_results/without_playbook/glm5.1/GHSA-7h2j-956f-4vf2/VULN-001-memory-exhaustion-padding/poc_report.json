@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that crafted brace expansion patterns with extreme width values cause massive memory allocations. The vulnerability allows an attacker to create padding strings of arbitrary size, leading to memory exhaustion and denial of service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that attacker-controlled numeric sequence patterns with large width differences (e.g., {0 followed by 50000 zeros ..1}) cause excessive memory allocation, confirming the denial of service vulnerability.",
+  "actual_observed_result": "The reproduction successfully built the target environment, installed dependencies, and executed the exploit. The crafted pattern created strings with >10,000 characters, confirming the memory exhaustion vulnerability. Memory consumption scaled linearly with the attacker-controlled width parameter.",
+  "verification_method": "The exploit script measures the length of generated strings and memory consumption. Success is determined by confirming that strings with >10,000 characters are created from a single expansion, demonstrating unbounded memory allocation controlled by attacker input.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit created a pattern with width=50001 by padding the first number with 50000 leading zeros",
+    "Padding generation allocated >50KB per string iteration via new Array(need + 1).join('0')",
+    "No validation exists in the codebase to limit maximum width or padding size",
+    "The max parameter only limits expansion count, not individual string size",
+    "Memory consumption scales with attacker-controlled width parameter"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (https://github.com/isaacs/brace-expansion) on the host, checks out the vulnerable version (v5.0.0), and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v5.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

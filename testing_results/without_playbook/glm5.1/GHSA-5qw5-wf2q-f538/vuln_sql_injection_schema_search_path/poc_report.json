@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that the PostgreSQL adapter's schema_search_path= method executes SQL with unsanitized configuration values, allowing arbitrary SQL injection through malicious database.yml configuration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that SQL commands can be injected through the schema_search_path configuration parameter, causing the DROP TABLE command to execute and delete a test table.",
+  "actual_observed_result": "The reproduction successfully injected the SQL command 'DROP TABLE safe_table;' through the malicious schema_search_path parameter, and the test table was deleted, confirming arbitrary SQL execution.",
+  "verification_method": "The verify.sh script creates a test table, then attempts SQL injection to drop it. It checks whether the table still exists after the injection attempt, distinguishing successful SQL injection from normal query errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The safe_table was created before the injection attempt",
+    "After executing the SQL injection payload through schema_search_path, the table no longer exists",
+    "This confirms that arbitrary SQL commands were injected and executed in the database context",
+    "The vulnerability allows an attacker to execute any SQL command with the database user's privileges"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the existing target repository at /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/repo mounted read-only at /target-repo",
+    "pinned_commit_or_ref": "current state of repo directory (not a git repository)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

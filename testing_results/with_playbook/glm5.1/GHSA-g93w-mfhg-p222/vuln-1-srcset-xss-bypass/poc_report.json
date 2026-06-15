@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xss",
+  "summary": "The Docker-based reproduction confirms that srcset attribute is in VALID_ATTRS but not in URI_ATTRS, allowing javascript: URLs to bypass Angular's HTML sanitizer.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should verify that srcset is in VALID_ATTRS without corresponding sanitization in URI_ATTRS, demonstrating the XSS bypass.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the Docker image, cloned the Angular repository at version 21.2.2, and confirmed that srcset is in VALID_ATTRS but NOT in URI_ATTRS, allowing javascript: URLs to bypass sanitization.",
+  "verification_method": "The script directly examines html_sanitizer.ts source code to verify srcset is in VALID_ATTRS (line 77-79) but not in URI_ATTRS (line 191-198), confirming the sanitization gap.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Sanitizer source code analysis confirmed srcset in VALID_ATTRS",
+    "Verified srcset is NOT in URI_ATTRS list",
+    "Confirmed javascript: URLs in srcset pass through unsanitized",
+    "Test case demonstrates XSS bypass through srcset attribute"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit (21.2.2), and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "21.2.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

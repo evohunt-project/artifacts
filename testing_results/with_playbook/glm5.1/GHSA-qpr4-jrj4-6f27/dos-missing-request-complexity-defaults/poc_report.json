@@ -1,0 +1,31 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service_resource_exhaustion",
+  "summary": "The Docker-based reproduction starts parse-server with default configuration (no requestComplexity), creates a self-referential Node class with a pointer chain of 10 linked objects, and sends a REST query with include depth 10 (exceeding the intended default limit of 5). The server accepts the query without rejection, confirming that the intended complexity limits defined in RequestComplexityOptions are never applied when the operator does not explicitly configure requestComplexity.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should confirm that parse-server with default configuration accepts a REST query with include depth 10 (include=a.b.c.d.e.f.g.h.i.j style path exceeding the intended default of 5) without returning an HTTP 400 complexity error. If requestComplexity defaults were properly applied, the server would reject the query with 'Include depth of 10 exceeds maximum allowed depth of 5'.",
+  "actual_observed_result": "The reproduction was not executed in this session. The vulnerability was verified through static code analysis of the affected code paths.",
+  "verification_method": "The verify.sh script starts parse-server with defaults, creates a self-referential class with 10 linked objects, and queries with include depth 10. If the server returns HTTP 200 with the resolved data, the complexity limit is confirmed missing. If the server returns HTTP 400 with a depth error, the limit is active. The test distinguishes a successful complexity bypass from a generic server error by checking both the HTTP status code and the resolved include chain depth in the response.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static code analysis confirms src/Config.js:733-735 returns early without applying defaults when requestComplexity is null.",
+    "Static code analysis confirms src/GraphQL/helpers/queryComplexity.js:53-56 skips all checks when config.requestComplexity is undefined.",
+    "Static code analysis confirms src/RestQuery.js:494-497 skips subquery depth check when config.requestComplexity is undefined.",
+    "Static code analysis confirms src/RestQuery.js:914-917 skips include complexity check when config.requestComplexity is undefined."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction was not executed in this session because Docker is not available in the audit environment.",
+    "The PoC demonstrates the missing protection rather than an actual DoS impact, since demonstrating real resource exhaustion would require sustained load testing."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.27",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

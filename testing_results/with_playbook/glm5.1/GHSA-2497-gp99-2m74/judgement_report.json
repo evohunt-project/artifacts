@@ -1,0 +1,148 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T03:49:26.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-2497-gp99-2m74/GHSA-2497-gp99-2m74.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "path_traversal_file_operations",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/path_traversal_file_operations",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/path_traversal_file_operations/vulnerability_report.json",
+      "title": "Path Traversal in File Operations API",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns Panel file path parameters being forwarded to Wings file operations; the advisory concerns Wings activity log cron deletion batches exceeding SQLite's parameter limit.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "ssrf_file_pull",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/ssrf_file_pull",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/ssrf_file_pull/vulnerability_report.json",
+      "title": "Server-Side Request Forgery in File Pull Endpoint",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns arbitrary URL fetching through the Panel file pull endpoint; the advisory concerns repeated Wings activity log uploads after failed SQLite deletion.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unbounded_archive_decompression",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/unbounded_archive_decompression",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/unbounded_archive_decompression/vulnerability_report.json",
+      "title": "Unbounded Archive Decompression Enabling Zip Bomb DoS",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns archive extraction without decompression bounds; the advisory concerns activity log deletion queries exceeding SQLite's variable limit and causing log reupload loops.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unbounded_schedule_creation",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/unbounded_schedule_creation",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/unbounded_schedule_creation/vulnerability_report.json",
+      "title": "Unbounded Schedule Creation Enabling Resource Exhaustion DoS",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns missing per-server schedule quotas in Panel; the advisory concerns Wings activity log rows not being deleted when a SQLite delete exceeds the max parameter count.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described Wings activity log cron root cause: deleting more than SQLite's maximum variable count from the local activity database fails, leaving entries to be reprocessed and reuploaded indefinitely.",
+    "evidence": [
+      "The advisory names Wings activity log processing in internal/cron/activity_cron.go and internal/cron/sftp_cron.go and a SQLite 'too many SQL variables' failure above 32766 delete parameters.",
+      "The qualifying findings are about Panel file path traversal, Panel file-pull SSRF, archive decompression resource exhaustion, and unbounded Panel schedule creation.",
+      "A targeted search of the session artifacts found no qualifying finding references to activity_cron, sftp_cron, activity log batch deletion, the SQLite variable limit, or the repeated activity-log reupload mechanism."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/path_traversal_file_operations",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/path_traversal_file_operations/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/path_traversal_file_operations/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/ssrf_file_pull",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/ssrf_file_pull/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/ssrf_file_pull/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/unbounded_archive_decompression",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/unbounded_archive_decompression/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/unbounded_archive_decompression/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/unbounded_schedule_creation",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/unbounded_schedule_creation/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_7c87b5b9/unbounded_schedule_creation/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

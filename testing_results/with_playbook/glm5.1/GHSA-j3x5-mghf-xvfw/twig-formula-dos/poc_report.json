@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction replicates the Twig sandbox configuration from the target Formulas.php and demonstrates that a crafted formula using the for tag with the range function causes unbounded CPU consumption, confirming the denial-of-service vector.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A crafted Twig formula containing {% for i in range(1, N) %}{% set x = x ~ \"a\" %}{% endfor %} where N is large should cause measurable, unbounded CPU and memory consumption that scales linearly with N, demonstrating that the sandboxed evaluation environment has no resource limits.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, mounted the target repository, and executed the exploit script. The sandbox accepted the DoS formula and the benchmark showed linear time scaling across increasing range sizes. Extrapolation confirmed that range(1, 999999999) would exhaust a PHP worker for the full max_execution_time window (default 30 seconds).",
+  "verification_method": "The exploit script measures wall-clock time for formula evaluation at progressively larger range sizes (1000, 10000, 100000). It verifies that (a) the sandbox accepts the formula without error, (b) execution time scales linearly with range size, and (c) extrapolation to 999999999 iterations would exceed any practical time limit. A deterministic proof string is printed only when all three checks pass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The Twig sandbox accepted the for/range formula without raising a SecurityError or SyntaxError.",
+    "Execution time scaled linearly: small ranges completed in milliseconds while large ranges consumed seconds, confirming unbounded resource consumption.",
+    "Extrapolation to 999999999 iterations confirmed multi-second or multi-minute execution, exceeding typical PHP max_execution_time and denying service to concurrent requests."
+  ],
+  "limitations_or_blockers": [
+    "The standalone PoC replicates the Twig sandbox configuration from Formulas.php using the same Twig 3.x library rather than running the full Craft CMS + Commerce stack, because setting up a complete Craft CMS installation requires database provisioning, configuration, and licensed plugin installation."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "4.10.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

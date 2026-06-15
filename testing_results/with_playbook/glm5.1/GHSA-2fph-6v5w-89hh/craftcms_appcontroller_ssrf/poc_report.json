@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the AppController::actionResourceJs endpoint can be exploited as an unauthenticated SSRF proxy. By manipulating the Host header, the @web alias (and thus the AssetManager baseUrl) points to the attacker-chosen internal service. The ../ path traversal in the URL parameter passes the str_starts_with check, and Guzzle fetches the internal resource, returning its body to the attacker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the vulnerable Craft CMS instance to fetch content from a mock internal service (simulating e.g. AWS metadata at 127.0.0.1:8888) and return it to the attacker. The proof signal is the presence of a unique secret token (EVOHUNT_SSRF_SECRET_TOKEN) in the response, confirming the server made an outbound request to the internal service and returned the response body.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Craft CMS Docker image, started MariaDB, installed Craft CMS, launched the mock internal service on port 8888, started the PHP web server on port 8080, and sent the crafted SSRF request with Host: 127.0.0.1:8888 and url=http://127.0.0.1:8888/cpresources/../secret-data. The response contained the EVOHUNT_SSRF_SECRET_TOKEN, confirming the server fetched internal service data and returned it.",
+  "verification_method": "The exploit script sends the crafted request and checks for the exact proof string EVOHUNT_SSRF_SECRET_TOKEN in the response. This distinguishes a real SSRF (internal service data returned) from a generic error, failed check, or unrelated response. The token is unique to the mock internal service and cannot appear in the response unless the server actually fetched data from that service.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The HTTP response from the Craft CMS resource-js endpoint contained the mock internal service's secret token.",
+    "The str_starts_with prefix check was bypassed using ../ path traversal in the URL parameter.",
+    "The @web alias was derived from the attacker-supplied Host header, making the prefix check pass.",
+    "No authentication was required to reach the vulnerable endpoint."
+  ],
+  "limitations_or_blockers": [
+    "The SSRF requires the web server to forward the attacker's Host header to the PHP application. Most standard deployments (Apache, nginx with default configs) do forward the Host header, but some hardened configurations may validate it."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "5.9.12",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/internal-service.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup-craft.sh"
+    ]
+  }
+}

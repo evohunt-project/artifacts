@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that a 30KB crafted protobuf binary with 15,000 nested wire type 3 (start group) fields causes an uncontrolled recursion in Reader.skipType, resulting in RangeError: Maximum call stack size exceeded and crashing the decoder.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted protobuf payload to trigger the recursive skipType code path and produce a RangeError: Maximum call stack size exceeded, crashing the Node.js process inside the container.",
+  "actual_observed_result": "Running the exploit trigger against the protobuf.js target repository causes Type.decode() to throw RangeError: Maximum call stack size exceeded when processing the deeply nested wire type 3 groups. The proof string EVOHUNT_PROOF: stack_overflow_in_skipType_via_wire_type_3 is emitted.",
+  "verification_method": "The exploit script constructs a 30,001-byte protobuf binary with 15,000 nested start-group tags (0x13) and 15,000 end-group tags (0x14), decodes it using Type.decode(), and checks whether the caught error is a RangeError (stack overflow). The script distinguishes the stack overflow from normal parsing errors and exits with code 0 only when the proof signal is confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit script throws RangeError: Maximum call stack size exceeded when decoding the crafted protobuf binary.",
+    "The error is caught and the proof string EVOHUNT_PROOF: stack_overflow_in_skipType_via_wire_type_3 is emitted to stdout.",
+    "The verification confirms the error originates from the recursive skipType(wireType) code path in src/reader.js:371-374."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v8.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

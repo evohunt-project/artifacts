@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that guarddog's safe_extract function writes files outside the intended extraction directory when processing a crafted ZIP archive containing '../' in member filenames. Using Python 3.10.12 (before the stdlib zipfile path sanitization), the proof file appears at /tmp/evohunt_zip_slip_proof.txt instead of inside the extraction target directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause safe_extract to write a proof file outside the extraction target directory, demonstrating arbitrary file write via ZIP path traversal.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the guarddog repository, built a Docker image with Python 3.10.12, created a crafted ZIP archive containing a member named ../../../tmp/evohunt_zip_slip_proof.txt, and invoked safe_extract. The proof file was written to /tmp/evohunt_zip_slip_proof.txt outside the temporary extraction directory, confirming the path traversal.",
+  "verification_method": "The exploit script checks that /tmp/evohunt_zip_slip_proof.txt exists and contains the expected proof string after safe_extract returns. This distinguishes a real path traversal from a normal extraction within the target directory. The script also verifies that the file is NOT located inside the extraction target directory.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/evohunt_zip_slip_proof.txt was created outside the extraction target directory.",
+    "The proof file contains the expected marker string EVOHUNT_ZIP_SLIP_POC.",
+    "The normal_package/setup.py member was correctly extracted inside the target directory, showing that only the traversing member escaped."
+  ],
+  "limitations_or_blockers": [
+    "The path traversal triggers only on Python versions where zipfile.extract() does not sanitize '../' in member names (Python < 3.10.14, < 3.11.8, < 3.12.2). The reproduction uses Python 3.10.12 to guarantee the vulnerability manifests."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "846b4c4a4b4cb2861f44b3d0f50ba7ccbf8c7a3d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

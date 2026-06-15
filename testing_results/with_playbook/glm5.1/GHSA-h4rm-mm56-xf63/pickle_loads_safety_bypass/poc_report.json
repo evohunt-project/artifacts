@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that a crafted pickle file importing pickle.loads and calling it with a nested malicious payload passes fickling's static analysis with severity LIKELY_SAFE, and fickling.load() subsequently executes the nested payload, creating a proof file that demonstrates arbitrary code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted pickle to pass fickling's check_safety() with severity LIKELY_SAFE, and then fickling.load() should execute the nested malicious payload, creating the proof file /tmp/evohunt_proof inside the container.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the fickling repository, built the Docker image, and ran the exploit. The safety check reported LIKELY_SAFE (confirming the bypass), and fickling.load() created the proof file /tmp/evohunt_proof, confirming arbitrary code execution via nested pickle deserialization.",
+  "verification_method": "The exploit script verifies the bypass in two steps: (1) check_safety() is called directly on the crafted pickle and asserts the severity is LIKELY_SAFE, confirming the static analysis is bypassed. (2) fickling.load() is called on the same pickle and the script checks for the existence of /tmp/evohunt_proof, which is created by the nested os.system('touch /tmp/evohunt_proof') payload. The proof file distinguishes actual code execution from a false positive or startup artifact.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "check_safety() reported Severity.LIKELY_SAFE for the crafted pickle, confirming the static analysis bypass.",
+    "fickling.load() created /tmp/evohunt_proof, confirming arbitrary code execution through nested deserialization.",
+    "The proof file was created by os.system() inside the nested pickle payload, not by the outer pickle or the test harness."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref v0.1.6, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

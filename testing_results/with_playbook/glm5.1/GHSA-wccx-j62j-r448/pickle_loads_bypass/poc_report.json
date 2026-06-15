@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "protection_mechanism_failure",
+  "summary": "The Docker-based reproduction confirms that pickle.loads() and _pickle.loads() bypass fickling.always_check_safety() entirely, executing a malicious payload (os.system) without any safety analysis, while pickle.load() on the same data is correctly blocked.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that pickle.loads() executes attacker-controlled code (os.system) after always_check_safety() is activated, while pickle.load() on the same data raises UnsafeFileError. The proof string PWNED_BY_PICKLE_LOADS_BYPASS should appear in the output, confirming arbitrary code execution via the unhooked API.",
+  "actual_observed_result": "Running the exploit showed that pickle.loads() executed os.system('echo PWNED_BY_PICKLE_LOADS_BYPASS') without raising any safety exception, while pickle.load(io.BytesIO(same_data)) correctly raised UnsafeFileError. _pickle.loads() also executed the payload without any safety check. The proof string was emitted, confirming the bypass.",
+  "verification_method": "The verify.sh script runs exploit.py and checks for two conditions: (1) the string 'VULNERABILITY CONFIRMED' in the exploit output, and (2) the proof string 'PWNED_BY_PICKLE_LOADS_BYPASS' in the output. The proof string is emitted by os.system() called via the malicious pickle payload through pickle.loads(), proving arbitrary code execution. The verification distinguishes a real bypass from a false positive by also confirming that pickle.load() is correctly blocked on the same data.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "pickle.loads() returned exit code 0 (os.system executed successfully) without raising UnsafeFileError.",
+    "pickle.load() raised UnsafeFileError on the same malicious data, confirming the hook works for load() but not loads().",
+    "_pickle.loads() also executed the payload, confirming the C extension path is also unhooked.",
+    "The proof string PWNED_BY_PICKLE_LOADS_BYPASS was emitted by the malicious payload executed through pickle.loads()."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref (v0.1.8), and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

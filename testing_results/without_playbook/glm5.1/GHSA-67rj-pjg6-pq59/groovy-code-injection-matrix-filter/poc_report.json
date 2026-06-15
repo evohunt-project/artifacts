@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that a malicious .jervis.yml with a crafted matrix include value containing a single-quote breakout causes GroovyShell.evaluate() to execute arbitrary Groovy code inside the target container, writing a proof file as evidence of code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted matrix filter value to break out of the Groovy string literal in the generated expression and execute arbitrary code via GroovyShell.evaluate(), creating a proof file at /tmp/evohunt_proof containing the expected marker string.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Jervis library, loaded a malicious .jervis.yml with injected matrix values, confirmed that matrixExcludeFilter() returns an expression containing injected Groovy code, evaluated the expression via GroovyShell.evaluate(), and the injected code created the proof file with the expected marker.",
+  "verification_method": "The verify.sh script checks for the existence and content of /tmp/evohunt_proof after the exploit runs. The proof file must contain the exact marker string EVOHUNT_CODE_EXECUTION_CONFIRMED, which distinguishes successful code injection from a generic parser error, library misconfiguration, or startup failure. The Groovy assertion in exploit.groovy also validates that the generated expression string contains the injected code before evaluation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "matrixExcludeFilter() returns a Groovy expression string containing the injected new File('/tmp/evohunt_proof') code.",
+    "GroovyShell.evaluate() executes the injected expression, creating the proof file.",
+    "The proof file /tmp/evohunt_proof contains the exact marker EVOHUNT_CODE_EXECUTION_CONFIRMED.",
+    "The assertion in exploit.groovy confirms the injected code is present in the generated expression before evaluation."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.groovy",
+      "reproduction/verify.sh"
+    ]
+  }
+}

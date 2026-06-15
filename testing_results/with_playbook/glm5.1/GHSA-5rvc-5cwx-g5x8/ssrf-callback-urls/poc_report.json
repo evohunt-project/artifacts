@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the DeregCallbackUri parameter is used without URL validation, allowing UDM to make HTTP requests to internal services.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause UDM to send an HTTP POST request to the attacker-controlled callback URL, demonstrating SSRF to internal network services.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started UDM and internal mock service, registered AMF with DeregCallbackUri=http://internal-service:8080/internal, and the internal service received POST request from UDM.",
+  "verification_method": "The verify.sh script checks the internal service logs for the POST request received from UDM, confirming SSRF attack success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Internal mock service started and listening on port 8080",
+    "AMF registration with malicious DeregCallbackUri succeeded",
+    "Internal service logs show POST /internal from UDM container",
+    "SSRF attack confirmed: UDM sent request to internal-only service"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the free5gc/udm repository from GitHub, checks out v3.2.10 tag, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v3.2.10",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/internal_service.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/udmcfg.yaml"
+    ]
+  }
+}

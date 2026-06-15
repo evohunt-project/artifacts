@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "configuration_injection",
+  "summary": "The Docker-based reproduction builds Traefik v1.7.25 from source, starts it with the REST provider enabled on port 8080, and sends an unauthenticated PUT request with a crafted JSON configuration. The server accepts the injection and confirms the new routing rules are active via the API.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The server should accept the injected configuration via an unauthenticated PUT request and return HTTP 200, confirming that arbitrary routing rules were applied. A subsequent GET to the API should show the injected frontend/backend in the active configuration.",
+  "actual_observed_result": "The PUT request to /api/providers/rest returned HTTP 200, and the subsequent GET to /api/providers confirmed that the injected evil-frontend and evil-backend were present in the active routing configuration.",
+  "verification_method": "The verify script checks three conditions: (1) the PUT request returns HTTP 200, confirming the configuration was accepted; (2) a subsequent GET to the API returns the injected frontend name, confirming the configuration is active; (3) the verification distinguishes a successful injection from a connection error, authentication failure, or API unavailability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 200 response from the PUT request confirming the REST API accepted the injected configuration without authentication.",
+    "GET /api/providers response containing the injected evil-frontend, confirming the configuration is active in the routing table.",
+    "Traefik startup logs confirming the REST provider is registered and listening on the traefik entrypoint."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.7.25",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/inject_config.json"
+    ]
+  }
+}

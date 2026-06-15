@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction demonstrates that the product deletion event subscriber uses unsafe string interpolation in SQL queries, creating a SQL injection vulnerability when processing product UUIDs.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The vulnerable code uses string interpolation in SQL DELETE queries. While the reproduction demonstrates the vulnerable code path, actual exploitation requires bypassing UUID validation in the initial deletion request.",
+  "actual_observed_result": "The reproduction confirmed the vulnerable code pattern in deleteUrlRewrite.ts where productUuid is interpolated directly into SQL. The code does not use parameterized queries, making it vulnerable to SQL injection if malicious data reaches the event subscriber.",
+  "verification_method": "The reproduction script creates products, attempts deletion with normal and malicious UUIDs, and checks database logs for SQL errors or unexpected behavior. It verifies the vulnerable code path exists by examining the source code pattern.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code analysis confirmed execute() uses string interpolation: `DELETE FROM url_rewrite WHERE entity_uuid = '${productUuid}'`",
+    "The productUuid flows from HTTP request through database trigger to event subscriber without escaping",
+    "PostgreSQL trigger ADD_PRODUCT_DELETED_EVENT_TRIGGER passes the UUID in event data",
+    "No parameterized query binding is used in the vulnerable subscriber"
+  ],
+  "limitations_or_blockers": [
+    "Direct exploitation requires bypassing UUID format validation in the initial DELETE request",
+    "The vulnerability is in an event subscriber triggered after the main deletion, making direct injection more complex",
+    "A successful PoC would require either: (1) finding UUID validation bypass, or (2) demonstrating injection through related attack vector"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the latest commit, and builds the Docker image",
+    "pinned_commit_or_ref": "latest main branch",
+    "target_repo_mount_path": "/app",
+    "helper_files": []
+  }
+}

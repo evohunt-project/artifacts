@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that sending a single gRPC Read request with comparison_type=99 to an unauthenticated Oxia server causes a panic at kv_pebble.go:508 that terminates the entire server process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The Oxia server process should crash (panic) immediately upon receiving a Read request with comparison_type=99. The verification script confirms the server PID is no longer alive after the exploit.",
+  "actual_observed_result": "Running the reproduction built the Oxia server from source, started it in standalone mode, sent a Read request with comparison_type=99, and observed the panic output: 'panic: Unknown comparison type: 99' at kv_pebble.go:508. The server process terminated and the verification confirmed the PID was no longer alive.",
+  "verification_method": "The verify.sh script starts the Oxia standalone server in the background, sends the malicious Read request via a Go gRPC client, waits for the process to exit, and checks that the server PID is no longer alive using kill -0. A successful reproduction is signaled by the server process being dead after the exploit.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server panic output: 'panic: Unknown comparison type: 99' at github.com/oxia-db/oxia/oxiad/dataserver/database/kvstore/kv_pebble.go:508",
+    "Stack trace confirms the call chain: Pebble.Get -> applyGet (db.go:799) -> db.Get (db.go:384) -> leaderController.Read.func1 (leader_controller.go:786) -> process.DoWithLabels (pprof.go:46)",
+    "Client-side error: 'rpc error: code = Unavailable desc = error reading from server: EOF' confirming the server crashed mid-RPC",
+    "Server process confirmed dead (kill -0 returned false)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit/main.go",
+      "reproduction/exploit/go.mod"
+    ]
+  }
+}

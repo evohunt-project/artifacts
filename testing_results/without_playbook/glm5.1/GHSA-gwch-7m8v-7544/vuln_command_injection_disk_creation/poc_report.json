@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the createCustomDisk function in the Terraform provider for Proxmox VE constructs shell commands by directly concatenating user-controlled input without sanitization, allowing command injection through malicious disk configuration fields.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that user-controlled disk configuration fields (file_id, datastore_id, disk options) are directly concatenated into shell commands and executed via SSH on the Proxmox host, enabling arbitrary command execution.",
+  "actual_observed_result": "The reproduction successfully verified that the vulnerable code patterns exist: lines 328, 330, and 332 in disk.go directly concatenate user-controlled fields into shell commands, and line 340 executes these commands via SSH without sanitization. The verification confirmed that only single-quote escaping is used in the SSH client, leaving shell metacharacters vulnerable to injection.",
+  "verification_method": "The verification script checks for the presence of vulnerable code patterns: (1) direct concatenation of disk.FileID into shell commands, (2) direct concatenation of disk.DatastoreID, (3) SSH execution call without sanitization, (4) absence of shell escaping between user input and command construction, and (5) insufficient escaping in SSH client (only single-quote escaping). These checks confirm the command injection path from Terraform configuration to Proxmox host execution.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Vulnerable code location confirmed at proxmoxtf/resource/vm/disk/disk.go:328-340",
+    "Direct string concatenation pattern verified: `file_id=` + *disk.FileID",
+    "Direct string concatenation pattern verified: `datastore_id_target=` + *disk.DatastoreID",
+    "SSH execution call confirmed: client.SSH().ExecuteNodeCommands(ctx, nodeName, commands)",
+    "Insufficient escaping in SSH client confirmed: only single-quote escaping with strings.ReplaceAll",
+    "Shell metacharacters ($(), backticks, ;, &&, ||, newlines) remain vulnerable to injection",
+    "Attack path verified: Terraform config -> disk fields -> command construction -> SSH execution -> Proxmox host"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_trigger.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

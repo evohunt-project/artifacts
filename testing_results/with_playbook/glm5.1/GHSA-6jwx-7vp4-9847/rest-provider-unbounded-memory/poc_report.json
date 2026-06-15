@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_memory_exhaustion",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can send an arbitrarily large PUT request body to the REST provider endpoint. Traefik reads the entire body into memory via ioutil.ReadAll without any size limit, causing the process to be OOM-killed or become unresponsive.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause Traefik's RSS memory to grow by the size of the payload (e.g., 80MB payload → ~80MB RSS growth) and the process to be killed by the OOM killer in a memory-limited container, denying service to all proxied backends.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched Traefik v1.7.34 with the REST provider enabled, confirmed the API was accessible (GET /api returned 200), then streamed an 80MB PUT request body to /api/providers/rest. Traefik's RSS memory grew from ~57MB to ~134MB as ioutil.ReadAll buffered the entire payload, and the process was killed by the OOM killer in the 96MB-limited container. On a subsequent run, the RSS was confirmed at 134MB (consuming the full 80MB payload) with the json.Unmarshal error message confirming the payload traversed the full code path through ioutil.ReadAll before reaching JSON parsing.",
+  "verification_method": "The verify.sh script monitors Traefik's /proc/{pid}/status VmRSS during payload delivery. A growth exceeding 80MB confirms that ioutil.ReadAll buffered the entire payload. Process termination (PID no longer alive) combined with the memory growth confirms OOM kill. The json.Unmarshal error in Traefik logs confirms the payload reached the vulnerable code path at provider/rest/rest.go:47-48.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Pre-exploit GET /api returned HTTP 200, confirming the REST provider endpoint is accessible without authentication.",
+    "Traefik RSS grew from ~57MB (idle) to ~134MB after the 80MB payload was delivered, confirming ioutil.ReadAll buffered the entire request body in memory.",
+    "Traefik log message 'Error parsing configuration invalid character \\x00 looking for beginning of value' confirms the payload reached json.Unmarshal at provider/rest/rest.go:48 after being fully read by ioutil.ReadAll at line 47.",
+    "Process was killed by OOM killer in the 96MB memory-limited container, confirming that unbounded memory consumption from the REST provider endpoint crashes the reverse proxy."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.7.34",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/traefik.toml"
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T09:02:38.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_76b786cf",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-vxx9-2994-q338/GHSA-vxx9-2994-q338.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "window_update_syn_credit_overflow",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_76b786cf/window_update_syn_credit_overflow",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_76b786cf/window_update_syn_credit_overflow/vulnerability_report.json",
+      "title": "Integer overflow in WindowUpdate SYN credit calculation allows remote denial of service",
+      "vulnerability_type": "integer_overflow_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes integer overflow in WindowUpdate SYN credit calculation at connection.rs:730 (`credit + DEFAULT_CREDIT` u32 overflow). The advisory describes a different vulnerability: a Data frame with SYN and oversized body (len > DEFAULT_CREDIT) that triggers `remove().expect(\"stream not found\")` panic. Different frame type (WindowUpdate vs Data), different code path (credit arithmetic vs body-size validation and stream cleanup), and different root cause (integer overflow vs reachable assertion on stream-not-found).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding matches the advisory-described vulnerability. The advisory describes a panic in the Rust yamux crate triggered by a malformed Data frame with SYN flag and oversized body (len > DEFAULT_CREDIT), where stream state is created before validation and cleanup calls remove().expect() on a missing stream. Finding window_update_syn_credit_overflow describes a different vulnerability in the same crate: integer overflow in WindowUpdate SYN credit calculation (different frame type, different code path, different root cause).",
+    "evidence": [
+      "Advisory root cause: Data|SYN frame with len > DEFAULT_CREDIT triggers remove().expect(\"stream not found\") panic during stream cleanup after oversized-body validation failure.",
+      "window_update_syn_credit_overflow root cause: WindowUpdate|SYN frame with credit near u32::MAX triggers integer overflow in credit + DEFAULT_CREDIT arithmetic at connection.rs:730.",
+      "Different frame types: advisory uses Data (tag=0), finding uses WindowUpdate (tag=1).",
+      "Different panic triggers: advisory uses reachable assertion (CWE-617), finding uses arithmetic overflow (CWE-190)."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_76b786cf/window_update_syn_credit_overflow",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_76b786cf/window_update_syn_credit_overflow/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_76b786cf/window_update_syn_credit_overflow/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

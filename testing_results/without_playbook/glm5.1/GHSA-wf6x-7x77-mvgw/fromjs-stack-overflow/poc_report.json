@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The PoC demonstrates that fromJS() crashes with a stack overflow error when processing a deeply nested object with 50,000 levels of nesting.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a 50,000-level deep nested object, attempt to convert it with fromJS(), and trigger a 'Maximum call stack size exceeded' error.",
+  "actual_observed_result": "The PoC created a deeply nested object with 50,000 levels and attempted fromJS conversion. The operation threw a 'Maximum call stack size exceeded' error, demonstrating the denial of service vulnerability.",
+  "verification_method": "The PoC script catches exceptions from fromJS() and checks if the error message contains 'Maximum call stack' or 'stack', indicating a stack overflow crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console output shows '[VULNERABLE] Stack overflow triggered!'",
+    "Error message: 'Maximum call stack size exceeded'",
+    "The application crashed when processing the deeply nested input",
+    "fromJS is vulnerable to DoS via deeply nested objects"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v5.1.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test-fromjs.js"
+    ]
+  }
+}

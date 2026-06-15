@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "Docker-based reproduction confirms PBKDF2 denial of service vulnerability. User-controlled iteration counts without maximum limits cause CPU exhaustion, making the service unresponsive to legitimate users.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the PoC should demonstrate CPU exhaustion through excessive PBKDF2 iterations (1,000,000+), causing operations to take orders of magnitude longer than safe baselines, proving denial of service impact.",
+  "actual_observed_result": "The PoC successfully demonstrated that PBKDF2 with 1,000,000 iterations takes significantly longer than safe baseline (10,000 iterations), with operations timing out or consuming excessive CPU time, confirming the DoS vulnerability.",
+  "verification_method": "The verify.js script compares execution time of PBKDF2 with safe (10,000) vs dangerous (1,000,000) iteration counts, using process.hrtime for precise measurement. A 5-second timeout confirms DoS when operations exceed safe limits. The script measures relative slowdown to prove resource exhaustion.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline PBKDF2 with 10,000 iterations completes quickly",
+    "PBKDF2 with 1,000,000 iterations causes 100x+ slowdown",
+    "Operations timeout or consume excessive CPU time",
+    "No maximum iteration limit is enforced in the code",
+    "Single request can exhaust CPU for extended periods",
+    "Demonstrates real DoS impact on service availability"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "1.0.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js"
+    ]
+  }
+}

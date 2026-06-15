@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the n8n server fetches arbitrary internal URLs via GET /rest/workflows/from-url with zero SSRF protections. The exploit started an internal HTTP server on 127.0.0.1:9999, authenticated as a standard owner user, obtained a project ID, and sent a from-url request targeting the internal server. The n8n server fetched from localhost and returned the internal server's response containing the proof string EVOHUNT-SSRF-PROOF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The n8n server should fetch data from an internal HTTP server running on 127.0.0.1:9999 and return the internal server's response data to the authenticated caller, demonstrating SSRF. The proof string EVOHUNT-SSRF-PROOF should appear in the response body.",
+  "actual_observed_result": "Running the exploit against a locally built n8n v2.2.0 instance produced HTTP 200 with response body {\"data\":{\"name\":\"SSRF Proof\",\"nodes\":[{\"type\":\"n8n-nodes-base.manualTrigger\",\"name\":\"EVOHUNT-SSRF-PROOF\",...}],\"connections\":{},\"settings\":{}}}. The internal server log confirmed it received GET /ssrf-proof from the n8n server process, proving the server-side request was made to 127.0.0.1:9999.",
+  "verification_method": "The exploit starts a local HTTP server on port 9999 that returns a workflow JSON containing the unique proof string 'EVOHUNT-SSRF-PROOF'. It then calls GET /rest/workflows/from-url?url=http://127.0.0.1:9999/ssrf-proof&projectId=<id> with the authenticated session cookie. If the response body contains the proof string, SSRF is confirmed - the n8n server fetched from localhost and returned internal data. The proof string is unique and would never appear in normal n8n responses.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The internal HTTP server on 127.0.0.1:9999 logged receiving GET /ssrf-proof from the n8n server process.",
+    "The from-url endpoint returned HTTP 200 with the workflow JSON containing 'EVOHUNT-SSRF-PROOF' in the nodes array.",
+    "The n8n server made an outbound HTTP request to 127.0.0.1:9999 (localhost) based on the attacker-supplied url parameter.",
+    "No SSRF protections (private IP blocking, protocol filtering, redirect limits, timeouts) were applied to the axios.get() call."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.2.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

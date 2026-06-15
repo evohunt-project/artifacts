@@ -1,0 +1,30 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The migration endpoint was identified as allowing unauthenticated access with CSRF protection disabled through code analysis. Docker-based reproduction was not completed due to base image download timeout, but the vulnerability is confirmed by direct inspection of the source code.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated POST to /actions/app/migrate should be accepted and processed, potentially enabling maintenance mode, triggering database backups, or running pending migrations.",
+  "actual_observed_result": "Docker build did not complete within the session time limit due to network-layer image pull timeouts. Code analysis confirms the vulnerability: AppController.php line 66 allows anonymous access to the migrate action, and lines 92-94 disable CSRF validation.",
+  "verification_method": "The reproduction bundle verifies the vulnerability by: (1) setting up Craft CMS in Docker, (2) sending an unauthenticated POST to /actions/app/migrate, and (3) checking the response for confirmation that the migration controller was reached without authentication.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Source code confirms 'migrate' is in $allowAnonymous with ALLOW_ANONYMOUS_LIVE | ALLOW_ANONYMOUS_OFFLINE (AppController.php:66).",
+    "Source code confirms CSRF is disabled: if ($action->id === 'migrate') { $this->enableCsrfValidation = false; } (AppController.php:92-94).",
+    "Source code confirms the action enables maintenance mode (line 301) and can trigger DB backups (line 307).",
+    "Docker build timed out during base image pull; reproduction was not executed."
+  ],
+  "limitations_or_blockers": [
+    "Docker base image pull (php:8.2-cli, composer:2) did not complete within the session timeout due to network speed constraints."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5.x",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

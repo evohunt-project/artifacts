@@ -1,0 +1,89 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d8d9ce36",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-2599-h6xx-hpxp/GHSA-2599-h6xx-hpxp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "shell_injection_windows",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d8d9ce36/shell_injection_windows",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d8d9ce36/shell_injection_windows/vulnerability_report.json",
+      "title": "Command injection via shell=True in poetry run on Windows",
+      "vulnerability_type": "command_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding describes command injection via shell=True in base_env.py:457-467 on Windows. The advisory describes path traversal in wheel_installer.py:47,59 where untrusted wheel entry paths are joined without containment. Same package (Poetry) but different vulnerability class (command injection vs path traversal), different vulnerable code (base_env.py vs wheel_installer.py), and different root cause (shell=True enabling metacharacter interpretation vs missing path containment in wheel destination construction).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "tarfile_path_traversal",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d8d9ce36/tarfile_path_traversal",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d8d9ce36/tarfile_path_traversal/vulnerability_report.json",
+      "title": "Arbitrary file write via path traversal in tarfile/zipfile extraction during package installation",
+      "vulnerability_type": "path_traversal_file_write",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding identifies path traversal in helpers.py:410-426 extractall() function used during sdist/package preparation (chef.py:104, info.py:322). The advisory identifies path traversal in wheel_installer.py:47,59 WheelDestination class used during wheel installation via executor.py:607. While both are path traversal vulnerabilities in Poetry (CWE-22), the vulnerable code, root cause, and source-to-sink paths are different: extractall() in helpers.py lacks archive member path validation, while WheelDestination in wheel_installer.py constructs destination paths by joining untrusted wheel entry names without resolve()+is_relative_to() containment. The finding's PoC exercises the extractall helper, not the WheelDestination class.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code/root cause. The advisory describes path traversal in Poetry's wheel_installer.py WheelDestination class (lines 47 and 59), where untrusted wheel entry paths are joined to build destination paths without resolve()+is_relative_to() containment, reachable via executor.py:607. The tarfile_path_traversal finding covers a different path traversal in helpers.py extractall() (lines 410-426) used during sdist preparation via chef.py and info.py. These are distinct vulnerable code paths with different root causes. The shell_injection_windows finding is a command injection vulnerability in a different code component (base_env.py shell=True).",
+    "evidence": [
+      "Advisory specifies vulnerable code at src/poetry/installation/wheel_installer.py:47 and :59 (WheelDestination class)",
+      "Advisory specifies reachability via src/poetry/installation/executor.py:607",
+      "Advisory PoC uses WheelDestination to install a crafted wheel with ../../pwned.txt entry",
+      "tarfile_path_traversal finding identifies src/poetry/utils/helpers.py:410-426 (extractall function) as vulnerable code",
+      "tarfile_path_traversal PoC exercises helpers.py extractall() with a malicious tarball, not wheel_installer.py WheelDestination",
+      "shell_injection_windows finding identifies src/poetry/utils/env/base_env.py:457-467 (shell=True on Windows) as vulnerable code"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d8d9ce36/shell_injection_windows",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d8d9ce36/shell_injection_windows/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d8d9ce36/shell_injection_windows/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d8d9ce36/tarfile_path_traversal",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d8d9ce36/tarfile_path_traversal/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d8d9ce36/tarfile_path_traversal/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

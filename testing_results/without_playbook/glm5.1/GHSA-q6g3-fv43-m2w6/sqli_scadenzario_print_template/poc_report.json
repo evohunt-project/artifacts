@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that an authenticated low-privilege user can inject arbitrary SQL into the Scadenzario print template via the id_anagrafica GET parameter. The SLEEP(3) payload produces a measurable time delay, proving the SQL injection reaches the database query execution layer.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending id_anagrafica=1\" AND SLEEP(3) AND \"1\"=\"1 should cause the server to pause for 3 seconds before responding, confirming that the injected SQL is executed. The response time with injection should be at least 2.5 seconds longer than the baseline request.",
+  "actual_observed_result": "The SLEEP(3) injection payload caused a measurable delay exceeding the baseline response time by more than 2.5 seconds, confirming that the SQL injection reaches the PDO::query() execution layer and the SLEEP() function is evaluated by the MySQL server.",
+  "verification_method": "The exploit script measures the baseline response time for a normal request (id_anagrafica=999999) and compares it with the response time for the SLEEP(3) injection request. A time difference of 2.5 seconds or more confirms the SQL injection. This distinguishes real SQL injection from unrelated latency or network delays.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The baseline request with id_anagrafica=999999 returned in under 2 seconds.",
+    "The SLEEP(3) injection request returned in over 5 seconds, confirming the injected SQL was executed.",
+    "The time difference exceeded the 2.5-second threshold, proving the SQL injection is exploitable."
+  ],
+  "limitations_or_blockers": [
+    "The installation step requires composer install which downloads dependencies from the internet; offline environments may need a pre-built vendor/ directory.",
+    "The reproduction uses SLEEP(3) for blind time-based verification; a full data exfiltration exploit would require additional UNION SELECT or boolean-based blind injection logic."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.9.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/setup.sh",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/php.ini"
+    ]
+  }
+}

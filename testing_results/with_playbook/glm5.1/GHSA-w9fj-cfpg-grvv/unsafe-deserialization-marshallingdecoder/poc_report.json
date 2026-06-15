@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that a crafted Serializable object sent over TCP to a Netty server with MarshallingDecoder in its pipeline triggers readObject() on the attacker-controlled payload, executing arbitrary commands inside the container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted serialized payload to reach the MarshallingDecoder.readObject() sink and execute an attacker-controlled command that writes a proof string to /tmp/evohunt-proof inside the container.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, started a Netty server with MarshallingDecoder, sent a crafted EvilPayload serialized object, and the proof file /tmp/evohunt-proof was created containing EVOHUNT_DESERIALIZATION_RCE_PROOF, confirming arbitrary code execution via readObject().",
+  "verification_method": "The verify.sh script starts the server, sends the exploit payload, then checks for the exact proof string EVOHUNT_DESERIALIZATION_RCE_PROOF in /tmp/evohunt-proof. This distinguishes successful deserialization-triggered code execution from a connection error, startup failure, or unrelated process.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show the server deserialized an object of type EvilPayload, confirming readObject() was reached through the MarshallingDecoder pipeline.",
+    "The proof file /tmp/evohunt-proof exists and contains the expected string EVOHUNT_DESERIALIZATION_RCE_PROOF.",
+    "The server remained operational long enough to process the payload, ruling out a startup crash."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "netty-4.1.111.Final",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/ExploitServer.java",
+      "reproduction/ExploitClient.java",
+      "reproduction/EvilPayload.java"
+    ]
+  }
+}

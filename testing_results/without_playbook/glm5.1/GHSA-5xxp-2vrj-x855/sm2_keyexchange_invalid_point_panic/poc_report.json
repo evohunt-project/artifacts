@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that the SM2 key exchange implementation panics when given a peer public key with coordinates not on the SM2 P-256 curve. The exploit creates a key exchange with a malicious public key (X=1, Y=2) and triggers the mqv() computation, which calls sm2Curve.Add() and panics with 'sm2/elliptic: Add was called on an invalid point'.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The SM2 key exchange should panic with an unrecoverable error when mqv() passes an invalid peer public key to sm2Curve.Add(), crashing the process and demonstrating denial of service.",
+  "actual_observed_result": "Running the reproduction built and launched a Docker container against the target repo. The exploit program created an SM2 key exchange with a malicious peer public key (X=1, Y=2, Curve=sm2.P256()), generated an ephemeral key, and called ConfirmResponder. The mqv() function panicked with 'sm2/elliptic: Add was called on an invalid point', confirming the vulnerability.",
+  "verification_method": "The exploit program uses a defer/recover block to catch the panic. If the panic message contains 'Add was called on an invalid point', the program prints 'PANIC CONFIRMED' and 'SUCCESS' and exits with code 0. If no panic occurs, it prints 'FAIL' and exits with code 1. The verify.sh script passes through the exit code, so the overall reproduction succeeds only when the expected panic occurs.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output: '[evohunt] creating key exchange with malicious peer public key (X=1, Y=2)'",
+    "Container output: '[evohunt] key exchange created successfully (no validation of peer key)'",
+    "Container output: '[evohunt] PANIC CONFIRMED: sm2/elliptic: Add was called on an invalid point'",
+    "Container output: '[evohunt] SUCCESS: the invalid peer public key caused an unrecoverable panic in sm2Curve.Add()'",
+    "Container exit code: 0 (verification passed)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

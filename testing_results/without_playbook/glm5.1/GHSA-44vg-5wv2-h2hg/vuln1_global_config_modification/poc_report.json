@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sandbox_escape_rce",
+  "summary": "The Docker-based reproduction confirms that modifying global security configuration allows complete sandbox escape and arbitrary code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should clear DISALLOW_FUNCTIONS, create a SimpleEval instance with eval in functions dict, and execute arbitrary code that writes to /tmp/pwned file.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the Docker image, cloned the target repository, executed the proof-of-concept script, and created /tmp/pwned file with 'hacked' content, confirming arbitrary code execution.",
+  "verification_method": "The run script executes the exploit and checks for the existence of /tmp/pwned file with expected content. The check distinguishes successful exploitation from a mere Python error or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show DISALLOW_FUNCTIONS being cleared successfully",
+    "Container logs show eval function being added to functions dict",
+    "Container logs show arbitrary code execution creating /tmp/pwned",
+    "File /tmp/pwned exists with content 'hacked'",
+    "No exceptions or errors occurred during exploitation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "path_traversal",
+  "summary": "The PoC demonstrates that a subscriberIdentifier containing path traversal sequences (e.g., imsi-../../victim/pwned) bypasses the imsi- prefix check and causes the CHF to write a CDR file to an arbitrary filesystem location outside /tmp/.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A CDR file should be written to /victim/pwned.cdr (outside the intended /tmp/ directory), demonstrating that the path traversal in the subscriberIdentifier allows arbitrary file writes on the filesystem.",
+  "actual_observed_result": "Not yet executed. The reproduction bundle is prepared and self-contained for future rerun.",
+  "verification_method": "The verify.sh helper creates a /victim directory before triggering the exploit. After sending the charging request with subscriberIdentifier=\"imsi-../../victim/pwned\", it checks whether /victim/pwned.cdr exists on the filesystem. File existence confirms the path traversal; absence means the exploit did not trigger or the path resolution behaved differently.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The CHF requires Go toolchain and MongoDB to build and run.",
+    "The ChargingDataCreate function must reach the dumpCdrFile call for the path traversal to trigger. If OpenCDR or UpdateCDR fail before reaching dumpCdrFile, the file will not be written.",
+    "For oneTimeEvent=true, CloseCDR is called before dumpCdrFile, and the flow should reach the write. For oneTimeEvent=false, dumpCdrFile is not called in the create path but is called in the update/release path."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh",
+      "reproduction/chfcfg_test.yaml"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that backtick-delimited commands in configuration files are executed during config parsing, allowing arbitrary command injection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The malicious configuration containing a backtick-wrapped command should execute during config parsing, creating a proof file that demonstrates arbitrary command execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built the Docker image, executed the config parser with a malicious configuration containing backtick commands, and created the proof file with the expected marker, confirming that the command was executed during configuration parsing.",
+  "verification_method": "The verify script creates a configuration file with a backtick command that writes a unique marker to a file. After config parsing, it checks for the existence and content of the proof file. The presence of the marker confirms command execution occurred during the vulnerable config.get_value() call.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Configuration file with backtick command injection was successfully created",
+    "The config.get_value() method processed the backtick-delimited command",
+    "The proof file was created at /tmp/evohunt_poc_proof.txt",
+    "The unique marker was found in the proof file, confirming command execution",
+    "This demonstrates that any user with write access to glances.conf can execute arbitrary commands"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh mounts the target repository from /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/repo as read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "current state of /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_4c338aa8/repo",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that the unauthenticated /api/login endpoint processes every request with expensive bcrypt password verification (~78ms CPU per request) without any rate limiting or account lockout, enabling CPU exhaustion through concurrent login attempts.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending 50 concurrent login requests should cause measurable CPU saturation and response time degradation, while sequential brute-force attempts should be accepted without any lockout or rate limiting.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the File Browser image, started the server, and demonstrated: (1) baseline login latency of 78ms per bcrypt comparison, (2) 6x latency degradation (474ms) when sending 50 concurrent login requests, and (3) 20/20 sequential brute-force attempts processed with no lockout or rate limiting enforced.",
+  "verification_method": "The verify.sh script measures baseline single-request latency, then sends 50 concurrent login requests and measures probe latency during the attack window. It then sends 20 sequential brute-force attempts and counts how many are processed. The proof signal EVOHUNT_PROOF_SIGNAL is emitted only when concurrent requests cause measurable degradation AND sequential attempts are accepted without lockout.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline single-request login latency: 78ms (confirms bcrypt cost 10 computation)",
+    "Probe request latency during 50 concurrent requests: 474ms (6x degradation confirms CPU saturation)",
+    "20/20 sequential brute-force attempts processed with HTTP 403 (no rate limit, no lockout)",
+    "Server log shows all 70+ login requests processed without any throttling",
+    "EVOHUNT_PROOF_SIGNAL:unauthenticated_login_dos_confirmed emitted by verify.sh"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned v2.61.2 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.61.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

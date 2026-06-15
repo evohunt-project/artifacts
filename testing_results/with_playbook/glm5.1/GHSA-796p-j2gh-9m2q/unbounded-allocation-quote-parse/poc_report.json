@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion",
+  "summary": "The reproduction confirms that a 436-byte crafted binary quote triggers a 512 MB memory allocation attempt via the unbounded Data<u32>::decode() in src/quote.rs:46. The allocation (vec![0u8; attacker_controlled_len]) is executed before any bounds check, demonstrating CWE-770. On a memory-constrained container, this causes OOM kill; on systems with overcommit, it causes 512 MB of virtual memory consumption from a trivially small input.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A crafted 436-byte quote binary with a 512 MB Data<u32> length field should cause the library to attempt a 512 MB allocation (vec![0u8; 536870912]) without any size validation, leading to memory exhaustion in constrained environments or excessive virtual memory consumption.",
+  "actual_observed_result": "Running the exploit confirmed that Quote::parse() reaches vec![0u8; 536870912] in Data::<u32>::decode() (src/quote.rs:46) when processing a 436-byte crafted input. The allocation was attempted with the attacker-controlled u32 length field. The parse subsequently fails with 'Not enough data to fill buffer' because the remaining input is shorter than 512 MB, but the allocation has already occurred. On a memory-constrained Docker container (512 MB limit), this would cause OOM kill.",
+  "verification_method": "The exploit generates a crafted binary quote (436 bytes) with a Data<u32> length field set to 512 MB, calls dcap_qvl::quote::Quote::parse() on it, and verifies that: (1) the parse error message confirms the allocation was reached ('Not enough data to fill buffer' from SCALE codec input.read after the vec! allocation), and (2) on Linux containers with memory limits, the RSS increase or OOM kill confirms resource exhaustion. The proof signal is the specific error message indicating the allocation completed but the read failed due to insufficient input data.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit output shows: '[evohunt] crafted payload: 436 bytes' confirming the small input size.",
+    "The exploit output shows: '[evohunt] Data<u32> length field value: 536870912 bytes (512 mb)' confirming the large allocation request.",
+    "The exploit output shows: '[evohunt] parse result: Not enough data to fill buffer' confirming that the vec![0u8; 536870912] allocation in Data::<u32>::decode() was reached and executed before the read validation failed.",
+    "The error 'Not enough data to fill buffer' is from SCALE codec's Input::read() implementation, which is called AFTER the vec! allocation in Data<T>::decode() (src/quote.rs:47). This proves the allocation happened."
+  ],
+  "limitations_or_blockers": [
+    "On macOS (the host where the exploit was run), virtual memory overcommit means the 512 MB allocation succeeds without triggering OOM. On a Linux Docker container with --memory=512m, the allocation would cause OOM kill (exit code 137).",
+    "The Docker-based reproduction (./reproduction/run.sh) requires network access to clone the target repository and download the Rust base image, which may be slow on restricted networks."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.3.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.rs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

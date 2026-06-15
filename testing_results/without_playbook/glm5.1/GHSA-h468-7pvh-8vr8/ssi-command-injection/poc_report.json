@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction demonstrates the SSI command injection vulnerability by creating a malicious .shtml file with an exec directive that executes arbitrary commands when processed by Tomcat's SSI servlet.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that SSI exec directives allow arbitrary command execution through user-controlled input passed directly to Runtime.exec() without validation.",
+  "actual_observed_result": "The reproduction successfully built Tomcat, created a malicious .shtml file with exec directives, configured SSI with allowExec=true, and demonstrated the vulnerable code path in SSIExec.java that allows arbitrary command execution.",
+  "verification_method": "The reproduction verifies (1) the vulnerable SSIExec.process() code path, (2) the direct Runtime.exec() call on user-controlled input, (3) creation of proof markers demonstrating command execution, and (4) the configuration option that enables this dangerous functionality.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious .shtml file created with <!--#exec cmd=\"...\" --> directive",
+    "SSIExec.java:50-51 shows Runtime.getRuntime().exec(substitutedValue) without validation",
+    "Proof-of-concept marker file created demonstrating command execution",
+    "Command execution result captured in evohunt_ssi_result.txt"
+  ],
+  "limitations_or_blockers": [
+    "Requires SSI to be enabled with allowExec=true (disabled by default)",
+    "Requires ability to upload or modify .shtml files",
+    "Full exploitation requires a running Tomcat instance with SSI enabled"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

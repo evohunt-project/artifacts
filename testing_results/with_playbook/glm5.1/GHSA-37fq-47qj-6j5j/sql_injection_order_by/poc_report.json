@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that the listpages action's ORDER BY parameter permits SQL injection through insufficient input validation, enabling attackers to inject arbitrary SQL commands and extract database information.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate successful SQL injection via the 'sort' GET parameter, confirming that attackers can extract user credentials and other sensitive database information.",
+  "actual_observed_result": "The reproduction bundle set up YesWiki with a MySQL database, created test users and pages, and demonstrated that crafted SQL injection payloads in the 'sort' parameter reach the database query without proper sanitization, confirming the vulnerability.",
+  "verification_method": "The verify.sh script checks for SQL error messages, password hashes, or response differences when injecting SQL commands, distinguishing successful injection from normal page rendering.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP responses differ when SQL injection payloads are injected into the sort parameter",
+    "SQL error messages appear in responses, confirming the injection point",
+    "The vulnerable code path directly concatenates user input into ORDER BY clause without escaping"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the YesWiki repository on the host, checks out the doryphore-dev branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "doryphore-dev",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

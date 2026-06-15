@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that authenticated users can exploit the workflow import from URL feature to perform server-side request forgery by accessing internal services through the n8n server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that n8n's server makes HTTP requests to attacker-controlled URLs, allowing access to internal services that are not directly accessible from outside the network.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the n8n application, started the server, created a test user with project permissions, set up an internal test service, and successfully used the import URL endpoint to access the internal service through SSRF. The n8n server fetched content from an internal URL (127.0.0.1:9999) and returned the response, proving it can act as a proxy to access internal resources.",
+  "verification_method": "The exploit script starts an internal HTTP server on a non-standard port (9999) that should not be accessible from outside, then uses the vulnerable import endpoint to fetch content from that internal service. Success is determined by detecting the string 'INTERNAL_SERVICE_ACCESSED_VIA_SSRF' in the response, which confirms the n8n server successfully accessed the internal endpoint via SSRF.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "n8n successfully built and started without errors",
+    "Test user created and authenticated successfully",
+    "Internal test service started on port 9999 (simulating an internal-only service)",
+    "SSRF attempt via /rest/workflows/from-url endpoint successfully accessed internal service",
+    "Response contained proof string 'INTERNAL_SERVICE_ACCESSED_VIA_SSRF' confirming SSRF",
+    "n8n server acted as a proxy to reach internal service that should not be externally accessible"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the latest master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh"
+    ]
+  }
+}

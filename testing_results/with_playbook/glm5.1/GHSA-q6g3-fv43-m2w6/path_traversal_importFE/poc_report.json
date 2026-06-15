@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms path traversal in plugins/importFE/view.php. An authenticated user sends a filename parameter containing directory traversal sequences (../) which passes through HTMLPurifier without sanitization and reaches file_get_contents(), allowing arbitrary file read from the server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An authenticated user sends a crafted filename parameter with path traversal sequences to plugins/importFE/view.php and reads the contents of /etc/passwd or other sensitive server files.",
+  "actual_observed_result": "The reproduce.sh script installed OpenSTAManager, logged in as admin, sent a request to /plugins/importFE/view.php with filename=../../../etc/passwd, and the response contained the contents of /etc/passwd, confirming arbitrary file read.",
+  "verification_method": "The verification script sends a path traversal request targeting /etc/passwd and checks if the response contains the pattern 'root:x:0:0' (standard /etc/passwd format). It also creates a test secret file with a known marker string and verifies that the marker appears when the file is read via the path traversal. The EVOHUNT_PROOF_TOKEN distinguishes confirmed traversal from unrelated response content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The authenticated request to /plugins/importFE/view.php with filename=../../../etc/passwd returned the contents of /etc/passwd.",
+    "The test secret file was readable via the path traversal, confirming arbitrary file read capability.",
+    "The filename parameter was not sanitized by HTMLPurifier, confirming the root cause."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/supervisord.conf"
+    ]
+  }
+}

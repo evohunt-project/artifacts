@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_security_hook",
+  "summary": "The Docker-based reproduction confirms that pickle.loads() is not hooked by always_check_safety(), allowing arbitrary code execution even after the user activates safety hooks. pickle.load() is properly hooked and blocks malicious payloads, while pickle.loads() executes them without any safety check.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After calling always_check_safety(), pickle.load() should raise UnsafeFileError for a malicious pickle (hook works) while pickle.loads() should bypass the hook entirely and execute the malicious payload (hook missing).",
+  "actual_observed_result": "Running ./reproduction/run.sh demonstrated that pickle.load() correctly raises UnsafeFileError when loading a malicious pickle, but pickle.loads() executes the malicious payload without any safety check, creating the RCE proof file.",
+  "verification_method": "The exploit.py script activates always_check_safety(), tests that pickle.load() is properly blocked by confirming UnsafeFileError is raised, then tests pickle.loads() which should bypass the hook. The PoC is verified by checking that the RCE proof file /tmp/evohunt_loads_proof exists with the expected marker string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "pickle.load() raises UnsafeFileError when loading a malicious pickle after always_check_safety() is called (hook works for load).",
+    "pickle.loads() executes the malicious payload without raising any safety error (hook missing for loads).",
+    "The RCE proof file /tmp/evohunt_loads_proof is created with content 'EVOHUNT_LOADS_BYPASS'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

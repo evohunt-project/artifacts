@@ -1,0 +1,36 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that Langroid's URLLoader can be used to access internal network services that should be protected by network segmentation. The exploit successfully retrieves sensitive data from a simulated internal metadata service using the vulnerable URL fetching functionality.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that URLLoader can fetch content from internal URLs (like http://127.0.0.1:8080/metadata) that represent protected internal services, thereby bypassing network security boundaries. The expected signal is successfully retrieving JSON metadata containing simulated credentials from the internal service.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction environment, started an internal metadata service simulator, and used Langroid's URLLoader to access it. The exploit successfully retrieved documents from the internal service, confirming the SSRF vulnerability. Sensitive credentials were accessible through the vulnerable URL fetching mechanism.",
+  "verification_method": "The verification script checks /tmp/ssrf_result.json to confirm whether: (1) the internal service was accessed via URLLoader, (2) documents were retrieved from the internal URL, and (3) sensitive credentials were exposed in the retrieved content. This distinguishes a successful SSRF attack from a connection failure or unrelated error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The URLLoader successfully accessed http://127.0.0.1:8080/metadata which simulates a protected internal metadata service",
+    "Documents were retrieved from the internal service using Langroid's vulnerable URL fetching code",
+    "The retrieved content contained simulated cloud credentials and sensitive metadata",
+    "The exploit demonstrates that network segmentation can be bypassed using Langroid's URL handling",
+    "The internal service logs show it received requests from the URLLoader, confirming the SSRF path"
+  ],
+  "limitations_or_blockers": [
+    "The reproduction uses a simulated internal service rather than a real cloud metadata endpoint for safety and portability",
+    "In a real cloud environment (AWS, GCP, Azure), attackers could access actual metadata services at well-known IP addresses (169.254.169.254, metadata.google.internal, etc.)",
+    "DNS rebinding attacks and other advanced SSRF techniques were not tested but would likely work given the absence of URL validation"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit (v0.59.31), and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.59.31",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/internal_service.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/check_result.py"
+    ]
+  }
+}

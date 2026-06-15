@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that the VerifyHostToken function accepts a forged JWT with an invalid signature, allowing an unauthenticated attacker to impersonate any host and retrieve its full WireGuard configuration including peer data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the forged JWT (with invalid signature) to be accepted by VerifyHostToken, allowing the attacker to retrieve the victim host's configuration from GET /api/v1/host without knowing the JWT signing secret.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds the Netmaker server from source (v1.4.0, commit 48ba499f83d521c4b42b69ea79770650c4959659), starts it with SQLite backend, creates a superadmin and host (ID: 245a8776-986b-4806-9b24-8c52672ec11e), then sends a forged JWT with an invalid signature to GET /api/v1/host. The server returns HTTP 200 with the host's full configuration (name: victim-host, WireGuard keys, peer data, server config), confirming the signature verification bypass.",
+  "verification_method": "The exploit script creates a legitimate host via the enrollment flow, then crafts a JWT with the host's ID but an invalid signature. The verification confirms that the server returns HTTP 200 with host data (instead of 401/403), proving the signature check was bypassed. The result is written to /tmp/exploit_result.json with the EVOHUNT_POC_VERIFIED marker.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The forged JWT with an invalid signature was accepted by the server (HTTP 200 instead of 401/403).",
+    "The server returned the full host configuration including host name, ID, and peer data.",
+    "The exploit_result.json file confirms the authentication bypass with the verification status PASS."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "48ba499f83d521c4b42b69ea79770650c4959659",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

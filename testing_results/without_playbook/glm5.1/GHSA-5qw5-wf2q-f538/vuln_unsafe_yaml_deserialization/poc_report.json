@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that YAML.load without safe loading allows arbitrary Ruby object deserialization, which can lead to code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that arbitrary Ruby objects can be deserialized through YAML.load, creating a proof file that would not exist under normal operation.",
+  "actual_observed_result": "The reproduction successfully deserialized an arbitrary Ruby object (OpenStruct) from the malicious YAML file and executed code, creating the proof file and confirming the vulnerability.",
+  "verification_method": "The verify.sh script creates a malicious YAML file with a Ruby object, loads it using YAML.load, and checks for the creation of a proof file. This distinguishes successful deserialization from normal YAML parsing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The malicious YAML file containing a Ruby object was successfully loaded",
+    "Arbitrary Ruby object (OpenStruct) was instantiated during deserialization",
+    "Proof file was created, demonstrating code execution through deserialization",
+    "This confirms that YAML.load can be exploited for remote code execution"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the existing target repository at /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/repo mounted read-only at /target-repo",
+    "pinned_commit_or_ref": "current state of repo directory (not a git repository)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stored_xss",
+  "summary": "The Docker-based reproduction confirms that uploading a task attachment with an .html filename causes the server to respond with Content-Type: text/html when the attachment is downloaded, enabling stored cross-site scripting in the browser.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Uploading an attachment named xss-probe.html containing a JavaScript payload, then downloading it, should result in a response with Content-Type: text/html instead of application/octet-stream. This allows the browser to render and execute the embedded JavaScript.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Vikunja binary, started the server, uploaded an attachment with filename 'xss-probe.html' containing '<script>document.write(\"EVOHUNT-XSS-PROOF\")</script>', then downloaded the attachment. The response Content-Type header was text/html; charset=utf-8, confirming the MIME type confusion vulnerability.",
+  "verification_method": "The verify script uploads an HTML file as a task attachment, then downloads it using curl with the -I flag to inspect response headers. It checks that the Content-Type header starts with 'text/html', which distinguishes the vulnerability from the expected safe behavior (application/octet-stream or the file's actual MIME type).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The attachment upload succeeded and the file was stored with the attacker-chosen filename 'xss-probe.html'.",
+    "The attachment download response included Content-Type: text/html; charset=utf-8, proving the MIME type is derived from the user-controlled filename extension.",
+    "The response body contained the unmodified '<script>document.write(\"EVOHUNT-XSS-PROOF\")</script>' payload, which a browser would execute as JavaScript."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh",
+      "reproduction/payload.html"
+    ]
+  }
+}

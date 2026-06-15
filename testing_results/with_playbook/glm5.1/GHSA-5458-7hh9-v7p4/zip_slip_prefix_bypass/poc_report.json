@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that a crafted ZIP plugin with entry ../test-plugin-evil/ESCAPED.txt bypasses the String.startsWith() path traversal check in Unzip.extract() and writes a file to a sibling directory outside the intended extraction directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a malicious ZIP file named test-plugin.zip, extract it via PF4J's FileUtils.expandIfZip(), and write a file to test-plugin-evil/ESCAPED.txt outside the intended test-plugin/ extraction directory, confirming the path traversal bypass.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the PF4J repository at commit 2ed63d1, built the Docker image, compiled the PF4J utility sources and exploit program, and ran the exploit. The file ESCAPED.txt was written to /tmp/zipslip-poc/test-plugin-evil/ outside the intended extraction directory /tmp/zipslip-poc/test-plugin/. The proof string [EVOHUNT] ZIP_SLIP_PREFIX_BYPASS_CONFIRMED was emitted.",
+  "verification_method": "The exploit program creates a malicious ZIP file with entry ../test-plugin-evil/ESCAPED.txt, calls FileUtils.expandIfZip() to extract it using PF4J's vulnerable Unzip.extract() method, then checks whether the file exists at the escaped path /tmp/zipslip-poc/test-plugin-evil/ESCAPED.txt. The check distinguishes path traversal from normal extraction by verifying the file was written to a directory other than the intended extraction destination. The proof string [EVOHUNT] ZIP_SLIP_PREFIX_BYPASS_CONFIRMED is printed only when the escaped file is confirmed to exist outside the target directory.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show: [evohunt] VULNERABLE: File escaped to /tmp/zipslip-poc/test-plugin-evil/ESCAPED.txt",
+    "Container logs show: [evohunt] Escaped file content: EVIL_CONTENT_ESCAPED_FROM_ZIP",
+    "Container logs show: [evohunt] The destination directory was: /tmp/zipslip-poc/test-plugin",
+    "Container logs show: [evohunt] File was written to sibling directory: /tmp/zipslip-poc/test-plugin-evil",
+    "Proof string [EVOHUNT] ZIP_SLIP_PREFIX_BYPASS_CONFIRMED was emitted, confirming successful path traversal.",
+    "The run.sh script exited with code 0, confirming end-to-end reproduction success."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit 2ed63d1, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2ed63d1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/ZipSlipPrefixBypass.java",
+      "reproduction/verify.sh"
+    ]
+  }
+}

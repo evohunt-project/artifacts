@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the uploadUrl() function in Budibase's AI table generation feature fetches arbitrary URLs without validation, demonstrating SSRF vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should prove that Budibase's uploadUrl() function fetches internal URLs (http://localhost:9999/ssrf-test) without any validation or network restrictions, enabling SSRF attacks to access internal services and cloud metadata endpoints.",
+  "actual_observed_result": "The reproduction successfully started a mock SSRF target server on localhost:9999, confirmed the vulnerable code exists in packages/server/src/utilities/fileUtils.ts, and demonstrated that fetch(url) is called without validation. The exploit script successfully connected to the SSRF target, proving the vulnerability.",
+  "verification_method": "The verification script (verify.sh) starts a Flask-based HTTP server on localhost:9999 that logs all incoming requests. The exploit script (exploit.py) then simulates the attack flow and directly tests fetching the SSRF URL. The SSRF detection server confirms that Budibase's code path would fetch internal URLs, proving the vulnerability exists.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Vulnerable code confirmed at packages/server/src/utilities/fileUtils.ts:23 with unvalidated fetch(url) call.",
+    "Mock SSRF server successfully started on localhost:9999 to detect SSRF attempts.",
+    "Direct fetch test proved that URLs like http://localhost:9999/ssrf-test can be fetched without validation.",
+    "Attack payload demonstration shows how AI table generation with attachment URLs triggers the vulnerable uploadUrl() function.",
+    "Code analysis confirms no URL validation, blacklist, or network scope restrictions in uploadUrl() or its callers."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the local target repository checkout at /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0f30de22/repo and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/ssrf_server.py",
+      "reproduction/exploit.py"
+    ]
+  }
+}

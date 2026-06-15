@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the GET /rest/workflows/from-url endpoint makes a server-side HTTP request to an arbitrary user-supplied URL without SSRF protection, bypassing the SsrfProtectionService that only covers workflow node execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause n8n to make a server-side HTTP request to http://127.0.0.1:9999/ (localhost), demonstrating that the endpoint can reach internal services. The response from the internal service should be returned to the caller, confirming the SSRF.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched n8n, set up an owner account, and triggered GET /rest/workflows/from-url?url=http://127.0.0.1:9999/. The endpoint fetched the response from the fake internal server on localhost:9999 and returned it to the caller, confirming the SSRF bypass.",
+  "verification_method": "A fake HTTP server runs on 127.0.0.1:9999 returning a JSON response containing the proof marker EVOHUNT_SSRF_PROOF_INTERNAL_SERVICE_REACHED. The verify.sh script checks whether the from-url endpoint response contains this marker, confirming the server-side request reached the internal service.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The GET /rest/workflows/from-url endpoint returned the response from http://127.0.0.1:9999/ containing the proof marker EVOHUNT_SSRF_PROOF_INTERNAL_SERVICE_REACHED.",
+    "The SsrfProtectionService was not invoked for this request, confirming it only covers workflow node execution.",
+    "The same request to cloud metadata (http://169.254.169.254/) or any RFC 1918 address would succeed identically."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref (n8n@2.14.0), and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.14.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T05:03:11.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_79e08a11",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-02/GHSA-ggxw-g3cp-mgf8/GHSA-ggxw-g3cp-mgf8.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "path-traversal-download",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_79e08a11/path-traversal-download",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_79e08a11/path-traversal-download/vulnerability_report.json",
+      "title": "Path traversal in /api/download allows arbitrary file read via flawed ../ sanitization",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerable endpoint and root cause: this finding concerns REST GET /api/download filename sanitization and default-disabled authentication, while the advisory concerns unauthenticated Socket.IO device tag writes and missing write authorization checks even when secure mode is enabled.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "rce-runscript",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_79e08a11/rce-runscript",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_79e08a11/rce-runscript/vulnerability_report.json",
+      "title": "Unauthenticated remote code execution via /api/runscript test mode",
+      "vulnerability_type": "code_injection_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerable endpoint and root cause: this finding concerns REST POST /api/runscript compiling attacker-supplied JavaScript through Module._compile with default-disabled authentication, while the advisory concerns unauthenticated Socket.IO device tag writes and missing write authorization checks even when secure mode is enabled.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described vulnerable code/root cause. GHSA-ggxw-g3cp-mgf8 describes an authorization bypass in FUXA Socket.IO/WebSocket device tag writes, allowing unauthenticated remote modification of device tags and disabling drivers. The referenced patch adds Socket.IO write authorization checks in server/runtime/index.js for device value set and device enable operations. The qualifying findings instead cover unrelated REST endpoint issues in /api/runscript and /api/download.",
+    "evidence": [
+      "Advisory summary/details: unauthenticated remote attacker can modify device tags via WebSockets and bypass role-based access controls, including with runtime.settings.secureEnabled set to true.",
+      "Referenced patch eb2d8a20964ce7acaa0f442a181390a5f726a1ae adds isSocketWriteAuthorized(socket) and guards Socket.IO DEVICE_VALUES set and DEVICE_ENABLE writes in server/runtime/index.js.",
+      "rce-runscript/vulnerability_report.json describes POST /api/runscript JavaScript compilation through Module._compile and default-disabled authentication, not Socket.IO device tag write authorization.",
+      "path-traversal-download/vulnerability_report.json describes GET /api/download path traversal through flawed ../ sanitization and default-disabled authentication, not Socket.IO device tag write authorization."
+    ],
+    "blockers_to_higher_tier": [
+      "No qualifying finding matched the advisory-described WebSocket device tag write authorization bypass."
+    ]
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_79e08a11/path-traversal-download",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_79e08a11/path-traversal-download/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_79e08a11/path-traversal-download/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_79e08a11/rce-runscript",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_79e08a11/rce-runscript/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_79e08a11/rce-runscript/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

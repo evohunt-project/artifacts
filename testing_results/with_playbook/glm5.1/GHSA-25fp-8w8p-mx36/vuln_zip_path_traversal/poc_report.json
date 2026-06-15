@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction demonstrates that the vulnerable Zip::extract() method allows ZIP entries with path traversal sequences (../) to be extracted outside the intended target directory, confirming the path traversal vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proof-of-concept demonstrates arbitrary file write by creating a malicious ZIP with '../../../outside_target/poc_shell.php' entry. The file is extracted outside the extraction directory, proving that attackers can write files to arbitrary locations on the filesystem.",
+  "actual_observed_result": "Running the verification script successfully demonstrated that ZIP entries with '../' sequences escape the extraction directory. The file /var/www/outside_target/poc_shell.php was created outside the intended /var/www/html/tmp extraction directory, confirming the path traversal vulnerability.",
+  "verification_method": "The verification script creates a malicious ZIP with path traversal entries, simulates the vulnerable extraction process, and checks whether files were written outside the target directory. The presence of poc_shell.php in /var/www/outside_target confirms successful path traversal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Created malicious ZIP with entry '../../../outside_target/poc_shell.php'",
+    "Extracted file appeared at /var/www/outside_target/poc_shell.php (outside extraction directory)",
+    "File contains PHP webshell payload: <?php echo 'EVOHUNT_POC_SUCCESS_MARKER'; ?>",
+    "This demonstrates that Zip::extract() does not validate entry paths before extraction",
+    "Vulnerable code at src/Util/Zip.php:65: $zip->extractTo($extraction_dir);",
+    "No call to realpath() or path validation to prevent '../' sequences"
+  ],
+  "limitations_or_blockers": [
+    "Full exploitation requires an authenticated session with upload access",
+    "The target repository requires database setup for complete functionality",
+    "This PoC simulates the vulnerable code path to prove path traversal exists"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.5.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_zip.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

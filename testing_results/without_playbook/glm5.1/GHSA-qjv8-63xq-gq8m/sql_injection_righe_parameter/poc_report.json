@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction deploys OpenSTAManager v2.9.8 with a MySQL database, initializes test data including a preventivo with righe, and demonstrates SQL injection through the unsanitized righe GET parameter. The exploit sends a UNION SELECT payload to extract the admin password hash from zz_users, confirming the vulnerability through both direct data extraction and time-based blind injection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that an authenticated low-privilege user can inject arbitrary SQL through the righe parameter, causing a measurable time delay via SLEEP() (confirming injection) and/or extracting sensitive data such as password hashes from the zz_users table through UNION SELECT.",
+  "actual_observed_result": "The reproduction container deploys the application, initializes the database with test data, and the exploit script sends crafted HTTP requests to the confronta_righe.php endpoint. The time-based SLEEP(3) payload causes a measurable delay confirming SQL injection. The UNION SELECT payload extracts admin credentials from the database.",
+  "verification_method": "The exploit uses two independent verification methods: (1) time-based blind injection using SLEEP(3) to confirm the SQL query context is injectable, and (2) UNION SELECT to extract the admin password hash from zz_users. The verification script checks for a bcrypt hash pattern ($2y$10$...) in the response body and/or a measurable time delay of >= 2.5 seconds.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response to crafted righe parameter contains data from zz_users table (password hash).",
+    "Time-based SLEEP(3) payload causes measurable delay in HTTP response, confirming SQL injection.",
+    "The response status code is 200, confirming the vulnerable endpoint is reachable without errors.",
+    "The application's filter()/post() sanitization is bypassed because $_GET['righe'] is accessed directly."
+  ],
+  "limitations_or_blockers": [
+    "Full OpenSTAManager database initialization from the 2_0.sql baseline and incremental updates may produce warnings that are safely ignored.",
+    "The exact UNION column count depends on the co_righe_preventivi table schema after all migrations; the exploit probes multiple column counts.",
+    "Login mechanism requires a valid admin or test user account, which is created during setup."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag v2.9.8, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.9.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/php.ini"
+    ]
+  }
+}

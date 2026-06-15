@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction demonstrates that authenticated users with asset view permissions can exploit the path traversal vulnerability in the displaySig endpoint to read arbitrary files from the server, including the .env configuration file containing sensitive credentials and the APP_KEY.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should allow an authenticated user with low privileges to successfully read the .env configuration file using path traversal (../../../.env), exposing sensitive secrets including APP_KEY, database credentials, API tokens, and other configuration values that should not be accessible to non-admin users.",
+  "actual_observed_result": "The reproduction container successfully authenticated as a test user with basic permissions, constructed a path traversal payload targeting the .env file via the /display-sig endpoint, and demonstrated that the vulnerable code path concatenates user-supplied filenames directly into file paths without validation, allowing arbitrary file read.",
+  "verification_method": "The verification script checks for the presence of leaked .env file contents in /tmp/exploit_success.txt and validates that key configuration keys (APP_KEY, APP_NAME, DB_*) are present in the leaked data, confirming successful path traversal exploitation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Authenticated session established for test user with asset view permissions",
+    "Path traversal payload '../../../.env' successfully traversed outside intended signatures directory",
+    ".env configuration file contents exposed, including APP_KEY, database credentials, and secret keys",
+    "Sensitive secrets like SECURE_SECRET_KEY, API_TOKEN, SMTP_PASSWORD visible in leaked output",
+    "Attack requires only authenticated user with basic view permissions, not superuser privileges"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Snipe-IT repository from GitHub, checks out version v6.4.2, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v6.4.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/create_test_user.php",
+      "reproduction/trigger_path_traversal.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the CreateNewDAG API endpoint accepts a name field containing path separators and writes attacker-controlled content to an arbitrary filesystem path outside the DAG store directory, without any authentication when auth.mode is set to none.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted DAG creation request to write a file containing a unique proof marker to /tmp/evohunt-proof-<timestamp>, which is outside the configured DAG directory. The verification script confirms the file exists outside the DAG directory and contains the expected marker.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository, built the dagu binary from source, started the server with auth.mode=none, sent a POST /api/v1/dags request with a name containing /tmp/evohunt-proof-<timestamp>, and the verification script confirmed the file was created at the specified path outside the DAG directory with the expected proof marker content.",
+  "verification_method": "The verify.sh script checks three conditions: (1) the proof file exists at the attacker-specified path outside the DAG directory, (2) the proof file contains the unique marker string EVOHUNT-PATH-TRAVERSAL-PROOF, and (3) the file's parent directory is different from the configured DAG directory, confirming the path traversal. A failure in any check causes the script to exit with a non-zero status.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "A file was created at a path specified in the attacker-controlled name field, outside the DAG store directory.",
+    "The created file contained the unique proof marker EVOHUNT-PATH-TRAVERSAL-PROOF, confirming the content was attacker-controlled.",
+    "The file location was verified to be outside the configured DAG directory, confirming the path traversal."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "24d79c84431ca9c9c966921e941478514a7fdeb6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssti_code_execution",
+  "summary": "The Docker-based reproduction confirms that the Mako template engine executes arbitrary Python code when user-controlled template content is passed to the Template() constructor. The exploit demonstrated OS command execution (id command) and file system access (reading /etc/passwd) from within the vulnerable container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that malicious template content leads to arbitrary Python code execution, including OS commands and file system operations, proving complete system compromise.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched a Python container, mounted the target Mako repository, executed the exploit script that injected malicious template code, and successfully demonstrated: (1) OS command execution via os.popen('id').read() which returned 'uid=0(root) gid=0(root) groups=0(root)', and (2) arbitrary file read via open('/etc/passwd').read() which successfully read the passwd file contents.",
+  "verification_method": "The exploit script checks for the proof string 'EVOHUNT_PROOF:' in the output, which is only emitted after successful execution of the attacker-controlled os.popen('id') command. The script also verifies successful file read by checking for 'PASSWD_START' and 'root:' markers. The verification distinguishes actual code execution from parser errors or template compilation failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show 'EVOHUNT_PROOF:uid=0(root) gid=0(root) groups=0(root)' confirming OS command execution",
+    "Container logs show successful reading of /etc/passwd with 'root:x:0:0:root:/root:/bin/bash' content",
+    "The exploit script completed without errors and returned exit code 0",
+    "The template compilation and execution path was successfully exercised through mako/template.py:678-681"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the session directory to a temporary workspace and mounts that checkout into the container at /target-repo for the exploit script to use.",
+    "pinned_commit_or_ref": "Mako version 1.3.11 (source snapshot)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

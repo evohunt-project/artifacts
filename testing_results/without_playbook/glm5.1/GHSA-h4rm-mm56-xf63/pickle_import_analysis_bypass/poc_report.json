@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "analysis_bypass_rce",
+  "summary": "The Docker-based reproduction confirms that a crafted pickle file using 'from pickle import loads; loads(nested_malicious_bytes)' passes fickling's static analysis as LIKELY_SAFE but executes arbitrary code when loaded through nested pickle deserialization.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should produce a bypass pickle that fickling reports as LIKELY_SAFE severity, then loading the pickle should execute the nested malicious payload and create a proof file at /tmp/evohunt_proof containing 'EVOHUNT_RCE_CONFIRMED'.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, generated the bypass pickle, confirmed fickling reports LIKELY_SAFE severity, loaded the pickle which triggered nested deserialization via pickle.loads() and executed os.system() creating the proof file.",
+  "verification_method": "The generate_bypass.py script constructs a bypass pickle, runs fickling's check_safety() confirming LIKELY_SAFE severity, loads the pickle to trigger nested deserialization, and checks for the RCE proof file at /tmp/evohunt_proof containing the expected marker string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Fickling static analysis reports severity LIKELY_SAFE for the crafted bypass pickle.",
+    "Loading the bypass pickle triggers nested pickle deserialization via the pickle.loads() call embedded in the outer pickle.",
+    "The RCE proof file /tmp/evohunt_proof is created with content 'EVOHUNT_RCE_CONFIRMED'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.1.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/generate_bypass.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

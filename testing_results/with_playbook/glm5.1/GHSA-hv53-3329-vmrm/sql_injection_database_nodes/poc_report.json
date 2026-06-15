@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "Docker-based PoC demonstrates SQL injection through expression evaluation in MySQL node. A malicious payload in workflow input data causes the DROP TABLE command to execute, deleting sensitive data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate that expression {{$json.user_id}} in a MySQL query can be injected with malicious SQL, causing table deletion despite the query originally intended to be a simple SELECT.",
+  "actual_observed_result": "Successfully set up n8n with MySQL database containing test_sensitive table. Created a workflow with MySQL node using query 'SELECT * FROM users WHERE id = {{$json.user_id}}'. Triggered the workflow with malicious input {'user_id': '1; DROP TABLE test_sensitive; --'}. The test_sensitive table was deleted, confirming SQL injection through unsanitized expression evaluation.",
+  "verification_method": "The run.sh script sets up MySQL with test tables, creates the vulnerable workflow, executes it with malicious input containing SQL injection payload, and verify.sh checks if the test_sensitive table no longer exists in the database.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "MySQL container started with test_sensitive table containing sensitive data",
+    "Workflow created with MySQL query using expression {{$json.user_id}}",
+    "Workflow executed with malicious input: user_id='1; DROP TABLE test_sensitive; --'",
+    "test_sensitive table was deleted from database after workflow execution",
+    "Query became: SELECT * FROM users WHERE id = 1; DROP TABLE test_sensitive; --",
+    "Expression evaluation did not escape or sanitize SQL input"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses docker-compose to orchestrate n8n and MySQL containers from official images",
+    "pinned_commit_or_ref": "n8n version 1.55.0",
+    "target_repo_mount_path": "/app",
+    "helper_files": [
+      "reproduction/docker-compose.yml",
+      "reproduction/setup_db.sql",
+      "reproduction/workflow.json",
+      "reproduction/malicious_input.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

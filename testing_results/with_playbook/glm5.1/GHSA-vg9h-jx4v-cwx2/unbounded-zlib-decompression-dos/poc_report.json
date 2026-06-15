@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial-of-service",
+  "summary": "A crafted URL containing a zlib-compressed base64 payload causes unbounded memory allocation in parse_compressed.py:82 because zlib.decompress() is called without a max_length parameter. A 130KB base64 string decompresses to 100MB, exhausting available memory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "MemoryError or OOM kill when unfurl processes a malicious URL containing a zlib bomb in a base64 query parameter, causing denial of service.",
+  "actual_observed_result": "MemoryError raised during zlib.decompress() when processing a 100MB decompression bomb with RLIMIT_AS set to 128MB. The exploit successfully triggers the vulnerable code path: URL parsing -> regex match on base64 -> base64 decode -> zlib.decompress() with no max_length.",
+  "verification_method": "Automated: exploit.py sets RLIMIT_AS=128MB then calls unfurl.core.run() with a zlib bomb URL. Success is confirmed by catching MemoryError from zlib.decompress(). verify.sh checks exploit exit code (0=success, 137=OOM kill).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "MemoryError exception raised during zlib.decompress() in parse_compressed.py:82",
+    "129612-character base64 payload decompresses to 100000000 bytes without any size limit",
+    "Exploit exit code 0 confirming successful reproduction"
+  ],
+  "limitations_or_blockers": [
+    "The PoC uses RLIMIT_AS to constrain memory rather than Docker -m because the URL-based attack vector requires the full base64 payload to be in memory before decompression",
+    "In production, the actual impact depends on available system memory; the attack scales linearly - larger bombs cause more memory consumption"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "6cb8731c539129a8594ec9b3fd90bbc555e160ca",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

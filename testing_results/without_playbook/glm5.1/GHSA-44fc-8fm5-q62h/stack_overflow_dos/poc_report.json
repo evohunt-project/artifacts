@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that providing a schema with 1700+ levels of nesting causes a stack overflow in the normalizeSchema function, crashing the Node.js process with 'Maximum call stack size exceeded' error.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the convict library to crash during schema normalization, demonstrating denial of service by exhausting the call stack.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the container, generated a deeply nested schema with 2000 levels, and successfully triggered a RangeError: Maximum call stack size exceeded during schema processing, confirming the DoS vulnerability.",
+  "verification_method": "The run script executes the PoC script that attempts to initialize convict with a deeply nested schema. The script checks for the specific RangeError with 'Maximum call stack size exceeded' message to confirm the crash is due to stack overflow rather than other errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container execution terminated with RangeError: Maximum call stack size exceeded",
+    "Stack trace shows repeated normalizeSchema calls leading to stack exhaustion",
+    "Crash occurs at exactly 1700+ nesting levels as predicted",
+    "Error occurs during schema normalization before any validation can prevent it"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v6.2.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

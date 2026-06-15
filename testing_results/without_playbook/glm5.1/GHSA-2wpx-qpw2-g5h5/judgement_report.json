@@ -1,0 +1,118 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T00:00:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-2wpx-qpw2-g5h5/GHSA-2wpx-qpw2-g5h5.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "cache-dos-size-limits",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/cache-dos-size-limits",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/cache-dos-size-limits/vulnerability_report.json",
+      "title": "Denial of service via unbounded DNS response caching with no size limits",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": false,
+      "advisory_match_reason": "Finding targets the cache plugin (plugin/cache/cache.go) storing oversized DNS responses without size limits. The advisory root cause is in core/dnsserver/server_quic.go where the DoQ server spawns unbounded goroutines per QUIC stream with blocking io.ReadFull(). Different vulnerable code, different component, different root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:H"
+      }
+    },
+    {
+      "finding_folder_name": "path-traversal-include-directive",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/path-traversal-include-directive",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/path-traversal-include-directive/vulnerability_report.json",
+      "title": "Path traversal via $INCLUDE directive in zone file parsing permits arbitrary file read",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "Finding targets the zone file parser enabling $INCLUDE without path validation (plugin/file/file.go, plugin/sign/signer.go). The advisory is about DoQ stream backlog and goroutine/memory growth in core/dnsserver/server_quic.go. Completely different vulnerability class (path traversal vs resource exhaustion), different component, different root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "regex-dos-redos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/regex-dos-redos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/regex-dos-redos/vulnerability_report.json",
+      "title": "Regex denial-of-service (ReDoS) via unvalidated regex patterns in Corefile configuration",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": false,
+      "advisory_match_reason": "Finding targets regex pattern processing in template/auto/rewrite plugins (plugin/template/setup.go, plugin/auto/setup.go, plugin/rewrite/name.go) with no complexity validation. The advisory is about DoQ worker pool stream backlog in core/dnsserver/server_quic.go. Same broad vulnerability class (DoS) but different root cause (regex backtracking vs unbounded goroutine spawning), different component, different code.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:H"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The advisory describes unbounded goroutine and memory growth in CoreDNS' DoQ server (core/dnsserver/server_quic.go) where stream processing spawns a goroutine per accepted QUIC stream and io.ReadFull() lacks a per-stream read deadline. None of the three qualifying findings identify the DoQ component, server_quic.go, or the advisory root cause. The findings target the cache plugin (plugin/cache/cache.go), zone file $INCLUDE handling (plugin/file/file.go), and regex processing plugins.",
+    "evidence": [
+      "Advisory root cause: core/dnsserver/server_quic.go - unbounded goroutine spawning per QUIC stream, io.ReadFull() with no read deadline",
+      "cache-dos-size-limits targets plugin/cache/cache.go - cache size limits, unrelated to DoQ stream backlog",
+      "path-traversal-include-directive targets plugin/file/file.go - $INCLUDE path traversal, different vulnerability class entirely",
+      "regex-dos-redos targets plugin/template/setup.go, plugin/auto/setup.go, plugin/rewrite/name.go - regex backtracking DoS, different root cause"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/cache-dos-size-limits",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/cache-dos-size-limits/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/cache-dos-size-limits/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/path-traversal-include-directive",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/path-traversal-include-directive/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/path-traversal-include-directive/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/regex-dos-redos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/regex-dos-redos/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_2c93f437/regex-dos-redos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

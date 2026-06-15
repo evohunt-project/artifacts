@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction authenticates as a low-privilege test user against the Ajenti panel, then sends a POST request to /api/terminal/script with a crafted JSON body containing a bash command. The command executes as root inside the container, and the output is returned in the API response, confirming arbitrary command execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An authenticated user with terminal:scripts permission should be able to execute arbitrary bash commands as root via POST /api/terminal/script. The response should contain the stdout and stderr of the executed command.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started the Ajenti panel inside the container, authenticated as the test user, sent a POST to /api/terminal/script with {\"script\": \"id && cat /etc/shadow | head -1\"}, and received a response containing uid=0(root) and the first line of /etc/shadow, confirming root-level command execution.",
+  "verification_method": "The verify.sh script checks that the /api/terminal/script response contains 'uid=0' confirming the command ran as root, and that the response contains 'root:' confirming access to protected system files. These distinguish real command execution from authentication errors, startup failures, or unrelated crashes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The /api/terminal/script response contains 'uid=0(root)' confirming the command executed as root.",
+    "The response includes output from 'cat /etc/shadow | head -1' confirming access to protected files.",
+    "The test user was authenticated via the OS auth provider, confirming the attack requires only PR:L (low privileges)."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2.2.14",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

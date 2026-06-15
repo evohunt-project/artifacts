@@ -1,0 +1,89 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T06:21:29.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5dbab726",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-7jrq-q4pq-rhm6/GHSA-7jrq-q4pq-rhm6.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "snapshot-path-traversal",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5dbab726/snapshot-path-traversal",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5dbab726/snapshot-path-traversal/vulnerability_report.json",
+      "title": "Path traversal in snapshot chunk loading allows arbitrary file write via SendSnapshot RPC",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerable code and root cause: this finding targets unsanitized SnapshotChunk.Name handling in SendSnapshot snapshot loading, while the advisory targets trustedCertPool() in common/security/tls.go parsing only the first PEM block from a trustedCaFile bundle.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unauthenticated-cluster-operations",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5dbab726/unauthenticated-cluster-operations",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5dbab726/unauthenticated-cluster-operations/vulnerability_report.json",
+      "title": "Unauthenticated access to all gRPC services including cluster management operations",
+      "vulnerability_type": "missing_authentication",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerable code and root cause: this finding targets default-disabled gRPC authentication and missing handler authorization, while the advisory targets TLS CA bundle parsing in trustedCertPool() and resulting mTLS certificate-chain validation failure.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or root cause. The advisory is specifically about common/security/tls.go trustedCertPool() decoding only one PEM block from trustedCaFile bundles, which breaks mTLS certificate-chain validation. The final qualifying findings instead cover SendSnapshot path traversal and default unauthenticated gRPC operations.",
+    "evidence": [
+      "Advisory GHSA-7jrq-q4pq-rhm6 describes trustedCertPool() in common/security/tls.go calling pem.Decode() only once and discarding later certificates in a CA bundle.",
+      "snapshot-path-traversal reports unsanitized SnapshotChunk.Name reaching filepath.Join() and os.OpenFile() in the SendSnapshot snapshot-loading path.",
+      "unauthenticated-cluster-operations reports authentication disabled by default and missing authorization checks across Oxia gRPC services.",
+      "Neither qualifying report references trustedCertPool(), trustedCaFile, PEM block iteration, corrupted CA-file handling, or the mTLS certificate-chain validation failure described by the advisory."
+    ],
+    "blockers_to_higher_tier": [
+      "No advisory-matched qualifying finding was present, so runtime tiering is not applicable."
+    ]
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5dbab726/snapshot-path-traversal",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5dbab726/snapshot-path-traversal/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5dbab726/snapshot-path-traversal/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5dbab726/unauthenticated-cluster-operations",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5dbab726/unauthenticated-cluster-operations/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_5dbab726/unauthenticated-cluster-operations/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

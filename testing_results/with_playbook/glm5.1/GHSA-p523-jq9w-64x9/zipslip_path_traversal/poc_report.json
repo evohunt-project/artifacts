@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_zipslip",
+  "summary": "The Docker-based reproduction confirms that Fickling's polyglot analysis extracts ZIP archive entries with path traversal sequences outside the intended temporary directory, allowing arbitrary file write on the system analyzing malicious PyTorch model files.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted ZIP file with path traversal entries to be extracted outside the tempdir, creating a proof file at an attacker-controlled location.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, created a malicious ZIP with '../../../../../../poc_output/poc_marker.txt' entry, triggered Fickling's find_file_properties_recursively function, and successfully created the proof file outside the temporary directory.",
+  "verification_method": "The run script checks for the existence of the proof file at the expected location outside the tempdir. The presence of this file confirms that path traversal succeeded and files can be written to arbitrary locations.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof file created at /poc_output/poc_marker.txt outside the temporary directory",
+    "Malicious ZIP entry '../../../../../../poc_output/poc_marker.txt' successfully extracted to attacker-controlled path",
+    "Fickling's polyglot.py:187 does not validate or sanitize ZIP entry paths before extraction"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the current HEAD commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "HEAD (current repository state)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_zip.py",
+      "reproduction/verify_zipslip.py"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "memory_safety_violation",
+  "summary": "The Docker-based reproduction confirms that the JIT sandbox JSON API allows registering arbitrary memory addresses and reading their contents through compiled Load instructions. A known sentinel value placed in a ctypes buffer at a controlled address was successfully read back through the JIT execution path, proving arbitrary memory read capability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit should place a known 8-byte sentinel value (0xDEADBEEFCAFEBABE) in a ctypes buffer, register the buffer's address as a sandbox memory region via rssn_jit_configure_sandbox_json, compile a JIT Load instruction targeting that region via rssn_jit_compile_json, execute the compiled code via rssn_jit_execute, and read back the sentinel value from the returned f64, confirming arbitrary memory read.",
+  "actual_observed_result": "Running the reproduction pipeline built the rssn library with JIT features, created a JIT engine, configured a sandbox region at the address of a buffer containing the sentinel value, compiled and executed a Load instruction, and confirmed that the returned value matched the sentinel placed at the attacker-specified address.",
+  "verification_method": "The exploit script places a deterministic sentinel value (0xDEADBEEFCAFEBABE) in a ctypes buffer, then uses the JIT sandbox JSON API to read it back. The verification compares the raw bytes of the f64 return value against the sentinel. A match proves the JIT engine read from the attacker-specified arbitrary address. This distinguishes a real arbitrary memory read from a coincidental value, parser error, or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The JIT engine successfully accepted a sandbox configuration pointing to a ctypes buffer address.",
+    "The compiled Load instruction executed without trapping and returned the exact sentinel value placed at the arbitrary address.",
+    "The bit-level comparison of the returned f64 against the sentinel (0xDEADBEEFCAFEBABE) confirmed the arbitrary memory read."
+  ],
+  "limitations_or_blockers": [
+    "Building the rssn library with JIT features requires a nightly Rust toolchain, which increases build time.",
+    "The exact vulnerable commit hash could not be determined from the source checkout (no .git directory); the v0.2.9 tag or main branch is used as the pinned ref."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.2.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

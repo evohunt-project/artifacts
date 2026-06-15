@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that unauthorized introspection queries succeed in protect-all mode, exposing sensitive schema fields like adminSecret and deleteUser that should require authorization.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an introspection query from an unauthenticated user (resolveUserFn returns null) exposes the complete schema including sensitive fields.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, executed the introspection query without authentication, and confirmed that sensitive fields (adminSecret, deleteUser) were exposed in the schema response.",
+  "verification_method": "The exploit script checks: (1) unauthenticated user (resolveUserFn returns null), (2) introspection query succeeds, (3) sensitive field names (adminSecret, deleteUser) are visible in __schema response. This confirms authorization bypass for introspection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Introspection query returned complete __schema object",
+    "Query type fields include adminSecret and deleteUser",
+    "resolveUserFn returned null (unauthenticated)",
+    "protect-all mode did not block introspection fields",
+    "Authorization check bypassed for isIntrospectionType fields"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the main branch, and builds the Docker image.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js"
+    ]
+  }
+}

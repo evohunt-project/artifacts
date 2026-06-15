@@ -1,0 +1,29 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "missing_authorization",
+  "summary": "The Docker-based reproduction demonstrates that an unauthenticated attacker can read, create, and modify feedback records through the whitelisted /api/v1/feedback endpoint. The proof signal is the presence of attacker-controlled feedback content in the server response after making unauthenticated HTTP requests.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause unauthenticated HTTP requests to successfully read existing feedback, create new fake feedback, and modify existing feedback on a Flowise instance that has basic authentication enabled for all other endpoints.",
+  "actual_observed_result": "PoC has not been executed in this session. The reproduction bundle is complete and self-contained, awaiting execution in an environment with Docker available.",
+  "verification_method": "The exploit script performs four unauthenticated HTTP operations against the feedback endpoint: (1) GET feedback to read existing records, (2) POST to create fake feedback containing 'FAKE FEEDBACK FROM UNAUTHENTICATED ATTACKER', (3) PUT to modify existing feedback to contain 'TAMPERED BY UNAUTHENTICATED ATTACKER', and (4) GET again to verify the tampered data persists. The script checks for the exact proof strings in responses to distinguish successful exploitation from authentication errors or unrelated failures.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "PoC execution requires Docker and significant build time (pnpm install + build for the Flowise monorepo)",
+    "The target repository version 3.1.0 must be available at the specified GitHub URL",
+    "Build requires network access for npm package installation"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "3.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

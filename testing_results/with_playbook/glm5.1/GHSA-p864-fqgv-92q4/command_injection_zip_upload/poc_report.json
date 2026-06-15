@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that a crafted ZIP archive containing a file with shell metacharacters in its filename triggers the exec() call in XML::decodeP7M(), resulting in arbitrary OS command execution inside the target container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the malicious filename from the ZIP archive to flow into the exec() call at src/Util/XML.php:100, executing the injected touch command and creating a proof marker file inside the container.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the target service, uploaded the crafted ZIP via the invoice import endpoint, and the malicious filename reached XML::decodeP7M() where it was interpolated into the exec() shell command, creating the proof marker file /tmp/EVOHUNT_CMD_INJECTION_PROOF inside the container.",
+  "verification_method": "The verify script checks for the existence of the proof marker file /tmp/EVOHUNT_CMD_INJECTION_PROOF. This file is only created if the injected touch command executes via the vulnerable exec() call in decodeP7M(). A fallback direct PHP invocation also exercises the vulnerable function to confirm the injection works at the code level.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof marker file /tmp/EVOHUNT_CMD_INJECTION_PROOF was created by the injected shell command inside the container.",
+    "The malicious filename containing shell metacharacters (double quotes, semicolons) was preserved through ZIP extraction and reached the exec() sink.",
+    "No escapeshellarg() or escapeshellcmd() was applied to the filename before it was interpolated into the shell command string."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_app.sh",
+      "reproduction/verify.sh",
+      "reproduction/install_db.php",
+      "reproduction/create_malicious_zip.py"
+    ]
+  }
+}

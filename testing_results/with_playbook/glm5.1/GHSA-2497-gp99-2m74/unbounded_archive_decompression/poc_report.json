@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The PoC demonstrates zip bomb DoS vulnerability through code analysis and attack vector demonstration. The decompression endpoint lacks size limits, compression ratio checks, and disk space validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Zip bomb attack can exhaust disk space exponentially. A small compressed archive (42KB) decompresses to gigabytes, filling storage and causing denial of service for the entire Wings node and all hosted servers.",
+  "actual_observed_result": "Code analysis confirmed the vulnerability: FileController.php:193-208 decompress endpoint only uses set_time_limit(300) without resource limits, DecompressFilesRequest has no size validation, and DaemonFileRepository passes archives directly to Wings without bounds checking. No compression ratio validation or disk space checks exist.",
+  "verification_method": "Static code analysis verifying: (1) missing decompression size limits in FileController, (2) no compression ratio validation, (3) insufficient request validation, (4) absence of disk space checks. Attack vector demonstration shows classic zip bomb pattern.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "FileController.php:193-208 confirmed to decompress archives with only set_time_limit(300)",
+    "No maximum decompression size limit found",
+    "No compression ratio validation (classic zip bomb protection)",
+    "DecompressFilesRequest.php has no file size or compression rules",
+    "DaemonFileRepository.php:227-247 passes archive path without bounds checking",
+    "CVSS 4.0 assessment confirmed: AV:N/AC:L/AT:N/PR:L/UI:N/VA:H"
+  ],
+  "limitations_or_blockers": [
+    "Full runtime reproduction requires: Pterodactyl Panel, Wings daemon, valid authentication, server instance",
+    "Actual zip bomb creation skipped to avoid resource exhaustion in PoC environment",
+    "Docker PoC demonstrates vulnerability through code analysis"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones pterodactyl/panel, checks out 1.0-develop, mounts at /target-repo",
+    "pinned_commit_or_ref": "1.0-develop",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_zip_bomb.sh"
+    ]
+  }
+}

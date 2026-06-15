@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that the cloud function validator bypass works by appending .prototype.constructor to the function name. The code-level test replicates the exact getStore/get logic from triggers.js and demonstrates that getFunction resolves the handler through the prototype chain (function -> .prototype -> .constructor -> handler) while getValidator returns undefined because plain validator objects lack a .prototype own property, causing maybeRunValidator to skip enforcement entirely.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should confirm that: (1) the normal function lookup resolves both handler and validator correctly, (2) the .prototype.constructor bypass lookup resolves the handler but returns undefined for the validator, demonstrating that any cloud function protected by requireUser, requireMaster, or custom validators can be called without authentication.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, ran the verification script inside the container, and confirmed the vulnerability. The verify.js output shows: getFunction('protectedAction.prototype.constructor') returns the handler function, getValidator('protectedAction.prototype.constructor') returns undefined, confirming that the validator enforcement is bypassed. The exit code was 0 (success).",
+  "verification_method": "The verify.js script replicates the exact createStore, getStore, and get functions from src/triggers.js and tests both normal and bypass lookups. It verifies: (1) Functions store contains a function with hasOwnProperty('prototype')=true, (2) Validators store contains a plain object with hasOwnProperty('prototype')=false, (3) getFunction with .prototype.constructor resolves through the function's prototype chain, (4) getValidator with .prototype.constructor fails because plain objects lack the prototype own property. The script exits with code 0 only when the bypass is confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Docker container output confirms getFunction('protectedAction.prototype.constructor') resolves to the handler function.",
+    "Docker container output confirms getValidator('protectedAction.prototype.constructor') returns undefined.",
+    "Docker container output confirms the function handler has 'prototype' as an own property (true) while the validator object does not (false).",
+    "The run.sh script completed successfully with exit code 0, indicating the vulnerability was confirmed inside the container."
+  ],
+  "limitations_or_blockers": [
+    "The current reproduction tests the vulnerable store resolution logic directly rather than through a full HTTP request to a running parse-server instance. This approach isolates the core vulnerability but does not demonstrate the end-to-end HTTP exploit path (POST /functions/name.prototype.constructor). A full HTTP-level reproduction would require MongoDB, which was not feasible due to Docker resource constraints on the test machine."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the 8.6.60 tag, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8.6.60",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js",
+      "reproduction/exploit.js",
+      "reproduction/cloud-code.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that an authenticated user can upload arbitrarily large files via POST /api/resources/{path} without any server-side size limit. A 256MB file was uploaded successfully, and no MaxFileSize setting exists in the application configuration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An authenticated user should be able to upload a file exceeding any reasonable size limit, and the uploaded file should be written to disk in full. No upload size limit should exist in the application configuration.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the File Browser image, started the server, authenticated as admin, and uploaded a 256MB file via POST /api/resources/testfile_256mb.bin. The server returned HTTP 200 and the full 268,435,456 bytes were written to disk. No max*size or upload-related settings exist in the Settings configuration.",
+  "verification_method": "The verify.sh script generates a 256MB test file, uploads it via the file upload API endpoint, and verifies that the entire file was written to disk by comparing file sizes. It also inspects the /api/settings endpoint for any upload size configuration, confirming none exists. The proof signal EVOHUNT_PROOF_SIGNAL is emitted only when the uploaded file exceeds 100MB on disk.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "256MB test file generated and uploaded via POST /api/resources/testfile_256mb.bin returning HTTP 200",
+    "Uploaded file size on disk: 268,435,456 bytes (matches source file exactly)",
+    "Disk usage increased by ~537MB after upload (source + destination during copy)",
+    "No max*size or upload-related settings found in /api/settings response",
+    "EVOHUNT_PROOF_SIGNAL:unbounded_upload_confirmed emitted by verify.sh"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned v2.61.2 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.61.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

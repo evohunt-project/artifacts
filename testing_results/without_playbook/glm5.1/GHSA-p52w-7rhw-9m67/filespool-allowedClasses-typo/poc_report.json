@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "insecure_deserialization",
+  "summary": "The Docker-based reproduction confirms that the 'allowedClasses' (camelCase) option key in FileSpool.php is silently ignored by PHP's unserialize(), completely disabling the intended class restriction. A crafted serialized object is instantiated despite the allowlist, demonstrating that the security boundary is non-functional.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that unserialize() with the buggy 'allowedClasses' key allows arbitrary class instantiation (object is created and __destruct() executes), while the correct 'allowed_classes' key properly blocks it. The proof file written by __destruct() confirms code execution through the deserialization path.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, verified the 'allowedClasses' typo in the target repo's FileSpool.php, and executed the exploit script. The buggy unserialize() call instantiated the proof object (confirming the class restriction is bypassed), while the correct 'allowed_classes' key properly returned false. The __destruct() method created the proof file, confirming arbitrary code execution via the deserialization path.",
+  "verification_method": "The exploit script performs two controlled experiments: (1) unserialize with 'allowedClasses' => [] which should block the object but does not due to the typo, and (2) unserialize with 'allowed_classes' => [] which correctly blocks the object. The proof file created by the object's __destruct() method provides an observable side effect that distinguishes genuine object instantiation from a false result. The script also inspects the target repo's FileSpool.php to confirm the typo is present in the source code.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output shows 'CONFIRMED: FileSpool.php contains the allowedClasses typo' verifying the bug exists in the target source.",
+    "Container output shows 'OBJECT CREATED - CLASS RESTRICTION BYPASSED' proving the buggy key fails to restrict deserialization.",
+    "Container output shows 'BLOCKED - as intended' for the correct key, proving the intended behavior would work with the correct key name.",
+    "Proof file /tmp/evohunt_deser_proof.txt was created by __destruct(), confirming code execution through the deserialization path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

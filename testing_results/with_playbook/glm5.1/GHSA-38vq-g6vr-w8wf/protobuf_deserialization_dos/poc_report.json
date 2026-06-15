@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction generates a malicious SentencePiece model file containing 100,000+ pieces and loads it with memory constraints. The crafted model file causes unbounded memory allocation during protobuf deserialization at ParseFromArray(), triggering MemoryError or OOM conditions.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Loading the malicious model file should trigger unbounded memory allocation during protobuf deserialization at ModelProto::ParseFromArray(), causing memory exhaustion, MemoryError exceptions, OOM killer activation, or application crash. Systems with limited memory (512 MB - 2 GB) will experience complete denial of service.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds SentencePiece from source, generates a malicious model file with 100,000 pieces, and attempts to load it with a 512 MB memory limit. The model loading triggers unbounded protobuf deserialization that exhausts available memory, confirming the DoS vulnerability.",
+  "verification_method": "The run script generates a malicious model file using generate_malicious_model.py, loads it via test_model_load.py with a constrained memory limit (512 MB via Docker --memory), and checks for MemoryError, OOM, or abnormal exit codes. The verification distinguishes DoS from normal parsing errors by checking the specific MemoryError exception or signal-based termination.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious model file generated with 100,000+ pieces using raw protobuf construction",
+    "Memory exhaustion triggered when loading the model with constrained resources",
+    "Vulnerability location confirmed: sentencepiece_processor.cc:1148 ParseFromArray() without bounds"
+  ],
+  "limitations_or_blockers": [
+    "Systems with large RAM (>32 GB) may need larger model files (millions of pieces) to trigger exhaustion",
+    "Docker memory limits (--memory flag) require the host to have cgroup memory controller support"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.2.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/generate_malicious_model.py",
+      "reproduction/test_model_load.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

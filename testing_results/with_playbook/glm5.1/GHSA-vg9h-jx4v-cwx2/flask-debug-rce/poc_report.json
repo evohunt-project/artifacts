@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "remote-code-execution",
+  "summary": "Flask debug mode is enabled by default because app.py:33 sets unfurl_debug='True' (a truthy string) as the default parameter. When no unfurl.ini config file exists (which is the case after pip install since MANIFEST.in does not include it), Flask runs with debug=True, exposing the Werkzeug interactive debugger console at /console.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The Werkzeug interactive debugger is accessible at /console, allowing unauthenticated remote code execution. An attacker can execute arbitrary Python code on the server.",
+  "actual_observed_result": "Server log shows 'Debug mode: on', 'Debugger is active!', and 'Debugger PIN: 100-815-443'. HTTP GET /console returns 200 with the Werkzeug debugger UI. Server header contains 'Werkzeug'. Error responses expose traceback information.",
+  "verification_method": "Automated: trigger_debug.py checks for debug mode indicators: (1) Werkzeug in Server header, (2) /console endpoint accessible with debugger UI, (3) error responses containing traceback/debugger content, (4) debugger secret extraction. Success requires at least 2 indicators.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server log: 'Debug mode: on'",
+    "Server log: 'Debugger is active!'",
+    "Server log: 'Debugger PIN: 100-815-443'",
+    "GET /console returned HTTP 200 with Werkzeug debugger UI",
+    "Server response header contains 'Werkzeug'"
+  ],
+  "limitations_or_blockers": [
+    "The PoC demonstrates debug mode activation and debugger console accessibility but does not execute arbitrary code through the console to avoid ethical concerns",
+    "Werkzeug debugger requires a PIN for console execution in newer versions, but the PIN is derived from stable system properties and can be brute-forced",
+    "The vulnerability requires the Flask web UI to be running (not the CLI tool)"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "6cb8731c539129a8594ec9b3fd90bbc555e160ca",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/trigger_debug.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

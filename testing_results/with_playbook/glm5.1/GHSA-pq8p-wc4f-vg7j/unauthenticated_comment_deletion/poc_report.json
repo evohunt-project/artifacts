@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authorization",
+  "summary": "The Docker-based reproduction confirms that the comment deletion endpoint accepts unauthenticated requests and deletes comments without any authorization check. A comment created by an authenticated admin user is successfully deleted by an unauthenticated curl request.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause an unauthenticated request to delete a comment that was created by an authenticated user, and the verification should confirm the comment no longer exists in the database.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the AVideo application, created a test comment via the authenticated admin session, then sent an unauthenticated POST request to commentDelete.json.php with the comment ID. The comment was deleted successfully, confirmed by querying the database directly.",
+  "verification_method": "The verification script checks the database for the comment record after the unauthenticated deletion attempt. It compares the comment count before and after the deletion to confirm the comment was removed without authentication. The script also verifies that no session cookie or authentication token was sent with the delete request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The comment creation response contains the comment ID, confirming the comment existed before the attack.",
+    "The deletion response contains status=true and error=false, confirming successful deletion.",
+    "A subsequent database query returns 0 comments, confirming the comment was permanently removed.",
+    "The curl command used for deletion includes no cookie or authentication header."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/setup_avideo.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

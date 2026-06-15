@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "os_command_injection",
+  "summary": "The Docker-based reproduction confirms that the Marimo server's MCP STDIO configuration endpoint spawns arbitrary OS processes. By sending a single HTTP POST to /api/kernel/save_user_config with a malicious MCP server definition containing attacker-controlled command and args, the server immediately spawns the specified process in a background task, achieving remote code execution without any user interaction.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted MCP STDIO config to trigger subprocess spawning of attacker-controlled commands, creating a proof file at /tmp/evohunt_rce_proof inside the container.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Docker container, installed marimo from the vulnerable source and the mcp package, started the marimo edit server with --no-token (no authentication), extracted the skew protection token from the server's internal state, sent a POST /api/kernel/save_user_config request with a malicious MCP STDIO server definition (command=python3, args=[-c, ...]), and the background task spawned the subprocess which created /tmp/evohunt_rce_proof containing EVOHUNT_RCE_PROOF_CONFIRMED.",
+  "verification_method": "The exploit script checks for the existence and content of /tmp/evohunt_rce_proof after sending the exploit request. The file is created by the attacker-controlled subprocess spawned by the MCP STDIO transport connector. The script verifies the file content exactly matches the expected proof string, distinguishing genuine command execution from unrelated behavior like server startup messages or error logs.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The POST /api/kernel/save_user_config returned HTTP 200 with {\"success\":true}, confirming the malicious config was accepted.",
+    "The server log shows: 'Failed to connect to MCP server evohunt_proof (transport: MCPTransportType.STDIO)' indicating the STDIO transport attempted to spawn the subprocess (the connection 'failed' because the proof command exits immediately, but the command was already executed).",
+    "The proof file /tmp/evohunt_rce_proof was created with exact content 'EVOHUNT_RCE_PROOF_CONFIRMED', confirming the attacker-controlled python3 process ran successfully inside the container."
+  ],
+  "limitations_or_blockers": [
+    "The mcp Python package must be installed for the vulnerability to trigger. It is an optional dependency (pip install marimo[mcp]) but is commonly included in production deployments."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "d86dd51700896b3c81ff0f91d8fe9dad9c3fb7c5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

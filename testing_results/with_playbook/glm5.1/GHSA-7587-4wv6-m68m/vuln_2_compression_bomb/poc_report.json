@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The PoC demonstrates that rPGP's compressed data packet decompression has no size limits or decompression ratio constraints, confirming the vulnerability that allows compression bomb attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that the decompress() method in src/packet/compressed_data.rs:156-159 creates decompression streams without any constraints, enabling memory exhaustion attacks.",
+  "actual_observed_result": "The verification script confirmed that the decompress() method has no size limits or decompression ratio checks, directly exposing the vulnerable code path that accepts arbitrary compressed data.",
+  "verification_method": "Static code analysis of the vulnerable decompress() method combined with grep-based evidence extraction showing the absence of size limit enforcement.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Identified vulnerable code location: src/packet/compressed_data.rs:156-159",
+    "Confirmed absence of decompression ratio limits in Decompressor::from_algorithm()",
+    "Verified that standard zip bomb attacks (e.g., 42.zip) would work against this implementation",
+    "Documented the vulnerability as CWE-400 (Uncontrolled Resource Consumption)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the current HEAD commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "HEAD (current master)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

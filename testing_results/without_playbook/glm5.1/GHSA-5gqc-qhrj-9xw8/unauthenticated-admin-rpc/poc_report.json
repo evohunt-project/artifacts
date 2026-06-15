@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that the admin RPC server exposes sensitive operations (ListNodes, ListNamespaces, SplitShard) on a network-accessible endpoint (0.0.0.0:6651) with authentication disabled by default, allowing unauthenticated attackers to access cluster topology and perform administrative operations.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate unauthenticated access to admin RPC endpoints, confirming the ability to list cluster nodes, enumerate namespaces, and potentially trigger shard split operations without any credentials or authentication.",
+  "actual_observed_result": "The reproduction successfully started the Oxia coordinator with default configuration (authentication disabled). The exploit script demonstrated unauthenticated access to the admin endpoint on port 6651, successfully calling ListNodes to enumerate cluster nodes and ListNamespaces to disclose namespace configurations. The SplitShard operation was also accessible, confirming complete administrative access without authentication.",
+  "verification_method": "The verification script sets up a minimal Oxia cluster using default configuration, then uses grpcurl to send unauthenticated gRPC requests to the admin endpoint. Success is determined by (1) ability to list gRPC services without authentication, (2) successful ListNodes response containing node information, (3) successful ListNamespaces response disclosing namespace configurations, and (4) ability to invoke SplitShard operation. These operations distinguish a real vulnerability from a service startup failure or network connectivity issue.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "grpcurl successfully listed available gRPC services on admin endpoint port 6651 without authentication",
+    "ListNodes RPC returned cluster node information including node IDs and addresses without requiring credentials",
+    "ListNamespaces RPC disclosed namespace configurations revealing system architecture",
+    "SplitShard RPC was accessible, demonstrating the ability to perform destructive administrative operations",
+    "All operations executed with default configuration (authentication disabled), confirming the insecure-by-default state"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (oxia-db/oxia) on the host, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

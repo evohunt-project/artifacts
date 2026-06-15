@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms the SQL injection vulnerability in Video::getCatSQL(). A MariaDB database is initialized with a secrets table containing a random proof token, and the same vulnerable code pattern (direct string interpolation of unsanitized catName into SQL) is exercised. The reproduction demonstrates extraction of the proof token from the secrets table via UNION-based SQL injection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the SQL injection proof token stored in a separate database table is extracted through the vulnerable getCatSQL() code pattern, confirming that an attacker can read arbitrary data from the database.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started MariaDB, created the test database with a secrets table, executed the UNION-based SQL injection using the same pattern as getCatSQL(), and successfully extracted the proof token from the secrets table.",
+  "verification_method": "The test script generates a random proof token (EVOHUNT_SQLI_PROOF_<hex>), inserts it into a secrets table, then uses the vulnerable code pattern to extract it via SQL injection. The verification checks whether the proof token appears in the query results. Additionally, the script confirms that the vulnerable $_REQUEST['catName'] pattern exists in the target repository's objects/video.php file.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The normal query returns the expected number of rows from the categories table.",
+    "The injected UNION SELECT query returns rows containing the proof token from the secrets table.",
+    "The vulnerable $_REQUEST['catName'] pattern is confirmed present in the target repository at objects/video.php.",
+    "The proof token extraction confirms the SQL injection allows reading arbitrary database tables."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_sqli.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

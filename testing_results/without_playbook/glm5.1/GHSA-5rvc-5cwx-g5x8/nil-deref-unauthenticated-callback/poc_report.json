@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "nil_pointer_dereference",
+  "summary": "The PoC builds the UDM from the pinned commit, starts it with a minimal HTTP config and a mock NRF, and sends a single unauthenticated POST to /sdm-subscriptions with a valid DataChangeNotify JSON body. The handler passes an empty SUPI (because the route lacks a :supi param) to DataChangeNotificationProcedure, which looks up a nil UE context and dereferences it at ue.UdmSubsToNotify, triggering a nil pointer dereference panic. Gin's recovery middleware catches the panic and returns HTTP 500.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "HTTP 500 Internal Server Error returned to the unauthenticated attacker. The UDM handler goroutine panics with nil pointer dereference at notifier.go:30. Gin's recovery middleware catches the panic, preventing a full process crash but the handler is disrupted and the error is logged with a full stack trace.",
+  "actual_observed_result": "Confirmed: POST /sdm-subscriptions with body {\"notifyItems\":[{\"resourceUri\":\"test\"}]} returns HTTP 500 Internal Server Error. The UDM log shows a panic stack trace with the crash at notifier.go:30 +0xbc, in the DataChangeNotificationProcedure function, triggered via api_httpcallback.go:66. No authentication was required. The Gin recovery middleware (ginRecover) caught the panic.",
+  "verification_method": "The verify.sh script checks: (1) UDM process crash after the exploit request, (2) HTTP 500 response code, or (3) panic/nil pointer dereference signatures in UDM logs (notifier.go:30). Any of these confirms the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 500 Internal Server Error response to unauthenticated POST /sdm-subscriptions",
+    "Stack trace showing panic at notifier.go:30 +0xbc (ue.UdmSubsToNotify nil dereference)",
+    "Call chain: HandleDataChangeNotificationToNF -> DataChangeNotificationProcedure -> ue.UdmSubsToNotify (nil)",
+    "Request path: POST /sdm-subscriptions with Content-Type: application/json and body {\"notifyItems\":[{\"resourceUri\":\"test\"}]}",
+    "No Authorization header or token required"
+  ],
+  "limitations_or_blockers": [
+    "Gin's recovery middleware catches the panic, so the UDM process does not fully crash. However, the handler goroutine is disrupted and returns HTTP 500, confirming the nil dereference.",
+    "The UDM requires NRF registration on startup. A mock NRF with h2c (HTTP/2 cleartext) support is included in the reproduction bundle.",
+    "The Go toolchain version must be Go 1.25+ as required by go.mod. The golang:latest image (Go 1.26.4) is used."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "630da428ecebf3ecb02c482333914078d9af96e7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/mock_nrf_go/main.go",
+      "reproduction/mock_nrf_go/go.mod"
+    ]
+  }
+}

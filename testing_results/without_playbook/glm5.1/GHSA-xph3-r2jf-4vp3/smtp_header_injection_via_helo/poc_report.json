@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "header_injection",
+  "summary": "The Docker-based reproduction confirms that a bare CR (0x0D) character in the EHLO host argument is preserved through the SMTP command processing pipeline and embedded in the Received header of the resulting email message, creating a header injection condition verifiable in the captured message stream.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a bare CR (0x0D) character in the EHLO host argument survives sanitization and is embedded in the Received header of the captured email message. A downstream email parser that treats bare CR as a line break would interpret the injected content as a separate email header.",
+  "actual_observed_result": "The reproduction starts Haraka from the vulnerable source, connects via SMTP with a crafted EHLO containing a bare CR (0x0D) in the host argument, completes a mail transaction, and the captured message file contains the byte sequence 0x0D followed by the injection marker 'X-EvohuntPoC:' within the Received header, confirming header injection.",
+  "verification_method": "The verification script checks the captured message file for the presence of the byte sequence \\rX-EvohuntPoC: (0x0D followed by the ASCII string X-EvohuntPoC:) which confirms that the bare CR from the attacker-controlled EHLO argument was preserved and embedded in the Received header without sanitization.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The captured message file (/tmp/captured_message.eml) contains the byte 0x0D (bare CR) followed by 'X-EvohuntPoC:' within the Received header, confirming the attacker-controlled EHLO argument was embedded without sanitization.",
+    "The Haraka server accepted the crafted EHLO command and completed the mail transaction without error, demonstrating that the vulnerability is reachable without special conditions or authentication."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Haraka repository on the host, checks out the pinned vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.1.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/capture_plugin.js",
+      "reproduction/setup_haraka.sh"
+    ]
+  }
+}

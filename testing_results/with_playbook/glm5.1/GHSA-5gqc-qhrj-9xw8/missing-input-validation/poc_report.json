@@ -1,0 +1,32 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "input_validation_missing",
+  "summary": "The PoC demonstrates missing input validation in Oxia Write/Read operations. Empty keys, oversized values, and large batch operations are accepted without server-side validation, enabling database corruption and resource exhaustion.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending empty keys, oversized values (e.g., 100MB), or large batch operations (10000+ items) should be accepted by the server, causing database corruption, memory exhaustion, or disk space depletion.",
+  "actual_observed_result": "PoC not executed during this session. Manual execution required to demonstrate acceptance of invalid inputs.",
+  "verification_method": "The verify.sh script checks: (1) Empty keys were written to database; (2) Memory/disk usage increased from oversized values; (3) Request was accepted without validation errors.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "PoC artifacts designed but not executed",
+    "Test cases: empty key write, 100MB value write, 10000-item batch",
+    "Expected outcome: server accepts all invalid inputs"
+  ],
+  "limitations_or_blockers": [
+    "PoC requires Docker execution which was not performed during automated session",
+    "Large value writes (100MB) may be limited by gRPC message size (256MB max)",
+    "Empty keys may cause database errors rather than corruption"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones or copies target repository, builds Docker image, runs exploit",
+    "pinned_commit_or_ref": "current HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

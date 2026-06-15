@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_execution",
+  "summary": "The Docker-based reproduction demonstrates that the execute_python_file function executes arbitrary Python code when an attacker-controlled file is created and executed. The PoC creates a malicious Python file, executes it through the vulnerable code path, and proves code execution through a proof file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create and execute a malicious Python file, demonstrating that attacker-controlled code runs with application privileges and can perform arbitrary actions.",
+  "actual_observed_result": "The PoC successfully created a malicious Python file and executed it through the vulnerable execute_python_file code path, creating python_exec_proof.txt with execution details including process ID and working directory.",
+  "verification_method": "The verify_exec.sh script checks for the presence of python_exec_proof.txt created by the malicious code, distinguishing successful execution from failures or unrelated behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious Python file was successfully created in workspace",
+    "File was executed through vulnerable subprocess.run with shell=True",
+    "Proof file contains process information showing code executed with application privileges",
+    "The attack path matches the real vulnerability in execute_code.py:33"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out v0.2.2, and mounts it read-only at /target-repo.",
+    "pinned_commit_or_ref": "v0.2.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_file.py",
+      "reproduction/trigger_exec.py",
+      "reproduction/verify_exec.sh"
+    ]
+  }
+}

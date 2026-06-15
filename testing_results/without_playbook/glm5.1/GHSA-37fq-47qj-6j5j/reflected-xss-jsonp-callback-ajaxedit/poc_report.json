@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "reflected_xss",
+  "summary": "The Docker-based reproduction deploys a full YesWiki instance with MariaDB, sends a crafted JSONP request to the ajaxedit handler with an attacker-controlled callback parameter, and confirms that the callback value is reflected verbatim in the HTTP response body without sanitization.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The server response to /PagePrincipale/ajaxedit?jsonp_callback=<payload> should contain the attacker-controlled payload reflected verbatim in the response body, demonstrating that an attacker can inject arbitrary JavaScript that auto-executes in victim browsers via JSONP script tags.",
+  "actual_observed_result": "Running ./reproduction/run.sh deployed a full YesWiki environment (PHP 7.4, Apache, MariaDB), sent a curl request with the proof string EVOHUNT_JSONP_XSS_PROOF_7b2c as the jsonp_callback parameter to the ajaxedit handler, and the response body contained the proof string verbatim in the JSONP response wrapper.",
+  "verification_method": "The verify.sh helper deploys the YesWiki environment, sends a crafted HTTP request with a unique proof string (EVOHUNT_JSONP_XSS_PROOF_7b2c) as the jsonp_callback parameter value, then uses grep to confirm the exact proof string appears in the response body. This distinguishes successful XSS reflection from generic server errors, redirects, or unrelated output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response body contains the literal string EVOHUNT_JSONP_XSS_PROOF_7b2c injected via the jsonp_callback parameter.",
+    "The response is served with Content-Type application/json, but the JSONP pattern allows loading via <script src> tags which execute the content as JavaScript.",
+    "The reflection occurs at ajaxedit.php line 93-94 which is outside any access-control check, confirming the vulnerability is exploitable without authentication."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction requires internet access during Docker build for composer dependency installation.",
+    "The setup takes several minutes due to MariaDB initialization and composer install."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the doryphore ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "doryphore",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

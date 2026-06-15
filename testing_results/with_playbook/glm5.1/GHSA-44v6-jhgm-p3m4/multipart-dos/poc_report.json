@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The PoC successfully verified that the multipart form-data parser in n8n webhooks is configured without critical resource limits (maxTotalFileSize, maxFieldsSize, maxFields, maxFiles), confirming the denial-of-service vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The verification script should confirm that the formidable parser configuration in webhook-form-data.ts is missing the four critical limits that prevent resource exhaustion attacks.",
+  "actual_observed_result": "The verification script confirmed that all four critical limits (maxTotalFileSize, maxFieldsSize, maxFields, maxFiles) are absent from the formidable configuration in webhook-form-data.ts, validating the vulnerability.",
+  "verification_method": "Static code analysis of webhook-form-data.ts checking for the presence of security-critical formidable options. The absence of these options confirms the vulnerability exists.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "webhook-form-data.ts found at expected location",
+    "maxTotalFileSize is NOT set in formidable configuration",
+    "maxFieldsSize is NOT set in formidable configuration",
+    "maxFields is NOT set in formidable configuration",
+    "maxFiles is NOT set in formidable configuration",
+    "Vulnerability confirmed: Multipart parser allows unbounded resource consumption"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit": "HEAD of n8n repository at time of audit",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_dos.sh",
+      "reproduction/trigger_dos.py"
+    ]
+  }
+}

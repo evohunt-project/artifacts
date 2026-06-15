@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that Glances executes arbitrary commands from backtick-wrapped configuration values when loading the configuration file. The malicious config value triggered command execution and created a proof file demonstrating the vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the malicious backtick command in the config file to be executed when Glances loads the configuration, creating a proof file that demonstrates arbitrary command execution.",
+  "actual_observed_result": "The reproduction successfully created a malicious configuration file with a backtick-wrapped command, started Glances to trigger config loading, and produced the expected proof file at /tmp/pwned_config.txt containing evidence of command execution including the user ID and system information.",
+  "verification_method": "The verify.sh script checks for the existence and content of /tmp/pwned_config.txt. It verifies that the file contains the 'VULNERABILITY_CONFIRMED' marker string, which can only appear if the backtick command was actually executed. This distinguishes a successful exploit from config parsing errors or other unrelated behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/pwned_config.txt was successfully created",
+    "The file contains 'VULNERABILITY_CONFIRMED: Command injection via config backtick execution'",
+    "The file contains output from the 'id' command, showing the user context of execution",
+    "This proves arbitrary command execution occurred during configuration loading"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the develop branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "develop",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.conf",
+      "reproduction/verify.sh"
+    ]
+  }
+}

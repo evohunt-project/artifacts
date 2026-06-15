@@ -1,0 +1,36 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_algorithmic_complexity",
+  "summary": "The Docker-based reproduction confirms that a Django view rendering user input through the striptags template filter triggers the O(n^2) HTMLParser quadratic-time path via unclosed HTML comments (<!--). The exploit sends two HTTP POST requests with different-sized payloads to the same view and measures timing. The timing ratio of 3.68x for a 2x input size increase confirms quadratic (O(n^2)) behavior, demonstrating that a single request can monopolize server CPU for seconds to minutes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proof-of-concept should demonstrate that response time grows quadratically (approximately 4x slower for 2x larger input) when processing crafted input through the striptags template filter, confirming CPU exhaustion-based denial of service. A 40KB crafted payload should take approximately 0.5 seconds, and a 400KB payload would take approximately 47 seconds of server CPU time.",
+  "actual_observed_result": "Running the reproduction with Python 3.12.10 (which has the vulnerable HTMLParser) produced timing results confirming O(n^2) behavior: small payload (20KB, n=5000) completed in 0.1247s, large payload (40KB, n=10000) completed in 0.4587s. The timing ratio of 3.68x for a 2.00x input size increase confirms quadratic scaling. The PROOF_SIGNAL 'strip_tags_dos_confirmed' was emitted by the exploit script.",
+  "verification_method": "The exploit sends two POST requests of different sizes (n=5000 and n=10000 unclosed comment tokens) to a Django view that renders the input through {{ user_input|striptags }}. It measures server response time for each request and computes the timing ratio. A ratio exceeding 2.5x for a 2x input increase confirms O(n^2) behavior. This distinguishes quadratic CPU exhaustion from normal linear processing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Small payload (n=5000, 20KB): 0.1247s server response time",
+    "Large payload (n=10000, 40KB): 0.4587s server response time",
+    "Timing ratio: 3.68x for 2.00x input increase, confirming O(n^2) quadratic scaling",
+    "PROOF_SIGNAL emitted: strip_tags_dos_confirmed",
+    "Both requests returned HTTP 200 with expected response sizes (35005 and 70005 bytes)"
+  ],
+  "limitations_or_blockers": [
+    "The O(n^2) behavior requires Python < 3.12.12 or < 3.13.6 where the HTMLParser quadratic-time bug is unfixed. The reproduction uses Python 3.12.10 to ensure the vulnerability is present."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/app/settings.py",
+      "reproduction/app/views.py",
+      "reproduction/app/urls.py",
+      "reproduction/app/templates/test.html"
+    ]
+  }
+}

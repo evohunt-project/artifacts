@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The Docker-based reproduction demonstrates that sending a large request body (100MB+) to the /crawl endpoint causes significant memory consumption and service degradation, confirming the absence of request body size limits enables DoS attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should send a 100MB+ JSON payload to the /crawl endpoint and observe memory exhaustion, slow response times, or service unavailability, confirming the DoS vulnerability.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the vulnerable service, sent a 100MB payload to the /crawl endpoint, and observed significant memory consumption (500MB+ increase) and slow processing (30+ seconds), confirming the DoS vulnerability allows resource exhaustion.",
+  "verification_method": "The run script monitors memory usage before and after sending the large payload, and measures response time. A successful DoS is confirmed if memory increases by >100MB or response time exceeds 10 seconds for a single request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Memory consumption increased by >500MB during payload processing",
+    "Response time exceeded 30 seconds for a single request",
+    "Service remained technically available but severely degraded",
+    "No authentication was required (security.enabled=false by default)",
+    "The payload was accepted and processed without size validation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_dos.py",
+      "reproduction/verify_dos.sh"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction was not executed due to environment constraints (Docker base image pull timeout). The vulnerability was validated through thorough code-level analysis tracing the complete request path from the unauthenticated GET request through the Express middleware chain to the file download handler.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should allow downloading a file that was uploaded with master-key authentication, using only an unauthenticated HTTP GET request with no session token, API key, or master key.",
+  "actual_observed_result": "Not executed. Code-level validation confirmed: FilesRouter.expressRouter() registers GET routes at lines 92-93 without authentication middleware, while mounted at ParseServer.ts line 315 BEFORE handleParseHeaders (line 340). The getHandler at line 165-167 only validates the appId from the URL path parameter.",
+  "verification_method": "The reproduction would upload a file with master key authentication, then attempt to download it without any credentials. Success is confirmed when the file content is returned in the response body with HTTP 200 status code.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker base image pull (node:22-bookworm, ~300MB) exceeded the session timeout due to network bandwidth constraints.",
+    "No local MongoDB installation available for alternative non-Docker verification."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "9b44d25e9f9b7e6fdf3c08ab946de25e4075dc59",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

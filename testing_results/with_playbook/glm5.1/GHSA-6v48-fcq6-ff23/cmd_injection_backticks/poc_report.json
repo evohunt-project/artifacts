@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that backtick-enclosed commands in DAG YAML parameters are executed without validation, allowing arbitrary command execution inside the target container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the backtick command payload to execute and create the proof file /tmp/pwned inside the vulnerable application container.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Dagu server, loaded the malicious DAG with backtick payload, triggered DAG execution, and created the proof file /tmp/pwned inside the container.",
+  "verification_method": "The run script executes the DAG and then checks for the existence of /tmp/pwned file inside the container. The check distinguishes successful command execution from YAML parsing errors or startup failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container file system contains /tmp/pwned after DAG execution",
+    "DAG execution logs show successful processing of backtick payload",
+    "The Dagu server remained healthy during exploitation, ruling out crash or startup failure"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the current HEAD, and builds the vulnerable Dagu binary inside the container.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.yaml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

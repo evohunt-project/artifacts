@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that any user with the application ID can obtain MongoDB query execution plans via the explain query parameter without master key authentication. The response contains queryPlanner, winningPlan, executionStats, and serverInfo fields revealing internal database structure.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a find request with explain=true using only the public application ID (no master key, no session token) should return a detailed MongoDB query execution plan containing index details, scan types, document counts, and execution times that should only be accessible to master-key holders.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched parse-server with default configuration, created test data in a TestSecrets class, and sent an explain query with only the application ID header. The response contained a full MongoDB explain document with queryPlanner, winningPlan, executionStats, totalDocsExamined, and executionTimeMillis fields, confirming the information disclosure.",
+  "verification_method": "The verification script parses the HTTP response as JSON and checks for at least 2 distinct MongoDB explain output fields (queryPlanner, winningPlan, executionStats, serverInfo, totalDocsExamined). This distinguishes a genuine MongoDB explain disclosure from a normal Parse query response (which would contain a results array of Parse objects) or an error response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The explain query response contains the queryPlanner field with nested winningPlan revealing the MongoDB query execution strategy.",
+    "The request succeeded using only the X-Parse-Application-Id header without X-Parse-Master-Key, confirming no master key is required.",
+    "The response includes executionStats with totalDocsExamined and executionTimeMillis, exposing internal database performance data.",
+    "The serverInfo field reveals MongoDB server version and host information."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.15",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

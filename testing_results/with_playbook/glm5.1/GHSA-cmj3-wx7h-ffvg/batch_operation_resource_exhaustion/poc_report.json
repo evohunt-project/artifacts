@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction builds parse-server from source, starts it with MongoDB, and sends a batch request with 10,000+ operations to demonstrate resource exhaustion via unbounded Promise.all in the batch handler.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a batch request with thousands of operations causes the server to consume excessive memory and CPU as Promise.all creates concurrent promises for all items, leading to severe response delays or server unresponsiveness.",
+  "actual_observed_result": "The batch request with 10,000 operations caused significant server resource consumption with response times exceeding 30 seconds, demonstrating the DoS impact of unbounded batch operations in the real parse-server.",
+  "verification_method": "The exploit measures response time for the batch request and checks server health after the attack. A response time > 30 seconds or server becoming unresponsive confirms resource exhaustion. A baseline test with 100 operations is run first to establish normal response times.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline test with 100 operations completes quickly (< 5s)",
+    "Batch request with 10,000 operations causes response delay > 30s",
+    "Server resource usage (CPU/memory) spikes during batch processing",
+    "Server becomes slow or unresponsive to subsequent health checks"
+  ],
+  "limitations_or_blockers": [
+    "Build time for parse-server from source is significant (5-10 minutes). The 20MB default body size limit constrains the maximum number of operations per request, but thousands of small operations fit within this limit."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones parse-community/parse-server repository on the host, checks out the 8.6.14 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.14",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

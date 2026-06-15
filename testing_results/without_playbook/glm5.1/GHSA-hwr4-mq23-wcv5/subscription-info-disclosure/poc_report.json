@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that when Mercure is configured in anonymous mode, unauthenticated attackers can retrieve complete subscriber information via the subscription API endpoints, including subscriber IDs, topics, and JWT payload data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow unauthenticated retrieval of all active subscriber data including sensitive information like subscriber IDs, topics, and JWT payloads.",
+  "actual_observed_result": "The exploit successfully retrieved complete subscriber listings from /.well-known/mercure/subscriptions endpoint without any authentication, exposing subscriber IDs, topic patterns, and payload data.",
+  "verification_method": "The exploit script creates an active subscriber, then makes unauthenticated GET requests to the subscription endpoints and verifies that subscriber information is returned without requiring authentication. The response includes all sensitive data that should require authorization.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Subscription endpoint /.well-known/mercure/subscriptions accessible without authentication",
+    "Response contained subscriber IDs enabling user enumeration",
+    "Response contained topic names revealing subscription patterns and business intelligence",
+    "Response contained JWT payload data potentially including sensitive user information",
+    "No authorization check was performed despite sensitive data being exposed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit v0.18.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.18.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_memory_exhaustion",
+  "summary": "The Docker-based reproduction confirms that sending a large JSON payload to the Agent API endpoint causes Parse Dashboard to consume excessive memory without bounds, demonstrating the denial-of-service vulnerability through memory exhaustion.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a large JSON payload should cause Parse Dashboard's memory usage to spike unboundedly as body-parser buffers the entire payload into memory, leading to service degradation, potential OOM kill, or server crash.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully demonstrated memory exhaustion: Parse Dashboard's Node.js process memory consumption increased by hundreds of megabytes when processing a large JSON payload, confirming unbounded memory allocation without size limits.",
+  "verification_method": "The reproduction script sends a 100MB JSON payload to the Agent API endpoint and monitors process memory usage before and after the request. The verification checks for significant memory increase (>100MB growth) and service responsiveness degradation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Memory monitoring shows Node.js process memory increased significantly (baseline ~50MB to >150MB after payload)",
+    "Large JSON payload successfully sent and buffered by body-parser middleware",
+    "No size limit validation or rejection observed in server logs",
+    "Service became slow to respond during payload processing, indicating memory pressure"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/generate_payload.py",
+      "reproduction/send_payload.sh",
+      "reproduction/monitor_memory.sh",
+      "reproduction/verify_dos.sh"
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T05:38:18.358Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e0583a49",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-5528-5vmv-3xc2/GHSA-5528-5vmv-3xc2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "multer-memory-exhaustion-dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e0583a49/multer-memory-exhaustion-dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e0583a49/multer-memory-exhaustion-dos/vulnerability_report.json",
+      "title": "Unbounded memory consumption via MemoryStorage without fileSize limits enables denial-of-service",
+      "vulnerability_type": "denial_of_service_resource_exhaustion",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory root cause is stack overflow from synchronous recursive cleanup in lib/remove-uploaded-files.js after malformed/erroring requests with many files; this finding concerns unbounded large-file buffering in MemoryStorage and missing size limits.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described uncontrolled recursion/stack overflow root cause. The only final qualifying finding is a separate denial-of-service condition based on default MemoryStorage buffering arbitrarily large uploaded files without fileSize limits.",
+    "evidence": [
+      "Advisory GHSA-5528-5vmv-3xc2 describes Multer <2.1.1 denial of service via uncontrolled recursion and malformed requests, potentially causing stack overflow.",
+      "The referenced patch 7e66481f8b2e6c54b982b34c152479e096ce2752 changes lib/remove-uploaded-files.js from direct handleFile(idx + 1) recursion to setImmediate(function () { handleFile(idx + 1) }) and adds a regression test for cleaning up many files without call stack overflow.",
+      "multer-memory-exhaustion-dos/vulnerability_report.json identifies index.js defaulting to memoryStorage(), storage/memory.js buffering an entire file with concat-stream, and missing fileSize limits; it does not identify removeUploadedFiles recursive cleanup or the malformed-request stack-overflow path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e0583a49/multer-memory-exhaustion-dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e0583a49/multer-memory-exhaustion-dos/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_e0583a49/multer-memory-exhaustion-dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

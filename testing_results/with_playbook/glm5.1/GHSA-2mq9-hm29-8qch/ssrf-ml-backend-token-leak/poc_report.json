@@ -1,0 +1,31 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf_token_leakage",
+  "summary": "The reproduction bundle demonstrates SSRF with auth token leakage via the ML backend URL. An authenticated user registers an attacker-controlled URL as an ML backend, and Label Studio sends the project creator's auth token to that URL in the setup() POST body. Docker-based execution was not completed due to network constraints (Docker image pull timeout in the execution environment).",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause Label Studio to create an ML backend pointing at a local HTTP listener, triggering a setup() POST request that contains the project creator's auth token (access_token field) in the request body delivered to the attacker-controlled URL.",
+  "actual_observed_result": "Not attempted. Docker image pull timed out in the execution environment due to network constraints. The source code was statically verified: label_studio/ml/api_connector.py:232-243 confirms that setup() sends project.created_by.auth_token.key in the POST body to the user-controlled ML backend URL.",
+  "verification_method": "The exploit.py script starts a local HTTP listener on port 9999, creates a Label Studio user and project, registers the listener URL as an ML backend via POST /api/ml, and checks whether the captured POST body contains the project creator's auth token. Success is determined by string-matching the token in the captured request body.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static code review confirmed label_studio/ml/api_connector.py:239 sends access_token: project.created_by.auth_token.key to the ML backend URL",
+    "Static code review confirmed label_studio/ml/serializers.py:34-36 calls validate_upload_url with block_local_urls=settings.ML_BLOCK_LOCAL_IP which defaults to False",
+    "Static code review confirmed label_studio/core/settings/base.py:733 sets ML_BLOCK_LOCAL_IP = get_bool_env('ML_BLOCK_LOCAL_IP', False)"
+  ],
+  "limitations_or_blockers": [
+    "Docker image pull timed out in the execution environment due to network constraints",
+    "Runtime verification could not be completed"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag 1.23.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "1.23.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

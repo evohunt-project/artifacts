@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cleartext_credential_exposure",
+  "summary": "The Docker-based reproduction confirms that the AVideo login endpoint accepts credentials via GET query parameters. The credentials appear in the Apache access log, and the JSON response exposes the PHP session identifier and user data including a password-derived token.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending GET /login?user=admin&pass=<password> should cause the credentials to be logged in the Apache access log and the response should contain the PHP session ID (PHPSESSID), a password-derived token (pass), and user email.",
+  "actual_observed_result": "The verify.sh script installed the AVideo application, sent a GET-based login request with credentials in the URL query string, and confirmed that: (1) the JSON response contains PHPSESSID and user data fields, and (2) the full URL with plaintext credentials appears in the Apache access log.",
+  "verification_method": "The verification script checks two independent signals: (1) the login response JSON contains 'PHPSESSID' and 'pass' fields confirming sensitive data exposure in the response body, and (2) the Apache access log contains the exact URL with credentials in the query string. Both signals must be present to confirm the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The login endpoint processed a GET request with user and password in the URL query string.",
+    "The JSON response body contains PHPSESSID, pass, and email fields after successful GET-based authentication.",
+    "The Apache access log records the full GET /login?user=admin&pass=<password> URL with plaintext credentials."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

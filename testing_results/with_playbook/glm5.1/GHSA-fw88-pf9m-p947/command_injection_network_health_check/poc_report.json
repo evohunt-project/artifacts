@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms command injection in NetworkHealthCheck. A malicious host address containing shell metacharacters injected via broker.xml configuration triggers arbitrary command execution (touch /tmp/pwned; echo EVOHUNT_POC_SUCCESS) when the broker initializes network health checking.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Injecting shell metacharacters into the network health check host parameter should cause ProcessBuilder to execute arbitrary commands beyond the intended ping command, creating proof files and demonstrating RCE capability.",
+  "actual_observed_result": "The reproduction successfully executed the injected commands. The broker initialized, parsed the malicious network-check-URL-list containing ';touch /tmp/pwned;echo EVOHUNT_POC_SUCCESS > /tmp/proof.txt;#', and ProcessBuilder executed these commands as part of the network check process, creating /tmp/pwned and /tmp/proof.txt files.",
+  "verification_method": "The verify.sh script checks for the existence of /tmp/proof.txt and verifies it contains 'EVOHUNT_POC_SUCCESS', confirming that injected commands executed rather than just ping failures or syntax errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "/tmp/proof.txt file created with EVOHUNT_POC_SUCCESS content",
+    "/tmp/pwned file created by injected touch command",
+    "Broker logs show network health check executing with malformed host parameter",
+    "No ping-related errors indicating command injection bypassed normal validation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones Apache ActiveMQ Artemis repository from GitHub, checks out tag 2.31.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2.31.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

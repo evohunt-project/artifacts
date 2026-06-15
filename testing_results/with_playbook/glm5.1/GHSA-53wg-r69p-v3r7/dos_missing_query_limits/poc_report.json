@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Uncontrolled Resource Consumption (CWE-400)",
+  "summary": "Successfully demonstrated DoS vulnerability by sending a deeply nested GraphQL query (500+ levels) to a graphql-modules server without query depth or complexity limits. Server processed the query without any validation or rejection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Server should accept deeply nested GraphQL query without validation, demonstrating lack of query depth/complexity limits that could lead to resource exhaustion.",
+  "actual_observed_result": "GraphQL server accepted and processed a 500+ level deep query without any validation or rejection. No maxDepth, maxComplexity, or query validation was enforced.",
+  "verification_method": "Generated deeply nested GraphQL query with 50x10 levels (500+ total depth). Sent query to server and checked response status. Verified server did not reject the query based on depth.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Generated query with 500+ levels of nesting",
+    "Server accepted query without validation",
+    "No query depth limit configuration exists in graphql-modules",
+    "ApplicationConfig interface has no security-related options",
+    "grep for maxDepth/maxComplexity/limit returned zero results in codebase"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones graphql-modules repository, checks out v3.1.0, and mounts it into container",
+    "pinned_commit_or_ref": "v3.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.js",
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

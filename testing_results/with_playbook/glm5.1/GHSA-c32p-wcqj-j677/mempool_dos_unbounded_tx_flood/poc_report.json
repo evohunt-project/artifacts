@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction successfully demonstrates that unauthenticated attackers can flood the mempool with thousands of transactions via RPC broadcast endpoints without any rate limiting, causing resource exhaustion and potential denial of service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should submit at least 5,000 transactions via the broadcast_tx_async endpoint without authentication or rate limiting, filling the mempool to capacity and consuming significant CPU/memory resources.",
+  "actual_observed_result": "The reproduction successfully submitted thousands of transactions to the mempool via unauthenticated RPC endpoints. The mempool filled with transactions, each triggering CheckTx validation. No per-client rate limiting was encountered. Resource consumption increased significantly during the flood.",
+  "verification_method": "The verification script checks that at least 5,000 transactions were successfully submitted (threshold for demonstrating unbounded submission), queries the mempool status via RPC to show transaction count and size, and monitors resource usage of the CometBFT process to demonstrate CPU/memory consumption.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Successfully submitted thousands of transactions via broadcast_tx_async without authentication",
+    "No per-client rate limiting encountered during rapid submission",
+    "Mempool filled with transactions, demonstrating capacity exhaustion vector",
+    "Resource consumption (CPU, memory) increased during transaction flood",
+    "CheckTx validation triggered for each transaction, demonstrating computational DoS vector"
+  ],
+  "limitations_or_blockers": [
+    "The PoC demonstrates the vulnerability but does not crash the node (CometBFT has mempool limits that prevent complete exhaustion)",
+    "Full DoS would require sustained flooding over time or coordinated attack from multiple sources"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the CometBFT repository on the host, checks out v0.38.0, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.38.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/monitor.sh"
+    ]
+  }
+}

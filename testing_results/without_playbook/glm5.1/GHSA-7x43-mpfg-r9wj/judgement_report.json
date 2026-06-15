@@ -1,0 +1,88 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T08:34:12.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d3f3d032",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-7x43-mpfg-r9wj/GHSA-7x43-mpfg-r9wj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated-queue-execution",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d3f3d032/unauthenticated-queue-execution",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d3f3d032/unauthenticated-queue-execution/vulnerability_report.json",
+      "title": "Unauthenticated queue execution permits unauthorized job processing",
+      "vulnerability_type": "authorization_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding identifies an authorization bypass in QueueController::actionRun() where allowAnonymous=['run'] permits unauthenticated queue execution. This is unrelated to the advisory-described IDOR in Elements::parseRefs via GraphQL @parseRefs. The vulnerable component (QueueController vs Elements service), attack vector (HTTP endpoint vs GraphQL directive), and missing security check (authentication vs canView() authorization) are different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "zip-slip-db-restore",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d3f3d032/zip-slip-db-restore",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d3f3d032/zip-slip-db-restore/vulnerability_report.json",
+      "title": "Zip slip path traversal in database restore permits arbitrary file overwrite",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding identifies a path traversal vulnerability in DbController::actionRestore() via unchecked ZipArchive::extractTo(). This is unrelated to the advisory-described IDOR in Elements::parseRefs. The vulnerable component (DbController console command vs Elements service GraphQL endpoint), vulnerability class (path traversal vs IDOR/authorization bypass), attack vector (malicious ZIP file vs GraphQL reference tags), and required privilege level (local console access vs network access) are entirely different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or root cause. The advisory describes an IDOR vulnerability in craft\\services\\Elements::parseRefs where the GraphQL @parseRefs directive fails to perform canView() authorization checks when resolving reference tags like {user:1:email}, allowing unauthorized data access. The two qualifying findings identify entirely different vulnerabilities: (1) authorization bypass in queue execution via allowAnonymous=['run'], and (2) path traversal in database restore via unchecked ZipArchive::extractTo(). Neither involves the Elements::parseRefs method, GraphQL @parseRefs directive, or the missing canView() authorization check described in the advisory.",
+    "evidence": [
+      "Advisory identifies vulnerable component: craft\\services\\Elements::parseRefs and _getRefTokenReplacement method",
+      "Advisory describes root cause: Missing canView() authorization check when resolving GraphQL reference tags",
+      "Advisory attack vector: GraphQL queries using @parseRefs directive with reference tags like {user:1:email}",
+      "Finding 'unauthenticated-queue-execution': Authorization bypass in QueueController (src/controllers/QueueController.php:38,76-101) - different vulnerable component and missing check",
+      "Finding 'zip-slip-db-restore': Path traversal in DbController (src/console/controllers/DbController.php:340-361) - different vulnerability class, component, and attack vector"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d3f3d032/unauthenticated-queue-execution",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d3f3d032/unauthenticated-queue-execution/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d3f3d032/unauthenticated-queue-execution/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d3f3d032/zip-slip-db-restore",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d3f3d032/zip-slip-db-restore/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_d3f3d032/zip-slip-db-restore/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

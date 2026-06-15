@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "header_injection",
+  "summary": "The Docker-based reproduction confirms that any authenticated user can inject arbitrary headers into requests to upstream LLM providers by prefixing headers with x-pass- on pass-through endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proxy should forward the x-pass-* prefixed headers (with prefix stripped) to the upstream HTTP server, allowing the attacker to inject arbitrary headers such as Authorization, Cookie, or custom provider headers.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, started the LiteLLM proxy, launched a victim HTTP server simulating an upstream provider, and sent a pass-through request with x-pass- prefixed headers. The victim server received the request with the injected headers present (prefix stripped).",
+  "verification_method": "A victim HTTP server logs all received headers. The exploit sends a request with x-pass-X-Injected-Header containing a unique proof token. The verification checks whether the injected header (without the x-pass- prefix) appears in the victim server's log, distinguishing successful header injection from a proxy error or unrelated failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The victim HTTP server received an HTTP request with the injected header X-Injected-Header present (the x-pass- prefix was stripped by the proxy).",
+    "The proof file contains the expected proof token in the injected header value.",
+    "The request was forwarded from the proxy to the victim server, confirming the header injection path through the pass-through endpoint."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.82.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py",
+      "reproduction/victim_server.py",
+      "reproduction/proxy_config.yaml"
+    ]
+  }
+}

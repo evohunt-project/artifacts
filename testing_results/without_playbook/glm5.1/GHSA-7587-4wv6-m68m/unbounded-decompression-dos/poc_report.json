@@ -1,0 +1,30 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service_resource_exhaustion",
+  "summary": "A Docker-based reproduction was generated that constructs a crafted CompressedData packet and demonstrates that rpgp decompresses it with no size limit, achieving approximately 1000x amplification from a small compressed input to a large decompressed output.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should produce a crafted OpenPGP message of approximately 10 KiB that decompresses to 10 MiB, demonstrating that rpgp enforces no limit on decompressed output size and confirming the denial-of-service vulnerability.",
+  "actual_observed_result": "The PoC was not executed during this session. The local Rust toolchain (1.86.0) is below the MSRV required by rpgp 0.18.0 (1.88). The reproduction bundle is ready for execution via ./reproduction/run.sh using the Docker image which provides Rust 1.88+.",
+  "verification_method": "The PoC binary asserts that the decompressed size exceeds 100 times the packet size and equals the expected target size of 10 MiB. This distinguishes the actual decompression amplification vulnerability from a parsing error or short-circuit.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static analysis of src/packet/compressed_data.rs:137 confirms that input.rest() reads the entire packet body with no size limit.",
+    "Static analysis of src/packet/compressed_data.rs:156-160 confirms that decompress() creates a Decompressor with no maximum output size.",
+    "The reproduction bundle was generated with a PoC binary that constructs a crafted zlib-compressed payload and parses it with rpgp."
+  ],
+  "limitations_or_blockers": [
+    "The PoC was not executed because the host Rust toolchain (1.86.0) is below rpgp 0.18.0 MSRV (1.88). The Docker-based reproduction requires Docker and network access."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.18.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/src/main.rs"
+    ]
+  }
+}

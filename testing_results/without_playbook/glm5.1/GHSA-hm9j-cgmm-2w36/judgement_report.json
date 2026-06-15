@@ -1,0 +1,74 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T15:30:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_224e76a9",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-hm9j-cgmm-2w36/GHSA-hm9j-cgmm-2w36.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "sql-injection-jsonapi-sort",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_224e76a9/sql-injection-jsonapi-sort",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_224e76a9/sql-injection-jsonapi-sort/vulnerability_report.json",
+      "title": "Unauthenticated SQL injection via JSON:API sort parameter",
+      "vulnerability_type": "sql_injection",
+      "advisory_match": true,
+      "advisory_match_reason": "Same vulnerable code/root cause: the sort query parameter in GET requests to /jsonapi/{resource} (especially /jsonapi/review) is passed unsanitized into the Aimeos core database query builder where it is interpolated into an SQL ORDER BY clause. The finding identifies the same endpoint, parameter, vulnerability class (CWE-89 SQL injection), CVE (CVE-2021-47763), GHSA (GHSA-hm9j-cgmm-2w36), and Exploit-DB entry (EDB-50538) as the advisory. The code locations (src/routes.php:102-137, JsonapiController.php:46-49,105-119) align with the advisory's description of the JSON:API sort parameter vulnerability.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier3",
+    "target_match": "match",
+    "runtime_evidence": "failed_or_none",
+    "selected_finding": {
+      "folder_name": "sql-injection-jsonapi-sort",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_224e76a9/sql-injection-jsonapi-sort",
+      "status": "qualifying_vuln",
+      "title": "Unauthenticated SQL injection via JSON:API sort parameter",
+      "vulnerability_type": "sql_injection"
+    },
+    "reason": "The sql-injection-jsonapi-sort finding directly matches the advisory-described vulnerability: SQL injection via the unsanitized sort parameter in the JSON:API endpoint (GET /jsonapi/review). The finding identifies the same root cause (sort parameter interpolated into SQL ORDER BY without sanitization), the same endpoint, the same CWE-89 vulnerability class, and references CVE-2021-47763 and GHSA-hm9j-cgmm-2w36. The PoC reproduction was attempted but could not be executed because Docker Hub was unreachable (network timeout), preventing the base Docker images from being pulled. No runtime artifacts were produced during this judge run. Tier3 is assigned because the advisory-matched finding is semantically correct with strong static-analysis evidence and a prior poc_report.json confirming reproduction, but no runtime evidence was produced in this judge execution.",
+    "evidence": [
+      "The finding references CVE-2021-47763 and GHSA-hm9j-cgmm-2w36, which are the exact advisory identifiers.",
+      "The finding identifies the same root cause: the sort parameter in GET /jsonapi/{resource} is passed unsanitized to the Aimeos core query builder and interpolated into SQL ORDER BY.",
+      "Code locations match: src/routes.php:102-137 (route without auth middleware), JsonapiController.php:46-49 (getAction passes request without validation), JsonapiController.php:105-119 (createClient builds client from user input).",
+      "The prior poc_report.json confirms the vulnerability was reproduced: SQL injection payload in sort parameter returned SQL error messages revealing database internals.",
+      "Docker-based PoC execution failed in this judge run due to Docker Hub network unreachability (timeout pulling php:8.0-apache image)."
+    ],
+    "blockers_to_higher_tier": [
+      "Docker Hub network unreachable: could not pull php:8.0-apache or composer:2.1 base images to build and run the PoC container.",
+      "No runtime artifacts were produced during this judge execution to satisfy exploit_success_predicate or bug_activation_predicate."
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "sql-injection-jsonapi-sort",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_224e76a9/sql-injection-jsonapi-sort",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_224e76a9/.judge/poc_runs/sql-injection-jsonapi-sort",
+      "exit_code": 1,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_224e76a9/.judge/poc_runs/sql-injection-jsonapi-sort/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_224e76a9/.judge/poc_runs/sql-injection-jsonapi-sort/poc_execution.json",
+      "observed_effect": "Docker build failed: could not pull php:8.0-apache base image from Docker Hub due to network timeout (dial tcp 74.86.118.24:443: i/o timeout). No application was started and no exploit request was sent.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    }
+  ],
+  "open_world_findings": []
+}

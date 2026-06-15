@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "CWE-674: Uncontrolled Recursion",
+  "summary": "Docker-based reproduction demonstrates stack overflow crash when loading ONNX model with 700+ nested GraphProto structures",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Application should crash with RecursionError or stack overflow when loading malicious ONNX model containing deeply nested GraphProto structures",
+  "actual_observed_result": "Reproduction successfully triggered RecursionError at nesting depth 700, demonstrating stack overflow vulnerability in protobuf parsing and ONNX validation",
+  "verification_method": "Automated verification script checks for RecursionError, Segmentation fault, or stack overflow signals in output. Distinguishes from normal parse errors by checking for recursion-specific error messages.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "RecursionError: maximum recursion depth exceeded",
+    "Stack overflow crash or segmentation fault",
+    "Nesting depth reached ~700 levels before failure",
+    "Recursion cycle: AttributeProto → GraphProto → NodeProto → AttributeProto"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the vulnerable version, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

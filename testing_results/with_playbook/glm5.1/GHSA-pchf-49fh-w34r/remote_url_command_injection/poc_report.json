@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Command Injection",
+  "summary": "Successfully demonstrated Remote Code Execution via command injection in Soft Serve's import functionality. The PoC clones the vulnerable Soft Serve version (commit d963932), builds it in a Docker container, creates a user with read-write access, and executes a malicious import command that creates /tmp/pwned file on the server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Creation of /tmp/pwned file on the server, proving arbitrary command execution with Soft Serve process privileges",
+  "actual_observed_result": "The exploit successfully created /tmp/pwned file on the server, demonstrating that the injected command 'touch /tmp/pwned' was executed via the malicious SSH URL parameter",
+  "verification_method": "Automated check via verify.sh that confirms existence of /tmp/pwned file created by the injected command. The file should only exist after successful exploitation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "/tmp/pwned file created on server",
+    "Docker container logs showing git clone execution with malicious URL",
+    "Soft Serve logs showing import operation triggered"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "d963932f5eab79bc8dcce4a4b3b8b7eb8f7e8679",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

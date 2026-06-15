@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction was not executed due to environment constraints (Docker base image pull timeout). The vulnerability was validated through thorough code-level analysis tracing the limit parameter from user input through ClassesRouter, RestQuery, DatabaseController to the MongoDB adapter with no upper bound enforcement when maxLimit is not configured.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that a query with limit=100000 returns more than the default 100 results, proving that the maxLimit configuration option defaults to undefined (unlimited) and no server-side upper bound exists.",
+  "actual_observed_result": "Not executed. Code-level validation confirmed: maxLimit defaults to undefined in Definitions.js line 381, the guard at ClassesRouter.js line 25 (if req.config.maxLimit && ...) short-circuits when undefined, and the limit passes uncapped to the database adapter.",
+  "verification_method": "The reproduction creates 200 test records with master key, then queries with limit=100000. If the result count exceeds the default limit of 100, the vulnerability is confirmed.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker base image pull (node:22-bookworm, ~300MB) exceeded the session timeout due to network bandwidth constraints.",
+    "No local MongoDB installation available for alternative non-Docker verification."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "9b44d25e9f9b7e6fdf3c08ab946de25e4075dc59",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "parameter_override",
+  "summary": "The Docker-based reproduction is designed to start parse-server with a checkRole cloud function, call it with conflicting body and query parameters, and verify that the query parameter overrides the body parameter.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Calling POST /functions/checkRole with body {role:'user'} and query ?role=admin should result in the cloud function receiving role=admin from the query string, overriding the body parameter.",
+  "actual_observed_result": "Reproduction was not executed. Docker image pull exceeded the runtime environment's available time budget.",
+  "verification_method": "The verify.sh script starts MongoDB, builds parse-server from /target-repo, starts parse-server with a checkRole cloud function defined in cloud.js, calls it with conflicting body (role=user) and query string (role=admin) parameters, and checks the JSON response for receivedRole:admin to confirm the query parameter overrode the body parameter.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker base image pull (node:22-bookworm) exceeded the runtime environment's network and time constraints. The reproduction bundle is self-contained and should run successfully in an environment with Docker and internet access."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the 8.6.14 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.14",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/cloud.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

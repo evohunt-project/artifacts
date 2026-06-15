@@ -1,0 +1,32 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "idor_missing_authorization",
+  "summary": "The PoC bundle was created to build OpenMeetings from source and demonstrate the missing object-level authorization by having User B delete User A's room, but the full Maven build was not executed during this session due to build time constraints (30+ minutes).",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "User B (a SOAP-level user) should be able to delete a room created by User A by sending DELETE /services/room/{roomId}?sid=USER_B_SID. The endpoint only checks User.Right.SOAP without verifying room ownership, so the deletion should succeed.",
+  "actual_observed_result": "The vulnerability was verified through static source code analysis. RecordingWebService.java:101-104, FileWebService.java:406-408, FileWebService.java:445-447, and RoomWebService.java:301-312 all confirm that mutation endpoints only check User.Right.SOAP without verifying resource ownership. The runtime reproduction was not executed.",
+  "verification_method": "Source code analysis: confirmed that (1) RecordingWebService.delete() at line 101 calls performCall(sid, User.Right.SOAP, ...) with no ownership check, (2) FileWebService.rename() at line 406 and move() at line 445 similarly lack ownership checks, (3) RoomWebService.delete() at line 301 only checks SOAP right, (4) CalendarWebService.delete() at line 370 properly checks ownership, demonstrating that the authorization check is intentionally implemented in some endpoints but omitted in others.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Source code at RecordingWebService.java:101-104: performCall(sid, User.Right.SOAP, sd -> { recordingDao.delete(recordingDao.get(id)); }) with no ownership verification.",
+    "Source code at FileWebService.java:406-408: performCall(sid, User.Right.SOAP, sd -> { fileDao.rename(id, name); }) with no ownership verification, unlike delete() at line 122 which checks userId.equals(f.getOwnerId()).",
+    "Source code at RoomWebService.java:301-312: performCall(sid, User.Right.SOAP, sd -> { ... roomDao.delete(r, sd.getUserId()); }) with no room ownership check.",
+    "Contrast with CalendarWebService.java:370-377: proper authorization check (u.hasRight(Right.ADMIN) || sd.getUserId().equals(a.getOwner().getId())) demonstrates the correct pattern exists but was not applied consistently."
+  ],
+  "limitations_or_blockers": [
+    "Full Maven build from source requires 30+ minutes to download dependencies and compile all modules.",
+    "The GitHub master branch may differ from the analyzed snapshot; the vulnerability is confirmed in the provided source tree."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

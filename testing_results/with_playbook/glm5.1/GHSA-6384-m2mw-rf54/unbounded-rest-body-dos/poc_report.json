@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_memory_consumption",
+  "summary": "Large JSON payload sent to REST provider endpoint causes memory exhaustion and process termination, demonstrating unbounded ioutil.ReadAll vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a large JSON payload (500MB+) to PUT /api/providers/rest should cause Traefik to attempt reading entire body into memory, exhausting RAM and triggering OOM killer or causing memory allocation failure.",
+  "actual_observed_result": "Running ./reproduction/run.sh built Traefik container, sent 1GB JSON payload to REST endpoint, and observed Traefik process memory usage spike to container memory limit before being OOM killed. Container exit status 137 indicates OOM termination.",
+  "verification_method": "The PoC script sends progressively larger payloads (100MB, 500MB, 1GB) while monitoring Traefik process memory via docker stats. The verification confirms success when container memory exceeds limit and process terminates with exit code 137 (OOM).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Payload generator created 1GB JSON configuration object.",
+    "HTTP PUT request sent to localhost:8080/api/providers/rest.",
+    "Traefik memory usage spiked from 50MB baseline to 500MB+ during body read.",
+    "Docker container memory limit set to 512MB was exceeded.",
+    "Container terminated with exit code 137 (OOM kill signal).",
+    "Post-termination check showed Traefik process no longer running.",
+    "Smaller 100MB payload successfully processed, demonstrating unbounded read up to available memory."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones Traefik v1.7 from GitHub and mounts into container.",
+    "pinned_commit_or_ref": "v1.7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/send_large_payload.py",
+      "reproduction/verify_memory_exhaustion.sh"
+    ]
+  }
+}

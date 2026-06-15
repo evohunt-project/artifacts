@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "open_redirect",
+  "summary": "The Docker-based reproduction builds Traefik v1.7.25 from source, starts it with the dashboard enabled on port 8080, and sends a GET / request with X-Forwarded-Prefix: ////evil.com. The server responds with a 302 redirect to //evil.com/dashboard/, confirming the open redirect vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The server should return HTTP 302 with a Location header containing //evil.com/dashboard/, which is a protocol-relative URL that browsers resolve to the attacker-controlled domain evil.com.",
+  "actual_observed_result": "The server responded with HTTP 302 and Location: //evil.com/dashboard/, confirming that the safePrefix validator was bypassed and the attacker-controlled prefix was embedded in the redirect target.",
+  "verification_method": "The verify script captures the HTTP response headers, checks that the status code is 302 and that the Location header contains the string //evil.com. This distinguishes the open redirect from a normal redirect to /dashboard/ and from unrelated errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response status 302 confirming the redirect was triggered.",
+    "Location header containing //evil.com/dashboard/ confirming the attacker-controlled prefix was embedded.",
+    "Traefik startup log confirming the dashboard was enabled and serving on the traefik entrypoint."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.7.25",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

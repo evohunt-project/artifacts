@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that chained string .replace() method calls bypass MAX_STRING_LENGTH by doubling the string with each call, producing arbitrarily large strings from a short expression.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should produce a string whose length exceeds MAX_STRING_LENGTH (100000) through chained .replace() method calls, demonstrating that method return values bypass the library's safety limit.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, cloned the vulnerable simpleeval v1.0.4, and executed the exploit script. The exploit used 20 chained .replace('a','aa') calls to produce a 1048576-character (1MB) string, exceeding MAX_STRING_LENGTH by ~10x.",
+  "verification_method": "The exploit script measures the result string length and compares it against MAX_STRING_LENGTH. It prints EXPLOIT_SUCCESS only if the result exceeds the limit and exits with code 0. It prints EXPLOIT_FAILED and exits with code 1 otherwise.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit script reported a result of 1048576 characters (2^20), exceeding MAX_STRING_LENGTH=100000.",
+    "The exploit printed EXPLOIT_SUCCESS, confirming the safety limit was bypassed via method chaining.",
+    "The verification helper confirmed the oversized string was produced by chained replace calls, not by an unrelated error."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0425898b23abb3f1a9ed56dbb0bb4244d6350f2f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

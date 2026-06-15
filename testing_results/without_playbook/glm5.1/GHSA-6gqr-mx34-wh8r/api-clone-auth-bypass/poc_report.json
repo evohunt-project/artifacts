@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "auth_bypass",
+  "summary": "The Docker-based reproduction confirms that the Api::clone() typo causes the authentication callback to be null on cloned instances, and authenticate() returns true without any security verification.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the original API instance invokes the authentication callback and returns the expected user value, while the cloned API instance has a null authentication callback and authenticate() returns true unconditionally, bypassing all security checks.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository, built the Docker image, and the verification script confirmed: (1) the original API's authentication callback was invoked and returned the expected value, (2) the cloned API's authentication property is null due to the typo, and (3) the cloned API's authenticate() returns true without invoking the callback.",
+  "verification_method": "The verify.sh script runs exploit.php which instantiates the Api class with a test authentication callback, clones it, and checks three conditions: (a) original API invokes the callback, (b) cloned API has null authentication property, (c) cloned API authenticate() returns true. Success is determined by the script printing EXPLOIT_VERIFIED and exiting with code 0.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The original API correctly invokes the authentication callback and returns the provided user value.",
+    "The cloned API's authentication() method returns null, confirming the 'autentication' typo at src/Api/Api.php:216 causes the constructor to not receive the callback.",
+    "The cloned API's authenticate() returns true without invoking any callback, confirming the authentication bypass.",
+    "The proof string EXPLOIT_VERIFIED was emitted by the verification script."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, installs composer dependencies, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "4.9.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

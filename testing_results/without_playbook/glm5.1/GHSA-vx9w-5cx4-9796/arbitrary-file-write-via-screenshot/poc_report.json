@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can write arbitrary files to the server's filesystem via the output_path parameter in the POST /screenshot endpoint. The exploit writes a screenshot file to an arbitrary path (/tmp/evohunt_arbitrary_write_proof.png), demonstrating unrestricted file write.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crawl4ai server to write a screenshot file to an arbitrary attacker-specified path (/tmp/evohunt_arbitrary_write_proof.png), demonstrating that the output_path parameter has no path restriction.",
+  "actual_observed_result": "The POST /screenshot endpoint wrote a PNG file to the specified arbitrary path. The file was created with non-zero size, confirming that the output_path parameter is used without any path validation or restriction.",
+  "verification_method": "The verify.sh script checks for the existence and non-zero size of the file at the arbitrary output_path location after sending the exploit request. Before the exploit, the script ensures the file does not exist. After the exploit, the script confirms the file was created with non-zero content. This distinguishes a real arbitrary file write from a generic API error or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "A file was created at /tmp/evohunt_arbitrary_write_proof.png with non-zero size.",
+    "No authentication token was required to exploit the /screenshot endpoint.",
+    "The output_path parameter was passed through os.path.abspath() and open() without any directory restriction."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and uses it to build the base crawl4ai Docker image. A second build step layers the exploit scripts on top.",
+    "pinned_commit_or_ref": "v0.8.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

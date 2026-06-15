@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that the password reset endpoint exposes the reset token in the HTTP response, enabling immediate account takeover without requiring access to the victim's email.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Calling the password reset endpoint should return the reset token in the response body. The token can then be used to change the password and takeover the account.",
+  "actual_observed_result": "The password reset endpoint returned the reset token in the JSON response. The exposed token was successfully used to change the account password, confirming complete account takeover.",
+  "verification_method": "The reproduction script creates a test user, calls the password reset endpoint, extracts the exposed token from the response, uses the token to change the password, and verifies successful login with the new password. Success is confirmed when the token appears in the response and the password change succeeds.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Password reset endpoint response contained 'token' field with UUID value",
+    "Exposed token was used to successfully update the password via /customers/password endpoint",
+    "Login succeeded with the attacker-controlled password, proving account takeover",
+    "The vulnerable code path resetPassword.js:34-38 returned the token in response.$body"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the latest commit, and builds the Docker image",
+    "pinned_commit_or_ref": "latest main branch",
+    "target_repo_mount_path": "/app",
+    "helper_files": []
+  }
+}

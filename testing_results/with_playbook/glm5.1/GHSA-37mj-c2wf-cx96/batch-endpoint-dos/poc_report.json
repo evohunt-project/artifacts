@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The Docker-based reproduction sends a batch request with 5000 sub-requests to the /batch endpoint using only the public Application ID, demonstrating that a single unauthenticated request can trigger thousands of parallel database operations and cause server resource exhaustion.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The parse-server should exhibit severe response time degradation (over 10 seconds) or timeout when processing a batch request containing 5000 parallel sub-requests, compared to a baseline of under 1 second for normal requests. Post-attack health checks should show sustained degradation.",
+  "actual_observed_result": "Reproduction was not attempted in this environment. The PoC bundle is configured to clone parse-server at tag 8.6.60, start the server with a test MongoDB instance, send a 5000-request batch payload, and measure response time degradation.",
+  "verification_method": "The verify.sh script measures baseline response time, sends the batch DoS payload, measures the time to process the batch request, then checks post-attack response time. Success is confirmed if the batch processing time exceeds 10 seconds, the server times out, or post-attack response time is degraded by more than 5x compared to baseline.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The reproduction requires Docker and a network connection to clone the parse-server repository.",
+    "MongoDB must be available inside the container for parse-server to start.",
+    "The actual DoS impact depends on the hardware resources of the container environment."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version tag 8.6.60, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8.6.60",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

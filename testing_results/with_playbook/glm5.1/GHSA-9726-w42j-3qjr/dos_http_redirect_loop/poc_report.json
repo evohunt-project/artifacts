@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The PoC demonstrates that scanning a URL with an infinite HTTP redirect loop causes the picklescan process to crash with RecursionError due to unlimited recursive calls in _http_get.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the picklescan scanner to encounter a RecursionError or stack overflow from following infinite redirects.",
+  "actual_observed_result": "The PoC successfully triggered a RecursionError. The scanner crashed after following the redirect loop, exceeding Python's recursion limit.",
+  "verification_method": "The run.sh script captures the scanner's stderr and verifies it contains 'RecursionError' or 'maximum recursion depth exceeded', confirming the stack overflow condition.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Scanner stderr contains RecursionError traceback",
+    "Traceback shows recursive _http_get calls",
+    "Scanner exited with non-zero status code",
+    "Redirect loop was followed to the point of stack overflow"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.py",
+      "reproduction/run_test.sh"
+    ]
+  }
+}

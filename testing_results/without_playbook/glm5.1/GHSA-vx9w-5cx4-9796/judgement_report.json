@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T07:42:07.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cfbcabbe",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-vx9w-5cx4-9796/GHSA-vx9w-5cx4-9796.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "arbitrary-file-write-via-screenshot",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cfbcabbe/arbitrary-file-write-via-screenshot",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cfbcabbe/arbitrary-file-write-via-screenshot/vulnerability_report.json",
+      "title": "Arbitrary file write via screenshot and PDF endpoint output_path parameter",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes local file inclusion via file:// URLs accepted by the API, allowing arbitrary file reads. This finding describes arbitrary file writes via the output_path parameter in POST /screenshot and POST /pdf. The root cause differs: the advisory root cause is acceptance of file:// URL scheme, while this finding's root cause is the output_path parameter passed unsanitized to open(). Different vulnerability class (file write via path traversal vs file read via file:// URL), different sink, different root-cause code path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "ssrf-via-markdown-endpoint",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cfbcabbe/ssrf-via-markdown-endpoint",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cfbcabbe/ssrf-via-markdown-endpoint/vulnerability_report.json",
+      "title": "Server-Side Request Forgery via markdown endpoint allows access to internal services",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes local file inclusion via file:// URLs accepted by /execute_js, /screenshot, /pdf, and /html endpoints. This finding describes SSRF via http:// URLs to internal IP addresses, with the root cause being lack of internal IP/hostname filtering. The advisory root cause is acceptance of the file:// URL scheme, while this finding's root cause is lack of IP-based access controls for http:// URLs. These are distinct vulnerable code paths: file:// scheme acceptance vs internal IP reachability. The finding shares affected endpoints and references the same validate_url_scheme function, but targets a different missing guard.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "H",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:H/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerability. The advisory describes local file inclusion via file:// URL scheme acceptance in the Crawl4AI Docker API (/execute_js, /screenshot, /pdf, /html endpoints), where file:// URLs are passed to the headless browser to read arbitrary server files. Finding 1 (arbitrary-file-write-via-screenshot) describes a different vulnerability: arbitrary file writes via the output_path parameter in POST /screenshot and POST /pdf, with a different root cause (output_path passed unsanitized to open()). Finding 2 (ssrf-via-markdown-endpoint) describes SSRF via http:// URLs to internal IPs, with a different root cause (no internal IP filtering). Neither finding identifies the file:// URL scheme acceptance as the vulnerable logic.",
+    "evidence": [
+      "Advisory root cause: /execute_js, /screenshot, /pdf, /html endpoints accept file:// URLs, enabling arbitrary file reads from the server filesystem.",
+      "Finding 1 root cause: output_path parameter in POST /screenshot and POST /pdf is passed unsanitized to os.path.abspath() and open(), enabling arbitrary file writes. Different sink, different input parameter, different vulnerability class.",
+      "Finding 2 root cause: No internal IP/hostname validation for http:// URLs, enabling SSRF to internal services. Different URL scheme, different missing guard, different impact.",
+      "Neither finding's exploit.py uses a file:// URL. Finding 1 uses http://localhost:11235/playground with output_path=/tmp/... Finding 2 uses http://localhost:8888/ as the target URL."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cfbcabbe/arbitrary-file-write-via-screenshot",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cfbcabbe/arbitrary-file-write-via-screenshot/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cfbcabbe/arbitrary-file-write-via-screenshot/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cfbcabbe/ssrf-via-markdown-endpoint",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cfbcabbe/ssrf-via-markdown-endpoint/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cfbcabbe/ssrf-via-markdown-endpoint/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

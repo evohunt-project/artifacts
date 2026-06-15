@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "Docker-based reproduction confirmed that the REST API /api/4/config endpoint exposes the complete configuration file including database passwords, API tokens, and other secrets without authentication when password is not configured.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Unauthenticated HTTP request to /api/4/config endpoint should return the complete configuration file including embedded secrets such as database passwords, JWT secrets, and SNMP community strings.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started Glances with a configuration file containing embedded secrets, and successfully retrieved the complete configuration via unauthenticated HTTP request to /api/4/config endpoint. Multiple secrets including 'SuperSecretDBPassword123!', 'MongoDBSecretPass456', 'RabbitMQPassword789', 'SuperSecretJWTKey', and 'private_community_string' were exposed in the API response.",
+  "verification_method": "The verification script creates a configuration file with known secret values and checks if those secrets appear in the unauthenticated /api/4/config API response. Success is confirmed when at least 3 different secrets are exposed in the response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Database password 'SuperSecretDBPassword123!' exposed in /api/4/config response",
+    "MongoDB password 'MongoDBSecretPass456' exposed in /api/4/config response",
+    "RabbitMQ password 'RabbitMQPassword789' exposed in /api/4/config response",
+    "JWT secret 'SuperSecretJWTKey' exposed in /api/4/config response",
+    "SNMP community string 'private_community_string' exposed in /api/4/config response"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag v4.5.1, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v4.5.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/malicious_config.ini"
+    ]
+  }
+}

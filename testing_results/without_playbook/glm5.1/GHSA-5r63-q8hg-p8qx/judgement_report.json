@@ -1,0 +1,105 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T15:57:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-02/GHSA-5r63-q8hg-p8qx/GHSA-5r63-q8hg-p8qx.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "fuxa-rce-runscript",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe/fuxa-rce-runscript",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe/fuxa-rce-runscript/vulnerability_report.json",
+      "title": "Remote code execution via /api/runscript test flag with hardcoded JWT secret and default-disabled authentication",
+      "vulnerability_type": "rce",
+      "advisory_match": true,
+      "advisory_match_reason": "The advisory describes RCE through unsandboxed script execution in FUXA v1.2.7 — 'does not properly sanitize or sandbox user-supplied scripts within imported project files'. Finding 1 identifies the same root cause: the script execution engine (Module._compile() in server/runtime/scripts/msm.js) compiles and runs attacker-supplied JavaScript without sanitization or sandboxing. While the entry point differs (/api/runscript with test:true vs project import), the insecure code execution mechanism is identical. Same CWE-78/CWE-94 (OS command injection / code injection), same impact (full RCE), same vulnerable component (the msm.js script execution engine).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "fuxa-unauth-file-upload",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe/fuxa-unauth-file-upload",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe/fuxa-unauth-file-upload/vulnerability_report.json",
+      "title": "Unauthenticated arbitrary file upload and stored XSS via /api/upload",
+      "vulnerability_type": "unauthenticated_file_upload",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerability type (stored XSS via file upload vs RCE via unsandboxed script execution), different root cause (missing authentication middleware on /api/upload endpoint vs lack of script sandboxing in the execution engine), and different impact (client-side JavaScript execution in victim browser vs server-side arbitrary OS command execution). While code locations overlap in server/api/projects/index.js, the vulnerable operation and security consequence are fundamentally different from the advisory-described RCE via project import.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier3",
+    "target_match": "match",
+    "runtime_evidence": "failed_or_none",
+    "selected_finding": {
+      "folder_name": "fuxa-rce-runscript",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe/fuxa-rce-runscript",
+      "status": "qualifying_vuln",
+      "title": "Remote code execution via /api/runscript test flag with hardcoded JWT secret and default-disabled authentication",
+      "vulnerability_type": "rce"
+    },
+    "reason": "The finding identifies the same unsandboxed script execution root cause as the advisory (Module._compile() in msm.js without sanitization/sandboxing, CWE-78/CWE-94). PoC execution was attempted but failed due to network connectivity: the environment could not clone the target repository from github.com or pull the required Docker base image. No runtime evidence was produced to distinguish Tier1/Tier2 from Tier3.",
+    "evidence": [
+      "Advisory root cause: 'does not properly sanitize or sandbox user-supplied scripts within imported project files' — same unsandboxed Module._compile() mechanism in server/runtime/scripts/msm.js",
+      "Finding code locations: server/runtime/scripts/msm.js:43 (runTestScript compiles attacker code), msm.js:139-144 (_requireFromString uses Module._compile)",
+      "Same CWE: CWE-78 (OS Command Injection), CWE-94 (Code Injection)",
+      "poc_report.json reports status=reproduced from prior Docker-based run, confirming child_process.execSync execution via /api/runscript test:true",
+      "PoC re-execution in judge environment failed: network could not reach github.com for repo clone, Docker base image node:18-bookworm not available locally"
+    ],
+    "blockers_to_higher_tier": [
+      "PoC execution failed: unable to clone target repository (github.com unreachable) and Docker base image not available locally. No runtime artifacts were produced to satisfy exploit_success_predicate or bug_activation_predicate."
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "fuxa-rce-runscript",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe/fuxa-rce-runscript",
+      "executed": true,
+      "command": "bash run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe/.judge/poc_runs/fuxa-rce-runscript/workspace",
+      "exit_code": 1,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe/.judge/poc_runs/fuxa-rce-runscript/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe/.judge/poc_runs/fuxa-rce-runscript/poc_execution.json",
+      "observed_effect": "PoC script failed during git clone of target repository. Network connectivity to github.com port 443 timed out after 54930ms. Docker base image (node:18-bookworm) was not available locally and could not be pulled. No vulnerable code was activated.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe/fuxa-unauth-file-upload",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe/fuxa-unauth-file-upload/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cf1344fe/fuxa-unauth-file-upload/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

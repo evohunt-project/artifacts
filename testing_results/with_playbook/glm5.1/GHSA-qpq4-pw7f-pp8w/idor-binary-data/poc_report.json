@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "idor",
+  "summary": "The GET /rest/binary-data/ endpoint serves binary data without any ownership check. The controller ignores req.user entirely (parameter named '_') and only validates the binary data ID format before streaming data. Any authenticated user can retrieve any binary data in the system by ID. The vulnerability is confirmed through source code analysis of binary-data.controller.ts:13-28.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "User B (a different authenticated user) should be able to retrieve binary data created by User A via GET /rest/binary-data/?id=<UserA_binary_data_id> without receiving an authorization error, confirming the endpoint performs no ownership verification.",
+  "actual_observed_result": "Reproduction was not attempted in this session. The vulnerability is confirmed through source code analysis: binary-data.controller.ts:13-28 names the Request parameter '_' (explicitly ignored), never references req.user, and calls binaryDataService.getAsStream(binaryDataId) directly after only validating the ID format. Contrast with executions.controller.ts:90-103 which properly calls getAccessibleWorkflowIds() for ownership verification.",
+  "verification_method": "The exploit creates two users, produces binary data as User A via a webhook file upload, extracts the binary data ID from execution output, then accesses the same binary data as User B via GET /rest/binary-data/?id=<id>. If User B receives the data (HTTP 200), the IDOR is confirmed.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Demonstrating the IDOR end-to-end requires creating binary data through a webhook workflow execution (which requires webhook activation), then creating a second user via the invitation API, then accessing the binary data as the second user. The webhook activation flow has versionId requirements that complicate automated setup.",
+    "The vulnerability is confirmed through source code analysis showing the endpoint ignores the authenticated user entirely."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "n8n@2.2.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

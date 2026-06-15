@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the OnlyOffice callback handler makes an outbound HTTP request to an attacker-controlled URL without validation. A Python listener captures the request from the filebrowser server, proving the SSRF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the filebrowser server to make an HTTP GET request to a locally started listener at http://127.0.0.1:9999/ssrf-proof, demonstrating that the server fetches attacker-specified URLs without validation.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the filebrowser binary from the target repository, started the server with a test configuration, authenticated as admin, started a local HTTP listener on port 9999, and sent a malicious OnlyOffice callback POST with the URL set to http://127.0.0.1:9999/ssrf-proof. The listener received the expected HTTP GET request from the filebrowser server process, confirming the SSRF.",
+  "verification_method": "A Python HTTP server on port 9999 writes a proof file (/tmp/ssrf_proof) upon receiving any request. After the exploit, the verification script checks for the existence and content of this proof file. This distinguishes a real SSRF from a mere startup failure or unrelated error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The Python listener on port 9999 received an HTTP GET request for /ssrf-proof from the filebrowser server.",
+    "The proof file /tmp/ssrf_proof was created containing 'SSRF_CONFIRMED'.",
+    "The server returned a 500 or 404 response to the callback request (because the target file did not exist), but the SSRF outbound request had already been made before the file check."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

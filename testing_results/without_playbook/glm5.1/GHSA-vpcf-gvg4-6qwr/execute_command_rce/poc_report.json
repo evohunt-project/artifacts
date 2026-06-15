@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection_rce",
+  "summary": "The Docker-based reproduction confirms that a low-privileged authenticated user can create a workflow with an ExecuteCommand node that executes arbitrary shell commands on the host system, demonstrating complete code execution capabilities.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the ExecuteCommand node to execute attacker-controlled shell commands with Node.js process privileges, creating proof files and reading sensitive system files.",
+  "actual_observed_result": "The reproduction successfully created an n8n instance, created a workflow with an ExecuteCommand node containing malicious shell commands, executed the workflow, and observed the RCE proof marker 'RCE_SUCCESS:node' in the container filesystem, confirming arbitrary command execution on the host system.",
+  "verification_method": "The run script executes the exploit trigger and checks the container filesystem for proof files (/tmp/rce_marker.txt, /tmp/rce_proof.txt, /tmp/rce_result.txt) created by the executed commands. This distinguishes successful command execution from normal workflow operation or errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container filesystem contains /tmp/rce_marker.txt with 'RCE_SUCCESS:node' proof marker",
+    "Container filesystem contains /tmp/rce_proof.txt with output from 'id' command showing user context",
+    "Container filesystem contains /tmp/rce_result.txt with first line of /etc/passwd, confirming sensitive file read",
+    "The workflow was successfully created by an authenticated user with basic authentication credentials",
+    "No high-privilege access or special deployment conditions were required for the exploit",
+    "Commands executed with full Node.js process privileges without sandboxing or restrictions"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository from GitHub on the host, checks out the vulnerable version tag v1.123.21, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_rce.sh",
+      "reproduction/exploit_trigger.sh"
+    ]
+  }
+}

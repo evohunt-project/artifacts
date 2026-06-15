@@ -1,0 +1,90 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T16:04:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0d90c0fa",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-02/GHSA-m4g2-2q66-vc9v/GHSA-m4g2-2q66-vc9v.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "stored-xss-via-mime-confusion-task-attachment",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0d90c0fa/stored-xss-via-mime-confusion-task-attachment",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0d90c0fa/stored-xss-via-mime-confusion-task-attachment/vulnerability_report.json",
+      "title": "Stored XSS via MIME type confusion in task attachment download using http.ServeContent",
+      "vulnerability_type": "stored_xss",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes XSS via TaskGlanceTooltip.vue setting innerHTML to unescaped task descriptions. This finding describes a different XSS vector: MIME type confusion in task attachment downloads where http.ServeContent derives Content-Type from user-controlled filename extension. The vulnerable code locations (task_attachment.go:221, files.go:112) differ from the advisory's vulnerable component (TaskGlanceTooltip.vue). The root causes differ: missing output escaping in task description rendering vs. unsafe MIME type derivation from filename extension.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "P",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "ssrf-via-webhook-target-url",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0d90c0fa/ssrf-via-webhook-target-url",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0d90c0fa/ssrf-via-webhook-target-url/vulnerability_report.json",
+      "title": "Server-Side Request Forgery via Webhook Target URL allows internal network probing",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes XSS via innerHTML assignment in TaskGlanceTooltip.vue. This finding describes SSRF via webhook target URLs. The vulnerability classes differ (XSS vs SSRF), the vulnerable components differ (Vue frontend component vs Go backend webhook system), and the root causes differ (missing HTML escaping vs. missing URL allowlist/private IP filtering).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or root cause. The advisory describes XSS via TaskGlanceTooltip.vue setting innerHTML to unescaped task descriptions. The two qualifying findings describe different vulnerabilities: (1) stored XSS via MIME type confusion in attachment downloads (task_attachment.go), and (2) SSRF via webhook target URLs (webhooks.go). Neither finding references TaskGlanceTooltip.vue, the task description field, or the innerHTML sink. The root causes, vulnerable components, and attack vectors are all distinct from the advisory.",
+    "evidence": [
+      "Advisory vulnerability: TaskGlanceTooltip.vue creates unparented div and sets innerHTML to unescaped task description (line 118 in frontend/src/components/tasks/partials/TaskGlanceTooltip.vue)",
+      "Advisory attack vector: Malicious task description shared via project sharing, XSS triggered on hover",
+      "Finding 1 vulnerability: task_attachment.go uses http.ServeContent with user-controlled filename extension, causing Content-Type: text/html for .html attachments",
+      "Finding 1 attack vector: Upload .html attachment, victim downloads attachment, browser renders as HTML",
+      "Finding 2 vulnerability: webhooks.go allows arbitrary target URLs including internal network addresses, no private IP filtering",
+      "Finding 2 attack vector: Create webhook with internal URL, trigger task event, server sends POST to attacker-controlled destination",
+      "No code location overlap: Advisory points to frontend Vue component, findings point to backend Go code in different packages"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0d90c0fa/stored-xss-via-mime-confusion-task-attachment",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0d90c0fa/stored-xss-via-mime-confusion-task-attachment/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0d90c0fa/stored-xss-via-mime-confusion-task-attachment/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0d90c0fa/ssrf-via-webhook-target-url",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0d90c0fa/ssrf-via-webhook-target-url/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_0d90c0fa/ssrf-via-webhook-target-url/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms the SQL injection vulnerability in the AVideo platform's catName parameter. The getCatSQL() method in objects/video.php reads $_REQUEST['catName'] and concatenates it directly into a SQL WHERE clause without parameterization. A crafted catName value containing SQL syntax (e.g., UNION SELECT) is executed by MySQL, enabling unauthenticated database exfiltration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should deploy the AVideo platform with a test database and demonstrate that a crafted catName parameter injects arbitrary SQL into the video listing query. The UNION SELECT injection should exfiltrate the database version string or the boolean-based injection (OR 1=1) should return all video records, confirming the SQL injection.",
+  "actual_observed_result": "The reproduction deploys a MariaDB + Apache/PHP environment, initializes the AVideo database with test data, and sends a crafted HTTP request to /objects/videos.json.php with a SQL injection payload in the catName parameter. The injected SQL is executed by the database, confirming the vulnerability. The vulnerable code pattern (direct concatenation of $_REQUEST['catName'] into SQL) is verified in the mounted target repository.",
+  "verification_method": "The verify.sh script first confirms the presence of the vulnerable code pattern in the target repository (direct string concatenation in getCatSQL()). It then deploys the application and sends a UNION SELECT payload via the catName parameter. The response is checked for database version strings (MySQL/MariaDB) and SQL error indicators. A secondary boolean-based test (OR 1=1) is attempted if the UNION SELECT does not produce output. Success is determined by detecting database information in the response that could only come from SQL execution.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The vulnerable code at objects/video.php:1325 concatenates $_REQUEST['catName'] directly into SQL: \"(c.clean_name = '{$value}'\" without any escaping or prepared statement parameters.",
+    "A crafted catName parameter containing SQL injection syntax is executed by the database when the videos.json.php endpoint is accessed.",
+    "The UNION SELECT or boolean-based injection via catName returns database information that confirms the SQL injection is exploitable without authentication."
+  ],
+  "limitations_or_blockers": [
+    "The full AVideo application setup requires Composer dependencies (vendor/ directory) which may not be available in the minimal PoC environment. The exploit targets the raw SQL injection path which executes before most framework dependencies are needed.",
+    "The UNION SELECT column count must match the original query's column count. The exploit uses a 46-column payload based on the videos table structure; slight adjustments may be needed for different schema versions."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub (WWBN/AVideo), checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/start_services.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/init_db.sh"
+    ]
+  }
+}

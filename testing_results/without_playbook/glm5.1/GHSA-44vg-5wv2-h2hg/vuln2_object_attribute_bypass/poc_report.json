@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sandbox_escape_rce",
+  "summary": "The Docker-based reproduction confirms that object attributes can return forbidden functions that bypass DISALLOW_FUNCTIONS checks when called indirectly via helper functions.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a malicious object's method can return eval function, which bypasses DISALLOW_FUNCTIONS when called via a helper function, resulting in arbitrary code execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully demonstrated that an object method returning eval bypasses security checks when called via helper function, executed arbitrary code, and created /tmp/pwned_vuln2 file.",
+  "verification_method": "The run script executes the exploit and verifies the creation of /tmp/pwned_vuln2 file with expected content, confirming arbitrary code execution despite DISALLOW_FUNCTIONS containing eval.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show DISALLOW_FUNCTIONS contains eval, open, exec",
+    "Container logs show MaliciousObject.get_eval() returning eval function",
+    "Container logs show helper function 'apply' calling the returned eval",
+    "Container logs show eval successfully executing arbitrary code",
+    "File /tmp/pwned_vuln2 created with content 'hacked_by_vuln2'"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

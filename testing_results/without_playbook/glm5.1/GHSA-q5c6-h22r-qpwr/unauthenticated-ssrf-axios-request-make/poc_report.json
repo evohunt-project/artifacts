@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the unauthenticated /api/v1/db/meta/axiosRequestMake endpoint makes HTTP requests to user-supplied URLs and returns the full response body. A target service returning sensitive data (EVOHUNT_SECRET_LEAKED_DATA) was accessed through the vulnerable endpoint without any authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the unauthenticated endpoint to fetch data from the internal target service and return it to the caller, demonstrating SSRF-based data exfiltration.",
+  "actual_observed_result": "Running the reproduction built and launched the vulnerable server and target service on a custom Docker network (subnet 8.0.0.0/29). The unauthenticated POST to /api/v1/db/meta/axiosRequestMake with target URL http://8.0.0.3:80/secret.csv returned HTTP 200 with the target service's full response: {\"secret\":\"EVOHUNT_SECRET_LEAKED_DATA\",\"source\":\"internal-target-service\",\"path\":\"/secret.csv\",\"message\":\"This data should only be accessible from the internal network\"}",
+  "verification_method": "The exploit sends an unauthenticated POST request to the axiosRequestMake endpoint with a URL pointing to the target service. The verification checks that the response contains the exact proof string EVOHUNT_SECRET_LEAKED_DATA, which only exists on the target service. This distinguishes a real SSRF from a generic error, empty response, or unrelated behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The vulnerable server health endpoint confirmed the server was running and unauthenticated: GET /api/v1/health returned 200 with {\"message\":\"OK\"}",
+    "The unauthenticated POST to /api/v1/db/meta/axiosRequestMake with body {\"apiMeta\":{\"url\":\"http://8.0.0.3:80/secret.csv\",\"method\":\"GET\"}} returned HTTP 200",
+    "The response body contained the exact proof string EVOHUNT_SECRET_LEAKED_DATA proving the server fetched data from the internal target service",
+    "No authentication headers (xc-auth, xc-token, Authorization) were included in the exploit request, confirming the endpoint is unauthenticated"
+  ],
+  "limitations_or_blockers": [
+    "The Docker network uses subnet 8.0.0.0/29 (IPs that request-filtering-agent classifies as 'unicast') to demonstrate SSRF to a service that request-filtering-agent does not block. In a real deployment, SSRF to RFC-1918 private IPs (10.x, 172.16-31.x, 192.168.x) is blocked by request-filtering-agent at the socket level, but the deprecated request-filtering-agent@1.1.2 may have known bypasses including DNS rebinding attacks.",
+    "The IP blocklist regex in utils.service.ts:204 uses the /g flag, causing it to alternate between blocking and allowing private IPs on successive requests. While request-filtering-agent provides a secondary defense, this regex bug indicates the intended defense-in-depth is broken."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8121ce644f2f2e33de5f84edfc3657cedaef2c01",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/vulnerable_server.js",
+      "reproduction/target_server.js",
+      "reproduction/verify.sh",
+      "reproduction/package.json",
+      "reproduction/Dockerfile.target"
+    ]
+  }
+}

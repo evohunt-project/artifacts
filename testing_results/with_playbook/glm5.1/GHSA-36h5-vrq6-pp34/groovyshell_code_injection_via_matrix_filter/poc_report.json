@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "code_injection",
+  "summary": "The reproduction bundle builds the Jervis library from source and exercises the GroovyShell.evaluate() code injection path by loading a crafted .jervis.yml whose matrix exclude value contains a single-quote breakout that injects arbitrary Groovy code into the evaluated filter expression.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the injected Groovy expression to execute inside the container, writing a proof file to /tmp/evohunt_proof with the string EVOHUNT_CODE_EXECUTION_PROOF.",
+  "actual_observed_result": "Not yet executed; the reproduction bundle was generated to be self-contained for future reruns.",
+  "verification_method": "The verify.sh script checks for the existence and content of /tmp/evohunt_proof after the exploit trigger runs. It distinguishes successful code injection from a normal filter evaluation by verifying the proof string matches exactly.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The reproduction requires network access for Gradle dependency resolution during the build step.",
+    "The Gradle build may take several minutes depending on available bandwidth and cache state."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_trigger.groovy",
+      "reproduction/malicious_jervis.yml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

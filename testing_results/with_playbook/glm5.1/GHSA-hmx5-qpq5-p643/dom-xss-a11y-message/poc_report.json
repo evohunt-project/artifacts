@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dom_xss",
+  "summary": "The Docker-based reproduction confirms that setting the a11y-first-slide-message HTML attribute on a <swiper-container> custom element to a value containing an img tag with an onerror handler results in arbitrary JavaScript execution when the user presses Enter on a navigation button. The attacker-controlled attribute value flows unsanitized from HTML attribute parsing through to innerHTML injection via the a11y notify() function.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted a11y-first-slide-message attribute value to be parsed by get-element-params.mjs, flow into the a11y module's notify() function, be injected into the DOM via setInnerHTML when the user presses Enter on the prev navigation button, and execute the attacker-controlled onerror JavaScript handler.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Swiper library, served an exploit page with a malicious a11y-first-slide-message attribute in a headless browser, simulated keyboard interaction (focusing the prev navigation button and pressing Enter), and confirmed that the attacker-controlled JavaScript executed. The onerror handler set a proof-of-compromise variable (window.__xss_proof), and the verification script confirmed the variable was set to true.",
+  "verification_method": "The verify.js script uses Puppeteer to load the exploit page in headless Chromium, waits for Swiper initialization, simulates keyboard interaction by dispatching a keydown event (Enter) on the prev navigation button inside the Shadow DOM, then evaluates whether the window.__xss_proof variable was set by the onerror handler. This distinguishes a real XSS from a failed interaction or unrelated DOM change.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The headless browser loaded the exploit page containing <swiper-container navigation a11y-first-slide-message=\"<img src=x onerror=proof()>\">.",
+    "Swiper initialized and the a11y module set up keyboard event listeners on the navigation buttons.",
+    "The verification script dispatched a keydown event (keyCode 13, Enter) on the prev navigation button.",
+    "The onEnterOrSpaceKey handler called notify(params.firstSlideMessage), which called setInnerHTML with the malicious HTML.",
+    "The img element's onerror handler executed the proof() function, setting window.__xss_proof to true.",
+    "The verification script confirmed window.__xss_proof === true, proving arbitrary JavaScript execution."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref (v12.1.1), builds the Swiper library, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v12.1.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js",
+      "reproduction/exploit.html",
+      "reproduction/package.json"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection_rce",
+  "summary": "The Docker-based reproduction confirms that the WebSocket command execution endpoint permits command injection through shell metacharacters when the Shell setting is configured. An authenticated user with execute permissions can inject arbitrary commands using semicolons, pipes, or other shell operators.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an authenticated attacker can inject arbitrary shell commands (beyond the allowed command whitelist) by using shell metacharacters like semicolons. The proof will show creation of arbitrary files with attacker-controlled content, indicating full command execution capabilities.",
+  "actual_observed_result": "The reproduction successfully authenticated as an admin user, connected to the WebSocket endpoint, and injected commands using shell metacharacters. The injected command 'ls; echo EVOHUNT_POC_SUCCESSFUL_$(whoami) > /tmp/evohunt_proof.txt' successfully created the proof file, demonstrating arbitrary command execution.",
+  "verification_method": "The exploit script creates a proof file with a unique marker string. The verification script checks for the existence and content of /tmp/evohunt_proof.txt, confirming that injected commands executed outside the allowed command whitelist.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File /tmp/evohunt_proof.txt was created by injected command",
+    "Proof file contains string 'EVOHUNT_POC_SUCCESSFUL_<username>'",
+    "Injected commands executed despite only 'ls', 'cat', 'echo', 'id' being in allowed commands list",
+    "Shell metacharacters (;) successfully bypassed command whitelist validation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the filebrowser repository from GitHub, checks out a stable commit, and builds the binary in the Docker container.",
+    "pinned_commit_or_ref": "latest main branch (or specific commit if available)",
+    "target_repo_mount_path": "N/A (built into container)",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/setup_filebrowser.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stored_xss",
+  "summary": "The Docker-based reproduction confirms that an authenticated attacker can upload a malicious SVG file containing JavaScript, and the file is served via the /get_image endpoint without authentication or sanitization. The PoC demonstrates uploading an SVG with embedded JavaScript that would execute in a victim's browser context.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Uploading a malicious SVG file should result in the file being stored and served without sanitization. When the file is accessed via /get_image, the embedded JavaScript should be present in the response, demonstrating the potential for XSS execution in a victim's browser.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully uploaded a malicious SVG file containing JavaScript via the /upload/logo endpoint. The file was served via /get_image endpoint, and the response contained the malicious script tags, confirming the Stored XSS vulnerability.",
+  "verification_method": "The reproduction script uploads an SVG file with embedded JavaScript, retrieves it via /get_image, and checks that the malicious script content is present in the response. This confirms the file was stored and served without sanitization.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "SVG file with embedded JavaScript uploaded successfully via /upload/logo endpoint.",
+    "File stored on disk and path returned in response.",
+    "File served via /get_image endpoint without authentication.",
+    "Response contained the malicious JavaScript payload, confirming lack of sanitization."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the LiteLLM repository on the host, checks out the vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_malicious_svg.py",
+      "reproduction/exploit_xss.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

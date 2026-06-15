@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that sending a deeply nested BINARY_ACK packet to the socket.io-parser decoder triggers an uncaught RangeError in _reconstructPacket, crashing the Node.js process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit script constructs a BINARY_ACK packet with 10000 levels of nested arrays, feeds it to the decoder, and triggers a RangeError (Maximum call stack size exceeded) in _reconstructPacket, with the process exiting with proof signal code 42.",
+  "actual_observed_result": "Running the exploit against the target parser caused _reconstructPacket to recurse through the deeply nested array structure and crash with RangeError: Maximum call stack size exceeded. The process exited with proof signal code 42, confirming the vulnerability.",
+  "verification_method": "The exploit script constructs a BINARY_ACK packet with 10000 levels of nested arrays by building the packet string directly (avoiding JSON.stringify stack overflow). The decoder.add() call triggers _reconstructPacket which recurses through the nested structure. The script catches the resulting RangeError and exits with code 42 only if the crash message matches 'Maximum call stack size exceeded'. The verify.sh wrapper checks this exit code to distinguish a confirmed exploit from a startup failure or unrelated error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit script caught a RangeError with message 'Maximum call stack size exceeded' originating from _reconstructPacket's recursive traversal.",
+    "The process exited with proof signal code 42, confirming the crash was caused by the deeply nested payload and not by an unrelated error.",
+    "The verify.sh wrapper confirmed the expected exit code and reported success."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3.4.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the download_file resource URL validation regex (https?://.*) accepts internal network addresses including cloud metadata endpoints, localhost, and RFC 1918 private IPs without any blocklist or validation beyond the scheme check.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that URLs targeting internal addresses (169.254.169.254, 127.0.0.1, 10.0.0.1, etc.) pass the provider's URL validation and would be forwarded directly to the Proxmox API for server-side fetch.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the container, mounted the target repository, and verified that the httpRegex pattern accepts all tested SSRF payloads. The IsValidGlobalUnicast function exists in the codebase but is not used in the download_file resource.",
+  "verification_method": "The verify.sh script extracts the URL validation regex from the target repository source code and tests SSRF payloads against it, checks that no IP/network validation is applied, and confirms the URL is passed as-is to the API. Success requires at least 3 SSRF vectors confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "httpRegex pattern accepts http://169.254.169.254/latest/meta-data/ (cloud metadata)",
+    "httpRegex pattern accepts http://127.0.0.1:22/, http://10.0.0.1/, http://192.168.1.1/ (internal addresses)",
+    "IsValidGlobalUnicast() is NOT used in the download_file resource for URL validation",
+    "download_url_types.go passes the URL directly to the Proxmox API without additional checks",
+    "Proof file /tmp/EVOHUNT_SSRF_PROOF created upon successful verification"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.73.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

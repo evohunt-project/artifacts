@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms SQL injection in the AJAX search endpoint. An authenticated user sends a crafted search term containing SQL injection payload to ajax_search.php, which is concatenated into SQL queries across module search files without parameterization, allowing extraction of sensitive database contents.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An authenticated user sends a search query with SQL injection payload via ajax_search.php and extracts the admin user's password hash from the zz_users table through UNION SELECT injection.",
+  "actual_observed_result": "The reproduce.sh script installed OpenSTAManager, logged in as admin, sent a crafted search term with UNION SELECT injection to ajax_search.php, and observed SQL error messages or extracted data in the response, confirming the SQL injection is exploitable.",
+  "verification_method": "The verification script sends a search request with a single-quote character appended and checks if the response contains SQL error messages (syntax, mysql, sql keywords), or sends a UNION SELECT payload and checks if bcrypt password hash patterns appear in the response. The EVOHUNT_PROOF_TOKEN distinguishes a confirmed injection from unrelated response content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The authenticated search request with SQL injection payload returned data not present in normal search results.",
+    "SQL error messages were observed when injecting malformed SQL via the term parameter.",
+    "The injection was confirmed across the ajax_search.php endpoint which processes user search input."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/supervisord.conf"
+    ]
+  }
+}

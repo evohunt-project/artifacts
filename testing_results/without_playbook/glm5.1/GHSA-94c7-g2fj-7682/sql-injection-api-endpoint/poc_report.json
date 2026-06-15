@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction confirms that the /api/query/sql endpoint accepts and executes arbitrary SQL queries from authenticated users, allowing unauthorized access to all database content.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Executing the PoC should demonstrate that an authenticated user can send arbitrary SQL queries to the endpoint and retrieve unrestricted data from the SiYuan database, bypassing role-based access controls.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the SiYuan service, sent SQL queries via the /api/query/sql endpoint, and successfully retrieved data from the blocks and attributes tables, confirming the SQL injection vulnerability.",
+  "verification_method": "The PoC script executes SQL queries against the vulnerable endpoint and verifies that the response contains a 'data' field with query results. The script demonstrates that arbitrary SELECT queries work without proper authorization checks.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The /api/query/sql endpoint accepted arbitrary SQL queries without authorization beyond basic CheckAuth.",
+    "Query results were returned in the JSON response 'data' field, confirming the SQL injection works.",
+    "Multiple SQL queries (SELECT * FROM blocks, SELECT * FROM attributes) were successfully executed.",
+    "The endpoint did not require administrator privileges, demonstrating authorization bypass."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the local repository checkout at /Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_cb9cd6d1/repo mounted into the container at /target-repo for reference, and clones the target repository v3.1.18 tag inside the Docker build.",
+    "pinned_commit_or_ref": "v3.1.18",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

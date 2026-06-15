@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cors_csrf_data_injection",
+  "summary": "The Docker-based reproduction confirms that the engram HTTP server returns Access-Control-Allow-Origin: * on all responses including CORS preflight, requires no authentication by default, and allows cross-origin POST /learn to inject arbitrary data into the knowledge graph and cross-origin GET /api/hook-log to exfiltrate project information.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Any website the user visits should be able to inject data into the knowledge graph via POST /learn and read hook log data via GET /api/hook-log, because the server sets Access-Control-Allow-Origin: * on all responses and requires no authentication when ENGRAM_API_TOKEN is not set.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the engram project from source, started the HTTP server, and confirmed: (1) Access-Control-Allow-Origin: * is returned on all API responses, (2) CORS preflight with an attacker-controlled Origin header is accepted, (3) POST /learn from an attacker origin successfully injected data into the graph (HTTP 201), (4) the injected proof string was found in graph query results, (5) GET /api/hook-log from an attacker origin returned data without authentication, (6) no ENGRAM_API_TOKEN is required by default.",
+  "verification_method": "The verification script makes six sequential checks: (1) CORS wildcard header presence on API responses, (2) CORS preflight acceptance of attacker origin, (3) successful cross-origin data injection via POST /learn, (4) persistence of injected data in graph query results, (5) cross-origin data exfiltration via GET /api/hook-log, (6) absence of authentication requirement. Each check fails the reproduction if it does not pass. The proof string EVOHUNT_PROOF_CSRF_* uniquely identifies the injected data.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server returns Access-Control-Allow-Origin: * on /health endpoint responses.",
+    "CORS preflight (OPTIONS /learn with Origin: http://evil-attacker.com) returns Access-Control-Allow-Origin: *.",
+    "POST /learn with attacker Origin header and JSON body {\"content\": \"...EVOHUNT_PROOF_CSRF_...\"} returns HTTP 201.",
+    "GET /query?q=EVOHUNT_PROOF_CSRF_* returns the injected proof string in graph query results.",
+    "GET /api/hook-log with attacker Origin header returns HTTP 200 with data.",
+    "GET /health with attacker Origin header succeeds without any Authorization header."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.0.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

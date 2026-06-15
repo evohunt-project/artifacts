@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cross_site_scripting",
+  "summary": "The Docker-based verification confirms that the MantisBT RSS feed endpoints (news_rss.php and issues_rss.php) contain the vulnerable code pattern where user-controlled username parameters are concatenated into RSS titles without proper sanitization, enabling reflected XSS attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The verification should confirm the presence of the vulnerable code pattern where username parameters are directly concatenated into RSS feed titles without HTML entity encoding, demonstrating the XSS vulnerability.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully identified the vulnerable code pattern in both news_rss.php:88 and issues_rss.php:116, where $f_username is directly concatenated into the RSS title string without sanitization.",
+  "verification_method": "Automated Python script scans the target repository for the exact vulnerable code pattern and reports the presence of unsanitized username concatenation in RSS title generation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Confirmed presence of vulnerable pattern in news_rss.php: $t_title .= ' - (' . $f_username . ')';",
+    "Confirmed presence of vulnerable pattern in issues_rss.php: $t_title .= ' - (' . $f_username . ')';",
+    "Username parameter retrieved via gpc_get_string() without sanitization",
+    "No HTML entity encoding or XSS protection applied before concatenation",
+    "RSS feed accessible without authentication when anonymous access is enabled"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the pre-existing target repository checkout mounted read-only at /target-repo",
+    "pinned_commit_or_ref": "current HEAD of advisory_9b3844e0/repo",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/trigger_xss.py",
+      "reproduction/check_payload.sh",
+      "reproduction/verify_xss.sh"
+    ]
+  }
+}

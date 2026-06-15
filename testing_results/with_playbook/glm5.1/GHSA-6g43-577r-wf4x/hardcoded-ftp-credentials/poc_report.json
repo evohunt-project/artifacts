@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "hardcoded_credentials",
+  "summary": "The PoC demonstrates that the hardcoded FTP credentials admin/free5gc grant full filesystem access to /tmp via the CGF FTP server. The reproduction connects to the FTP server, authenticates with the known credentials, and lists files.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The FTP client should successfully authenticate using the hardcoded credentials admin/free5gc and list the contents of the /tmp directory, proving unauthenticated read/write access to CDR billing files.",
+  "actual_observed_result": "Not yet executed. The reproduction bundle is prepared and self-contained for future rerun.",
+  "verification_method": "The verify.sh helper attempts to connect to the FTP server using the hardcoded credentials admin/free5gc. If the login succeeds and a directory listing is returned, the vulnerability is confirmed. Failure to connect or authenticate means the FTP server is not running or the credentials were changed.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The CHF requires Go toolchain and MongoDB to build and run.",
+    "The CGF FTP server must be enabled in the configuration (cgf.enable=true) for this PoC to work.",
+    "The FTP server may fail to start if the listen port is already in use."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/chfcfg_test.yaml"
+    ]
+  }
+}

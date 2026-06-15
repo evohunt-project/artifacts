@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The reproduction demonstrates that the isLocalhost() function in esm.sh fails to block IPv6 localhost addresses (::1) and other private IP ranges, allowing SSRF attacks via the /http://[::1]:port/ endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The test program should demonstrate that isLocalhost() returns false for IPv6 localhost (::1) and other private IPs, proving that SSRF protection can be bypassed. An internal service on [::1]:8080 should be accessible via the bypass.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and executed the test program which demonstrated: 1) isLocalhost('::1') returns false (should be true), 2) isLocalhost('[::1]') returns false (should be true), 3) isLocalhost('10.0.0.1') returns false (should be true for private IPs), 4) The test program successfully connected to an internal service at http://[::1]:8080/secret, confirming SSRF.",
+  "verification_method": "The reproduction extracts the exact isLocalhost() function from server/utils.go and tests it with various hostnames. It then starts an internal HTTP service on [::1]:8080 and demonstrates that a client can connect to it using the IPv6 localhost address that bypasses the isLocalhost() check.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "isLocalhost('localhost') = true (correct)",
+    "isLocalhost('127.0.0.1') = true (correct)",
+    "isLocalhost('::1') = false (VULNERABILITY: should be true for IPv6 localhost)",
+    "isLocalhost('[::1]') = false (VULNERABILITY: should be true for IPv6 localhost)",
+    "isLocalhost('10.0.0.1') = false (VULNERABILITY: should be true for private IP)",
+    "isLocalhost('172.16.0.1') = false (VULNERABILITY: should be true for private IP)",
+    "HTTP request to http://[::1]:8080/secret succeeded, returning internal service content",
+    "SSRF protection bypass confirmed for IPv6 localhost address"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the pinned commit (main), and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_ssrf.go",
+      "reproduction/internal_service.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

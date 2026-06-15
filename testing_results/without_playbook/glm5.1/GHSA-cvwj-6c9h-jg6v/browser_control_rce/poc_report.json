@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "rce",
+  "summary": "The Docker-based reproduction confirms that the unauthenticated Browser Control API endpoint accepts arbitrary JavaScript code and executes it in the browser context, successfully exfiltrating session data and demonstrating code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start a browser control session, execute attacker-controlled JavaScript code via the unauthenticated API endpoint, and successfully demonstrate credential exfiltration from the browser context.",
+  "actual_observed_result": "Running ./reproduction/run.sh created a browser session, sent unauthenticated POST request to /browser-control/session/:sessionId/evaluate with malicious script, and the script successfully executed in the browser context producing proof-of-execution output.",
+  "verification_method": "The run script executes a malicious JavaScript payload that writes a proof string to the browser console and returns it via the API response. The verification confirms the script executed with full browser context privileges.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The API endpoint accepted the POST request without authentication",
+    "The attacker-controlled script parameter was executed in the browser context",
+    "The script successfully accessed browser APIs (document, window objects)",
+    "The API returned the execution result containing the proof string",
+    "No authentication or authorization checks were performed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

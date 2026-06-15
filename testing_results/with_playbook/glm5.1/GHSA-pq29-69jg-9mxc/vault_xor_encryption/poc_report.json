@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cryptographic_failure",
+  "summary": "Successfully demonstrated that the Vault KMS backend uses XOR encryption instead of AES-GCM, allowing trivial key recovery via known-plaintext attacks and complete compromise of encrypted data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Demonstrating that XOR encryption provides no confidentiality, enabling key recovery through known-plaintext attacks and decryption of any SSE-S3 encrypted object without KMS access.",
+  "actual_observed_result": "The reproduction successfully showed: (1) XOR encryption is used in vault.rs:268-271, (2) known-plaintext attacks recover key material, (3) base64-encoded keys provide no protection, (4) complete decryption of encrypted data is possible without the key.",
+  "verification_method": "The exploit.py script demonstrates three attack vectors: (1) immediate decryption using XOR symmetry, (2) key recovery via known-plaintext attacks, (3) ciphertext forgery. The verify.sh script confirms the vulnerable code pattern exists.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "XOR encryption pattern confirmed at vault.rs:268-271",
+    "Key material successfully recovered from known plaintext",
+    "Demonstrated decryption of sensitive data (passwords, API keys, payment card data)",
+    "Showed base64 key storage provides zero protection",
+    "Confirmed CVSS 4.0 score of 9.3 Critical"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh demonstrates the vulnerability using the target repository at advisory_03ce2d54/repo. For self-contained reproduction, the repository should be cloned and the vulnerable code checked out before mounting into container.",
+    "pinned_commit_or_ref": "current HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Allocation of Resources Without Limits (CWE-770)",
+  "summary": "Successfully demonstrated DoS via unbounded session storage by sending 1000 concurrent requests to graphql-modules server. Each request creates a new session entry without any limit on session count, demonstrating memory exhaustion vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Server should create unlimited session entries for each request, demonstrating lack of session count limits that could lead to memory exhaustion.",
+  "actual_observed_result": "Sent 1000 concurrent requests to GraphQL endpoint. Server created session entries for each request without any limit check. Sessions stored indefinitely without automatic cleanup.",
+  "verification_method": "Sent 1000 concurrent GraphQL requests. Verified each request completed successfully, demonstrating that unlimited sessions can be created. Checked for session count limits in apollo.ts code.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "1000 concurrent requests processed successfully",
+    "No session count limit in apollo.ts:51-87",
+    "sessions object declared as unbounded Record type",
+    "uniqueId() creates sessions without maximum count check",
+    "No automatic cleanup mechanism for idle sessions"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones graphql-modules repository, checks out v3.1.0, and mounts it into container",
+    "pinned_commit_or_ref": "v3.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.js",
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

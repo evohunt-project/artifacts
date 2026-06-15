@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction demonstrates that an authenticated non-admin user can retrieve the full application settings via the /api/mcp-settings/export endpoint, including user password hashes, bearer key tokens, and other sensitive credentials without any field masking or admin authorization check.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Calling GET /api/mcp-settings/export as a non-admin authenticated user should return the complete settings object including users with password hashes and any configured bearer keys with their token values.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds and launches MCPHub, creates a non-admin user, authenticates as that user, calls the settings export endpoint, and confirms that the response contains user records with password fields (bcrypt hashes) and the settings data structure without any redaction.",
+  "verification_method": "The exploit script parses the JSON response and checks whether the users array contains entries with a non-empty password field and whether bearerKeys entries contain token fields. The presence of these sensitive fields in the response to a non-admin user confirms the information disclosure vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The settings export response contains a users array with password field values",
+    "The endpoint is accessible to non-admin authenticated users",
+    "No field-level masking or redaction is applied to sensitive fields in the response"
+  ],
+  "limitations_or_blockers": [
+    "The exploit requires git clone access to the target repository for the run.sh host-side script",
+    "The exploit requires Docker to be available on the host",
+    "In a fresh instance with no bearer keys configured, the bearerKeys array may be empty"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2a2e2205ad25128ef9be9b452146555f3f3268a1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

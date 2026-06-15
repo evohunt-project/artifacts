@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "signature_validation_bypass",
+  "summary": "Docker-based PoC demonstrates that malformed ECDSA signatures with trailing bytes bypass verification due to missing DER validation in parseSig().",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Malformed signature with trailing bytes should pass verification, demonstrating signature malleability and authentication bypass.",
+  "actual_observed_result": "Exploit script generated valid ECDSA signature, appended trailing bytes (DEADBEEF), and verification succeeded on malformed signature. Output: 'VULNERABILITY CONFIRMED: Malformed signature verified'.",
+  "verification_method": "Automated comparison: valid signature vs malformed signature with trailing bytes. Verification checks that both pass, demonstrating DER validation bypass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console output: 'VULNERABILITY CONFIRMED: Malformed signature verified'",
+    "Console output: 'VULNERABLE! 4 trailing bytes ignored: 0xde 0xad 0xbe 0xef'",
+    "Both valid and malformed signatures pass verification for same message"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones jsrsasign repository on host, checks out vulnerable commit 8.0.19, and mounts read-only at /target-repo.",
+    "pinned_commit_or_ref": "8.0.19",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js"
+    ]
+  }
+}

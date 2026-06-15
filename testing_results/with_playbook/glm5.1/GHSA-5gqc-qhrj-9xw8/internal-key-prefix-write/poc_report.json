@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "data_integrity_bypass",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated client can write to internal __oxia/-prefixed keys through the public gRPC Write RPC. Both __oxia/commit-offset and __oxia/last-version-id were overwritten with attacker-controlled values.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Writing to __oxia/commit-offset and __oxia/last-version-id should succeed without error, demonstrating that the internal key namespace has no write protection on the public API.",
+  "actual_observed_result": "Running the reproduction built the Oxia server from source, started it in standalone mode, and sent Write RPCs for __oxia/commit-offset and __oxia/last-version-id. Both writes returned Status_OK, confirming the internal keys were overwritten with attacker-controlled values.",
+  "verification_method": "The verify.sh script starts the Oxia standalone server, sends Write RPCs for __oxia/commit-offset and __oxia/last-version-id via a Go gRPC client, and checks that both writes return Status_OK. Success is signaled by the exploit exiting with code 0.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Write to __oxia/commit-offset returned Status_OK (no validation error)",
+    "Write to __oxia/last-version-id returned Status_OK (no validation error)",
+    "Both internal metadata keys were overwritten by an unauthenticated client without any error"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit/main.go",
+      "reproduction/exploit/go.mod"
+    ]
+  }
+}

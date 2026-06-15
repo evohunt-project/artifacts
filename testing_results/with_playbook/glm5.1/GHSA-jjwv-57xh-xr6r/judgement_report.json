@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T05:29:39.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_c3d5b236",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-jjwv-57xh-xr6r/GHSA-jjwv-57xh-xr6r.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "slowloris-read-header-timeout",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_c3d5b236/slowloris-read-header-timeout",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_c3d5b236/slowloris-read-header-timeout/vulnerability_report.json",
+      "title": "Denial of Service via missing ReadHeaderTimeout in HTTP server",
+      "vulnerability_type": "dos",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerable component and root cause: this finding targets Go net/http server header-read timeout omission in pkg/modules/api/api.go, not the advisory's Chromium file-scheme deny-list bypass caused by case-sensitive regexp matching in FilterDeadline.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "ssrf-download-from",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_c3d5b236/ssrf-download-from",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_c3d5b236/ssrf-download-from/vulnerability_report.json",
+      "title": "Server-Side Request Forgery via unfiltered download-from URL feature",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "Different FilterDeadline condition and caller path: this finding targets the downloadFrom feature's empty allow-list and deny-list defaults plus outbound HTTP fetching, while the advisory targets Chromium URL/HTML conversion where a mixed-case file: scheme bypasses the default case-sensitive chromium deny-list regex.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying_vuln finding identifies the advisory-described Chromium deny-list bypass root cause: the default chromium file: deny-list is matched case-sensitively in pkg/gotenberg/filter.go, allowing uppercase or mixed-case file schemes that Chromium later normalizes and uses to read local files.",
+    "evidence": [
+      "Advisory GHSA-jjwv-57xh-xr6r describes a bypass of the default --chromium-deny-list regex ^file:(?!//\\/tmp/).* because FilterDeadline compiles the deny-list with regexp flags 0 and therefore performs case-sensitive matching.",
+      "The advisory root cause involves pkg/modules/chromium/chromium.go default deny-list configuration, pkg/modules/chromium/events.go request filtering, and Chromium normalization of FILE: or mixed-case file schemes before local file navigation.",
+      "slowloris-read-header-timeout/vulnerability_report.json reports missing ReadHeaderTimeout in pkg/modules/api/api.go and a Slowloris resource-exhaustion attack path, with no Chromium URL filtering or file-scheme bypass.",
+      "ssrf-download-from/vulnerability_report.json reports downloadFrom accepting arbitrary URLs because API download allow-list and deny-list defaults are empty; it does not identify the non-empty chromium deny-list, case-sensitive file: scheme matching, Chromium request interception, or arbitrary local file read."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_c3d5b236/slowloris-read-header-timeout",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_c3d5b236/slowloris-read-header-timeout/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_c3d5b236/slowloris-read-header-timeout/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_c3d5b236/ssrf-download-from",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_c3d5b236/ssrf-download-from/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_c3d5b236/ssrf-download-from/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

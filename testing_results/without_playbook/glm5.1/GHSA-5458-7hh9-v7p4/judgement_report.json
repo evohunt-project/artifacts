@@ -1,0 +1,71 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T08:28:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b8163f6b",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-5458-7hh9-v7p4/GHSA-5458-7hh9-v7p4.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "zipslip-startswith-bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b8163f6b/zipslip-startswith-bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b8163f6b/zipslip-startswith-bypass/vulnerability_report.json",
+      "title": "ZipSlip bypass via String.startsWith() without path separator enforcement in Unzip.extract()",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same vulnerable function (Unzip.extract() in Unzip.java), the same root cause (improper path validation of zip entry names using startsWith() without path separator boundary), and the same vulnerability class (CWE-22 Path Traversal / Zip Slip) as the advisory. The advisory describes path traversal in the extract() function of Unzip.java due to lack of proper path normalization and validation; the finding pinpoints the exact mechanism: fileCanonicalPath.startsWith(destinationCanonicalPath) at Unzip.java:85 fails to enforce a path separator boundary.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "zipslip-startswith-bypass",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b8163f6b/zipslip-startswith-bypass",
+      "status": "qualifying_vuln",
+      "title": "ZipSlip bypass via String.startsWith() without path separator enforcement in Unzip.extract()",
+      "vulnerability_type": "path_traversal"
+    },
+    "reason": "The finding matches the advisory-described vulnerability: path traversal / Zip Slip in pf4j's Unzip.extract() due to improper handling of zip entry names. The PoC was executed successfully: a ZIP entry ../ab/evil.txt bypassed the startsWith() validation in Unzip.java:85, and a file was written outside the intended extraction directory (ab/evil.txt outside a/), emitting EVOHUNT_PROOF=zipslip-startswith-bypass-confirmed. This demonstrates end-to-end exploit success with the advisory-described root cause.",
+    "evidence": [
+      "PF4J 3.14.0 Unzip.extract() processed a ZIP entry named ../ab/evil.txt without throwing ZipException",
+      "The file ab/evil.txt was created outside the intended destination directory a/, confirming path traversal",
+      "The startsWith() check at Unzip.java:85 passed because /path/to/ab/evil.txt starts with /path/to/a as a string prefix",
+      "Proof string EVOHUNT_PROOF=zipslip-startswith-bypass-confirmed was emitted by the exploit",
+      "Exit code 0 - exploit completed without error"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "zipslip-startswith-bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b8163f6b/zipslip-startswith-bypass",
+      "executed": true,
+      "command": "java -cp '.:libs/pf4j.jar:libs/slf4j-api.jar:libs/slf4j-simple.jar:libs/java-semver.jar' ExploitZipSlip",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b8163f6b/.judge/poc_runs/zipslip-startswith-bypass",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b8163f6b/.judge/poc_runs/zipslip-startswith-bypass/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_b8163f6b/.judge/poc_runs/zipslip-startswith-bypass/poc_execution.json",
+      "observed_effect": "ExploitZipSlip created a malicious ZIP (a.zip) with entry ../ab/evil.txt and extracted it using PF4J's Unzip.extract(). The startsWith() check at Unzip.java:85 was bypassed because the canonical path of the escaped file (/path/ab/evil.txt) starts with the destination canonical path (/path/a) as a string prefix. The file ab/evil.txt was written outside the intended destination directory a/, and the proof string EVOHUNT_PROOF=zipslip-startswith-bypass-confirmed was emitted. No ZipException was thrown during extraction.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

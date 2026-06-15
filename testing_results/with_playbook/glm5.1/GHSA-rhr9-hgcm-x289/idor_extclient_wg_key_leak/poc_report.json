@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor_broken_object_level_authorization",
+  "summary": "The Docker-based reproduction confirms that a low-privilege authenticated user can access extclient records belonging to other users via GET /api/extclients/{network}/{clientid} without any ownership verification, exposing WireGuard private keys and VPN configurations.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A non-admin authenticated user should be able to retrieve any extclient's data by specifying its client ID in the URL path, even if the extclient belongs to a different user. The response includes WireGuard private keys and full VPN configurations.",
+  "actual_observed_result": "Running ./reproduction/run.sh started the Netmaker server, created an admin user, a test network, a non-admin attacker user, and a victim extclient. The attacker user then successfully retrieved the victim extclient's data via GET /api/extclients/testnet/victim-client, confirming the IDOR vulnerability.",
+  "verification_method": "The run script creates two users with different privilege levels, creates an extclient as the admin, then attempts to read the extclient using the non-admin attacker's token. Success is determined by the attacker receiving extclient data including sensitive fields (private key, address, public key) that should only be accessible to the extclient's owner.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The attacker's GET request to /api/extclients/testnet/victim-client returned extclient data instead of a 403 Forbidden response.",
+    "The response contained extclient fields including sensitive WireGuard configuration data.",
+    "The attacker user had no ownership relationship to the victim extclient, confirming broken object-level authorization."
+  ],
+  "limitations_or_blockers": [
+    "Requires an authenticated user account (PR:L). The attacker needs valid credentials for any user on the platform."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the v1.1.0 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that a Python Thrift server crashes with RecursionError when processing a message containing deeply nested structs (depth=1500). The skip() method recurses without limit, exhausting the Python call stack and crashing the server process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the Thrift server to crash with a RecursionError when skip() is called on a deeply nested struct, demonstrating remote denial of service against any Python Thrift service.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the Apache Thrift repository, built a Docker image, launched a Python Thrift server using the target repository's library, sent a crafted message with 1500 levels of struct nesting, and the server crashed with RecursionError (non-zero exit code).",
+  "verification_method": "The verify.sh script starts the server in the background, waits for it to accept connections, sends the exploit payload via exploit.py, then checks that the server process terminated with a non-zero exit code and that the server output log contains RecursionError. This distinguishes a genuine crash from a normal server shutdown or unrelated error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server process exited with non-zero exit code after receiving the exploit payload.",
+    "Server stderr output contains a RecursionError traceback from TProtocol.skip().",
+    "Exploit client observed connection termination after sending the payload."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Apache Thrift repository from GitHub, checks out the v0.23.0 tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v0.23.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.py",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

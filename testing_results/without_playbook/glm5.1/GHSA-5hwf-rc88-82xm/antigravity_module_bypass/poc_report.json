@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "incomplete_blocklist_bypass",
+  "summary": "The Docker-based reproduction confirms that the 'antigravity' module is missing from the UNSAFE_IMPORTS blocklist in fickling/fickle.py. Pickles importing antigravity pass security screening with Severity.LIKELY_SAFE, but execute code (webbrowser.open()) when unpickled, demonstrating an incomplete blocklist bypass.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that: (1) Pickle importing antigravity passes check_safety() with LIKELY_SAFE status, (2) antigravity is confirmed absent from UNSAFE_IMPORTS blocklist, (3) Importing antigravity module executes webbrowser.open() automatically (SSRF/phishing vector).",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Docker container, executed the exploit script which demonstrated that: (1) antigravity import returned Severity.LIKELY_SAFE from check_safety(), confirming security bypass, (2) Direct inspection confirmed 'antigravity' is not in UNSAFE_IMPORTS frozenset, (3) The module exists in Python stdlib and opens a web browser when imported, enabling SSRF/phishing attacks.",
+  "verification_method": "The verification script runs three tests: (1) Security bypass test verifies antigravity import returns LIKELY_SAFE status, (2) Blocklist check directly inspects UNSAFE_IMPORTS frozenset to confirm antigravity is missing, (3) Module existence test confirms antigravity is a real stdlib module that executes code. All three tests must pass for verification success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Test 1 confirmed antigravity import returns Severity.LIKELY_SAFE, successfully bypassing security screening",
+    "Test 2 confirmed 'antigravity' is not in the UNSAFE_IMPORTS frozenset (incomplete blocklist)",
+    "Test 3 confirmed antigravity is a real Python stdlib module that opens webbrowser.open('https://xkcd.com/353/')",
+    "Verification also identified other missing dangerous modules: cgi, cgitb, encodings, mailcap",
+    "Note: webbrowser IS blocked in UNSAFE_IMPORTS, but antigravity (which wraps it) is not",
+    "All tests returned exit code 0 indicating successful exploitation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD (current main branch)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

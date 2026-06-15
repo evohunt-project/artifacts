@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass_code_execution",
+  "summary": "The Docker-based reproduction confirms that public flows can be executed without authentication, leading to arbitrary code execution via the PythonREPL component. The exploit successfully created a PUBLIC flow with malicious code and triggered execution without any authentication credentials, only requiring an arbitrary client_id cookie.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a PUBLIC flow with PythonREPL component, trigger execution via the unauthenticated public endpoint, and produce a proof file at /tmp/evohunt_public_pwned.txt containing the success marker string.",
+  "actual_observed_result": "The reproduction successfully: (1) started the Langflow server with default configuration, (2) created a PUBLIC flow containing PythonREPL component with malicious code, (3) triggered flow execution via POST /api/v1/chat/build_public_tmp/{flow_id}/flow without authentication (only client_id cookie), (4) executed arbitrary Python code that wrote a proof file, (5) verified the proof file contained the expected success marker.",
+  "verification_method": "The exploit script checks for the existence of /tmp/evohunt_public_pwned.txt and verifies it contains the exact proof string 'EVOHUNT_PUBLIC_FLOW_POC_SUCCESS'. This distinguishes successful code execution from flow execution errors, authentication failures, or component initialization issues. The use of a fresh session with only a client_id cookie proves no authentication was required.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "PUBLIC flow with PythonREPL component was successfully created via authenticated API",
+    "Public flow execution endpoint accepted POST request without authentication credentials",
+    "Only client_id cookie was required (no JWT token or API key)",
+    "Python code was executed inside the Langflow container",
+    "Proof file /tmp/evohunt_public_pwned.txt was created with expected content",
+    "Flow marked as PUBLIC was accessible to unauthenticated users"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Langflow repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

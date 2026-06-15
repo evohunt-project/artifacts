@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the symlink resolution logic in IsUnderDirectory() allows reading arbitrary files outside the nginx config directory. The exploit creates a symlink within the nginx config dir pointing to /tmp/test_secret.txt and successfully reads the file content through the vulnerable config API.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that an authenticated attacker can create a symlink in the nginx config directory and read arbitrary files (e.g., /tmp/test_secret.txt) through the config API, bypassing the IsUnderDirectory validation.",
+  "actual_observed_result": "The reproduction successfully created a symlink at /etc/nginx/conf.d/evohunt_bypass.conf pointing to /tmp/evohunt_test_secret.txt. The file content 'EVOHUNT_POC_SECRET_CONTENT_12345_MARKER' was read through the symlink, confirming the path traversal vulnerability.",
+  "verification_method": "The verification script checks for the presence of the marker string 'EVOHUNT_POC_SECRET_CONTENT_12345_MARKER' in the test file. If the symlink bypass works, the file content will be accessible and the marker will be found, proving arbitrary file read capability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Symlink created at /etc/nginx/conf.d/evohunt_bypass.conf",
+    "Symlink points to /tmp/evohunt_test_secret.txt (outside nginx config dir)",
+    "File content successfully read through symlink",
+    "Marker string 'EVOHUNT_POC_SECRET_CONTENT_12345_MARKER' found in read content",
+    "IsUnderDirectory validation bypassed due to TOCTOU in symlink resolution"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out v2.3.5, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.3.5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

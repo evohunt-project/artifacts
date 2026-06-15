@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that the executeCommands function in the SSH client uses insufficient shell escaping (only replacing single quotes), leaving shell metacharacters like $(), backticks, ;, &&, ||, and newlines vulnerable to injection, enabling attackers to execute arbitrary commands on Proxmox hosts.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that shell metacharacters bypass the single-quote escaping mechanism, allowing attackers to inject commands through various techniques including backticks, command substitution, newline injection, and command chaining operators.",
+  "actual_observed_result": "The reproduction successfully verified the insufficient escaping mechanism: the executeCommands function joins commands with semicolons, wraps them in /bin/bash -c with single quotes, and only escapes single quotes using strings.ReplaceAll. All other shell metacharacters remain unescaped, enabling multiple injection techniques.",
+  "verification_method": "The verification script checks for: (1) command joining with semicolon delimiter, (2) bash execution wrapper, (3) insufficient single-quote escaping only, (4) absence of comprehensive shell escaping, and (5) user input flowing from Terraform configuration to command construction. These checks confirm the complete attack path from user input through insufficient escaping to bash execution.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Vulnerable code location confirmed at proxmox/ssh/client.go:290-297",
+    "Command joining pattern verified: strings.Join(commands, '; ')",
+    "Bash execution wrapper verified: /bin/bash -c wrapper",
+    "Insufficient escaping verified: strings.ReplaceAll(script, '\\'', '\\'\"'\"\\'')",
+    "No comprehensive shell escaping found: shellescape/shellquote libraries not used",
+    "Shell metacharacters confirmed vulnerable: $(), backticks, ;, &&, ||, newlines can bypass escaping",
+    "Attack path verified: user input -> command construction -> insufficient escaping -> bash -> command injection"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_trigger.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

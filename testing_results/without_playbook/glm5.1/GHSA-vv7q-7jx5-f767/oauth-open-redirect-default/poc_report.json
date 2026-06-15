@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "open_redirect",
+  "summary": "The Docker-based reproduction confirms that the default OAuthProxy configuration accepts any redirect URI during Dynamic Client Registration. A client registered with an attacker-controlled redirect URI is created without error, and the authorization endpoint accepts the evil redirect URI in the flow, demonstrating that the default policy allows open redirect attacks that can leak authorization codes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should confirm that (1) validate_redirect_uri accepts any URI when allowed_patterns is None, (2) a DCR client can be registered with an attacker-controlled redirect URI, and (3) the authorization flow accepts the evil redirect URI without validation error, proving the open redirect vulnerability.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched both the mock IdP and the FastMCP OAuth proxy server. The exploit script confirmed that validate_redirect_uri returns True for any URI with the default None policy, a DCR client was registered with redirect_uri=http://localhost:9999/steal-tokens, and the authorization endpoint accepted the evil redirect URI in the flow without rejection, demonstrating the open redirect vulnerability.",
+  "verification_method": "The exploit script verifies the vulnerability in three stages: (1) directly calls validate_redirect_uri to confirm the default policy accepts any URI, (2) registers a DCR client with an evil redirect URI via POST /register and checks for a 201 response, and (3) initiates an authorization flow with the evil redirect URI and checks that the request is accepted (not rejected with 400/403). The proof string EVOHUNT_OPEN_REDIRECT_CONFIRMED is emitted on success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "validate_redirect_uri('http://localhost:9999/steal-tokens', None) returned True, confirming the default allow-all policy.",
+    "DCR registration with redirect_uris=['http://localhost:9999/steal-tokens'] succeeded with HTTP 201.",
+    "Authorization endpoint accepted the evil redirect URI without returning a 400/403 error.",
+    "The proof string EVOHUNT_OPEN_REDIRECT_CONFIRMED was emitted by the exploit script."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.py",
+      "reproduction/exploit.py",
+      "reproduction/mock_idp.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

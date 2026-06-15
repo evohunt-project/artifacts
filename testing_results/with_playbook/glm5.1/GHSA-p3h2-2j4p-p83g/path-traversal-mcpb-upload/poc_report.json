@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction demonstrates that a crafted .mcpb file with path traversal in manifest.name causes the extracted content to be relocated outside the intended upload directory via fs.renameSync.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Uploading a .mcpb file with manifest.name containing ../ sequences should cause the extracted files to be moved to a directory outside data/uploads/mcpb/, demonstrating arbitrary filesystem write via path traversal.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds and launches MCPHub, authenticates, uploads a crafted .mcpb file with manifest.name set to ../../../../../tmp/evohunt-poc-traversal, and the extracted content is relocated to /tmp/evohunt-poc-traversal outside the intended upload directory.",
+  "verification_method": "The exploit script checks for the existence of the directory at the traversal target path (/tmp/evohunt-poc-traversal) and verifies it contains the expected proof string EVOHUNT_PATH_TRAVERSAL_PROOF in the extracted files. The verification distinguishes actual path traversal from normal extraction by checking whether the final directory is outside the upload base directory.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "A directory was created at the traversal target path outside the intended upload directory",
+    "The extracted files contain the proof string EVOHUNT_PATH_TRAVERSAL_PROOF",
+    "The upload response confirmed successful processing of the malicious .mcpb file"
+  ],
+  "limitations_or_blockers": [
+    "The exploit requires git clone access to the target repository for the run.sh host-side script",
+    "The exploit requires Docker to be available on the host"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2a2e2205ad25128ef9be9b452146555f3f3268a1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/build_malicious_mcpb.py",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

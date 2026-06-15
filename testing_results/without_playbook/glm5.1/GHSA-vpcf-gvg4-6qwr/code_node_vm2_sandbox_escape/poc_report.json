@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sandbox_escape_rce",
+  "summary": "The Docker-based reproduction confirms that a low-privileged authenticated user can create a workflow with a malicious Code node that escapes the VM2 sandbox and executes arbitrary code on the host system, reading sensitive files like /etc/passwd.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the malicious Code node to escape the VM2 sandbox and execute attacker-controlled JavaScript code with Node.js process privileges, demonstrating arbitrary file read and code execution on the host system.",
+  "actual_observed_result": "The reproduction successfully created an n8n instance, created a workflow with a malicious Code node containing a VM2 escape payload, executed the workflow, and observed the sandbox escape marker 'ESCAPE_SUCCESS:root:' in the container logs, confirming arbitrary code execution on the host system.",
+  "verification_method": "The run script executes the exploit trigger and then checks container logs for the specific proof string 'ESCAPE_SUCCESS:root:' emitted by the escaped code. This distinguishes successful sandbox escape from normal execution, startup failures, or unrelated errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs contain the proof marker 'ESCAPE_SUCCESS:root:' confirming the VM2 sandbox was escaped",
+    "The malicious code successfully accessed the Node.js process object and required the 'fs' module from outside the sandbox",
+    "The code read /etc/passwd from the host filesystem, confirming arbitrary file access",
+    "The workflow was successfully created by an authenticated user with basic authentication credentials",
+    "No high-privilege access or special deployment conditions were required for the exploit"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository from GitHub on the host, checks out the vulnerable version tag v1.123.21, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_escape.sh",
+      "reproduction/exploit_trigger.sh"
+    ]
+  }
+}

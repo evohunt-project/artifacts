@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that the backup API endpoint exposes AES encryption keys and IV in the HTTP response header. The reproduction successfully extracted the X-Backup-Security header, decrypted the backup file offline, and accessed sensitive configuration data, demonstrating complete bypass of the encryption security model.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the backup endpoint returns encryption key material in the X-Backup-Security header, allowing offline decryption of the backup file without proper authorization. The proof should show successful extraction and decryption revealing sensitive data.",
+  "actual_observed_result": "The reproduction successfully authenticated, triggered backup creation, extracted the AES key and IV from the X-Backup-Security response header, and used the exposed keys to decrypt the backup file. The decrypted backup revealed nginx configuration files, database contents, and application settings, proving the encryption is ineffective due to key exposure.",
+  "verification_method": "The run script creates a backup, extracts the X-Backup-Security header containing AES key:IV, and uses a Python decryption script to decrypt the backup offline. The verification confirms that sensitive data (nginx configs, database files) were successfully extracted from the decrypted backup, proving the information disclosure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Backup endpoint returned X-Backup-Security header with AES key and IV",
+    "Encryption key and IV were successfully extracted from response headers",
+    "Backup file was decrypted offline using the exposed key material",
+    "Decrypted backup contained nginx configuration files and database",
+    "No authorization checks prevented key extraction by authenticated user"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/decrypt_backup.py",
+      "reproduction/exploit_disclosure.sh",
+      "reproduction/verify_disclosure.sh"
+    ]
+  }
+}

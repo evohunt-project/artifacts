@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sandbox_escape_rce",
+  "summary": "The Docker-based reproduction confirms that objects returned by name handlers can have dangerous methods that completely bypass DISALLOW_FUNCTIONS security checks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a name handler returning an object with dangerous methods (run, read_file) can execute arbitrary code and read sensitive files like /etc/passwd, completely bypassing the sandbox.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully demonstrated that name handler returned object methods executed arbitrary code (creating /tmp/pwned_vuln3) and read /etc/passwd, confirming complete sandbox escape.",
+  "verification_method": "The run script executes the exploit and verifies both arbitrary code execution (via /tmp/pwned_vuln3 file) and information disclosure (reading /etc/passwd), demonstrating complete security bypass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show name handler returning CodeExecutor object",
+    "Container logs show system.run() method executing arbitrary code via eval",
+    "Container logs show /tmp/pwned_vuln3 created with content 'hacked_by_vuln3'",
+    "Container logs show system.read_file() method reading /etc/passwd",
+    "Container logs show /etc/passwd content successfully retrieved",
+    "No exceptions or security blocks occurred despite DISALLOW_FUNCTIONS containing eval"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

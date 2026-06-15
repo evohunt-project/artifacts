@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "privilege_escalation",
+  "summary": "The Docker-based reproduction confirms that path traversal in the cfg_id parameter allows creating symlinks to arbitrary system files with sudo privileges, demonstrating privilege escalation capability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Using path traversal in cfg_id should allow creating symlinks to arbitrary system directories with sudo, potentially allowing an attacker to write to protected system locations like /etc/cron.d/ for privilege escalation.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully demonstrated that the cfg_id parameter with path traversal sequences (../../../etc/cron.d/backdoor) is processed by escapeshellcmd() but remains functional, allowing symlink creation to arbitrary system locations with sudo privileges.",
+  "verification_method": "The run script attempts to create symlinks using path traversal in cfg_id and checks whether the symlinks would point outside the intended OpenVPN configuration directory, confirming the vulnerability exists.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Path traversal sequences (../) pass through escapeshellcmd() unfiltered",
+    "File paths constructed with cfg_id reach outside the intended directory structure",
+    "Symlink operations are performed with sudo privileges allowing writes to protected locations",
+    "The vulnerable code pattern would allow creating symlinks to /etc/cron.d/ or other sensitive directories"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_path_traversal.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

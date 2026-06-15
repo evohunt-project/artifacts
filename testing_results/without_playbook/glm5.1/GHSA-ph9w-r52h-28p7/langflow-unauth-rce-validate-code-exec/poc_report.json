@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "rce",
+  "summary": "The Docker-based reproduction starts a Langflow server with default AUTO_LOGIN=true, obtains a superuser JWT via the unauthenticated auto_login endpoint, then sends a crafted function definition to /api/v1/validate/code whose default argument executes os.system() to write a proof file. Verification checks that the proof file exists and contains the expected marker string.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted validate/code payload to trigger exec() of a function definition with a malicious default argument, which executes os.system() inside the Langflow container and writes a unique proof file to /tmp/evohunt_rce_proof.",
+  "actual_observed_result": "PoC was not executed in the current environment. The reproduction bundle is complete and self-contained; ./reproduction/run.sh should build the Docker image, start the Langflow server, and run the exploit automatically.",
+  "verification_method": "The verify.sh script starts the Langflow server, runs exploit.py which writes a unique proof string to /tmp/evohunt_rce_proof via the exec() sink, then checks that the file exists and contains the exact expected proof string. This distinguishes successful code execution from a server startup failure or unrelated error.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The PoC was not executed in the current build environment. It requires Docker to build the reproduction image and run the container."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.7.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the log clearing endpoint's path validation is bypassed via path traversal, allowing truncation of a file outside the intended /var/log and /tmp directories.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should truncate a marker file at /var/evohunt_marker.txt (outside /var/log and /tmp) by sending a POST request to /ajax/logging/clearlog.php with logfile=/var/log/../evohunt_marker.txt, which passes the substring regex check but resolves outside the intended directory via '..' traversal.",
+  "actual_observed_result": "The exploit authenticates with default credentials (admin/secret), obtains a CSRF token from the session, and sends a POST request to /ajax/logging/clearlog.php with the path traversal payload logfile=/var/log/../evohunt_marker.txt. The endpoint returns HTTP 200 with an empty JSON array. The marker file at /var/evohunt_marker.txt is confirmed truncated from 28 bytes (content: 'EVOHUNT_PROOF_BEFORE_EXPLOIT') to exactly 0 bytes, confirming the path traversal vulnerability.",
+  "verification_method": "The verify script creates a marker file at /var/evohunt_marker.txt with known content before the exploit runs, then checks the file size after the exploit. Success is confirmed when the file size drops to exactly 0 bytes, proving that the path traversal payload was processed by the vulnerable PHP code and the truncate command was executed on the resolved path outside the intended directories.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Marker file at /var/evohunt_marker.txt was truncated from non-zero content to 0 bytes.",
+    "The clearlog.php endpoint accepted the path traversal payload /var/log/../evohunt_marker.txt without rejection.",
+    "The sudo truncate command executed with the path-traversed argument and successfully truncated the target file."
+  ],
+  "limitations_or_blockers": [
+    "The default RaspAP sudoers configuration (installers/raspap.sudoers line 79) restricts truncate to /tmp/*.log and /var/log/dnsmasq.log. The PoC uses a more permissive sudoers entry to demonstrate the PHP code vulnerability. In production deployments with the restrictive default sudoers, this specific attack vector is partially mitigated by the sudoers configuration, though the code vulnerability in clearlog.php remains exploitable if sudoers is modified or if other code paths invoke truncate without the same sudoers restrictions."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3.3.5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/router.php",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "jndi_injection",
+  "summary": "The Docker-based reproduction is designed to demonstrate that the vulnerable configure_jndi method in JdbcConnection performs an unvalidated JNDI lookup that loads a malicious Java class from an attacker-controlled LDAP server, achieving code execution inside the JRuby container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start a mock LDAP server, trigger the JNDI lookup at connection.rb:29 with an attacker-controlled ldap:// URL, load the malicious Exploit class, and create /tmp/pwned.txt as proof of code execution.",
+  "actual_observed_result": "PoC was not executed during this session; no runtime observation is available.",
+  "verification_method": "The verify scripts check for the existence and contents of /tmp/pwned.txt inside the container. The presence of this file confirms the JNDI lookup loaded and executed the malicious class, distinguishing code execution from a generic NamingException or connection failure.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker was not available in the audit environment to execute the reproduction container."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "1.2.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.rb",
+      "reproduction/exploit_simple.rb",
+      "reproduction/verify.sh",
+      "reproduction/verify_simple.sh",
+      "reproduction/jndi_server_enhanced.py",
+      "reproduction/malicious_class/Exploit.java"
+    ]
+  }
+}

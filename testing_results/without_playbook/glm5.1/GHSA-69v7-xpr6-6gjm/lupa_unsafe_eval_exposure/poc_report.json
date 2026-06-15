@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The PoC demonstrates that Lupa's default configuration exposes Python's eval() function to Lua code, enabling arbitrary Python code execution from untrusted Lua scripts. The exploit successfully reads sensitive files and executes system commands by invoking python.eval() from Lua.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate that Lua code executed in a default LuaRuntime can call python.eval() to execute arbitrary Python code, including reading sensitive files (/etc/passwd or /etc/hostname) and running system commands (id). The output should include the PROOF_OF_CONCEPT_SUCCESS marker.",
+  "actual_observed_result": "The PoC successfully built Lupa from source, created a default LuaRuntime instance, and demonstrated that python.eval() is accessible from Lua code. The exploit executed arbitrary Python code to read system files and execute commands, confirming full code execution capabilities. The output included the expected success markers.",
+  "verification_method": "The exploit script checks for specific proof markers: (1) confirmation that python.eval() is accessible by default, (2) successful file read operations using python.eval('open'), (3) successful command execution using python.eval('__import__(\"subprocess\")'), and (4) the final PROOF_OF_CONCEPT_SUCCESS marker. These markers distinguish successful exploitation from build failures or unrelated errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "python.eval() was confirmed accessible from Lua in default LuaRuntime",
+    "Arbitrary Python code execution achieved via python.eval() from Lua",
+    "Successfully imported Python modules (os, subprocess) from Lua",
+    "Successfully read system files (/etc/hostname or /etc/passwd) using python.eval('open')",
+    "Successfully executed system commands (id) using python.eval('__import__(\"subprocess\")')",
+    "Verified mitigation works: register_eval=False prevents python.eval() exposure"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Lupa repository from GitHub on the host, checks out the latest commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "latest",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

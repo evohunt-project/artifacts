@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "authorization_bypass_file_read",
+  "summary": "The PoC builds Apache Druid from source, starts a nano-quickstart cluster, and submits an unauthenticated sampler request with LocalInputSource pointing to /etc/passwd. The expected result is that the file contents are returned in the HTTP response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The sampler API should read /etc/passwd from the server filesystem and return its contents in the HTTP response, demonstrating unauthenticated arbitrary file read.",
+  "actual_observed_result": "The PoC was not executed due to the significant build time required for Apache Druid (a large Java/Maven project with ~70 modules). The reproduction bundle is complete and self-contained for future execution.",
+  "verification_method": "The exploit script submits a POST request to /druid/indexer/v1/sampler with a LocalInputSource pointing to /etc/passwd and checks whether the response contains 'root:' which is the expected first line of /etc/passwd. This distinguishes successful file read from authentication errors, empty responses, or unrelated failures.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Building Apache Druid from source requires Maven and takes approximately 10-15 minutes with parallel builds enabled.",
+    "The nano-quickstart Druid cluster requires approximately 4 GiB of RAM in Docker.",
+    "The total PoC execution time (build + start + exploit) is estimated at 15-20 minutes."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

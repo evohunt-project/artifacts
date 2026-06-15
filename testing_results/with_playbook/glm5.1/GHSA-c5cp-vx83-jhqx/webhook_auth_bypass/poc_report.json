@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass_code_execution",
+  "summary": "The Docker-based reproduction confirms that the webhook endpoint allows unauthenticated flow execution, which leads to arbitrary code execution via the PythonREPL component. The exploit successfully created a flow with malicious code and triggered execution without any authentication credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a flow with PythonREPL component, trigger execution via the unauthenticated webhook endpoint, and produce a proof file at /tmp/evohunt_pwned.txt containing the success marker string.",
+  "actual_observed_result": "The reproduction successfully: (1) started the Langflow server with default configuration (WEBHOOK_AUTH_ENABLE=false), (2) created a flow containing PythonREPL component with malicious code, (3) triggered flow execution via POST /api/v1/webhook/{flow_id} without authentication, (4) executed arbitrary Python code that wrote a proof file, (5) verified the proof file contained the expected success marker.",
+  "verification_method": "The exploit script checks for the existence of /tmp/evohunt_pwned.txt and verifies it contains the exact proof string 'EVOHUNT_WEBHOOK_POC_SUCCESS'. This distinguishes successful code execution from flow execution errors, authentication failures, or component initialization issues.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Flow with PythonREPL component was successfully created via authenticated API",
+    "Webhook endpoint accepted POST request without authentication credentials",
+    "Python code was executed inside the Langflow container",
+    "Proof file /tmp/evohunt_pwned.txt was created with expected content",
+    "No authentication was required for webhook execution (WEBHOOK_AUTH_ENABLE=false)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Langflow repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

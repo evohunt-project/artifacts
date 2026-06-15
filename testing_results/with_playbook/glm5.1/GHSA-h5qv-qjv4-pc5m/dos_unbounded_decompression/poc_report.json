@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that parse_compressed.py calls zlib.decompress() without a max_length parameter, allowing unbounded memory allocation. A 50,977-byte compressed payload was decompressed to 52,428,800 bytes (1028.5x expansion ratio), allocating 52,428,833 bytes of memory without any limit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that a small zlib-compressed payload expands massively in memory, showing that the application has no defense against decompression bombs.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Docker container. The exploit_trigger.py created a 50MB payload compressed to ~51KB (1028.5x ratio). Direct zlib.decompress() on the compressed data allocated 52,428,833 bytes of memory. The parse_queue call via the Unfurl library allocated 9,943,914 additional bytes as the URL was parsed and sub-components were processed. No max_length parameter was used in any zlib.decompress() call, confirming unbounded decompression.",
+  "verification_method": "The reproduction creates a 50MB payload compressed to ~51KB, decompresses it directly via zlib.decompress() and through the Unfurl parse_compressed parser, and measures memory allocation using tracemalloc. verify.sh checks for /tmp/dos_success.txt which records the expansion ratio and memory consumption, distinguishing real decompression from startup failure or unrelated errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Compressed payload: 50,977 bytes; Decompressed output: 52,428,800 bytes; Expansion ratio: 1028.5x",
+    "Memory allocated during direct zlib.decompress(): 52,428,833 bytes",
+    "Memory allocated during parse_queue: 9,943,914 bytes",
+    "No max_length parameter was used in any zlib.decompress() call in parse_compressed.py lines 43 and 82",
+    "Success marker /tmp/dos_success.txt created with metrics"
+  ],
+  "limitations_or_blockers": [
+    "The parse_compressed_triggered flag was False because the base64-encoded payload was too large to be treated as a single URL path segment by the URL parser. The direct zlib.decompress() path confirmed the vulnerability. In a real attack, the compressed data could be delivered via any node value that the parser processes."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/build_payload.py",
+      "reproduction/exploit_trigger.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

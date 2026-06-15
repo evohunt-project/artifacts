@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "dos",
+  "summary": "The PoC bundle demonstrates that the Gogs HTTP server has no ReadTimeout, ReadHeaderTimeout, or WriteTimeout, enabling Slowloris-style denial of service. The reproduction builds Gogs, starts it, and runs a Slowloris attack that holds connections open to exhaust server resources.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the Slowloris attack should cause the Gogs server to become unresponsive to legitimate requests because each slow connection holds a goroutine and file descriptor without any timeout. The server will be unable to accept new connections once resources are exhausted.",
+  "actual_observed_result": "The reproduction was not executed because the Docker base image could not be pulled in the available environment.",
+  "verification_method": "The verify.sh script (1) confirms no timeout configuration exists in cmd/gogs/web.go via grep, (2) starts Gogs, (3) runs slowloris.py to hold connections open, (4) attempts a healthcheck request to verify the server became unresponsive.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker base image pull timed out in the execution environment, preventing the PoC from being built and run."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the local target repository and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/slowloris.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

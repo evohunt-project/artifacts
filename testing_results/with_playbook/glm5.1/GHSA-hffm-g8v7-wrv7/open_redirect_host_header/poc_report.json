@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "open_redirect",
+  "summary": "The Docker-based reproduction confirms that Caddy's http_redirect listener wrapper reflects the attacker-controlled Host header directly into the Location response header, creating an open redirect from HTTPS URLs to arbitrary attacker-controlled hosts.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending an HTTP request with Host: evil.com to the TLS port should produce a 308 Permanent Redirect to Location: https://evil.com/test-path, demonstrating that the Host header is reflected without validation.",
+  "actual_observed_result": "Running ./reproduction/run.sh built Caddy from source, started it with the http_redirect listener wrapper, and sent a plaintext HTTP request with Host: evil.com to the TLS port. The server responded with a 308 Permanent Redirect to Location: https://evil.com/test-path, confirming the Host header is reflected without validation.",
+  "verification_method": "The verify.sh script starts Caddy with the http_redirect listener wrapper, sends a crafted HTTP request using curl with a Host: evil.com header to the TLS port, captures the response headers, and checks whether the Location header contains 'https://evil.com'. The check distinguishes a genuine open redirect from a normal server response or error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The Location response header contains 'https://evil.com/test-path' reflecting the attacker-controlled Host header.",
+    "The 308 Permanent Redirect status code confirms the redirect is treated as permanent by Caddy.",
+    "The EVOHUNT_PROOF_STRING OPEN_REDIRECT_HOST_HEADER_REFLECTED was emitted by the verification script."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/caddy-config.json"
+    ]
+  }
+}

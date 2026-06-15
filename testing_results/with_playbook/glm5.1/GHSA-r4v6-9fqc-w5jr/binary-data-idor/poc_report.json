@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor",
+  "summary": "The Docker-based reproduction confirms that the GET /rest/binary-data/ endpoint streams binary data based solely on the ID parameter without verifying the requesting user's access to the source execution. A second authenticated user can access binary data from the first user's workflow execution by constructing the binary data ID.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A second authenticated user should be able to download binary data produced by the first user's workflow execution by constructing the binary data ID, which contains the workflow ID and execution ID.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds n8n, creates two users, runs a workflow as User A that produces binary data, then User B accesses that binary data via the /rest/binary-data/ endpoint using the known binary data ID format. The response contains the binary data proof string, confirming unauthorized cross-user data access.",
+  "verification_method": "A unique proof string is embedded in binary data produced by User A's workflow execution. User B attempts to access this binary data via the /rest/binary-data/ endpoint. The presence of the proof string in User B's response confirms the IDOR.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "User B successfully downloaded binary data belonging to User A's workflow execution.",
+    "The binary data contained the unique proof string, confirming cross-user data access.",
+    "No ownership or access check was performed on the binary data endpoint."
+  ],
+  "limitations_or_blockers": [
+    "Building n8n from source takes significant time (10-20 minutes).",
+    "The binary data UUID suffix adds some entropy, but can be obtained through the executions API response which includes binary data metadata."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version n8n@2.17.4, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.17.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

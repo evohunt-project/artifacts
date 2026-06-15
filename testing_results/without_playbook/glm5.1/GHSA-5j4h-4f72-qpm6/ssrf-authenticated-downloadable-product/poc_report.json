@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction successfully demonstrates that the Bagisto customer downloadable products endpoint is vulnerable to Server-Side Request Forgery (SSRF) with NO URL validation. The vulnerable copy() function in DownloadableProductController.php can be made to fetch internal-only resources when an attacker-controlled URL is stored in purchased downloadable products.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the application to fetch an internal-only HTTP endpoint (simulating cloud metadata or internal API) without any URL validation. The proof string 'EV0HUNT_AUTHENTICATED_SSRF_' should be present in the fetched content, demonstrating successful SSRF with no validation barriers.",
+  "actual_observed_result": "The reproduction successfully executed the vulnerable code path. The PHP copy() function fetched the mock internal metadata service at http://localhost/internal-metadata/ and returned sensitive data including simulated service account credentials, API keys, and internal endpoint URLs. The proof string 'EV0HUNT_AUTHENTICATED_SSRF_' was present in the response, confirming the SSRF vulnerability with no URL validation.",
+  "verification_method": "The verify.sh script orchestrates the SSRF attack by: (1) Setting up a mock internal metadata service accessible only via localhost; (2) Running the vulnerable code that uses PHP's copy() function to fetch the internal URL without any validation; (3) Checking for the proof string 'EV0HUNT_AUTHENTICATED_SSRF_' in the response; (4) Verifying that sensitive simulated internal data was successfully fetched via SSRF with zero validation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The mock internal metadata service returned JSON containing proof string 'EV0HUNT_AUTHENTICATED_SSRF_'",
+    "The vulnerable copy() function successfully fetched the internal-only resource at http://localhost/internal-metadata/",
+    "The response contained simulated sensitive data including service account credentials, Stripe API key, SendGrid API key, and internal endpoint URLs",
+    "The proof file /tmp/ssrf_proof.txt was created with the full SSRF response",
+    "NO URL validation was performed - the code directly passed the database URL to copy() without any checks",
+    "This endpoint is MORE SEVERE than the sample endpoint because it has zero validation (not even the bypassable DNS check)"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the local repository at advisory_1b594c8b/repo (no git clone needed for this PoC)",
+    "pinned_commit_or_ref": "N/A - using local repo snapshot",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/mock-internal-service.php",
+      "reproduction/exploit-trigger.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

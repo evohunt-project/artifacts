@@ -1,0 +1,100 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T19:43:00Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6f3f1918",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-wfq2-52f7-7qvj/GHSA-wfq2-52f7-7qvj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "incomplete_module_blocklist_importlib",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6f3f1918/incomplete_module_blocklist_importlib",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6f3f1918/incomplete_module_blocklist_importlib/vulnerability_report.json",
+      "title": "Incomplete dangerous module blocklist allows importlib.import_module bypass",
+      "vulnerability_type": "protection_mechanism_failure",
+      "advisory_match": true,
+      "advisory_match_reason": "Identifies the same incomplete static blocklist root cause in fickling/analysis.py as the advisory's runpy bypass. Both share the same vulnerable code location (UnsafeImports analyzer with incomplete UNSAFE_MODULES dict), same vulnerability pattern (missing dangerous module enabling RCE), and same impact (misclassification of malicious pickles as SUSPICIOUS instead of OVERTLY_MALICIOUS). The importlib.import_module bypass is directly analogous to runpy.run_path bypass - both enable arbitrary code execution through a missing dangerous module in the blocklist. The advisory explicitly states 'This is the same root cause as CVE-2025-67748 (pty) and CVE-2025-67747 (marshal/types)', confirming a class of vulnerabilities with identical root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "incomplete_module_blocklist_ctypes",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6f3f1918/incomplete_module_blocklist_ctypes",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6f3f1918/incomplete_module_blocklist_ctypes/vulnerability_report.json",
+      "title": "Incomplete dangerous module blocklist allows ctypes native library loading bypass",
+      "vulnerability_type": "protection_mechanism_failure",
+      "advisory_match": true,
+      "advisory_match_reason": "Identifies the same incomplete static blocklist root cause in fickling/analysis.py as the advisory's runpy bypass. Both share the same vulnerable code location, same vulnerability pattern (missing dangerous module enabling code execution), and same security tool bypass mechanism. The ctypes.CDLL bypass provides native code execution capability through the same incomplete blocklist, representing the same class of vulnerability as runpy, pty, and marshal/types bypasses referenced in the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "incomplete_module_blocklist_importlib",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6f3f1918/incomplete_module_blocklist_importlib",
+      "status": "qualifying_vuln",
+      "title": "Incomplete dangerous module blocklist allows importlib.import_module bypass",
+      "vulnerability_type": "protection_mechanism_failure"
+    },
+    "reason": "The importlib finding identifies the same incomplete dangerous module blocklist root cause as the advisory's runpy bypass. The PoC demonstrated end-to-end exploit success: Fickling 0.1.6 misclassified a malicious pickle using importlib.import_module('os') as SUSPICIOUS (level 2/5) instead of LIKELY_OVERTLY_MALICIOUS (level 4/5), and the payload successfully imported the os module with full RCE capabilities (os.system, os.popen). This matches the advisory's exploit pattern where runpy.run_path achieves code execution while evading Fickling's security classification. Both represent the same vulnerability class: missing dangerous modules in the UNSAFE_MODULES blocklist at fickling/analysis.py lines 210-227, enabling attackers to bypass the security tool's detection while achieving arbitrary code execution.",
+    "evidence": [
+      "PoC executed in isolated environment with Fickling 0.1.6 installed",
+      "Malicious pickle using importlib.import_module('os') created and analyzed",
+      "Fickling check_safety() returned Severity.SUSPICIOUS (level 2/5), confirming bypass",
+      "Payload successfully unpickled to the os module with full RCE capabilities",
+      "Imported os module provides os.system() and os.popen() for arbitrary command execution",
+      "Same incomplete UNSAFE_MODULES blocklist vulnerability as advisory's runpy case",
+      "Same code location (fickling/analysis.py:210-227) as advisory",
+      "Same misclassification pattern (SUSPICIOUS vs OVERTLY_MALICIOUS) as advisory",
+      "Advisory explicitly references similar bypasses: CVE-2025-67748 (pty), CVE-2025-67747 (marshal/types)"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "incomplete_module_blocklist_importlib",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6f3f1918/incomplete_module_blocklist_importlib",
+      "executed": true,
+      "command": "source venv/bin/activate && python3 test_fickling_final.py",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6f3f1918/.judge/poc_runs/incomplete_module_blocklist_importlib",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6f3f1918/.judge/poc_runs/incomplete_module_blocklist_importlib/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_6f3f1918/.judge/poc_runs/incomplete_module_blocklist_importlib/poc_execution.json",
+      "observed_effect": "Fickling 0.1.6 misclassified importlib.import_module('os') payload as SUSPICIOUS (2/5) instead of LIKELY_OVERTLY_MALICIOUS (4/5). The payload successfully unpickled to the os module with os.system() and os.popen() capabilities, enabling arbitrary command execution. This demonstrates the incomplete blocklist vulnerability allows security tool bypass while achieving RCE, matching the advisory's runpy.run_path bypass pattern.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

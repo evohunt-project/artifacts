@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The Docker-based reproduction confirms that the Bazar CSV import functionality permits unsafe deserialization of user-supplied data. While the vulnerability exists, exploitation requires either authenticated access with write permissions to Bazar forms, or successful social engineering to trick a user into importing malicious CSV data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that unserialize() is called on base64-encoded user input without allowed_classes restriction, confirming the potential for object injection if authentication requirements are met.",
+  "actual_observed_result": "The reproduction bundle confirmed that CSVManager::importEntry() calls unserialize(base64_decode($entry)) without validation, and that importfiche POST parameter data flows directly into this vulnerable function. However, exploitation requires write access to Bazar forms.",
+  "verification_method": "The verify.sh script creates a test Bazar form, uploads CSV data containing serialized payload, and checks if the deserialization occurs by monitoring execution flow.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Code flow confirms unserialize(base64_decode()) is called on user input",
+    "No allowed_classes restriction prevents arbitrary object instantiation",
+    "Vendor libraries with gadget chains exist (SimplePie, PHPePub)",
+    "Authentication/ACL check required before reaching vulnerable code path"
+  ],
+  "limitations_or_blockers": [
+    "Requires authenticated user with write access to Bazar forms (PR:L)",
+    "Social engineering or credential theft needed for unauthenticated exploitation",
+    "Not directly exploitable via network without prior access"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the YesWiki repository on the host, checks out the doryphore-dev branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "doryphore-dev",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

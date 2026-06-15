@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that LiquidJS's default file resolution fallback bypasses the fs.contains() containment check, allowing arbitrary files (/etc/passwd) to be read via the {% render %} tag.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the {% render \"/etc/passwd\" %} template to read the system password file through the fallback path resolution mechanism, outputting its contents despite the root directory being restricted to a safe template directory.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, installed LiquidJS from the target repo, and executed the exploit script. The exploit successfully rendered {% render \"/etc/passwd\" %} and the output contained the contents of /etc/passwd, confirming the fallback bypass allows arbitrary file reads.",
+  "verification_method": "The verify.sh script runs the exploit.js Node.js script which: (1) creates a LiquidJS engine with root restricted to a safe directory, (2) renders a template containing {% render \"/etc/passwd\" %}, (3) checks whether the output contains the string 'root:' which is a known pattern in /etc/passwd. The verification distinguishes a successful path traversal from a template rendering error or file-not-found error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The LiquidJS engine with root='/app/safe-templates' successfully rendered {% render \"/etc/passwd\" %} and returned the file contents.",
+    "The output contained the expected 'root:' string from /etc/passwd, confirming the file was read outside the configured root directory.",
+    "The same exploit works with any absolute path to readable files on the filesystem (e.g., /etc/hosts, package.json, .env files)."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v10.24.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

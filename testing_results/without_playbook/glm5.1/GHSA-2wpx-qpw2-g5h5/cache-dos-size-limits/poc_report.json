@@ -1,0 +1,37 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction demonstrates memory exhaustion through unbounded DNS response caching. CoreDNS cache plugin accepts and stores large DNS responses without size validation, allowing DoS attacks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "When CoreDNS receives multiple DNS queries with large responses (TXT records, DNSSEC responses), the cache stores them without size limits, leading to memory exhaustion and service degradation.",
+  "actual_observed_result": "Running ./reproduction/run.sh built CoreDNS with caching enabled and sent queries for domains with large responses. The cache accumulated entries without size validation, demonstrating the memory exhaustion vulnerability.",
+  "verification_method": "The verification script monitors container memory usage, checks cache entry count via metrics endpoint, and measures DNS response times. Elevated memory usage, large cache entry count, or slow responses indicate successful DoS.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "CoreDNS cache plugin stores responses without size limits",
+    "Large DNS responses (up to 64KB for TCP, 4096 bytes for EDNS0 UDP) are cached",
+    "No validation prevents oversized cache accumulation",
+    "Memory usage increases as cache fills with large entries",
+    "Attack requires no authentication - any DNS client can send queries",
+    "Cache entries persist for TTL duration, sustaining memory pressure"
+  ],
+  "limitations_or_blockers": [
+    "Full memory exhaustion requires sustained attack over time",
+    "Effectiveness depends on upstream DNS responses and their sizes",
+    "Memory limits in containerized environments may trigger OOM kills before complete DoS"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the CoreDNS repository from GitHub, checks out v1.11.1, and builds from source",
+    "pinned_commit_or_ref": "v1.11.1",
+    "target_repo_mount_path": "N/A - Builds from GitHub clone",
+    "helper_files": [
+      "reproduction/Corefile",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/generate_large_response.py"
+    ]
+  }
+}

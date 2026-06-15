@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction builds the Netmaker server from source, creates a superadmin, registers a host, obtains a legitimate host JWT, then forges a new JWT with the same host ID but signed with a wrong key. The forged JWT is accepted by the server, confirming that VerifyHostToken does not validate the JWT signature.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A forged JWT signed with a wrong key should be rejected with a 401/403 response, but due to the missing token.Valid check, the server accepts it and returns the host's full VPN configuration.",
+  "actual_observed_result": "Running the reproduction pipeline built the Netmaker server, registered a test host, forged a JWT with a wrong signing key, and sent it to GET /api/v1/host. The server returned HTTP 200 with the host's configuration data, confirming the forged JWT was accepted.",
+  "verification_method": "The exploit script sends a legitimate host JWT to /api/v1/host and records the response, then sends a forged JWT (same claims but signed with a completely different key) to the same endpoint. If the forged JWT returns HTTP 200 with host data, the vulnerability is confirmed. The script explicitly compares the two responses and checks that both succeed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The legitimate host JWT (obtained via /api/hosts/adm/authenticate) returns HTTP 200 with host data.",
+    "The forged JWT (signed with wrong-secret instead of the server's JWT secret) returns HTTP 200 with the same host data.",
+    "Both responses contain the host ID, peer information, and server configuration, proving full host impersonation."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

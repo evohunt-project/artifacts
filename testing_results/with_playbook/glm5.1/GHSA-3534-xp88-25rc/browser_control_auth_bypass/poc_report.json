@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Missing Authorization",
+  "summary": "Successfully demonstrated authentication bypass by accessing Browser Control API without credentials. Created browser session, executed JavaScript, and extracted proof of exploitation via /browser-control/session/start and /browser-control/session/:sessionId/evaluate endpoints without any authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Unauthenticated attacker can create browser sessions, navigate to arbitrary URLs, execute arbitrary JavaScript code in browser context, and extract sensitive data from authenticated sessions.",
+  "actual_observed_result": "Successfully created browser session via POST /browser-control/session/start without authentication. Executed JavaScript to compute 'AUTH_BYPASS_PROOF_1337' and received the result, confirming complete authentication bypass.",
+  "verification_method": "Automated check verifies: (1) HTTP 200 response from unauthenticated POST to /browser-control/session/start, (2) Valid sessionId returned in response, (3) Successful JavaScript execution via /browser-control/session/:sessionId/evaluate returning expected proof string, (4) No authentication headers or cookies required for any request.",
+  "verification_passed": "true",
+  "evidence_produced_by_run": [
+    "HTTP response showing successful session creation without authentication",
+    "sessionId returned from unauthenticated API call",
+    "JavaScript evaluation result confirming arbitrary code execution",
+    "Full HTTP request/response logs showing no auth headers"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v9.0.0-alpha.7 (current HEAD)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify_exploit.sh",
+      "reproduction/config.json"
+    ]
+  }
+}

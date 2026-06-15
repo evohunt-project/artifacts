@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that an authenticated attacker can use the SSRF vulnerability to fetch resources from internal network services that should not be accessible from the network.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate that an authenticated attacker can fetch internal service content (http://127.0.0.1:8080/internal-secret) via the SSRF vulnerability, proving access to resources on the internal network.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the n8n container with mock internal service, authenticated as project member, called /rest/workflows/from-url?url=http://127.0.0.1:8080/internal-secret, and successfully retrieved the internal secret content via SSRF.",
+  "verification_method": "The reproduction starts a mock internal HTTP server with known secret content ('INTERNAL_SECRET_DATA'), then uses the SSRF endpoint to fetch this content. Success is verified by checking that the response contains the secret that was only accessible on the internal network.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Internal mock service started successfully on port 8080",
+    "Authenticated user created with workflow:create scope",
+    "SSRF request to http://127.0.0.1:8080/internal-secret succeeded",
+    "Response contained 'INTERNAL_SECRET_DATA' proving internal network access",
+    "No URL validation blocked the internal IP address request"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the n8n repository, checks out the vulnerable commit, builds the Docker image, and runs the container with the source mounted at /target-repo.",
+    "pinned_commit_or_ref": "master (current version with SSRF vulnerability)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/start-internal-service.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify-vulnerability.sh"
+    ]
+  }
+}

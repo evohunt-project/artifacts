@@ -1,0 +1,30 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "csrf_bypass",
+  "summary": "The GraphQL API endpoint was identified as disabling CSRF protection and falling back to an unauthenticated public token through code analysis. Docker-based reproduction was not completed due to base image download timeout, but the vulnerability is confirmed by direct inspection of the source code.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated POST to /actions/graphql/api with a GraphQL query should receive a response containing data or errors, confirming the endpoint accepts requests without authentication and without CSRF validation.",
+  "actual_observed_result": "Docker build did not complete within the session time limit due to network-layer image pull timeouts. Code analysis confirms the vulnerability: GraphqlController.php line 67 disables CSRF, line 49 allows anonymous access, and lines 291-329 fall back to the public token.",
+  "verification_method": "The reproduction bundle verifies the vulnerability by: (1) setting up Craft CMS in Docker, (2) sending an unauthenticated POST with a GraphQL introspection query to /actions/graphql/api, and (3) checking the response for GraphQL data or error output confirming the endpoint processed the request.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Source code confirms $allowAnonymous = ['api'] (GraphqlController.php:49) allows anonymous access.",
+    "Source code confirms CSRF is disabled: $this->enableCsrfValidation = false (GraphqlController.php:67).",
+    "Source code confirms fallback to public token via _publicToken() (GraphqlController.php:318-329).",
+    "Docker build timed out during base image pull; reproduction was not executed."
+  ],
+  "limitations_or_blockers": [
+    "Docker base image pull (php:8.2-cli, composer:2) did not complete within the session timeout due to network speed constraints."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5.x",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

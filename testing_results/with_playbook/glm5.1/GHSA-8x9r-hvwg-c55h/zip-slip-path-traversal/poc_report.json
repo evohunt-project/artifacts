@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that a malicious VSIX with path traversal entries in its zip file names causes the code-marketplace to write files outside the designated extensions directory. The verify.sh script builds the marketplace from source, generates a malicious VSIX, adds it via the CLI, and confirms the proof file was written to /tmp/evohunt-zipslip-proof/pwned.txt which is outside the /tmp/extensions directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause a crafted VSIX to be extracted with path traversal entries, resulting in a proof file being written to /tmp/evohunt-zipslip-proof/pwned.txt which is outside the designated extensions directory at /tmp/extensions.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the code-marketplace binary from source in a Docker container, generated a malicious VSIX with entry names containing ../../../../ sequences, executed 'code-marketplace add /tmp/malicious.vsix --extensions-dir /tmp/extensions', and the proof file was successfully created at /tmp/evohunt-zipslip-proof/pwned.txt containing the marker string EVOHUNT_ZIP_SLIP_PROOF_OF_CONCEPT_SUCCESS.",
+  "verification_method": "The verify.sh script checks for the existence of /tmp/evohunt-zipslip-proof/pwned.txt after the add command completes. It verifies the file contains the expected proof marker string 'EVOHUNT_ZIP_SLIP_PROOF_OF_CONCEPT_SUCCESS'. This distinguishes a real path traversal from a normal extraction where files would only appear under /tmp/extensions/.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The marketplace CLI reported 'Unpacked evil-publisher.test-extension@1.0.0 to /tmp/extensions/evil-publisher/test-extension/1.0.0' confirming extraction occurred.",
+    "The proof file /tmp/evohunt-zipslip-proof/pwned.txt exists outside the extensions directory /tmp/extensions.",
+    "The proof file contains the marker string EVOHUNT_ZIP_SLIP_PROOF_OF_CONCEPT_SUCCESS.",
+    "A second proof file was written to /tmp/evohunt-zipslip-proof/deep/nested.txt demonstrating traversal to a nested path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/build_exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

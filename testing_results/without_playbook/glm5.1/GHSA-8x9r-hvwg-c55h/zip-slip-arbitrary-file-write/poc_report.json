@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction demonstrates that a crafted VSIX file with path traversal sequences successfully writes a file outside the intended extensions directory, confirming the Zip Slip vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a file outside the extensions directory at /outside_jail/exploited.txt, demonstrating arbitrary file write capability through path traversal in VSIX extraction.",
+  "actual_observed_result": "The reproduction successfully built the marketplace binary, created a malicious VSIX with path traversal sequences, and when processed by the marketplace add command, a file was created at /outside_jail/exploited.txt confirming the arbitrary file write vulnerability.",
+  "verification_method": "The verify.sh script checks for the presence of /outside_jail/exploited.txt file after processing the malicious VSIX. The file contains a unique marker EVOSHUNT_ZIPSLIP_SUCCESS_* that distinguishes successful exploitation from normal operation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File /outside_jail/exploited.txt was created outside the extensions directory",
+    "The file contains the expected exploitation marker content",
+    "The marketplace binary processed the malicious VSIX without error",
+    "No validation or sanitization of path traversal sequences occurred during extraction"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the advisory session directory and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "current-state",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/create_malicious_vsix.sh"
+    ]
+  }
+}

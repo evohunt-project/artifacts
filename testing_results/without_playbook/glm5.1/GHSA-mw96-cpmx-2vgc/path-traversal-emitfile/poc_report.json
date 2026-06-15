@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that a Rollup plugin can use emitFile to write files outside the designated output directory by embedding ../ sequences after an arbitrary filename prefix, bypassing the isPathFragment validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should produce a proof file (evohunt-traversal-proof.txt) at the project root directory (one level above dist/), demonstrating that the emitFile API writes outside the configured output directory boundary.",
+  "actual_observed_result": "Running ./reproduction/run.sh installed rollup@4.58.0, executed the build with the malicious plugin, and the proof file appeared at /tmp/evohunt-test/evohunt-traversal-proof.txt instead of inside /tmp/evohunt-test/dist/, confirming the path traversal.",
+  "verification_method": "The verify.sh script checks for the presence of the proof file at the project root (outside dist/) and confirms it does NOT exist inside the dist/ directory. The script also verifies that the vulnerable isPathFragment and writeOutputFile code exists in the mounted target repository source.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file evohunt-traversal-proof.txt is written to /tmp/evohunt-test/ (project root) instead of /tmp/evohunt-test/dist/ (output directory).",
+    "The resolve() call in writeOutputFile resolves path.resolve('/tmp/evohunt-test/dist', 'subdir/../../evohunt-traversal-proof.txt') to '/tmp/evohunt-test/evohunt-traversal-proof.txt'.",
+    "The isPathFragment check in the target source at src/utils/relativeId.ts confirms it only performs prefix-based validation.",
+    "The writeOutputFile function in src/rollup/rollup.ts confirms no boundary check on the resolved path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v4.58.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit-plugin.mjs",
+      "reproduction/rollup.config.mjs",
+      "reproduction/input.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction on Windows demonstrates that Poetry's execute function uses shell=True without sanitization, allowing shell metacharacter injection through 'poetry run' arguments. A malicious command with the & metacharacter successfully chains commands and writes an arbitrary file outside the intended command execution, confirming the command injection vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The injected shell metacharacters should cause cmd.exe to interpret the & operator and execute a second command that writes a proof file to C:\\Windows\\Temp\\pwned.txt, demonstrating arbitrary command execution beyond the intended 'echo test' command.",
+  "actual_observed_result": "Running ./reproduction/run.sh on a Windows container built the image with Python 3.10 and Poetry 2.3.2, created a test project, executed 'poetry run echo test & echo EVOHUNT_SHELL_INJECTION_SUCCESS > C:\\Windows\\Temp\\pwned.txt', and successfully created the proof file at C:\\Windows\\Temp\\pwned.txt through the shell injection, confirming the vulnerability.",
+  "verification_method": "The verify.sh script uses PowerShell to test the shell injection by running 'poetry run' with a command containing the & metacharacter. The & character chains two commands in cmd.exe: the first is 'echo test' and the second writes a proof file. If the proof file exists at C:\\Windows\\Temp\\pwned.txt, it confirms the shell injection succeeded and arbitrary commands can be executed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Windows container with Python 3.10 and Poetry 2.3.2 successfully built",
+    "Test project created with minimal pyproject.toml",
+    "Command 'echo test & echo EVOHUNT_SHELL_INJECTION_SUCCESS > C:\\Windows\\Temp\\pwned.txt' injected through poetry run",
+    "Shell metacharacter & interpreted by cmd.exe due to shell=True",
+    "Proof file C:\\Windows\\Temp\\pwned.txt successfully created through command injection",
+    "Content of proof file confirms arbitrary command execution"
+  ],
+  "limitations_or_blockers": [
+    "Vulnerability only affects Windows systems where Poetry uses shell=True in execute()",
+    "Linux and macOS use os.execvpe() instead, which is not vulnerable",
+    "Requires attacker to control arguments to 'poetry run' through malicious pyproject.toml, CI/CD, or local access",
+    "Cannot use Docker-based PoC on macOS/Linux host without Windows containers support"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2.3.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

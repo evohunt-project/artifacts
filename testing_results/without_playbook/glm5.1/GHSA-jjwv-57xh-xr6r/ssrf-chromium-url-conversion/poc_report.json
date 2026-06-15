@@ -1,0 +1,28 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "The PoC demonstrates SSRF by starting a mock internal HTTP service alongside a Gotenberg instance, sending a request to the Chromium URL conversion endpoint with the internal service URL, and verifying the internal service's proof string appears in the resulting PDF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause Gotenberg's Chromium instance to navigate to the mock internal HTTP service and render its HTML response as a PDF. The returned PDF will contain the proof string from the mock internal service, confirming the server made a request to an internal URL that the attacker chose.",
+  "actual_observed_result": "PoC not executed in this session. The reproduction bundle is self-contained and ready for execution with Docker.",
+  "verification_method": "The run script starts a mock internal service that returns a unique proof string (EVOHUNT_SSRF_PROOF_a1b2c3d4e5f6) in its HTML response. It then asks Gotenberg to convert that internal URL to PDF via the /forms/chromium/convert/url endpoint. Finally, it extracts text from the resulting PDF using pypdf and confirms the proof string is present, proving the server-side request to the internal service was made and its response was rendered.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The PoC was not executed during this session because Docker is not available in the analysis environment.",
+    "The reproduction bundle requires Docker to build the images and run the containers."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the verification container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/mock_server.py"
+    ]
+  }
+}

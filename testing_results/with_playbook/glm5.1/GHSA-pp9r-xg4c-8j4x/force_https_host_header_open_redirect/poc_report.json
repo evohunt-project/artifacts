@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "open_redirect",
+  "summary": "The ForceHttps middleware reflects the client-provided Host header into the redirect Location without validation. A test binary built against the vulnerable Salvo 0.89.3 code confirms that sending Host: evil-attacker.com produces an HTTP 308 Permanent Redirect to https://evil-attacker.com/, including any query parameters present in the original request URL.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An HTTP request with Host: evil-attacker.com should produce a 308 Permanent Redirect response whose Location header contains https://evil-attacker.com/, proving the middleware trusts the unvalidated Host header for redirect URL construction and leaks query parameters to the attacker-controlled domain.",
+  "actual_observed_result": "Running the test binary against the vulnerable Salvo 0.89.3 code produced: Status 308 Permanent Redirect, Location: https://evil-attacker.com:443/?token=leaked_secret. The attacker-controlled Host header was reflected verbatim in the redirect Location, and query parameters from the original request were leaked to the attacker domain.",
+  "verification_method": "A Rust test binary using Salvo's TestClient sends a request with Host: evil-attacker.com and query parameter token=leaked_secret to the ForceHttps middleware. The test asserts that (1) the response status is 308 Permanent Redirect and (2) the Location header contains the attacker domain evil-attacker.com and the leaked query parameter. This distinguishes a confirmed open redirect from a normal same-origin redirect or an error response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Test 1: Host: evil-attacker.com -> Status 308 Permanent Redirect, Location: https://evil-attacker.com/",
+    "Test 2: Host: evil-attacker.com with ?token=leaked_secret -> Status 308, Location: https://evil-attacker.com:443/?token=leaked_secret",
+    "Query parameters from the original request are fully preserved in the redirect to the attacker-controlled domain, confirming information disclosure."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.89.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

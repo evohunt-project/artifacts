@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can read arbitrary files on the FUXA server via path traversal in GET /api/logs or GET /api/download. The single-pass ../ regex removal is bypassed using ....// sequences that reconstruct to ../ after the replacement.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the path traversal payload to bypass the single-pass regex sanitization and return the contents of /etc/passwd from the server.",
+  "actual_observed_result": "The exploit sends GET /api/logs?file=....//....//....//....//etc/passwd. The single-pass regex removes the embedded ../ but the remaining characters reconstruct to a valid traversal path. If the /api/logs endpoint returns an error, the exploit falls back to GET /api/download?cmd=reportDownload&name=....//....//....//....//etc/passwd.",
+  "verification_method": "The exploit checks whether the HTTP response body contains the string 'root:' which is the standard first-field entry in /etc/passwd. This distinguishes successful file read from error messages, empty responses, or application-level access denied messages.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The GET /api/logs endpoint accepted the crafted filename parameter with the bypass sequence.",
+    "The regex replacement was bypassed as predicted: ....// -> ../ after single-pass removal.",
+    "No authentication token was required because secureEnabled defaults to false."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh downloads the target repository archive from GitHub, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b873cdf32a63bcfaa6de8b724781f63c6f977c69",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

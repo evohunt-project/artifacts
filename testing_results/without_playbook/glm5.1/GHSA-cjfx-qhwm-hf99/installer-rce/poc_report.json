@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_rce",
+  "summary": "The Docker-based reproduction confirms that the unauthenticated Installer controller writes attacker-controlled PHP code into config.php via the fs_lang parameter. On the next request, the injected code executes and creates a proof file, demonstrating arbitrary code execution inside the target container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the crafted installer POST request to write injected PHP code into config.php. A subsequent request triggers config.php inclusion, and the injected file_put_contents() call creates /tmp/evohunt-proof containing EVOHUNT_RCE_CONFIRMED inside the target container.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched a container with MySQL and the PHP development server, sent the crafted POST request with the injected fs_lang value, triggered config.php loading on a follow-up request, and the injected code executed successfully, producing the expected proof file /tmp/evohunt-proof with content EVOHUNT_RCE_CONFIRMED.",
+  "verification_method": "The verify.sh script checks for the existence and exact content of /tmp/evohunt-proof after the exploit and trigger requests. The check distinguishes successful code execution from a mere installation completion, startup failure, or unrelated error. The injected line in config.php is also printed as supporting evidence.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file /tmp/evohunt-proof exists and contains the exact string EVOHUNT_RCE_CONFIRMED after the exploit sequence.",
+    "The injected config.php line reads: define('FS_LANG', 'x'); file_put_contents('/tmp/evohunt-proof','EVOHUNT_RCE_CONFIRMED'); //'); confirming the code break-out.",
+    "The installer response indicates successful installation (config.php was written).",
+    "The trigger request loaded config.php, executing the injected file_put_contents call."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "d2315475b7f971e841a8a1ba14ab55de061fd6d3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/start-services.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

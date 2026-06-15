@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that authenticated users with viewer role can access full DAG configurations including sensitive environment variables that should be restricted to higher privilege roles.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that a viewer role user can successfully retrieve a DAG configuration containing secret environment variables via the GET /api/v1/dags/{name} endpoint.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Dagu server with authentication enabled, created admin and viewer users, created a DAG with sensitive environment variables, and confirmed that the viewer user can access the full DAG configuration including secrets via HTTP 200 response.",
+  "verification_method": "The run script authenticates as a viewer user, calls the DAG read endpoint, and checks the response JSON for the presence of secret environment variable values. The check distinguishes successful unauthorized access from authentication failures or authorization enforcement.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Viewer user successfully authenticated and obtained JWT token",
+    "GET /api/v1/dags/sensitive-dag returned HTTP 200 status code",
+    "Response JSON contains the 'env' field with DATABASE_PASSWORD and API_KEY secrets visible",
+    "No HTTP 403 Forbidden error, confirming missing authorization check"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the current HEAD, and builds the vulnerable Dagu binary inside the container.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_dags.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

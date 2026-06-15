@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that a user account with ProhibitLogin=true can still clone and push to repositories via Git HTTP Basic Authentication. The HTTPContexter handler authenticates credentials but skips the account status checks that the web UI correctly enforces.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A disabled user (ProhibitLogin=true) should be denied all access. The PoC demonstrates that the user can still clone a private repository and push unauthorized changes via Git HTTP, proving the authorization bypass.",
+  "actual_observed_result": "The verify.sh script builds Gogs from source, starts the server, creates a disabled user with ProhibitLogin=true, and then shows that git clone and git push succeed using the disabled user's credentials over Git HTTP Basic Auth.",
+  "verification_method": "The reproduction creates a user, sets ProhibitLogin=true in the SQLite database, then attempts git clone and git push with that user's credentials. Success of either operation confirms the vulnerability. The proof file records CLONE_SUCCESS and/or PUSH_SUCCESS for automated verification.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Disabled user (testuser, ProhibitLogin=true) successfully clones the private repository admin/private-test via Git HTTP.",
+    "Disabled user reads sensitive file content (secret.txt) from the private repository.",
+    "Disabled user successfully pushes an unauthorized commit to the private repository.",
+    "The web UI correctly blocks the disabled user (Toggle middleware), but Git HTTP does not (HTTPContexter lacks the check)."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository (gogs/gogs) on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

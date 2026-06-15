@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_generated_output",
+  "summary": "The Docker-based reproduction confirms that a malicious OpenAPI spec with an injected operation summary causes arbitrary JavaScript code (require('child_process').execSync(...)) to be written into the generated MCP server.ts file via the unescaped string interpolation in generateServer().",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause orval to generate an MCP server.ts file containing an injected require('child_process').execSync() call that was never part of the legitimate server template, proving arbitrary code injection into the generated MCP server output.",
+  "actual_observed_result": "Running ./reproduction/run.sh built orval from source at the pinned commit, processed the malicious spec with client: 'mcp', and the generated server.ts file contained the injected require('child_process').execSync('echo EVOHUNT_MCP_INJECTION_SUCCESS > /tmp/evohunt_mcp_proof && echo MCP_INJECTED') call inside the server.tool() invocation.",
+  "verification_method": "The verify.sh script greps the generated server.ts file for the pattern require('child_process') to confirm that arbitrary code from the spec's summary field was injected into the generated output. It then extracts and executes the injected payload to prove the code is functional, creating /tmp/evohunt_mcp_proof as a proof artifact.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The generated server.ts file contains require('child_process').execSync(...) in the server.tool() call's summary argument.",
+    "The /tmp/evohunt_mcp_proof file is created by executing the injected payload, confirming the injected code is functional.",
+    "The vulnerable interpolation at packages/mcp/src/index.ts:209 was confirmed in the target repo source."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b8189efe3858a8d6e4bae1e41d3fb6b14c1bd55d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious-spec.yaml",
+      "reproduction/orval.config.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

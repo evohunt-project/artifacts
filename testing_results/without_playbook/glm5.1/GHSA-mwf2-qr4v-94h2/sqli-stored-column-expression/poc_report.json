@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "sql_injection",
+  "summary": "Docker-based reproduction demonstrating that a malicious column expression stored via the Dataset API is injected raw into SQL queries via literal_column() at superset/connectors/sqla/models.py:908 without sanitize_clause() protection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should create a TableColumn with a malicious expression containing EVOHUNT_COLUMN_EXPR_PROOF, call get_sqla_col(), and confirm the proof string appears in the generated SQL, demonstrating unsanitized SQL injection through the stored column expression code path.",
+  "actual_observed_result": "Reproduction bundle created but not executed in this session. The bundle installs Superset from the pinned source, creates a TableColumn with a malicious expression, calls get_sqla_col(), and verifies the proof string in the generated SQL.",
+  "verification_method": "The exploit script creates a TableColumn with expression \"1 UNION SELECT 'EVOHUNT_COLUMN_EXPR_PROOF' AS pwned\", calls get_sqla_col() to get the SQLAlchemy column object, compiles it to SQL, and checks for the proof string. The check distinguishes successful injection from a generic error by requiring the exact proof string in the compiled SQL output.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Full reproduction requires Docker and network access to clone the Superset repository. The installation of Superset and its dependencies takes several minutes."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

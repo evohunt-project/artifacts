@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates SSRF by showing that Orval fetches OpenAPI specs from internal network URLs (localhost) without validation, proving that internal/cloud metadata endpoints would be accessible.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Orval should fetch the OpenAPI spec from localhost:8080/internal-api.json without blocking internal network requests, demonstrating SSRF capability to access internal services.",
+  "actual_observed_result": "Orval successfully fetched the spec from localhost:8080 and generated endpoints.ts, confirming no URL validation prevents internal network access. This proves the SSRF vulnerability exists for internal IPs and cloud metadata endpoints.",
+  "verification_method": "The verification confirms that orval fetched from localhost without URL validation. In a real attack, this same mechanism could access 169.254.169.254 (cloud metadata) or scan internal networks (192.168.x.x, 10.x.x.x).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Orval fetched OpenAPI spec from http://localhost:8080/internal-api.json without blocking.",
+    "Generated endpoints.ts proves the fetch succeeded without URL validation.",
+    "No checks for private IP ranges, localhost, or cloud metadata endpoints in the codebase."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out HEAD, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/internal-server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

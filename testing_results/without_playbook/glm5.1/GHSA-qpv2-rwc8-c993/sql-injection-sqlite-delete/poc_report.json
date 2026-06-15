@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The Docker-based reproduction compiles a self-contained Go program that replicates the exact vulnerable code pattern from database/sqlite.go:81. It creates a SQLite table, seeds it with 3 rows, then calls the same string-concatenated DELETE construction with the crafted key '\" OR 1=1 --'. The injected SQL deletes all rows from the table, confirming that the vulnerable sqliteDeleteRecord function allows an attacker to break out of the WHERE clause and affect arbitrary records.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The crafted DELETE key '\" OR 1=1 --' should break out of the WHERE clause in 'DELETE FROM hosts WHERE key = \"<injected>\"' and delete all rows from the hosts table. The proof signal is that the row count drops from 3 to 0 after the injection.",
+  "actual_observed_result": "The PoC program seeded 3 rows into the hosts table, constructed the vulnerable SQL via string concatenation with the injected key, executed it, and confirmed all 3 rows were deleted. The generated SQL was: DELETE FROM hosts WHERE key = \"\" OR 1=1 --\". The double-quote in the injected key closed the WHERE clause value, OR 1=1 matched all rows, and -- commented out the trailing double-quote.",
+  "verification_method": "The program counts table rows before and after the injection. Success is defined as: (1) 3 rows exist before injection, (2) 0 rows exist after injection, confirming the crafted key deleted ALL rows rather than just the non-existent target key. This distinguishes genuine SQL injection from a normal failed DELETE.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The program output shows 'rows before injection: 3' and 'rows after injection: 0'.",
+    "The generated SQL statement 'DELETE FROM hosts WHERE key = \"\" OR 1=1 --\"' is printed, showing the exact injection.",
+    "The program exits with code 0 only when the proof condition (all rows deleted) is met."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "The PoC is self-contained and does not require cloning the target repository. It replicates the exact vulnerable code pattern from database/sqlite.go:81 in a minimal Go program.",
+    "pinned_commit_or_ref": "v1.5.0",
+    "target_repo_mount_path": "",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/go.mod",
+      "reproduction/go.sum",
+      "reproduction/verify.sh"
+    ]
+  }
+}

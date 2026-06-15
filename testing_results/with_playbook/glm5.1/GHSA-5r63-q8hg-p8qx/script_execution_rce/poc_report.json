@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that the vulnerable script execution endpoint allows unauthenticated users to execute arbitrary JavaScript code on the server, resulting in remote code execution verified by marker file creation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow execution of arbitrary system commands inside the FUXA container, demonstrated by creating a marker file at /tmp/poc_marker_success.txt via the script execution vulnerability.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the vulnerable FUXA container, sent a malicious script payload to /api/runscript with test=true, executed the attacker-controlled JavaScript code, and successfully created the marker file in the container filesystem.",
+  "verification_method": "The run.sh script executes the exploit payload and then checks for the existence of /tmp/poc_marker_success.txt inside the container. The marker file confirms successful code execution. The verification distinguishes successful exploitation from service startup errors or authentication failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs show successful script execution via the /api/runscript endpoint",
+    "Marker file /tmp/poc_marker_success.txt exists in the container filesystem",
+    "The FUXA service remained operational during exploitation, ruling out crash-based false positives",
+    "The exploit executed arbitrary system commands via require('child_process').exec()"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and builds the Docker image from that source.",
+    "pinned_commit_or_ref": "37ebc5ead6e5b7115507d2289784d0aa28c93630",
+    "target_repo_mount_path": "/app/FUXA",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

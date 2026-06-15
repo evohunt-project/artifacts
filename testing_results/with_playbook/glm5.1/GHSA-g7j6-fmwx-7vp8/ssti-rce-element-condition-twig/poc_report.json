@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssti_rce",
+  "summary": "The Docker-based reproduction confirms that authenticated CP users can inject Twig template code through the elementIds field in condition rules. The sandbox is disabled by default (enableTwigSandbox=false), allowing full application access through craft.app including database operations via craft.app.db.createCommand().",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending a crafted POST request to a CP element index endpoint with Twig template code in the condition rule elementIds field causes server-side Twig template evaluation with full application access. A Twig error payload triggers a 500 response while a control string returns 200, proving SSTI. A second payload executes SQL through craft.app.db to demonstrate RCE.",
+  "actual_observed_result": "Running ./reproduction/run.sh builds a Docker container with Craft CMS 5.9.8, installs the application with MySQL, authenticates as a CP user, and sends crafted POST requests. The Twig error payload ({{ 1/0 }}) returns HTTP 500 while the control payload returns HTTP 200, confirming SSTI. An RCE payload creates a database table via craft.app.db.createCommand() through the SSTI, which is verified by querying the database directly.",
+  "verification_method": "The verification compares HTTP response status codes: a Twig error payload causes HTTP 500 (Twig RuntimeError from division by zero) while a non-Twig control string returns HTTP 200. Additionally, a database table created through craft.app.db in the SSTI payload is verified by querying MySQL directly after the exploit request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP 500 response when sending Twig error payload {{ 1/0 }} proves the input is rendered as a Twig template (SSTI).",
+    "HTTP 200 response when sending a plain text control string proves the non-error path works normally.",
+    "Database query confirms a table (evohunt_proof) was created through the SSTI payload via craft.app.db.createCommand(), proving RCE.",
+    "The response code differential (500 vs 200) confirms server-side Twig template injection through the elementIds condition rule field."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version (5.9.8 tag), and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "5.9.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/setup-craft.sh",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

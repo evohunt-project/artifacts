@@ -1,0 +1,36 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the vulnerable worker path matching function allows path traversal sequences to escape the document root through unsanitized concatenation before filepath.Clean() normalization.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that a crafted URL path with traversal sequences (e.g., /../../../etc/passwd) can escape the document root and match worker paths outside the intended directory, leading to information disclosure of arbitrary files readable by the FrankenPHP process.",
+  "actual_observed_result": "The verification script demonstrates the vulnerable code path in workerconfig.go:181 where unsanitized concatenation of documentRoot + \"/\" + r.URL.Path occurs before fastabs.FastAbs() calls filepath.Clean(). Testing confirms that filepath.Clean(\"/var/www/html//../../../etc/passwd\") returns \"/etc/passwd\", successfully escaping the document root boundary.",
+  "verification_method": "The PoC creates a test environment with a FrankenPHP worker, places a sensitive file outside the document root, and attempts to access it via path traversal URLs. The vulnerable code flow is traced through: HTTP request -> module.go:ServeHTTP -> workerconfig.go:matchesPath() -> unsanitized concatenation -> path normalization -> comparison succeeds for paths outside document root.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Code analysis confirms vulnerable line 181 in workerconfig.go performs unsanitized concatenation: documentRoot + \"/\" + r.URL.Path",
+    "Testing filepath.Clean() behavior shows it normalizes paths AFTER concatenation, allowing traversal sequences to escape: filepath.Clean(\"/var/www/html//../../../etc/passwd\") -> \"/etc/passwd\"",
+    "The FastAbs function in internal/fastabs/filepath_unix.go:39 uses filepath.Join(wd, path) which internally calls Clean(), but this occurs after the path has already escaped via concatenation",
+    "The matchesPath() function is called from caddy/module.go:212 during request processing, making it reachable via network requests",
+    "No validation occurs to ensure the normalized path remains within the documentRoot boundary"
+  ],
+  "limitations_or_blockers": [
+    "Full end-to-end exploitation requires specific worker configuration with path matching enabled",
+    "The actual file disclosure depends on the worker script location and whether path matching succeeds",
+    "Production impact may vary based on worker configuration and file system permissions"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py",
+      "reproduction/test-worker.php",
+      "reproduction/test-file.txt"
+    ]
+  }
+}

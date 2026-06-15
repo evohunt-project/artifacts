@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction builds Zebra from source, starts zebrad in regtest mode with RPC enabled, and sends 20 concurrent sendrawtransaction requests each carrying an 8 MiB hex payload. The hex decoding allocates memory before the Zcash deserialization layer rejects the invalid transaction. The reproduction measures RSS memory before and after the exploit and confirms a measurable memory increase exceeding the verification threshold.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the zebrad process RSS memory to increase by more than 10 MiB after 20 concurrent sendrawtransaction requests with 8 MiB hex payloads are submitted, proving that hex input is decoded into heap buffers without application-level size validation.",
+  "actual_observed_result": "The reproduction builds Zebra, starts zebrad with RPC on regtest port 18232, reads the generated cookie for authentication, records baseline RSS memory, sends 20 concurrent sendrawtransaction requests each with an 8 MiB hex payload, and measures the post-exploit RSS memory. The server accepts each request, decodes the full hex string into a Vec<u8> allocation, then returns a deserialization error for the invalid transaction data. The aggregate memory increase across 20 concurrent requests exceeds the 10 MiB verification threshold.",
+  "verification_method": "The entrypoint script measures the zebrad process RSS memory via ps before and after sending the exploit requests. A memory increase exceeding 10240 KiB (10 MiB) confirms that the oversized hex payloads were allocated in server memory without size-based rejection. The verification distinguishes the memory impact of the exploit from normal node operation by comparing RSS deltas against a fixed threshold.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline RSS memory recorded before exploit requests.",
+    "20 concurrent sendrawtransaction requests with 8 MiB hex payloads each returned HTTP 200 with deserialization error responses, confirming hex decoding succeeded before transaction validation.",
+    "Post-exploit RSS memory showed increase exceeding 10 MiB threshold.",
+    "No max_request_body_size configuration exists in zebra-rpc/src/config/rpc.rs or zebra-rpc/src/server.rs."
+  ],
+  "limitations_or_blockers": [
+    "Building Zebra from source requires significant time (15-30 minutes) and at least 4 GiB RAM for compilation.",
+    "The jsonrpsee implicit 10 MiB request body limit bounds each individual request, so the exploit relies on concurrent connections to amplify memory usage.",
+    "The reproduction requires the zebrad binary to start successfully in regtest mode, which depends on system resources."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out commit 92a4e55f9e702468dbb0d8ec57df3e0c3fdd4ea9 (v4.3.0), and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "92a4e55f9e702468dbb0d8ec57df3e0c3fdd4ea9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

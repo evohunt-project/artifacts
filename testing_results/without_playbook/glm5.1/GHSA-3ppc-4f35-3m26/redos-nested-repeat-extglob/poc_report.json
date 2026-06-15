@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "redos",
+  "summary": "The Docker-based reproduction confirms that the nested repeat extglob pattern +(+(a)) compiles to /^(?:(?:a)+)+$/ which triggers catastrophic exponential backtracking when matched against a string of repeated characters followed by a non-matching character. Local testing showed n=28 takes ~945ms, n=30 takes ~3.8s, demonstrating clear exponential growth.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that minimatch('aaa...b', '+(+(a))') blocks the Node.js event loop for multiple seconds due to exponential regex backtracking, while the safe pattern +(a) completes instantly.",
+  "actual_observed_result": "Local reproduction confirmed exponential timing: safe pattern +(a) completes in <1ms for all input sizes. Dangerous pattern +(+(a)) shows: n=24=55ms, n=26=233ms, n=28=945ms, n=30=3776ms. Time roughly doubles every 2 additional characters, confirming exponential (O(2^n)) backtracking. The generated regex /^(?:(?:a)+)+$/ has nested greedy + quantifiers over the same character class.",
+  "verification_method": "The verification compares the execution time of a safe single-quantifier pattern +(a) against the dangerous nested-quantifier pattern +(+(a)). A 100x+ timing difference with the dangerous pattern exceeding 1 second confirms exponential backtracking. The Docker reproduction uses a 10-second timeout as an additional oracle: if the match exceeds 10 seconds (which occurs for n>=35), the timeout kills the process and the vulnerability is confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Generated regex for +(+(a)) is /^(?:(?:a)+)+$/ containing nested greedy + quantifiers",
+    "Safe pattern +(a) completes in <1ms regardless of input length",
+    "Dangerous pattern +(+(a)) shows exponential growth: 55ms at n=24, 233ms at n=26, 945ms at n=28, 3776ms at n=30",
+    "Variant *(*(a)) compiles to /^(?:(?:a)*)*$/ and shows similar exponential behavior"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref v10.2.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v10.2.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

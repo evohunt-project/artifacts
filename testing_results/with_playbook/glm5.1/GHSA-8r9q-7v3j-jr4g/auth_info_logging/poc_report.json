@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure_logging",
+  "summary": "The Docker-based reproduction confirms that the example server with OAuth enabled logs sensitive authentication information including AuthInfo objects (access tokens, client IDs) and request bodies (potentially containing OAuth credentials) to console output.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that OAuth access tokens and authentication information are logged in plaintext when the example server processes authenticated requests.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the example server with OAuth enabled, sent an authenticated request, and observed console.log output containing AuthInfo object with access_token and other sensitive credentials.",
+  "verification_method": "The reproduction script captures server log output and verifies that sensitive authentication data (tokens, client IDs) appears in console.log statements, confirming CWE-532 violation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server log output contains AuthInfo object with access_token field",
+    "Request body containing OAuth credentials logged to console",
+    "Session IDs logged in plaintext",
+    "No redaction or filtering applied to logged authentication data"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out version 1.25.1, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.25.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/test_auth_logging.js"
+    ]
+  }
+}

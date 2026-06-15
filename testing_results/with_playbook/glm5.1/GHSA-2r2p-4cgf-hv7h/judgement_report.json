@@ -1,0 +1,102 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-11T06:17:33.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-2r2p-4cgf-hv7h/GHSA-2r2p-4cgf-hv7h.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "cors-wildcard-csrf",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7/cors-wildcard-csrf",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7/cors-wildcard-csrf/vulnerability_report.json",
+      "title": "Permissive CORS policy with default-off authentication enables cross-origin data injection and exfiltration via the engram HTTP server",
+      "vulnerability_type": "cors_csrf_data_injection",
+      "advisory_match": true,
+      "advisory_match_reason": "Same engram HTTP server root cause as the advisory: wildcard CORS, default-off authentication, and cross-origin /learn plus graph read routes on the local server.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unbounded-body-dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7/unbounded-body-dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7/unbounded-body-dos/vulnerability_report.json",
+      "title": "Unbounded request body reading in HTTP server enables memory exhaustion denial of service",
+      "vulnerability_type": "dos_unbounded_allocation",
+      "advisory_match": false,
+      "advisory_match_reason": "Same broad HTTP server area, but a different root cause and impact: unbounded body buffering DoS rather than wildcard CORS/default-off auth enabling CSRF graph exfiltration and persistent injection.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "cors-wildcard-csrf",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7/cors-wildcard-csrf",
+      "status": "qualifying_vuln",
+      "title": "Permissive CORS policy with default-off authentication enables cross-origin data injection and exfiltration via the engram HTTP server",
+      "vulnerability_type": "cors_csrf_data_injection"
+    },
+    "reason": "The selected finding identifies the advisory root cause and the copied PoC demonstrated advisory-level impact: a malicious origin can access the unauthenticated local server, persist attacker-controlled /learn content into the graph, and read graph metadata cross-origin.",
+    "evidence": [
+      "cors-wildcard-csrf/vulnerability_report.json identifies src/server/http.ts json()/OPTIONS wildcard CORS, checkAuth default allow when ENGRAM_API_TOKEN is unset, and /learn graph writes.",
+      ".judge/poc_runs/cors-wildcard-csrf/run.log shows Access-Control-Allow-Origin: * on API responses and CORS preflight.",
+      ".judge/poc_runs/cors-wildcard-csrf/run.log shows cross-origin POST /learn succeeded with HTTP 201 and the injected proof string was found in graph query results.",
+      ".judge/poc_runs/cors-wildcard-csrf/run.log shows cross-origin GET /stats returned graph metadata with HTTP 200 and no authentication was required by default."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "cors-wildcard-csrf",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7/cors-wildcard-csrf",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7/.judge/poc_runs/cors-wildcard-csrf/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7/.judge/poc_runs/cors-wildcard-csrf/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7/.judge/poc_runs/cors-wildcard-csrf/poc_execution.json",
+      "observed_effect": "Copied PoC ran against engram v2.0.1 and showed attacker-origin wildcard CORS/preflight, unauthenticated POST /learn HTTP 201, injected proof retrievable through /query, cross-origin /stats graph metadata HTTP 200, and no default authentication requirement.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7/unbounded-body-dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7/unbounded-body-dos/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_2c389da7/unbounded-body-dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

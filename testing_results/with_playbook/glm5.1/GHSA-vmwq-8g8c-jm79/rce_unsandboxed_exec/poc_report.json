@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_execution_rce",
+  "summary": "The Docker-based reproduction confirms that the LocalExecutor provides zero sandboxing, allowing arbitrary Python code execution including reading protected files, executing system commands, and accessing environment variables.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that LocalExecutor.exec() can read /etc/passwd, execute system commands via os.popen('whoami'), and access environment variables, proving the executor provides no isolation from the host system.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository, built the reproduction image, and executed the exploit script. The LocalExecutor pattern successfully read /etc/passwd, executed system commands, and confirmed full builtins exposure, demonstrating zero sandboxing.",
+  "verification_method": "The exploit script reads the actual source code from /target-repo/openchatbi/code/local_executor.py, asserts it contains the vulnerable exec() pattern with full builtins, then replicates the exact same code pattern to demonstrate arbitrary code execution. The proof strings (EVOHUNT_PROOF) distinguish successful exploitation from unrelated errors or startup failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit verified that local_executor.py contains exec(code, safe_globals, safe_globals) with __builtins__: __builtins__.",
+    "The exploit verified that run_python_code.py contains multiple LocalExecutor() fallback paths.",
+    "Arbitrary code execution was confirmed by reading /etc/passwd and executing system commands through the exec() path.",
+    "Full builtins exposure was confirmed: __import__, open, eval are all accessible through the safe_globals namespace."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

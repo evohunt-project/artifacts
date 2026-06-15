@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that Poetry's URL construction allows accessing internal services. A malicious repository response containing http://127.0.0.1:9999/internal-admin is successfully joined with the base URL, allowing Poetry to make requests to internal services not exposed externally.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate SSRF by constructing a URL to an internal service (127.0.0.1:9999) and successfully accessing it, confirming lack of URL validation.",
+  "actual_observed_result": "Running ./reproduction/run.sh started an internal Flask service, Poetry's urljoin() constructed a URL pointing to 127.0.0.1, and requests.get() successfully accessed the internal service, creating ssrf_successful.txt with confirmation.",
+  "verification_method": "Verification checks for ssrf_successful.txt created by accessing the internal service via Poetry's URL construction without validation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Internal Flask service started on 127.0.0.1:9999",
+    "urljoin() constructed URL: http://127.0.0.1:9999/internal-admin from malicious href",
+    "requests.get() accessed internal service successfully",
+    "Response contains \"INTERNAL SERVICE - SSRF CONFIRMED\"",
+    "File /poc-output/ssrf_successful.txt created"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones Poetry repository and mounts it at /target-repo",
+    "pinned_commit_or_ref": "2.3.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_ssrf_test.sh",
+      "reproduction/malicious_repository.py"
+    ]
+  }
+}

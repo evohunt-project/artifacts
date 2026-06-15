@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "access_control_bypass",
+  "summary": "A deployed Solidity contract successfully calls the staking precompile's delegate method, proving the smart-contract guard is missing. In contrast, createValidator correctly rejects the same contract call, confirming the access control inconsistency.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit contract should be able to call delegate() on the staking precompile at 0x0000000000000000000000000000000000000800 and have the delegation succeed, demonstrating that the contract code guard is absent for this method. createValidator() called from the same contract should revert with the ErrCannotCallFromContract error, proving the guard exists for other methods.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the evmd binary from source, started a local single-node chain, deployed the StakingExploit contract, and called exploitDelegate from the contract with 1 test token. The delegate transaction succeeded (status 1), confirming the contract bypassed the missing guard. A subsequent call to exploitCreateValidator from the same contract reverted as expected, confirming the guard is present for that method.",
+  "verification_method": "The verify.sh script deploys the exploit contract, calls exploitDelegate with a known validator address and 1 test token, and checks that the transaction receipt shows status 1 (success). It then calls exploitCreateValidator and checks that the transaction reverts. The contrast between the two results proves the access control bypass: delegate succeeds from a contract (missing guard) while createValidator fails (correctly guarded).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The delegate call from the StakingExploit contract returned a successful transaction receipt (status 1), proving the smart-contract guard is missing for the delegate method.",
+    "The createValidator call from the same contract reverted, proving the guard exists and works for that method.",
+    "Post-exploit staking query confirms the delegation was created from the contract's address.",
+    "Container logs show the full exploit sequence: build, chain start, contract deploy, exploit calls, and verification."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Exploit.sol",
+      "reproduction/verify.sh"
+    ]
+  }
+}

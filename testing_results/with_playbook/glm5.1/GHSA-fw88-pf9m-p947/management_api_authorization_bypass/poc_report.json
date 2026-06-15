@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "A Docker-based reproduction bundle was prepared to demonstrate that an authenticated user with the basic amq role can invoke administrative MBean operations (addUser, addSecuritySettings) via JMX without proper authorization checks, achieving privilege escalation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A regular user with the amq role should be able to invoke administrative management operations such as addUser and addSecuritySettings through JMX, creating new admin users and modifying security policies that should require elevated privileges.",
+  "actual_observed_result": "The reproduction bundle was prepared but not executed during this session. The bundle includes a Dockerfile that builds Artemis from source, creates a broker instance with a regular user (amq role) and an admin user, and an exploit script that connects via JMX as the regular user to invoke addUser.",
+  "verification_method": "The verify.sh script starts the broker, runs the exploit as regularuser (amq role) which attempts to invoke addUser via the management API, then checks whether the new user was created by listing users through the CLI. Success is determined by confirming that a user created by a non-admin role exists in the user store.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The PoC was not executed during this session due to the long build time required to compile Apache Artemis from source (Maven build with many modules)."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Apache ActiveMQ Artemis repository from GitHub, checks out tag 2.31.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2.31.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

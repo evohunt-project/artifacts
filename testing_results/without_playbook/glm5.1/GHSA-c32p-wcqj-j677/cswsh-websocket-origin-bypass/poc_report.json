@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cswsh",
+  "summary": "The PoC demonstrates that a malicious website can establish WebSocket connections to a victim's CometBFT node without origin validation, subscribe to sensitive transaction and block events, exfiltrate the captured data, and broadcast transactions through the hijacked connection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The malicious website should successfully: (1) Establish a WebSocket connection from a cross-origin domain, bypassing the Same-Origin Policy, (2) Subscribe to transaction and block events without authentication, (3) Capture and exfiltrate sensitive blockchain data including transaction contents, (4) Broadcast a transaction through the hijacked WebSocket connection, demonstrating unauthorized write capabilities.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the CometBFT node, started the exploit server, and simulated a victim visiting the malicious website. The WebSocket connection was successfully established from a malicious origin (http://malicious-attacker-site.com), confirming the origin bypass. The exploit subscribed to transaction events, captured node status and block data, and successfully broadcast a test transaction through the hijacked connection. The verification script confirmed that multiple sensitive data items were exfiltrated and the transaction broadcast succeeded.",
+  "verification_method": "The verification script checks: (1) CometBFT node is running and accessible, (2) WebSocket accepts connections with a malicious Origin header using a Python test client, (3) The malicious website successfully establishes connection, subscribes, and captures events, (4) Transaction data is exfiltrated to the attacker-controlled server, (5) A transaction is broadcast through the hijacked connection. The presence of /tmp/exploit_result.txt with 'SUCCESS' and exfiltrated_data.json with captured items confirms the attack succeeded.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "WebSocket connection accepted from malicious origin http://malicious-attacker-site.com",
+    "Successfully subscribed to transaction events (tm.events.type='Tx') without authentication",
+    "Successfully subscribed to block events (tm.events.type='NewBlock') without authentication",
+    "Node status information captured including moniker and network info",
+    "Transaction successfully broadcast via broadcast_tx_async through hijacked WebSocket",
+    "Multiple data items exfiltrated to attacker server (stored in /tmp/exfiltrated_data.json)",
+    "Exploit completion marker /tmp/exploit_result.txt contains 'SUCCESS'"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the CometBFT repository from GitHub, checks out the main branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious_website.html",
+      "reproduction/exploit_server.py",
+      "reproduction/setup_node.sh",
+      "reproduction/verify_exploit.sh"
+    ]
+  }
+}

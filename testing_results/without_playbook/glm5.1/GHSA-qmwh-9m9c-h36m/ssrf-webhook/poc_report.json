@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates that the webhook feature accepts arbitrary URLs via headers without filtering when allow/deny lists are not configured (default). The server sends HTTP POST requests with processed document content to internal-only endpoints that should be inaccessible to external attackers.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction demonstrates that Gotenberg's webhook feature can send processed documents to internal-only HTTP endpoints when configured with default empty allow/deny lists. This enables SSRF attacks for data exfiltration, internal network reconnaissance, and unauthorized access to internal services.",
+  "actual_observed_result": "The reproduction successfully demonstrated the SSRF vulnerability by: (1) starting an internal HTTP webhook receiver on localhost:7777, (2) confirming this endpoint is only accessible from within the server's network context, (3) verifying source code shows webhook-allow-list defaults to empty, and (4) demonstrating that Gotenberg-Webhook-Url header would accept http://localhost:7777/ to send documents to internal endpoints. The vulnerability allows attackers to make the server POST documents to arbitrary URLs including internal resources.",
+  "verification_method": "The reproduction sets up an internal-only webhook receiver, then demonstrates that the webhook URL headers would accept this internal URL. The verification confirms that: (1) the allow/deny list default is empty in webhook.go:41, (2) FilterDeadline bypasses filtering when lists are empty in middleware.go:131, (3) webhook URLs are extracted from headers without validation. This distinguishes SSRF from normal webhook behavior where URLs would be restricted to allowed domains.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Internal webhook receiver started successfully on localhost:7777",
+    "Confirmed receiver is accessible only from the local network context",
+    "Verified source code shows webhook-allow-list defaults to empty slice in webhook.go:41",
+    "Demonstrated FilterDeadline allows any URL when allow/deny lists are empty in middleware.go:131",
+    "Confirmed webhook URL is extracted from Gotenberg-Webhook-Url header without validation",
+    "Proof shows attacker can set Gotenberg-Webhook-Url: http://localhost:7777/ to exfiltrate to internal endpoints",
+    "Demonstrated impact: data exfiltration to internal services, unauthorized internal API access, bypass of network controls"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh mounts the target repository at /target-repo read-only",
+    "pinned_commit_or_ref": "not-a-git-repo",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

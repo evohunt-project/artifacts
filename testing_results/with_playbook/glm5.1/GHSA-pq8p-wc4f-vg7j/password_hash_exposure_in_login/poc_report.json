@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that the login response includes the user's password hash (pass field) and session ID (PHPSESSID field) in the JSON response body. A successful login returns these sensitive values, which can be captured by anyone who can observe the HTTP response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should show that the login JSON response contains the pass field (password hash) and PHPSESSID field (session identifier), confirming information disclosure.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the AVideo application, created an admin user, and sent a login request. The JSON response contained both the pass field with the user's encrypted password hash and the PHPSESSID field with the active session identifier.",
+  "verification_method": "The verification script parses the login JSON response and checks for the presence of the 'pass' field (non-empty string) and 'PHPSESSID' field (non-empty string). It confirms these sensitive values are exposed to the client by matching specific patterns in the response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The login JSON response contains a non-empty 'pass' field containing the user's password hash.",
+    "The login JSON response contains a non-empty 'PHPSESSID' field containing the session identifier.",
+    "The password hash is also present in the embedChatUrlMobile URL as a query parameter.",
+    "The streamServerURL contains the password hash as a 'p' query parameter."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/setup_avideo.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

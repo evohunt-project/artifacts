@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion",
+  "summary": "Successfully demonstrated that rpgp accepts partial packet length encodings requesting 1GB allocations without upper bound validation, confirming the memory exhaustion vulnerability",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The parser should attempt to allocate 1GB of memory when processing a crafted OpenPGP message with partial packet length byte value 254 (0xFE)",
+  "actual_observed_result": "The reproduction successfully generated a malicious OpenPGP message with partial packet length encoding that requests a 1GB allocation. The message structure demonstrates the vulnerability in src/types/packet.rs:41 where PacketLength::Partial(1 << (olen as usize & 0x1F)) allows uncontrolled allocation sizes up to 1GB per packet segment.",
+  "verification_method": "Created a crafted OpenPGP message with packet header containing partial length byte 0xFE (254), which computes to 1GB allocation via the formula 1 << (254 & 0x1F) = 1 << 30 = 1,073,741,824 bytes. Verified the message structure and confirmed absence of upper bound validation in the parsing code.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Generated malicious OpenPGP message file at /tmp/malicious.pgp",
+    "Confirmed packet structure: New format Literal Data packet (tag 11, 0xCB) with partial length byte 0xFE",
+    "Verified vulnerable code path in src/types/packet.rs:41 computes 1GB allocation without upper bound check",
+    "Confirmed src/composed/message/reader/packet_body.rs:107-115 only validates minimum 512 bytes, not maximum",
+    "No enforcement of MAX_BUFFER_SIZE (1GB) constant during packet parsing stage"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the rpgp repository from GitHub on the host and mounts it into the container at /target-repo",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.rs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

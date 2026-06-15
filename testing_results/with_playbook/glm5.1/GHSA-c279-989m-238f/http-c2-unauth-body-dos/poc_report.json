@@ -1,0 +1,32 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "uncontrolled_resource_consumption",
+  "summary": "The reproduction bundle was built but could not be executed in the current environment due to Go toolchain version constraints. The local Go version (1.19.2) is older than the minimum required by the Sliver repository (1.24+), and no pre-cached Docker base images were available to build the reproduction container. The vulnerability is confirmed through static code analysis of the exact vulnerable code path at server/c2/http.go:568.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Each unauthenticated HTTP request to the C2 listener causes an 8 MB server-side memory allocation. With concurrent requests and no rate limiting, an attacker can exhaust server memory and crash the C2 server.",
+  "actual_observed_result": "The reproduction was not executed. Static analysis confirms the vulnerability: server/c2/http.go line 568 calls io.ReadAll with an 8 MB limit on every request that reaches startSessionHandler, before any authentication or key-exchange validation at lines 591 and 606.",
+  "verification_method": "Three automated Go tests are included in the reproduction bundle: (1) TestStartSessionHandlerReadsFullBodyBeforeValidation uses a tracking reader to measure exactly how many bytes startSessionHandler reads, (2) TestUnauthBodyReadBeforeValidation verifies the handler returns 404 after consuming the body, (3) TestConcurrentUnauthBodyAllocDoS sends 50 concurrent requests and measures cumulative heap allocation growth.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Static code analysis confirms io.ReadAll at server/c2/http.go:568 reads up to DefaultMaxUnauthBodyLength (8 MB) before any validation",
+    "The anonymousHandler at line 552 dispatches to startSessionHandler for any request with a valid encoder nonce, with no authentication check",
+    "No rate limiting, no per-IP connection cap, and no maximum concurrent session initiation limit exists in the HTTP C2 listener"
+  ],
+  "limitations_or_blockers": [
+    "The local Go toolchain (1.19.2) is older than the repository minimum (1.24+), preventing direct test execution",
+    "No pre-cached Docker base images were available and the golang:1.24-bookworm pull exceeded the execution timeout",
+    "The PoC is designed for Docker-based execution with Go 1.24+ and should be run in an environment with adequate network access to pull the base image"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/dos_test.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

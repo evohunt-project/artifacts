@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The PoC replicates the Formulas service Twig sandbox configuration and demonstrates that a crafted formula using range() and for tags causes unbounded memory allocation and CPU consumption. The PoC was not executed against a live Craft CMS instance because setting up the full Craft CMS + Commerce stack (MySQL, web server, framework configuration) in Docker is prohibitively complex for a self-contained reproduction bundle.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit formula should cause the PHP process to allocate massive memory (>128 MB) and/or consume significant CPU time (>30 seconds), demonstrating that a single request can exhaust PHP worker resources and deny service to legitimate users.",
+  "actual_observed_result": "The PoC was not executed. The reproduction bundle contains a standalone PHP script that replicates the exact Twig sandbox from Formulas.php and demonstrates the resource exhaustion pattern at the Twig template evaluation level.",
+  "verification_method": "The verification script measures peak memory usage and execution time of a crafted DoS formula versus a benign formula. A successful demonstration is defined as the DoS formula consuming >10x the memory or >10x the time of a benign formula.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The PoC was not executed against a live Craft CMS instance because Craft Commerce requires the full Craft CMS framework, a MySQL/PostgreSQL database, web server configuration, and application setup that cannot be reliably automated in a self-contained Docker reproduction bundle.",
+    "The standalone PoC exercises the same Twig sandbox code path (createTemplate + render with the identical SecurityPolicy) but bypasses the HTTP controller layer."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned ref, and mounts that checkout into the container at /target-repo for reference.",
+    "pinned_commit_or_ref": "5.5.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

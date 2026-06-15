@@ -1,0 +1,33 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "missing_authorization",
+  "summary": "A Docker-based reproduction was generated to demonstrate that GET /api/v1/leads/:id returns personally identifiable information (names, emails, phone numbers) without any authentication. The reproduction seeds a Flowise instance with test leads containing known PII, then verifies the unauthenticated endpoint returns the data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running ./reproduction/run.sh should cause the unauthenticated GET /api/v1/leads/<chatflowId> endpoint to return a JSON array containing the seeded lead records with their name, email, and phone fields in plaintext.",
+  "actual_observed_result": "The reproduction was not executed in this session. The run.sh script, Dockerfile, setup.js, exploit.sh, and verify.sh artifacts are provided as a self-contained bundle for future execution.",
+  "verification_method": "The verify.sh script seeds the database with three test leads containing known PII (alice.smith@example.com, +1-555-0101), starts Flowise, then calls GET /api/v1/leads/<chatflowId> without authentication. The exploit.sh script checks whether the expected email and phone values appear in the JSON response, writing PROOF_OK or PROOF_FAIL accordingly.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The reproduction bundle includes setup.js which seeds a Flowise SQLite database with three lead records containing known PII values.",
+    "The exploit.sh script demonstrates the attack: a single unauthenticated HTTP GET request to /api/v1/leads/<chatflowId> returns all PII.",
+    "Automated verification checks for exact email and phone values in the response."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction was not executed during this session. The PoC artifacts have not been validated by a live run.",
+    "Building Flowise from source or installing via npm may require network access and significant build time.",
+    "The pinned commit ref is approximate and may need adjustment."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub (FlowiseAI/Flowise), checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "9cf17c06e4e97b8e1e37637b61ab3fb2b2b9d2bc",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup.js",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

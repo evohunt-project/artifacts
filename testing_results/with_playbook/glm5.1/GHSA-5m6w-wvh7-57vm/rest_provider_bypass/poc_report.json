@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that unauthenticated attackers can inject malicious routing configuration via the REST provider endpoint, causing all traffic to be redirected to attacker-controlled backends.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After injecting malicious configuration, requests to Traefik port 80 should be forwarded to the attacker-controlled backend server, demonstrating complete traffic hijacking.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully built Traefik from source, started the service with REST provider enabled, injected malicious routing config via unauthenticated PUT request to /api/providers/rest, and verified that subsequent requests were forwarded to the attacker backend with proof-of-exploitation string in the response.",
+  "verification_method": "The verification script makes a test request to Traefik port 80 after exploitation and checks if the response contains the proof string emitted by the attacker backend, confirming traffic redirection occurred.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Traefik service started successfully with REST provider on port 8080",
+    "Unauthenticated PUT request to /api/providers/rest accepted and configuration applied",
+    "Test request to port 80 received proof string from attacker backend",
+    "Traefik logs show configuration reload triggered by REST provider update"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh uses the existing target repository at /Users/mac/ResearchSpace/opencode/EvoHunt-Run/advisory_1e3057f9/repo and mounts it read-only at /target-repo during build.",
+    "pinned_commit_or_ref": "master branch (v1.7.x)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/attacker_backend.py",
+      "reproduction/traefik.toml"
+    ]
+  }
+}

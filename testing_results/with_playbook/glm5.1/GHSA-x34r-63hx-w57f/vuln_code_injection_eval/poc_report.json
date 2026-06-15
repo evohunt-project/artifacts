@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction demonstrates that TableChatAgent with full_eval=True executes arbitrary Python code via the eval() function in the pandas_eval tool handler. The exploit creates a file in the container filesystem, proving code execution capability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the malicious pandas expression to execute arbitrary Python code that creates /tmp/pwned.txt in the container, demonstrating full code execution capabilities when full_eval=True is enabled.",
+  "actual_observed_result": "The exploit script successfully executed the malicious payload __import__('os').system('touch /tmp/pwned.txt') through the pandas_eval tool handler, creating the proof file in the container filesystem.",
+  "verification_method": "The run script checks for the existence of /tmp/pwned.txt after executing the exploit. The file presence confirms that arbitrary code execution occurred via the eval() sink when full_eval=True bypassed the sanitize_command() protection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The eval() function at table_chat_agent.py:239 was called with malicious code",
+    "The full_eval=True configuration bypassed the sanitize_command() protection",
+    "Arbitrary code execution was achieved through the pandas expression evaluation mechanism",
+    "The proof file /tmp/pwned.txt was created, confirming successful exploitation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable version, and mounts it into the container at /target-repo.",
+    "pinned_commit_or_ref": "main branch (vulnerable at time of audit)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

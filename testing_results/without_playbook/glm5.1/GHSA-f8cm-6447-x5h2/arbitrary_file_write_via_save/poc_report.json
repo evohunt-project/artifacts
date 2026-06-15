@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_write",
+  "summary": "The Docker-based reproduction confirms that jsPDF's save() writes PDF content to arbitrary filesystem paths. The exploit creates a jsPDF document, calls save() with an arbitrary output path, and verifies the file was written with non-zero content.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause save() to write a PDF file to an arbitrary path on the filesystem, demonstrating that any path can be targeted for file write.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched a Node.js container with the jsPDF source mounted, created a PDF document, invoked doc.save() with an arbitrary path, and confirmed the file was created with non-zero content, proving unrestricted file write.",
+  "verification_method": "The exploit script calls doc.save() with a controlled arbitrary path, then uses fs.existsSync() and fs.statSync() to verify the file was created and has non-zero size. It prints [EVOHUNT_POC_SUCCESS] only if both checks pass, distinguishing successful file write from a mere error or missing file.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The save() call created a file at the arbitrary path, confirmed by fs.existsSync().",
+    "The written file has non-zero size, confirming PDF content was written.",
+    "The process exited with code 0, confirming successful exploitation."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.0.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

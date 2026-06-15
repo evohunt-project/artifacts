@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that uploading a ZIP file with path traversal entries (../../) successfully writes files outside the intended extraction directory. The PoC demonstrates this by extracting a proof file to /var/www/html/zipslip_proof.txt (one directory level above the extraction directory) and a webshell to /var/www/html/modules/zipslip_shell.php.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should extract the malicious ZIP file and create files in /var/www/html/ outside the /var/www/html/tmp/ extraction directory, demonstrating the path traversal vulnerability.",
+  "actual_observed_result": "The reproduction script successfully built the Docker container, extracted the malicious ZIP, and confirmed the creation of /var/www/html/zipslip_proof.txt containing the proof message, and /var/www/html/modules/zipslip_shell.php containing a minimal webshell.",
+  "verification_method": "The reproduction script checks for the existence of files outside the extraction directory (/var/www/html/zipslip_proof.txt and /var/www/html/modules/zipslip_shell.php) and verifies their content. The presence of these files confirms successful path traversal exploitation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Malicious ZIP file created with path traversal entries: ../../zipslip_proof.txt and ../../modules/zipslip_shell.php",
+    "ZIP file extracted to /var/www/html/tmp/ but files written to /var/www/html/ and /var/www/html/modules/",
+    "File /var/www/html/zipslip_proof.txt created successfully with timestamp proof",
+    "File /var/www/html/modules/zipslip_shell.php created successfully (webshell)",
+    "Webshell execution test confirmed PHP code execution capability"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh copies the target repository from the session directory to a temporary workspace and mounts it into the container at /var/www/html with read-write permissions.",
+    "pinned_commit_or_ref": "2.4.17 (latest version based on update directory structure)",
+    "target_repo_mount_path": "/var/www/html",
+    "helper_files": [
+      "reproduction/create_exploit.py",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass_incorrect",
+  "summary": "The Docker-based reproduction confirms that JWTBearerTokenValidator with resource_server=None skips audience validation. A JWT access token intended for resource server A is correctly rejected when resource_server is set to B, but is incorrectly accepted when resource_server is None (the default used by JWTIntrospectionEndpoint).",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A JWT access token intended for resource server A should be rejected by resource server B. However, when using JWTBearerTokenValidator with resource_server=None (as JWTIntrospectionEndpoint does), the token should be incorrectly accepted because audience validation is skipped.",
+  "actual_observed_result": "The exploit script created a JWT with aud=https://api-a.example.com. With resource_server=https://api-a.example.com (correct), the token was accepted. With resource_server=https://api-b.example.com (wrong), the token was correctly rejected. With resource_server=None (JWTIntrospectionEndpoint default), the token was incorrectly accepted, confirming audience validation bypass.",
+  "verification_method": "Three test cases are run: (1) correct resource_server - should accept, (2) wrong resource_server - should reject, (3) resource_server=None - should reject but incorrectly accepts. Test 3 passing demonstrates the vulnerability. The script exits with code 0 only if the vulnerability is confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Test 1: Token with correct audience accepted (expected).",
+    "Test 2: Token with wrong audience rejected (expected, proves audience validation works when resource_server is set).",
+    "Test 3: Token with resource_server=None accepted (vulnerability - audience validation skipped).",
+    "The vulnerability is in claims.py validate_aud: when resource_server is None, aud_value evaluates as falsy and audience comparison is skipped at lines 149-155."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.5.2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

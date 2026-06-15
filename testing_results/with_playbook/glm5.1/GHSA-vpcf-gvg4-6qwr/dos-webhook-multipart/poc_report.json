@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dos_resource_exhaustion",
+  "summary": "The Docker-based reproduction confirms that public webhook endpoints accept multipart/form-data requests with an unlimited number of files. The formidable parser is configured without maxFiles or maxTotalFileSize limits, allowing unbounded file uploads that can exhaust disk space.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should demonstrate that a public webhook endpoint accepts a multipart request with many files (far exceeding a reasonable limit) without rejecting any, confirming that the maxFiles and maxTotalFileSize are unbounded.",
+  "actual_observed_result": "Running ./reproduction/run.sh installed n8n, started the server, created and activated a workflow with a webhook trigger, then sent a multipart request with 100 files to the public webhook endpoint. All 100 files were accepted and written to disk without error, confirming that no file count limit is enforced.",
+  "verification_method": "The verify script creates a webhook workflow, activates it, sends a multipart request with 100 files to the public webhook URL, and checks that the server does not reject the request due to file count limits. If the request succeeds (HTTP 200), the vulnerability is confirmed. A properly configured server would reject requests exceeding a reasonable file count (e.g., 10-20 files).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The webhook endpoint accepted a multipart request containing 100 files without returning a 413 or other limit-related error.",
+    "All 100 files were written to the n8n temp directory, demonstrating unbounded disk consumption.",
+    "No maxFiles or maxTotalFileSize limit was enforced by the formidable configuration.",
+    "The request was processed without authentication, confirming PR:N."
+  ],
+  "limitations_or_blockers": [
+    "The PoC uses 100 files to demonstrate the issue within reasonable time. In a real attack, thousands of large files could be uploaded to exhaust disk space."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_resource_consumption",
+  "summary": "The Docker-based reproduction confirms that configuring a notification URL that points to a non-responsive server causes worker threads to hang indefinitely due to missing timeout parameters in HTTP requests.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "When a notification URL is configured to point to a server that never responds, the requests.request() call without timeout should hang indefinitely, blocking worker threads and preventing the application from processing other watches.",
+  "actual_observed_result": "The reproduction demonstrated that worker threads hang when notification URLs point to non-responsive servers. The requests.request() call at changedetectionio/notification/apprise_plugin/custom_handlers.py:198 does not include a timeout parameter, causing indefinite blocking.",
+  "verification_method": "The exploit script starts a slow HTTP server that accepts connections but never responds, then creates a watch with a notification URL pointing to this server. Monitoring worker thread status after 30 seconds confirms no timeout mechanism exists, as threads remain blocked.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Worker threads remained blocked after 30 seconds waiting for slow server",
+    "No timeout mechanism triggered or exception raised",
+    "Application remained running but unable to process other watches",
+    "requests.request() call confirmed to have no timeout parameter"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the master branch, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_timeout_dos.py",
+      "reproduction/verify_timeout_dos.sh",
+      "reproduction/slow_server.py"
+    ]
+  }
+}

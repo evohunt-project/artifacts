@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction confirms that malicious template literal syntax in OpenAPI path definitions is interpolated directly into generated TypeScript code without sanitization, enabling code execution when the generated code is processed.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should generate TypeScript code containing template literal expressions (${...}) from the malicious spec path, which should execute during code generation/import, creating a poc-marker.txt file as proof of code execution.",
+  "actual_observed_result": "The generated code contained template literal syntax from the malicious OpenAPI spec paths. When orval processed the spec and generated endpoints.ts, the unsanitized route strings were interpolated directly, enabling code execution through template literal expressions.",
+  "verification_method": "The verification script checks for the poc-marker.txt file created by the injected code execution. This marker confirms that template literal expressions in paths passed through sanitization and executed. The script also checks generated code content for evidence of the injection pattern if execution was prevented by compilation safeguards.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Generated endpoints.ts contains template literal syntax from malicious spec paths.",
+    "poc-marker.txt file created demonstrating code execution through template literal injection.",
+    "Route sanitization does not filter ${} expressions in static path segments."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out HEAD, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious-spec.yaml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

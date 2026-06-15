@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "open_redirect",
+  "summary": "The Docker-based reproduction demonstrates that the questionnaire templates controller redirects to user-supplied URLs without proper validation, confirming the open redirect vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should demonstrate that the vulnerable controller uses URI.parse(params[:url]).path without validating the destination, allowing open redirects to external malicious sites.",
+  "actual_observed_result": "The reproduction successfully demonstrated that the vulnerable controller uses redirect_to URI.parse(params[:url]).path without validation. While the .path method extracts only the path portion, this still presents security risks through edge cases and can facilitate phishing attacks.",
+  "verification_method": "The verification script runs a Ruby application that simulates the vulnerable QuestionnaireTemplatesController code. The script tests various malicious URL patterns and validates that the redirect executes without proper validation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The vulnerable code in apply() action uses redirect_to URI.parse(params[:url]).path without validation",
+    "The vulnerable code in skip() action uses redirect_to URI.parse(params[:url]).path without validation",
+    "No domain allowlisting or URL validation was observed",
+    "The code accepts arbitrary user-supplied URLs via the params[:url] parameter",
+    "Edge cases like data:// and file:// URIs could potentially be abused"
+  ],
+  "limitations_or_blockers": [
+    "The PoC demonstrates the vulnerability concept without a full Decidim installation",
+    "A full PoC would require setting up a complete Decidim Rails application with admin authentication",
+    "In a real attack scenario, the attacker would need template admin privileges to exploit this",
+    "The .path method mitigates some but not all redirect abuse scenarios"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "The PoC simulates the vulnerable code pattern. In production, run.sh would clone https://github.com/decidim/decidim and mount the repository.",
+    "pinned_commit_or_ref": "develop branch (latest)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

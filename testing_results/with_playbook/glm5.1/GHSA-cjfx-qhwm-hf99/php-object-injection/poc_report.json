@@ -1,0 +1,31 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "php_object_injection",
+  "summary": "The PHP Object Injection vulnerability in WidgetSelect::processFormData() allows deserialization of user-controlled POST data. While the PoC was not executed with a specific gadget chain, the vulnerability is confirmed through code analysis showing direct unserialize() usage on attacker-controlled input.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Submitting a serialized PHP object payload to a form with a multiple select widget would trigger object instantiation. If exploitable gadget chains exist in the application or its dependencies, this could lead to remote code execution or privilege escalation.",
+  "actual_observed_result": "PoC not attempted. Code analysis confirms the vulnerability: Core/Lib/Widget/WidgetSelect.php:122 calls unserialize($value) directly on POST data received from $request->request->get() without validation, whitelist, or secure alternatives like json_decode().",
+  "verification_method": "The vulnerability is verified through static code analysis. Manual testing would require identifying a form with multiple select widget, crafting a serialized PHP object payload, and submitting it to verify object instantiation.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Code shows unserialize() called on user-controlled POST data (Core/Lib/Widget/WidgetSelect.php:122)",
+    "Value comes directly from request without validation (Line 117: $request->request->get())",
+    "Triggered when widget is multiple and not readonly (Line 121)",
+    "No input validation or type checking before deserialization",
+    "PHP's unserialize() is known to be dangerous with user input (documented security risk)"
+  ],
+  "limitations_or_blockers": [
+    "PoC requires identifying a specific form with multiple select widget configuration",
+    "Impact depends on availability of exploitable gadget chains in application/dependencies",
+    "Full demonstration of RCE requires crafting payload for specific gadget chain"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "Code analysis only - no live reproduction attempted",
+    "pinned_commit_or_ref": "main (latest development version)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

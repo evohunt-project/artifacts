@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass_rce",
+  "summary": "Successfully demonstrated unauthenticated arbitrary code execution through AUTO_LOGIN bypass and custom component code execution. The exploit creates a proof file at /tmp/evohunt_poc_success.txt demonstrating file system access and command execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should create a file /tmp/evohunt_poc_success.txt containing proof of arbitrary code execution, including the user context and process ID. This demonstrates complete system access without authentication.",
+  "actual_observed_result": "The Langflow server starts with AUTO_LOGIN enabled. The exploit script posts a malicious custom component without authentication. The code executes via exec() in the validation pipeline, creating the proof file and executing system commands. The verification script confirms the proof file exists with expected content.",
+  "verification_method": "Automated check for proof file existence and content validation. The verify_exploit.py script checks for /tmp/evohunt_poc_success.txt and validates it contains the expected exploitation marker.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof file created at /tmp/evohunt_poc_success.txt",
+    "Custom component created without authentication",
+    "Arbitrary Python code executed via exec()",
+    "System command 'id' executed successfully",
+    "File system write access confirmed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.7.3",
+    "target_repo_mount_path": "/app/langflow",
+    "helper_files": [
+      "reproduction/exploit_trigger.py",
+      "reproduction/verify_exploit.py"
+    ]
+  }
+}

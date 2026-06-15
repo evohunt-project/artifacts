@@ -1,0 +1,37 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The reproduction confirms that the GET /rest/workflows/from-url endpoint performs an unvalidated server-side fetch of any user-supplied URL using axios.get(). The mock server replicated the exact vulnerable code pattern from workflows.controller.ts:181. When the endpoint was asked to fetch http://127.0.0.1:9999/metadata (a simulated internal metadata service), it fetched the URL and returned the full response including the SSRF proof string and simulated cloud credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the server to fetch http://127.0.0.1:9999/metadata via the from-url endpoint and return the internal server's JSON response including the SSRF proof string (EVOHUNT_SSRF_PROOF_7b06cb04) and simulated cloud metadata credentials to the caller.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, verified the vulnerable code exists in /target-repo at workflows.controller.ts:181 (axios.get(query.url)), started a mock server replicating the vulnerable pattern, started an internal server serving sensitive data, triggered the SSRF via GET /rest/workflows/from-url?url=http://127.0.0.1:9999/metadata, and received HTTP 200 with the full internal server response including the proof string EVOHUNT_SSRF_PROOF_7b06cb04 and simulated AWS credentials.",
+  "verification_method": "The exploit.sh script checks whether the response from the from-url endpoint contains the proof string EVOHUNT_SSRF_PROOF_7b06cb04. This string is only present in the response from the internal server at 127.0.0.1:9999, so its appearance in the API response proves the server fetched the internal URL and returned its contents to the caller. The script also verifies the vulnerable source code exists in /target-repo by grepping for the exact axios.get call.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The vulnerable code was confirmed in /target-repo at packages/cli/src/workflows/workflows.controller.ts:181: const { data } = await axios.get<IWorkflowResponse>(query.url);",
+    "The URL validation was confirmed to be syntax-only at packages/@n8n/api-types/src/dto/workflows/import-workflow-from-url.dto.ts:6: url: z.string().url()",
+    "SSRF protection was confirmed disabled by default at packages/@n8n/config/src/configs/ssrf-protection.config.ts:56: enabled: boolean = false",
+    "The mock server successfully replicated the vulnerable pattern and fetched http://127.0.0.1:9999/metadata",
+    "The SSRF response (HTTP 200) contained the proof string EVOHUNT_SSRF_PROOF_7b06cb04 confirming data exfiltration from the internal service",
+    "The response contained simulated AWS credentials (aws_access_key_id, aws_secret_access_key, aws_session_token) demonstrating the real-world impact of cloud metadata SSRF"
+  ],
+  "limitations_or_blockers": [
+    "The reproduction uses a mock server that replicates the exact vulnerable code pattern from the target rather than running the full n8n application, because building n8n from source requires 10-30 minutes and significant memory",
+    "The mock server faithfully reproduces the vulnerable code path: axios.get(userControlledUrl) with URL syntax-only validation and no SSRF IP blocking",
+    "In a real deployment, the full n8n server would be reachable over the network and the from-url endpoint would require authentication with workflow:create scope on a project"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag n8n@2.18.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.18.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/internal-server.js",
+      "reproduction/mock-server.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

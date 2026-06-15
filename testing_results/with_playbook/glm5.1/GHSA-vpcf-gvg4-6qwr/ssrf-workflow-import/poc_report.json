@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the n8n import-from-url endpoint performs server-side requests to attacker-controlled URLs without any SSRF protection. The mock internal server's response is fully returned to the caller, demonstrating data exfiltration from internal services.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause n8n to fetch the mock internal server's URL via the import-from-url endpoint and return the full response body including the proof string, demonstrating that the server performs arbitrary outbound requests and exfiltrates internal service data.",
+  "actual_observed_result": "Running ./reproduction/run.sh installed n8n, started the server, configured an owner account, launched a mock internal HTTP server on 127.0.0.1:8888, and called GET /rest/workflows/from-url with the internal URL. The n8n server fetched the mock server and returned the full response including the SSRF proof string, confirming the vulnerability.",
+  "verification_method": "The verify script starts a mock HTTP server that serves a JSON payload containing a unique proof string. After triggering the SSRF via the import-from-url endpoint, the script checks whether the proof string appears in the response. The presence of the proof string confirms that the n8n server fetched the internal URL and returned the response body to the caller.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The n8n server made an outbound HTTP GET request to 127.0.0.1:8888 (the mock internal server) as observed in the mock server logs.",
+    "The response from the import-from-url endpoint contains the full JSON payload from the mock server, including fields beyond nodes and connections.",
+    "The proof string SSRF_PROOF_DATA_EXFILTRATED was found in the API response, confirming end-to-end SSRF with data exfiltration."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/mock_server.py"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "regex_dos",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can cause complete Parse Dashboard server hang by sending a crafted HTTP request to the AI agent endpoint with a malicious regex pattern that triggers catastrophic backtracking.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Sending the crafted HTTP request should cause the Parse Dashboard server to hang indefinitely, demonstrating complete denial of service. The server will become unresponsive to all requests until manually restarted.",
+  "actual_observed_result": "The PoC successfully triggered catastrophic backtracking. After sending the malicious payload to /apps/:appId/agent, the server's event loop was blocked for over 10 seconds during regex evaluation, demonstrating successful denial of service. The server remained in a hung state unable to process additional requests.",
+  "verification_method": "The PoC script measures the response time of the exploit request. A response time exceeding 10 seconds with the server unresponsive during that period confirms successful ReDoS exploitation. The script also verifies the server is unable to respond to a follow-up health check request during the hang.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP request to exploit endpoint took >10 seconds to complete, confirming catastrophic backtracking",
+    "Server event loop was blocked during regex evaluation",
+    "Health check request sent during exploit execution timed out, confirming unavailability",
+    "Server logs show regex pattern was constructed and evaluated",
+    "Process remained in running state but unresponsive to new requests"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the vulnerable version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "HEAD",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify_dos.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that the /api/v1/full-spec endpoint returns the complete OpenAPI specification without authentication while other API endpoints properly enforce the API key requirement.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated GET request to /api/v1/full-spec should return HTTP 200 with the full OpenAPI specification YAML, while an unauthenticated GET to /api/v1/watch should return HTTP 403, confirming the access-control bypass.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the target application, started it, and verified that GET /api/v1/full-spec without any authentication header returned HTTP 200 with the complete OpenAPI specification YAML. Simultaneously, GET /api/v1/watch without authentication correctly returned HTTP 403, confirming that all other API endpoints enforce the token check while the spec endpoint does not.",
+  "verification_method": "The verify.sh script starts the application, sends an unauthenticated GET request to /api/v1/full-spec, checks that the response is HTTP 200, validates that the body contains OpenAPI YAML markers (openapi:, paths:, components:), then sends an unauthenticated GET to /api/v1/watch and confirms it returns HTTP 403. This distinguishes the access-control bypass from a misconfigured or fully-open API.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GET /api/v1/full-spec returned HTTP 200 without x-api-key header.",
+    "Response body contains valid OpenAPI specification with openapi:, paths:, and components: keys.",
+    "GET /api/v1/watch returned HTTP 403 without x-api-key header, confirming other endpoints enforce auth.",
+    "The access-control bypass is isolated to the Spec endpoint alone."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b984426666a6f3ea9fa9645ea05992567a72427e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

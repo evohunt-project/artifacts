@@ -1,0 +1,121 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T15:17:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf",
+  "advisory_path": "/Users/mac/ResearchSpace/EvoHunt/dataset/advisory/testing/2026-01/GHSA-5qw5-wf2q-f538/GHSA-5qw5-wf2q-f538.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "vuln_command_injection_postgresql_structure_dump",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_command_injection_postgresql_structure_dump",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_command_injection_postgresql_structure_dump/vulnerability_report.json",
+      "title": "Command injection in PostgreSQL structure_dump via unsanitized database configuration",
+      "vulnerability_type": "command_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerability type (command injection vs SQL injection), different vulnerable code location (lib/arjdbc/postgresql/adapter.rb:565 vs lib/arjdbc/jdbc/adapter.rb), and different root cause (shell command interpolation vs sql.gsub() function).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "L",
+          "SI": "L",
+          "SA": "L"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:L/SI:L/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "vuln_sql_injection_schema_search_path",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_sql_injection_schema_search_path",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_sql_injection_schema_search_path/vulnerability_report.json",
+      "title": "SQL injection in PostgreSQL schema_search_path via unsanitized configuration",
+      "vulnerability_type": "sql_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "Same vulnerability type (SQL injection) but different vulnerable code location (lib/arjdbc/postgresql/adapter.rb:582 vs lib/arjdbc/jdbc/adapter.rb) and different root cause (direct string interpolation into SET search_path TO statement vs sql.gsub() function). The advisory specifically identifies the sql.gsub() function in lib/arjdbc/jdbc/adapter.rb as the vulnerable component.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "vuln_unsafe_yaml_deserialization",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_unsafe_yaml_deserialization",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_unsafe_yaml_deserialization/vulnerability_report.json",
+      "title": "Unsafe YAML deserialization in database configuration loader",
+      "vulnerability_type": "deserialization_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerability type (deserialization/RCE vs SQL injection), different vulnerable code locations (test/manualTestDatabase.rb:17 and rakelib/db.rake:19 vs lib/arjdbc/jdbc/adapter.rb), and different root cause (YAML.load without safe loading vs sql.gsub() function).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "None of the three qualifying vulnerabilities identify the advisory-described vulnerable code/root cause. The advisory (GHSA-5qw5-wf2q-f538) specifically describes a SQL injection vulnerability in the sql.gsub() function located in lib/arjdbc/jdbc/adapter.rb. The findings identify: (1) command injection in lib/arjdbc/postgresql/adapter.rb:565 via shell command interpolation, (2) SQL injection in lib/arjdbc/postgresql/adapter.rb:582 via direct string interpolation into SET search_path, and (3) unsafe YAML deserialization in test/manualTestDatabase.rb and rakelib/db.rake. While finding #2 is the same vulnerability type (SQL injection), it affects a different code location and uses a different vulnerable mechanism (direct interpolation vs gsub function).",
+    "evidence": [
+      "Advisory specifies vulnerable component: lib/arjdbc/jdbc/adapter.rb",
+      "Advisory specifies vulnerable function: sql.gsub()",
+      "Advisory CWE: CWE-89 (SQL Injection)",
+      "Finding 1: Command injection in lib/arjdbc/postgresql/adapter.rb:565 (different type, different location)",
+      "Finding 2: SQL injection in lib/arjdbc/postgresql/adapter.rb:582 (same type, different location, different root cause)",
+      "Finding 3: YAML deserialization in test/manualTestDatabase.rb:17 and rakelib/db.rake:19 (different type, different location)",
+      "No finding references lib/arjdbc/jdbc/adapter.rb or sql.gsub() function"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_command_injection_postgresql_structure_dump",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_command_injection_postgresql_structure_dump/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_command_injection_postgresql_structure_dump/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_sql_injection_schema_search_path",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_sql_injection_schema_search_path/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_sql_injection_schema_search_path/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_unsafe_yaml_deserialization",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_unsafe_yaml_deserialization/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e7debecf/vuln_unsafe_yaml_deserialization/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

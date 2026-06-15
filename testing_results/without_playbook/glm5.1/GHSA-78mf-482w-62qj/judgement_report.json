@@ -1,0 +1,88 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T17:22:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3725da04",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-04/GHSA-78mf-482w-62qj/GHSA-78mf-482w-62qj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "config_path_traversal_symlink_bypass",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3725da04/config_path_traversal_symlink_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3725da04/config_path_traversal_symlink_bypass/vulnerability_report.json",
+      "title": "Arbitrary file read via symlink bypass in config API",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding describes a path traversal vulnerability via symlink bypass in the config API. The advisory describes Cross-Site WebSocket Hijacking (CSWSH) via missing origin validation on WebSocket endpoints. These are different vulnerability classes, different root causes (TOCTOU in path validation vs. missing origin check in WebSocket upgrader), and different attack surfaces (config API vs. WebSocket endpoints).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "L",
+          "VA": "N",
+          "SC": "H",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:L/VA:N/SC:H/SI:L/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unauthenticated_backup_restore_rce",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3725da04/unauthenticated_backup_restore_rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3725da04/unauthenticated_backup_restore_rce/vulnerability_report.json",
+      "title": "Unauthenticated backup restore allows arbitrary file write and RCE",
+      "vulnerability_type": "arbitrary_file_write",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding describes an unauthenticated backup restore vulnerability with path traversal for arbitrary file write and RCE. The advisory describes Cross-Site WebSocket Hijacking (CSWSH) via missing origin validation on WebSocket endpoints. These are different vulnerability classes, different root causes (authIfInstalled middleware bypass during installation vs. missing origin check in WebSocket upgrader), and different attack surfaces (backup restore API vs. WebSocket endpoints).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "H",
+          "SI": "H",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerability. The advisory describes Cross-Site WebSocket Hijacking (CSWSH) caused by missing origin validation (CheckOrigin returning true) on all WebSocket endpoints in nginx-ui, combined with cookie-based JWT authentication without HttpOnly or SameSite attributes. The two qualifying findings describe: (1) path traversal via symlink bypass in the config API, and (2) unauthenticated backup restore with arbitrary file write/RCE. Neither of these findings match the CSWSH root cause (missing WebSocket origin validation), the affected attack surface (WebSocket endpoints), or the vulnerability mechanism (browser-based cross-origin WebSocket hijacking via cookie authentication).",
+    "evidence": [
+      "Advisory root cause: CheckOrigin: func(r *http.Request) bool { return true } in WebSocket upgrader across multiple files (api/terminal/pty.go, api/analytic/analytic.go, api/event/websocket.go, etc.)",
+      "Advisory attack surface: WebSocket endpoints under authenticated router group (/api/nginx/detail_status/ws, /api/events, /api/analytic/intro, etc.)",
+      "Advisory vulnerability mechanism: Browser-based cross-origin WebSocket hijacking exploiting cookie-stored JWT tokens",
+      "Finding 1 (config_path_traversal_symlink_bypass): TOCTOU in IsUnderDirectory symlink validation in config API endpoints",
+      "Finding 2 (unauthenticated_backup_restore_rce): authIfInstalled middleware bypass during installation allowing backup restore with path traversal"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3725da04/config_path_traversal_symlink_bypass",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3725da04/config_path_traversal_symlink_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3725da04/config_path_traversal_symlink_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3725da04/unauthenticated_backup_restore_rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3725da04/unauthenticated_backup_restore_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_3725da04/unauthenticated_backup_restore_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

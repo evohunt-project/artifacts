@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_slowloris",
+  "summary": "Successfully demonstrated Slowloris DoS vulnerability due to missing ReadHeaderTimeout configuration. Multiple connections sending headers slowly remained open indefinitely, consuming server connection resources without completing requests.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "External attackers can exhaust server connection resources by holding many connections open with slow header transmission, preventing legitimate users from accessing services.",
+  "actual_observed_result": "Multiple HTTP connections sending headers byte-by-byte at slow rate remained open without timeout. The http.Server struct does not configure ReadHeaderTimeout, allowing Slowloris-style attacks where headers can be sent arbitrarily slowly.",
+  "verification_method": "Inspected source code to verify ReadHeaderTimeout is not configured in http.Server struct. Created slowloris attack script that opens multiple connections and sends headers at 1-second intervals. Verified that connections remain open without timeout. Confirmed vulnerability matches documented Slowloris attack pattern.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Source code inspection confirmed ReadHeaderTimeout absent from http.Server configuration",
+    "5 connections established successfully",
+    "Headers sent at 1-second intervals remained open",
+    "No timeout enforced during slow header transmission",
+    "Connections consumed resources for extended duration",
+    "Attack matches canonical Slowloris pattern documented in CVE databases"
+  ],
+  "limitations_or_blockers": [
+    "Demonstration limited to 5 connections for safety; real attack would use hundreds or thousands",
+    "Full DoS impact requires reaching connection limit of the server"
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones Traefik repository and checks out v2.11.0, mounts read-only at /target-repo",
+    "pinned_commit_or_ref": "v2.11.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": []
+  }
+}

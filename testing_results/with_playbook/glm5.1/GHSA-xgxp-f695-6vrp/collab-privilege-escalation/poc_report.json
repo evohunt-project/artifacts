@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "privilege_escalation",
+  "summary": "The Docker-based reproduction confirms that a ReadWriteAccess collaborator can escalate their privileges to AdminAccess via the 'repo collab add' command. The test creates an admin user, a regular user, adds the regular user as read-write collaborator, then the regular user adds themselves with admin-access level.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A ReadWriteAccess collaborator should be able to grant themselves AdminAccess on a repository using 'repo collab add <repo> <username> admin-access', bypassing the intended access level hierarchy.",
+  "actual_observed_result": "The regular user (read-write collaborator) successfully ran 'repo collab add target-repo regular-user admin-access' and then verified admin-level access by performing operations restricted to admins, such as listing webhooks.",
+  "verification_method": "After the privilege escalation, the script attempts an admin-only operation (repo webhook list) as the escalated user. The proof string EVOHUNT_ESCALATION_CONFIRMED is printed if the admin operation succeeds, confirming the privilege escalation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Admin user created a repository and added regular-user as read-write collaborator.",
+    "Regular user successfully executed 'repo collab add target-repo regular-user admin-access'.",
+    "Regular user was then able to list webhooks (admin-only operation) on the repository.",
+    "The access level escalation from read-write to admin-access was confirmed via the collaborator list."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

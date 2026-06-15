@@ -1,0 +1,89 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T08:01:44.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8b8042f2",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-02/GHSA-97f8-7cmv-76j2/GHSA-97f8-7cmv-76j2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "ssrf-via-http-redirect",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8b8042f2/ssrf-via-http-redirect",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8b8042f2/ssrf-via-http-redirect/vulnerability_report.json",
+      "title": "SSRF via unvalidated HTTP redirect chain in scan_url and scan_huggingface_model",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes a picklescan scanning bypass vulnerability where the scanner's get_magic_number() function can be bypassed via dynamic eval in __reduce__ to evade malicious pickle detection. This SSRF finding describes a completely different vulnerability (HTTP redirect following without URL validation) affecting different code paths (_http_get at scanner.py:282-283), with a different root cause (missing redirect validation vs. magic number parsing bypass), and different security impact (SSRF to internal resources vs. scanner evasion).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "path-traversal-7z-extraction",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8b8042f2/path-traversal-7z-extraction",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8b8042f2/path-traversal-7z-extraction/vulnerability_report.json",
+      "title": "Path traversal in 7z archive extraction (Zip Slip vulnerability)",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes a picklescan scanning bypass vulnerability where the scanner's get_magic_number() function can be bypassed via dynamic eval in __reduce__ to evade malicious pickle detection. This path traversal finding describes a completely different vulnerability (7z archive extraction without path validation) affecting different code paths (scan_7z_bytes at scanner.py:463-468), with a different root cause (missing path traversal checks vs. magic number parsing bypass), and different security impact (arbitrary file writes vs. scanner evasion).",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code/root cause. The advisory describes a picklescan scanning bypass vulnerability in the scan_pytorch function where the scanner's get_magic_number() implementation uses pickletools.genops() to extract magic numbers from INT/LONG opcodes, but PyTorch's pickle_module.load() can handle dynamic eval in __reduce__, allowing attackers to embed magic code that bypasses the scanner while still executing on load. Neither the SSRF finding (HTTP redirect following in _http_get) nor the path traversal finding (7z extraction in scan_7z_bytes) relate to this magic number parsing bypass in scan_pytorch/get_magic_number. These are independent vulnerabilities in different code paths with different root causes and different security impacts.",
+    "evidence": [
+      "Advisory describes vulnerability in scan_pytorch function's get_magic_number() implementation at torch.py:76-84",
+      "Advisory root cause: Implementation difference between pickletools.genops() (scanner) and pickle_module.load() (PyTorch) allows magic number bypass via dynamic eval in __reduce__",
+      "Advisory security impact: Malicious pickle evasion - scanner fails to detect dangerous pickle that executes on load",
+      "SSRF finding affects _http_get() at scanner.py:282-283 with root cause: missing redirect URL validation",
+      "Path traversal finding affects scan_7z_bytes() at scanner.py:463-468 with root cause: missing path traversal validation",
+      "No finding mentions get_magic_number, scan_pytorch, torch.py, pickletools.genops, magic number parsing, or __reduce__ bypass"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8b8042f2/ssrf-via-http-redirect",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8b8042f2/ssrf-via-http-redirect/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8b8042f2/ssrf-via-http-redirect/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8b8042f2/path-traversal-7z-extraction",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8b8042f2/path-traversal-7z-extraction/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_8b8042f2/path-traversal-7z-extraction/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

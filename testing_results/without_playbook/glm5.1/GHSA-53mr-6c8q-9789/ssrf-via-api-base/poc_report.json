@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that any authenticated user can force the LiteLLM proxy to send HTTP requests to arbitrary internal or external URLs by specifying api_base in the request body to /v1/chat/completions.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proxy should send an HTTP POST request to the attacker-controlled api_base URL (http://127.0.0.1:8888/ssrf-target-path), simulating access to an internal service. The victim server should receive and log the request, proving SSRF.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, started the LiteLLM proxy with PostgreSQL, launched the victim HTTP server, sent a chat completion request with api_base pointing to the victim server, and the victim server received the HTTP request from the proxy process.",
+  "verification_method": "The victim HTTP server writes a proof file to /tmp/ssrf_proof.txt containing a unique proof token (EVOHUNT_SSRF_4c472f81_CONFIRMED) when it receives any request. The exploit script checks for this token after sending the request. The presence of the token confirms the proxy made an outbound HTTP connection to the attacker-specified URL, distinguishing SSRF from a proxy startup failure or unrelated error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The victim HTTP server received an HTTP POST request on the path /ssrf-target-path from the LiteLLM proxy process.",
+    "The proof file /tmp/ssrf_proof.txt contains the expected proof token, the request path, method, and headers.",
+    "The request headers show the proxy's User-Agent and Content-Type, confirming the request originated from the litellm library's HTTP client."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.82.6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py",
+      "reproduction/victim_server.py",
+      "reproduction/proxy_config.yaml"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ip_whitelist_bypass",
+  "summary": "The Docker-based reproduction builds Traefik v1.7.34 from source with IP whitelist configured (sourceRange: 10.0.0.0/8, 127.0.0.1/32) and useXForwardedFor=true. A request without spoofing is correctly blocked (403), but a request with X-Forwarded-For: 203.0.113.1, 127.0.0.1 bypasses the whitelist and returns HTTP 200 with the full API configuration, demonstrating the any-match logic vulnerability.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a request without spoofed headers is blocked by the IP whitelist, while a request with a spoofed X-Forwarded-For header containing a whitelisted IP (127.0.0.1) bypasses the whitelist and gains access to the protected API.",
+  "actual_observed_result": "The request without X-Forwarded-For was blocked (HTTP 403). The request with X-Forwarded-For: 203.0.113.1, 127.0.0.1 returned HTTP 200 with the full provider configuration, confirming the whitelist bypass.",
+  "verification_method": "The verify script first confirms that requests without the spoofed header are blocked (status 403 or 401), then sends a request with the spoofed X-Forwarded-For header containing 127.0.0.1 and checks that the response is HTTP 200 with the full API configuration. The contrast between the blocked and allowed requests proves the bypass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Request without spoofed X-Forwarded-For was blocked with HTTP 403.",
+    "Request with X-Forwarded-For: 203.0.113.1, 127.0.0.1 returned HTTP 200.",
+    "The 200 response contained the full provider configuration, confirming successful bypass of the IP whitelist.",
+    "The bypass works because whitelist/ip.go:IsAuthorized checks if ANY IP in the X-Forwarded-For chain matches, not just the rightmost trusted proxy IP."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref v1.7.34, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.7.34",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

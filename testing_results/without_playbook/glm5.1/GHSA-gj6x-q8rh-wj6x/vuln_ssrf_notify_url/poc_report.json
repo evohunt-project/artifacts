@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The PoC demonstrates that user-controlled notify URLs trigger HTTP POST requests from the server to attacker-specified endpoints. The reproduction successfully accessed simulated AWS metadata endpoints and internal admin services, confirming that SSRF allows bypassing network segmentation and accessing sensitive internal resources.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should demonstrate that malicious notify URLs cause the server to make HTTP POST requests to internal endpoints and cloud metadata services, exfiltrating sensitive data and accessing resources that should be protected by network segmentation.",
+  "actual_observed_result": "The reproduction successfully demonstrated two SSRF attack scenarios: (1) POST request to simulated AWS metadata endpoint at http://127.0.0.1:8080/latest/meta-data/iam/security-credentials/, which received sensitive operational data (service ID, piece CID, piece reference), and (2) POST request to simulated internal admin service at http://127.0.0.1:9999/admin/delete-all, which would normally be blocked by firewall rules. Both attacks succeeded without URL validation.",
+  "verification_method": "The verification script checks for evidence files created by the fake metadata and internal servers. The presence of /tmp/ssrf_exfiltrated_data.txt and /tmp/ssrf_internal_access.txt confirms that the server made HTTP requests to attacker-controlled URLs and POSTed sensitive data. The test confirms (1) no URL validation, (2) requests to internal addresses succeed, and (3) sensitive data is exfiltrated.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP POST request made to http://127.0.0.1:8080/latest/meta-data/iam/security-credentials/",
+    "File /tmp/ssrf_exfiltrated_data.txt created by fake metadata server with POSTed data",
+    "POSTed data includes: upload ID, service ID, piece CID, piece reference, check hash",
+    "HTTP POST request made to http://127.0.0.1:9999/admin/delete-all",
+    "File /tmp/ssrf_internal_access.txt created by fake internal admin service",
+    "No URL validation or internal IP blocking was performed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from https://github.com/filecoin-project/curio on the host and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/fake_metadata_server.sh",
+      "reproduction/fake_internal_server.sh",
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that an authenticated user can cause the n8n server to make arbitrary server-side HTTP requests via the GET /rest/workflows/from-url endpoint. The server fetches content from a mock internal metadata service running on 127.0.0.1:9999 and returns the response body to the attacker, including a proof token and simulated AWS credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause n8n to fetch data from the mock internal service at http://127.0.0.1:9999/metadata and return the response to the attacker, demonstrating that the server makes arbitrary outbound HTTP requests to URLs controlled by the caller.",
+  "actual_observed_result": "The n8n server was built from source, the owner account was created, a project was created, and the SSRF request to GET /rest/workflows/from-url?url=http://127.0.0.1:9999/metadata&projectId=<id> returned the mock internal service's JSON payload including the SSRF_PROOF_TOKEN marker and simulated AWS metadata credentials.",
+  "verification_method": "The verify.sh script checks the SSRF response for the exact proof string SSRF_PROOF_TOKEN emitted by the mock internal server, and additionally confirms aws-metadata-simulated and internal-api-key markers are present. This distinguishes a genuine SSRF from a generic error response, startup failure, or unrelated behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The SSRF response body contains the SSRF_PROOF_TOKEN string that only exists in the mock internal server's response, proving the server-side request reached the mock service.",
+    "The response includes simulated AWS credentials (aws_access_key, aws_secret_key) and internal API tokens, confirming the server returned the fetched internal data to the caller.",
+    "The X-SSRF-Proof header in the mock service response confirms the request originated from the n8n server process."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.3.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh",
+      "reproduction/mock-internal-service.js"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction builds SiYuan v3.6.4 from source, starts it with SIYUAN_ACCESS_AUTH_CODE_BYPASS=true (a documented option that disables authentication), and demonstrates that the forwardProxy endpoint can be used without any credentials to make arbitrary outbound HTTP requests to external services.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the forwardProxy endpoint to fetch an external URL without authentication and return the response body, proving that an unauthenticated attacker can use the SiYuan server as an open forward proxy.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the SiYuan Docker image from the pinned source, started the SiYuan container with auth bypass enabled, waited for boot completion, and then used curl to call POST /api/network/forwardProxy with an arbitrary external URL. The endpoint returned the full HTTP response (status, headers, body) from the target URL, confirming unauthenticated SSRF.",
+  "verification_method": "The exploit script calls the forwardProxy endpoint with a known external URL (http://httpbin.org/get) and checks that the JSON response contains a non-error code (code==0), a status field showing HTTP 200 from the target, and a body field containing the response data. This distinguishes a genuine SSRF response from a connection error, auth failure, or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The forwardProxy endpoint returned HTTP 200 with code=0, confirming the request was processed successfully.",
+    "The response data included the full external URL response (status, headers, body), proving the SiYuan server made an outbound HTTP request on behalf of the caller.",
+    "No Authorization header, token, or session cookie was provided, confirming the request was processed without authentication due to the auth bypass."
+  ],
+  "limitations_or_blockers": [
+    "The PoC requires internet access to reach the external target URL. In air-gapped environments, the forwardProxy will fail to connect but the vulnerability (unauthenticated endpoint accepting arbitrary URLs) is still present.",
+    "The private-IP blocking in getSafeClient prevents SSRF to internal services (loopback, private, link-local), limiting the SSRF impact to public IP destinations."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.6.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

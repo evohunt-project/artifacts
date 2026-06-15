@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection_rce",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated attacker can achieve remote code execution by sending a crafted POST request to /api/runscript with test mode enabled. The PoC executes 'id' via child_process.execSync and the server returns the command output in the HTTP response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the FUXA server to compile and execute attacker-controlled JavaScript code that calls require('child_process').execSync('id'), returning the OS command output (e.g., 'uid=0(root) gid=0(root)...') in the JSON response body.",
+  "actual_observed_result": "Running ./reproduction/run.sh started the FUXA server, waited for it to become ready, sent the crafted POST /api/runscript payload, and the server responded with the output of the 'id' command, confirming arbitrary OS command execution.",
+  "verification_method": "The verify script checks that the HTTP response body contains the string 'uid=' which is the expected prefix of the 'id' command output on Linux. This distinguishes successful command execution from a generic error response, startup failure, or unrelated crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The FUXA server started successfully and responded to HTTP requests on port 1881.",
+    "The crafted POST /api/runscript request returned HTTP 200 with the output of the 'id' command.",
+    "The response body contained 'uid=' confirming that child_process.execSync('id') was executed server-side.",
+    "No authentication token or credentials were required to trigger the vulnerability."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.2.10",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/wait-for-server.sh"
+    ]
+  }
+}

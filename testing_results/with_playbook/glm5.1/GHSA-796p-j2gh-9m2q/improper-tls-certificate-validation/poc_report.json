@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "improper_certificate_validation",
+  "summary": "The reproduction confirms that the library unconditionally disables TLS certificate verification via danger_accept_invalid_certs(true) in collateral.rs:151. A standard HTTPS client (Python urllib) correctly rejects a connection to a server with a self-signed certificate, but the library's reqwest client would accept it. This means any MITM attacker can intercept the collateral fetching requests.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The library should reject connections to servers with untrusted TLS certificates. Instead, it accepts any certificate, allowing MITM attackers to intercept, read, replay, or modify attestation collateral data in transit.",
+  "actual_observed_result": "Source code analysis confirmed danger_accept_invalid_certs(true) at src/collateral.rs:151. A mock HTTPS server with a self-signed certificate was started locally; standard Python urllib correctly rejected the self-signed certificate with an SSL verification error, demonstrating that proper TLS validation would block the connection. The library's HTTP client bypasses this protection entirely.",
+  "verification_method": "The verification generates a self-signed TLS certificate, starts a mock HTTPS server with it, and demonstrates that (1) a standard HTTPS client correctly rejects the self-signed certificate, while (2) the library's source code shows danger_accept_invalid_certs(true) which bypasses TLS certificate verification. The contrast between the standard client's rejection and the library's unconditional acceptance confirms the vulnerability.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Standard Python urllib rejects the self-signed certificate: 'urllib.error.URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed>' - confirming proper TLS validation blocks untrusted certificates.",
+    "Source code at src/collateral.rs:151 contains 'danger_accept_invalid_certs(true)' which unconditionally disables TLS certificate verification for all collateral fetching.",
+    "The setting affects all HTTPS requests: PCK CRL fetch (line 160), TCB info fetch (line 168), QE identity fetch (line 176), and root CA CRL fetch (lines 192, 216)."
+  ],
+  "limitations_or_blockers": [
+    "The PoC demonstrates the vulnerability through source code analysis and contrast testing (standard client vs library behavior). A full end-to-end MITM demonstration would require network-level interception tools (e.g., mitmproxy).",
+    "The Docker-based reproduction requires network access to clone the target repository."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.3.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/mock_server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

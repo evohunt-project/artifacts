@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that sending 5,000 small file parts to a multer endpoint using default MemoryStorage and then closing the connection triggers synchronous recursive cleanup that overflows the V8 call stack, crashing the server with RangeError: Maximum call stack size exceeded.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the multer middleware to buffer thousands of small files in memory, and when the connection is abruptly closed, the synchronous recursive cleanup in remove-uploaded-files.js should overflow the call stack and crash the Node.js process.",
+  "actual_observed_result": "Running the Docker-based reproduction sent 5,000 one-byte file parts via multipart/form-data, then destroyed the connection. The server's uncaughtException handler caught RangeError: Maximum call stack size exceeded, confirming the recursive cleanup path was triggered and crashed the process.",
+  "verification_method": "The run script starts the vulnerable server, runs the attack (which sends 5,000 file parts and aborts), and checks the server output for the stack overflow signal string. The verification distinguishes the stack overflow crash from unrelated errors, startup failures, or normal operation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server output contains 'RangeError: Maximum call stack size exceeded' confirming the recursive cleanup overflowed the call stack.",
+    "The uncaughtException handler caught the error, confirming it was an unhandled crash (not caught by Express error handling).",
+    "The attack required no authentication and minimal bandwidth (5,000 one-byte file parts with multipart framing is approximately 200 KB)."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v2.1.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.js",
+      "reproduction/attack.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

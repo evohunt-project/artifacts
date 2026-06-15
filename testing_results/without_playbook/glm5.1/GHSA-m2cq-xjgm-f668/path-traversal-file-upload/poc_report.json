@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that the vulnerable upload-user-file endpoint writes attacker-controlled content to an arbitrary filesystem path outside the intended user-files directory when the x-actual-file-id header contains path traversal sequences.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the server to write a file containing a known proof string to /tmp/evohunt-traversal-proof.blob, which is outside the /data/user-files/ directory, demonstrating arbitrary file write via path traversal.",
+  "actual_observed_result": "Running ./reproduction/run.sh built and launched the Actual Budget sync-server from the pinned Docker image, bootstrapped the server with a password, authenticated, uploaded a legitimate control file to /data/user-files/ (confirming normal operation), then uploaded a file with a crafted x-actual-file-id header containing /../../../tmp/evohunt-traversal-proof. The proof file was found at /tmp/evohunt-traversal-proof.blob containing the attacker-controlled proof payload.",
+  "verification_method": "The exploit script uploads a control file first (verifying normal upload works and the file lands in /data/user-files/), then uploads the traversal payload. It checks whether the file exists at the traversed path (/tmp/evohunt-traversal-proof.blob) and verifies the file content contains the expected proof string. This distinguishes a real path traversal from a mere upload error or unrelated file.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The control file was correctly written to /data/user-files/file-control-file-id.blob, confirming the server handles normal uploads as expected.",
+    "A file containing the proof string EVOHUNT-TRaversal-Proof-Of-Concept-Payload was found at /tmp/evohunt-traversal-proof.blob, which is outside the /data/user-files/ directory.",
+    "The traversal file content matches the attacker-controlled request body, confirming the path traversal wrote the payload to the unintended location."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v26.2.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh"
+    ]
+  }
+}

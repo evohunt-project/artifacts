@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service_memory_exhaustion",
+  "summary": "The Docker-based reproduction confirms that the FITS gzip decoder decompresses attacker-controlled data without any size limit, causing massive memory allocation far exceeding the image dimensions.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause gzip.decompress to produce decompressed output that is orders of magnitude larger than the declared image data requirements, demonstrating the unbounded memory allocation vulnerability.",
+  "actual_observed_result": "Running ./reproduction/run.sh built Pillow from the target repo, generated a crafted FITS file with a gzip bomb payload, and the verification confirmed that gzip.decompress produced over 10 MB of data for a 16-byte image, a 655000x over-allocation with no size limit enforced.",
+  "verification_method": "The verification script monkey-patches gzip.decompress to intercept and measure the actual decompressed size. It compares the decompressed size against the expected image data size (ZNAXIS1 * ZNAXIS2 * |ZBITPIX|/8 = 16 bytes). If the ratio exceeds 100x, the vulnerability is confirmed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The monkey-patched gzip.decompress recorded the actual decompressed size as 10485760 bytes versus the expected 16 bytes.",
+    "The decompressed data was 655360x larger than required by the declared image dimensions.",
+    "No size limit or sanity check was applied before or during decompression."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "main",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/generate_payload.py",
+      "reproduction/verify.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

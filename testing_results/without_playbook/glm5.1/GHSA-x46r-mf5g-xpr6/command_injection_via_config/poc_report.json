@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "Docker-based reproduction confirmed that Glances configuration parser executes arbitrary shell commands specified within backtick syntax. A malicious configuration value containing `id > /tmp/glances_pwned.txt` successfully executed the 'id' command during configuration parsing.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "When Glances loads a configuration file containing backtick-wrapped commands like `id > /tmp/glances_pwned.txt`, the command should be executed during configuration parsing, creating the output file and demonstrating arbitrary command execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, started Glances with a configuration file containing the backtick command injection payload, and confirmed that the 'id' command was executed. The file /tmp/glances_pwned.txt was created containing the output of the 'id' command (uid, gid, groups).",
+  "verification_method": "The verification script creates a configuration file with a backtick command payload that writes the 'id' command output to a file. Success is confirmed when the file /tmp/glances_pwned.txt exists and contains the expected 'uid=' string from the command execution.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "File /tmp/glances_pwned.txt created by command injection payload",
+    "File contains 'id' command output with uid, gid, and groups information",
+    "Command was executed during Glances configuration loading phase",
+    "Arbitrary command execution achieved through configuration file modification"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag v4.5.1, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v4.5.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

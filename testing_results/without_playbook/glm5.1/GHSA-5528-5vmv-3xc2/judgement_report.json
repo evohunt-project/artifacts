@@ -1,0 +1,107 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T16:22:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-03/GHSA-5528-5vmv-3xc2/GHSA-5528-5vmv-3xc2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "multer-stack-overflow-dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49/multer-stack-overflow-dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49/multer-stack-overflow-dos/vulnerability_report.json",
+      "title": "Stack overflow crash via synchronous recursive file cleanup in MemoryStorage",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": true,
+      "advisory_match_reason": "Identifies the exact vulnerable code path (lib/remove-uploaded-files.js synchronous recursive callbacks) and root cause (uncontrolled recursion causing stack overflow) that the advisory describes. The finding's code locations and exploit path align with the patch commit 7e66481 which adds setImmediate to break the synchronous recursion.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "multer-memory-exhaustion-dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49/multer-memory-exhaustion-dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49/multer-memory-exhaustion-dos/vulnerability_report.json",
+      "title": "Unrestricted memory consumption via default MemoryStorage without file size limits",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": false,
+      "advisory_match_reason": "Different vulnerability from the advisory. The advisory describes uncontrolled recursion causing stack overflow, while this finding describes unbounded memory consumption via MemoryStorage. Both are DoS vulnerabilities in multer, but they have different root causes, vulnerable code locations, and exploit mechanisms.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier3",
+    "target_match": "match",
+    "runtime_evidence": "failed_or_none",
+    "selected_finding": {
+      "folder_name": "multer-stack-overflow-dos",
+      "folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49/multer-stack-overflow-dos",
+      "status": "qualifying_vuln",
+      "title": "Stack overflow crash via synchronous recursive file cleanup in MemoryStorage",
+      "vulnerability_type": "denial_of_service"
+    },
+    "reason": "The finding matches the advisory-described vulnerable code (lib/remove-uploaded-files.js synchronous recursive cleanup) and root cause (uncontrolled recursion causing stack overflow). The finding's code locations align with the patch commit 7e66481 which adds setImmediate to break the recursion. However, Tier3 applies because the PoC execution failed during judging due to network connectivity issues preventing repository clone. The original discovery PoC report confirms the vulnerability was successfully reproduced.",
+    "evidence": [
+      "Finding identifies the exact vulnerable code: lib/remove-uploaded-files.js:7-22 with synchronous recursive handleFile calls",
+      "Finding identifies the synchronous callback in storage/memory.js:14-16 that prevents stack unwinding",
+      "Finding's exploit path matches advisory: multipart upload with many files, connection abort, recursive cleanup overflow",
+      "Original poc_report.json confirms RangeError: Maximum call stack size exceeded from 5,000 file uploads",
+      "Patch commit 7e66481 adds setImmediate to the exact code location identified by the finding"
+    ],
+    "blockers_to_higher_tier": [
+      "PoC execution failed during judging due to network connectivity (unable to clone repository from GitHub)",
+      "Cannot verify runtime predicates (exploit_success_predicate, bug_activation_predicate) with fresh execution",
+      "Tier1 and Tier2 require executable PoC run under judge control with verifiable runtime artifacts"
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "multer-stack-overflow-dos",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49/multer-stack-overflow-dos",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49/.judge/poc_runs/multer-stack-overflow-dos/reproduction",
+      "exit_code": 1,
+      "timed_out": false,
+      "log_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49/.judge/poc_runs/multer-stack-overflow-dos/run.log",
+      "execution_json_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49/.judge/poc_runs/multer-stack-overflow-dos/poc_execution.json",
+      "observed_effect": "PoC execution failed due to network connectivity: unable to clone target repository from GitHub (failed to connect to github.com port 443 after 52857 ms). The original discovery execution demonstrated the vulnerability successfully.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49/multer-memory-exhaustion-dos",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49/multer-memory-exhaustion-dos/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e0583a49/multer-memory-exhaustion-dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

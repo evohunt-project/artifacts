@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_deserialization_rce",
+  "summary": "The Docker/local-PHP-based reproduction confirms that bare unserialize() on a crafted serialized payload instantiates the EGroupware\\Api\\Etemplate\\Request\\Files class, whose __destruct() method writes an attacker-controlled proof string to an attacker-chosen file path via file_put_contents(). This validates the PHP Object Injection vulnerability at addressbook_groupdav.inc.php:939.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause unserialize() to instantiate a POP gadget object whose destructor writes the proof string EVOHUNT_PROOF_OF_RCE_SUCCESS to a file on disk, demonstrating arbitrary file write capability.",
+  "actual_observed_result": "Running ./reproduction/run.sh executed the exploit script which (1) loaded the EGroupware autoloader from the target repository, (2) set the Files class static directory to a writable temp path, (3) called unserialize() on a crafted serialized Files object payload, (4) the __destruct() fired on object cleanup and wrote the proof string to /tmp/evohunt_test/evohunt_unserialize_proof.txt, and (5) the verification confirmed the proof file exists and contains the expected proof string.",
+  "verification_method": "The exploit script checks that (a) unserialize() returns a valid object of class EGroupware\\Api\\Etemplate\\Request\\Files, (b) the proof file is created at the expected path, and (c) the file content contains the exact proof string EVOHUNT_PROOF_OF_RCE_SUCCESS. The script exits with code 0 on success and non-zero on failure, and run.sh propagates this exit code.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "unserialize() returned a valid object of class EGroupware\\Api\\Etemplate\\Request\\Files, confirming no class restrictions on the deserialization sink.",
+    "The proof file /tmp/evohunt_test/evohunt_unserialize_proof.txt was created by Files::__destruct() via file_put_contents(), confirming the POP gadget chain works end-to-end.",
+    "The file content a:2:{i:0;s:28:\"EVOHUNT_PROOF_OF_RCE_SUCCESS\";s:9:\"destroyed\";N;} contains the exact attacker-controlled proof string, confirming that attacker-controlled data flows through the entire deserialization chain into persistent file output."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from GitHub on the host (or falls back to the local repo checkout), then either builds a Docker image and mounts the checkout into the container at /target-repo, or runs the exploit directly with local PHP.",
+    "pinned_commit_or_ref": "master",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

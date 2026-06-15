@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "code_injection",
+  "summary": "The Docker-based reproduction is designed to demonstrate that the vulnerable java_import sink in JdbcDriver loads an arbitrary Java class whose static initializer executes attacker-controlled code inside the JRuby container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted ProofOfConcept Java class to be loaded via java_import at driver.rb:24, triggering its static initializer which creates /tmp/pwned.txt and /tmp/rce_successful as proof of arbitrary code execution.",
+  "actual_observed_result": "PoC was not executed during this session; no runtime observation is available.",
+  "verification_method": "The verify.sh script checks for the existence and contents of /tmp/pwned.txt and /tmp/rce_successful inside the container. The presence of these files confirms the malicious class was loaded and its static initializer executed, distinguishing code execution from a generic class-not-found error.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker was not available in the audit environment to execute the reproduction container."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "1.2.8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.rb",
+      "reproduction/verify.sh"
+    ]
+  }
+}

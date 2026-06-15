@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-08T07:30:00.000Z",
+  "run_folder": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e5182ac1",
+  "advisory_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-GLM/dataset/advisory/testing/2026-01/GHSA-c83v-7274-4vgp/GHSA-c83v-7274-4vgp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated-pty-rce",
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e5182ac1/unauthenticated-pty-rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e5182ac1/unauthenticated-pty-rce/vulnerability_report.json",
+      "title": "Unauthenticated remote command execution via PTY WebSocket endpoint",
+      "vulnerability_type": "unauthenticated_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes XSS (CWE-79) through the markdown renderer and URL override feature (?url= parameter in packages/app/src/app.tsx) as the root cause, with /pty/ endpoints as the downstream impact mechanism. The finding identifies missing authentication on /pty/ endpoints as the root cause (CWE-306). These are different vulnerability classes with different root causes: the advisory's vulnerable code is the unsanitized markdown renderer and CSP absence, while the finding's vulnerable code is the /pty/ endpoint handlers. The finding does not mention XSS, DOMPurify, CSP, the markdown renderer, or the ?url= parameter — the actual advisory root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The advisory (GHSA-c83v-7274-4vgp, CVE-2026-22813) describes an XSS vulnerability (CWE-79) in the OpenCode web UI caused by unsanitized HTML injection in the markdown renderer and the server URL override feature (?url= parameter in packages/app/src/app.tsx). The attack chain is: malicious website tricks user into loading a URL with ?url= parameter → XSS on localhost:4096 → same-origin fetch to /pty/ API → command execution. The sole qualifying finding (unauthenticated-pty-rce) identifies missing authentication on /pty/ endpoints as the root cause, which is a different vulnerability (CWE-306) with different vulnerable code (server.ts /pty/ route handlers, pty/index.ts PTY session creation). The finding does not address the advisory's root cause: the lack of DOMPurify sanitization and CSP in the web UI markdown renderer.",
+    "evidence": [
+      "Advisory CWE is CWE-79 (Cross-site Scripting); finding vulnerability_type is unauthenticated_rce",
+      "Advisory root cause code: markdown renderer (no DOMPurify, no CSP) and ?url= parameter in packages/app/src/app.tsx",
+      "Finding root cause code: POST /pty and GET /pty/:ptyID/connect in packages/opencode/src/server/server.ts, PTY creation in packages/opencode/src/pty/index.ts",
+      "Finding does not mention XSS, markdown renderer, DOMPurify, CSP, or the ?url= parameter override feature",
+      "Advisory attack chain requires user interaction (UI:P) to trigger XSS; finding describes direct API access without user interaction (UI:N) — fundamentally different attack vectors"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e5182ac1/unauthenticated-pty-rce",
+      "vulnerability_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e5182ac1/unauthenticated-pty-rce/vulnerability_report.json",
+      "poc_report_path": "/Users/mac/ResearchSpace/opencode/EvoHunt-DryRun/advisory_e5182ac1/unauthenticated-pty-rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction demonstrates SSRF via the workflow import from URL endpoint. The exploit starts n8n, creates an owner account and project, starts a fake internal HTTP server on port 8888, then triggers the SSRF by sending GET /rest/workflows/from-url pointing to the internal server. The verification confirms n8n made an outbound request to the internal server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The n8n server should make an outbound HTTP request to the internal fake server (http://127.0.0.1:8888/ssrf-target), proving that the server fetches user-supplied URLs without SSRF protection. The fake internal server returns a valid n8n workflow JSON, which the endpoint should pass back to the attacker, confirming full response data exfiltration.",
+  "actual_observed_result": "Reproduction not executed due to Docker image pull timeout. The vulnerability is confirmed through static code analysis: axios.get(query.url) at workflows.controller.ts:181 makes an unvalidated outbound HTTP request with user-controlled URL input.",
+  "verification_method": "The exploit starts a Python HTTP server on port 8888 that writes a proof file (/tmp/ssrf_proof.txt) when it receives a request. The verification script checks that this proof file exists and contains the request details from the n8n server. This distinguishes the SSRF from unrelated network activity.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker image pull for n8nio/n8n:2.18.0 exceeded the build timeout due to large image layers (~238MB). The reproduction bundle is complete and functional but could not be executed within the session time constraints."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable version tag, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2.18.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

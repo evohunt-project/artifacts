@@ -1,0 +1,31 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction builds n8n from the vulnerable source, starts the service with a mock internal HTTP server simulating a private network resource, authenticates as the instance owner, and calls the SSRF endpoint GET /rest/workflows/from-url with the mock server URL. The verification checks that the response body contains the proof marker proving the server fetched data from the internal mock service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause n8n to make an HTTP request to the mock internal server at http://127.0.0.1:18888/secrets/internal and return the response body containing the proof marker EVOHUNT_SSRF_INTERNAL_DATA_EXPOSED to the caller, confirming full-read SSRF.",
+  "actual_observed_result": "PoC was not executed in this session. The reproduction bundle is self-contained and ready for execution via ./reproduction/run.sh, which clones the target repository, builds n8n from source, starts the service, and runs the exploit verification.",
+  "verification_method": "The exploit script (exploit.py) calls the SSRF endpoint and checks that the HTTP response body contains the proof marker string EVOHUNT_SSRF_INTERNAL_DATA_EXPOSED. This distinguishes a real SSRF from a startup failure, network error, or unrelated application error. A secondary check looks for the error message 'does not seem to be a n8n workflow' which confirms the server fetched the URL even when the response shape does not match a workflow JSON.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Building n8n from source may take 5-15 minutes depending on hardware and network speed.",
+    "The build requires Node.js >= 22.16, pnpm >= 10.22.0, and standard C/C++ build tools for native modules.",
+    "The git tag n8n@2.4.0 must exist in the n8n-io/n8n GitHub repository for the clone step to succeed.",
+    "Docker must be available on the host machine.",
+    "The mock internal server listens on 127.0.0.1:18888 inside the container; the port must not conflict with n8n (port 5678)."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag n8n@2.4.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.4.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py",
+      "reproduction/mock_server.py"
+    ]
+  }
+}

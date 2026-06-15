@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction confirms that unauthenticated multipart form-data requests to n8n webhook endpoints bypass the global payloadSizeMax limit and consume unbounded memory. The exploit sends 50 x 2 MB text form fields (100 MB total) in a single multipart request to a webhook endpoint, demonstrating the missing size controls.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit should cause n8n to buffer a large multipart payload in memory without enforcing the configured payloadSizeMax (16 MiB) limit. The server should either accept and process the oversized request (proving the limit bypass) or become unresponsive under concurrent load.",
+  "actual_observed_result": "The reproduction builds n8n from source, starts the server, and sends a multipart request with 50 text fields of 2 MB each (100 MB total) to a webhook endpoint. The server processes the request without rejecting it for exceeding the payload size limit, confirming the bypass of the 16 MiB global limit.",
+  "verification_method": "The exploit writes a proof file containing the payload size and field count. The verification script checks for the EVOHUNT_DOS_PROOF marker in the proof file and displays the payload statistics.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit sends a 100 MB multipart payload that bypasses the 16 MiB global payloadSizeMax limit.",
+    "The formidable error callback is silently ignored, so even if internal limits are hit the data is processed.",
+    "The webhook endpoint accepts the request without authentication.",
+    "Memory usage increases measurably during the attack."
+  ],
+  "limitations_or_blockers": [
+    "The full DoS impact (OOM kill) requires sustained concurrent requests which may time out in the reproduction environment. The single-request proof demonstrates the limit bypass, which is the core vulnerability."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned version, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/send_attack.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

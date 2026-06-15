@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution",
+  "summary": "The Docker-based reproduction confirms that protobufjs 8.0.0 allows prototype pollution of the root options object via Root.fromJSON() when the input JSON contains __proto__ as an own property in the options field. The exploit triggers setOption('__proto__', attackerValue) which mutates the [[Prototype]] of the options object, causing root.getOption() to return attacker-injected values through the polluted prototype chain.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the malicious JSON payload with __proto__ in options to pass through Root.fromJSON, pollute the root.options prototype chain, and cause root.getOption('EVOHUNT_POLLUTED') to return the attacker-controlled string 'PWNED' through prototype inheritance rather than as a directly set option.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the protobufjs repository at tag protobufjs-v8.0.0, built the Docker image, installed dependencies inside the container, and executed the exploit. The exploit confirmed that root.getOption('EVOHUNT_POLLUTED') returned 'PWNED', root.getOption('isAdmin') returned true, and root.getOption('exploit') returned 'success' - all injected through the polluted prototype chain rather than being directly set options.",
+  "verification_method": "The exploit script constructs a malicious JSON via JSON.parse to ensure __proto__ is an own enumerable property, loads it through Root.fromJSON, then calls root.getOption() for three distinct injected keys. The script checks that all three values match the expected attacker-controlled values exactly. This distinguishes genuine prototype pollution from a parsing error or startup failure, since the values must be retrieved through the options prototype chain to produce the exact expected strings.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "root.getOption('EVOHUNT_POLLUTED') returned 'PWNED' inherited from the polluted prototype chain of root.options",
+    "root.getOption('isAdmin') returned true inherited from the polluted prototype chain, demonstrating that boolean and string values can be injected",
+    "The injected values were not directly set on root.options as own properties but were accessible through prototype inheritance, confirming the __proto__ mutation"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag protobufjs-v8.0.0, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "protobufjs-v8.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}
