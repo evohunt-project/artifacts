@@ -10,7 +10,7 @@ We are currently organizing the release materials. The artifact package will inc
 
 We plan to release the EvoHunt artifacts in three phases.
 
-### Phase 1: Evaluation artifacts ✅
+### Phase 1: Evaluation artifacts (In Progress)
 
 To support public verifiability and reproducibility, we will release:
 
@@ -18,14 +18,14 @@ To support public verifiability and reproducibility, we will release:
 2. The execution results of each evaluated model on the testing set.
 3. The judgment records for the execution results.
 
-### Phase 2: Project source code
+### Phase 2: Project source code (In Progress)
 
 We will release the project source code, including:
 
 1. The complete training pipeline.
 2. The design and implementation of EvoHunt, the evaluator agent, and the reviser agent.
 
-### Phase 3: Training playbook repositories
+### Phase 3: Training playbook repositories (In Progress)
 
 We will release the GPT and GLM training playbook repositories, including:
 
