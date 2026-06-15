@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.4.0",
+  "id": "GHSA-r54v-qq87-px5r",
+  "modified": "2026-04-14T00:06:56Z",
+  "published": "2026-04-14T00:06:56Z",
+  "aliases": [
+    "CVE-2026-32272"
+  ],
+  "summary": "Craft Commerce hasVariant/hasProduct Blind SQL Injection",
+  "details": "## Overview\n\nCraft Commerce’s `ProductQuery::hasVariant` and `VariantQuery::hasProduct` properties bypass the `unset()` blocklist added to `ElementIndexesController` in GHSA-2453-mppf-46cj.\n\nThe blocklist only strips top-level Yii2 Query properties (`where`, `orderBy`, etc.), but `hasVariant` and `hasProduct` pass\nthrough untouched. Internally, these properties call `Craft::configure()` on a subquery without sanitization, re-introducing SQL injection via `criteria[hasVariant][where]=INJECTED_SQL`.\n\nAn authenticated control panel user can perform boolean-based blind SQL injection through the patched `ElementIndexesController` and extract arbitrary database contents.\n\n## Impact\n\n* Full database read access via blind SQL injection\n* Privilege escalation via security key extraction → forged admin sessions\n\n## Prerequisites\n* Authenticated control panel user\n* Commerce plugin installed\n* Products with variants in the database",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Packagist",
+        "name": "craftcms/commerce"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "5.0.0"
+            },
+            {
+              "fixed": "5.6.0"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/craftcms/commerce/security/advisories/GHSA-r54v-qq87-px5r"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-32272"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/craftcms/commerce/pull/4232"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://github.com/advisories/GHSA-2453-mppf-46cj"
+    },
+    {
+      "type": "PACKAGE",
+      "url": "https://github.com/craftcms/commerce"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/craftcms/commerce/releases/tag/5.6.0"
+    }
+  ],
+  "database_specific": {
+    "cwe_ids": [
+      "CWE-89"
+    ],
+    "severity": "HIGH",
+    "github_reviewed": true,
+    "github_reviewed_at": "2026-04-14T00:06:56Z",
+    "nvd_published_at": "2026-04-13T21:16:24Z"
+  }
+}

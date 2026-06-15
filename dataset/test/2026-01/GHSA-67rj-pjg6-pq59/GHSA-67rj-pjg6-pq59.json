@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.4.0",
+  "id": "GHSA-67rj-pjg6-pq59",
+  "modified": "2026-01-21T16:21:29Z",
+  "published": "2026-01-13T14:52:31Z",
+  "aliases": [
+    "CVE-2025-68702"
+  ],
+  "summary": "Jervis Has a SHA-256 Hex String Padding Bug",
+  "details": "### Vulnerability\n\nhttps://github.com/samrocketman/jervis/blob/157d2b63ffa5c4bb1d8ee2254950fd2231de2b05/src/main/groovy/net/gleske/jervis/tools/SecurityIO.groovy#L622-L626\n\n`padLeft(32, '0')` should be `padLeft(64, '0')`. SHA-256 produces 32 bytes = 64 hex characters.\n\n### Impact\n\n* Inconsistent hash lengths when leading bytes are zero\n* Comparison failures for hashes with leading zeros\n* Potential security issues in hash-based comparisons\n* Could cause subtle bugs in systems relying on consistent hash lengths\n\nSeverity is considered low for internal uses of this library but if there's any consumer using these methods directly then this is considered high.\n\n### Patches\n\nUpgrade to Jervis 2.2.\n\n### Workarounds\n\nUse an alternate SHA-256 hash function or upgrade.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Maven",
+        "name": "net.gleske:jervis"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.2"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/samrocketman/jervis/security/advisories/GHSA-67rj-pjg6-pq59"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-68702"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/samrocketman/jervis/commit/c3981ff71de7b0f767dfe7b37a2372cb2a51974a"
+    },
+    {
+      "type": "PACKAGE",
+      "url": "https://github.com/samrocketman/jervis"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/samrocketman/jervis/blob/157d2b63ffa5c4bb1d8ee2254950fd2231de2b05/src/main/groovy/net/gleske/jervis/tools/SecurityIO.groovy#L622-L626"
+    },
+    {
+      "type": "WEB",
+      "url": "http://github.com/samrocketman/jervis/commit/c3981ff71de7b0f767dfe7b37a2372cb2a51974a"
+    }
+  ],
+  "database_specific": {
+    "cwe_ids": [
+      "CWE-327"
+    ],
+    "severity": "HIGH",
+    "github_reviewed": true,
+    "github_reviewed_at": "2026-01-13T14:52:31Z",
+    "nvd_published_at": "2026-01-13T20:16:07Z"
+  }
+}

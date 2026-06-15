@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.4.0",
+  "id": "GHSA-4v8w-gg5j-ph37",
+  "modified": "2026-03-06T00:14:39Z",
+  "published": "2025-11-03T17:07:36Z",
+  "aliases": [
+    "CVE-2025-47776"
+  ],
+  "summary": "MantisBT vulnerable to authentication bypass for some passwords due to PHP type juggling",
+  "details": "Due to an incorrect use of loose (`==`) instead of strict (`===`) comparison in the [authentication code][1], PHP type juggling will cause interpretation of certain MD5 hashes as numbers, specifically those matching scientific notation.\n\n[1]: https://github.com/mantisbt/mantisbt/blob/0fb502dd613991e892ed2224ac5ea3e40ba632bc/core/authentication_api.php#L782\n\n### Impact\nOn MantisBT instances configured to use the *MD5* login method, user accounts having a password hash evaluating to zero (i.e. matching regex `^0+[Ee][0-9]+$`) are vulnerable, allowing an attacker knowing the victim's username to login without knowledge of their actual password, using any other password having a  hash evaluating to zero, for example `comito5` (0e579603064547166083907005281618). \n\nNo password bruteforcing for individual users is needed, thus $g_max_failed_login_count does not protect against the attack.\n\n### Patches\n* https://github.com/mantisbt/mantisbt/commit/966554a19cf1bdbcfbfb3004766979faa748f9a2\n\n### Workarounds\nCheck the database for vulnerable accounts, and change those users' passwords, e.g. for MySQL:\n```sql\nSELECT username, email FROM mantis_user_table WHERE password REGEXP '^0+[Ee][0-9]+$'\n```\n\n### References\n- https://mantisbt.org/bugs/view.php?id=35967\n\n### Credits\nThanks to Harry Sintonen / Reversec for discovering and reporting the issue.",
+  "severity": [
+    {
+      "type": "CVSS_V3",
+      "score": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+    },
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:H/VA:N/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Packagist",
+        "name": "mantisbt/mantisbt"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "2.27.2"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/mantisbt/mantisbt/security/advisories/GHSA-4v8w-gg5j-ph37"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2025-47776"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/mantisbt/mantisbt/commit/966554a19cf1bdbcfbfb3004766979faa748f9a2"
+    },
+    {
+      "type": "PACKAGE",
+      "url": "https://github.com/mantisbt/mantisbt"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/mantisbt/mantisbt/blob/0fb502dd613991e892ed2224ac5ea3e40ba632bc/core/authentication_api.php#L782"
+    },
+    {
+      "type": "WEB",
+      "url": "https://mantisbt.org/bugs/view.php?id=35967"
+    }
+  ],
+  "database_specific": {
+    "cwe_ids": [
+      "CWE-305",
+      "CWE-697"
+    ],
+    "severity": "HIGH",
+    "github_reviewed": true,
+    "github_reviewed_at": "2025-11-03T17:07:36Z",
+    "nvd_published_at": "2025-11-04T21:15:37Z"
+  }
+}

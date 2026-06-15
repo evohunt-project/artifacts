@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.4.0",
+  "id": "GHSA-234q-vvw3-mrfq",
+  "modified": "2026-03-04T20:52:32Z",
+  "published": "2026-03-04T20:52:31Z",
+  "aliases": [
+    "CVE-2026-29069"
+  ],
+  "summary": "Craft CMS has unauthenticated activation email trigger with potential user enumeration",
+  "details": "The `actionSendActivationEmail()` endpoint is accessible to unauthenticated users and does not require a permission check for pending users. An attacker with no prior access can trigger activation emails for any pending user account by knowing or guessing the user ID. If the attacker controls the target user’s email address, they can activate the account and gain access to the system.\n\nThe vulnerability is not that anonymous access exists - there’s a legitimate use case for it. The vulnerability is that the endpoint accepts arbitrary `userId` parameters without verifying ownership.\n\nCraft CMS allows public user registration. When a user registers but doesn’t receive their activation email (spam filter, typo correction, etc.), they need a way to request a resend. This is why `send-activation-email` is in the `allowAnonymous` array - it’s intentional self-service functionality.\n\n### The Security Gap\n\nThe endpoint accepts `userId` as the identifier:\n```php\n$userId = $this->request->getRequiredBodyParam('userId');\n```\n\nThis allows any visitor to trigger activation emails for any pending user, not just their own registration.\n\n---\n\n## Background\n\nWhen administrators create new user accounts in Craft CMS, users are created in a “pending” state until they activate their account via an emailed link. The `actionSendActivationEmail()` function sends (or resends) this activation email.\n\n**Expected Behavior:** Anonymous users should only be able to resend activation emails for their own registration.\n\n**Actual Behavior:**\n1. The endpoint is listed in `allowAnonymous` - no login required (intentional for self-service)\n2. For pending users, there is NO ownership verification\n3. Any unauthenticated visitor can trigger activation emails for ANY pending user by ID\n\n---\n\n## Attack Scenarios\n\n### Scenario 1: Targeted Account Takeover\n\n**Prerequisites:** Attacker controls target user’s email (compromised email, shared mailbox, typosquatting, etc.)\n\n```\n1. Admin creates a user account for victim@company.com\n2. User account is in PENDING state (hasn’t activated yet)\n3. Attacker has compromised victim@company.com (or it’s a typo of attacker’s domain)\n4. Attacker discovers user ID (brute-force, GraphQL enumeration, or insider knowledge)\n5. Attacker (unauthenticated) triggers: POST /actions/users/send-activation-email\n6. Activation email sent to victim@company.com (attacker-controlled)\n7. Attacker clicks activation link, sets password\n8. Attacker gains access as that user with pre-assigned permissions\n```\n\n### Scenario 2: User ID Brute-Force Enumeration\n\n```\n1. Attacker iterates through user IDs (1, 2, 3, ...)\n2. For each ID, the attacker calls send-activation-email\n3. Response reveals user state:\n   - \"Activation email sent.\" = Pending user exists\n   - \"User not found\" = No user with this ID\n   - \"Activation emails can only be sent to inactive or pending users\" = Active user exists\n4. Attacker builds a map of all user IDs and their states\n5. For any pending user whose email an attacker controls → account takeover\n```\n\n### Scenario 3: GraphQL + Targeted Attack\n\n**Prerequisites:** GraphQL public schema allows user queries\n\n```\n1. Attacker queries GraphQL: { users { id email status } }\n2. Filters for pending users\n3. Cross-references with emails attacker controls\n4. Triggers activation for the target user\n5. Account takeover\n```\n\n### Scenario 4: Email Spam / Harassment\n\n```\n1. Attacker brute-forces all pending user IDs\n2. Repeatedly triggers activation emails\n3. Victims receive unwanted emails from the Craft site\n4. Potential for:\n   - Reputation damage to the site\n   - Email deliverability issues (spam reports)\n   - User confusion/phishing vector\n```\n\n---\n\n## References\n\nhttps://github.com/craftcms/cms/commit/c3d02d4a7246f516933f42106c0a67ce062f68d8",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:H/VA:N/SC:N/SI:N/SA:N/E:P"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Packagist",
+        "name": "craftcms/cms"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "5.0.0-RC1"
+            },
+            {
+              "fixed": "5.9.0-beta.2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "Packagist",
+        "name": "craftcms/cms"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.0.0-RC1"
+            },
+            {
+              "fixed": "4.17.0-beta.2"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/craftcms/cms/security/advisories/GHSA-234q-vvw3-mrfq"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-29069"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/craftcms/cms/commit/c3d02d4a7246f516933f42106c0a67ce062f68d8"
+    },
+    {
+      "type": "PACKAGE",
+      "url": "https://github.com/craftcms/cms"
+    }
+  ],
+  "database_specific": {
+    "cwe_ids": [
+      "CWE-287",
+      "CWE-639"
+    ],
+    "severity": "HIGH",
+    "github_reviewed": true,
+    "github_reviewed_at": "2026-03-04T20:52:31Z",
+    "nvd_published_at": "2026-03-04T17:16:22Z"
+  }
+}

