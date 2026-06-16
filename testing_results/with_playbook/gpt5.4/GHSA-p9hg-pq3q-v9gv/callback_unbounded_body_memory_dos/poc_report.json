@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction builds a helper from the pinned vulnerable source, confirms that a small callback body reaches the real handler and returns a normal `400`, and then shows that a `1 GiB` callback body OOM-kills the process under a `512 MiB` memory cap.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A small-body control should reach the real callback handler and fail normally with HTTP 400, while an oversized callback body should force the handler's unbounded body read to exhaust memory and terminate the process with exit code 137 under a 512 MiB container limit.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `free5gc/udm` at `9308405abd0ddc01ce9499a125536002bca9b5cc`, built the helper binary from that source, observed the small-body control message `unexpected completion with status 400`, and then observed the oversized-body run terminate with exit code 137 after the handler started.",
+  "verification_method": "The run script first builds the helper from the pinned vulnerable source and runs a small-body control in the same 512 MiB memory limit to prove the handler starts and reaches normal JSON parsing. It then reruns the same helper with a `1 GiB` body and treats exit code 137 as the success oracle for memory exhaustion on the identical handler path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Small-body control output included `unexpected completion with status 400` after the handler logged a JSON parse error.",
+    "Oversized-body trigger exited with status 137 under `docker run --memory 512m`, matching an OOM-kill of the helper process on the vulnerable path."
+  ],
+  "limitations_or_blockers": [
+    "The bundle exercises the real callback handler directly with a compiled helper because stock UDM startup blocks on mandatory NRF registration before binding its HTTP port. The vulnerable `GetRawData()` path is unchanged in the helper-driven execution."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container so the helper can be built from the vulnerable source before verification.",
+    "pinned_commit_or_ref": "9308405abd0ddc01ce9499a125536002bca9b5cc",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/callback_dos_main.go"
+    ]
+  }
+}

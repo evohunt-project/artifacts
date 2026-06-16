@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "storage_quota_bypass",
+  "summary": "The reproduction starts Sliver's real multiplayer gRPC listener with a crackstation-scoped operator, sets the crack file quota to 2048 bytes, creates a 1024-byte logical crack file, and then uploads twelve duplicate 256-byte chunks using the same chunk number. The server accepts all uploads and stores 3072 bytes on disk while tracked quota usage remains 1024 bytes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privilege crackstation operator should be able to exceed the configured crack file disk quota and grow actual server-side stored chunk bytes beyond MaxDiskUsage.",
+  "actual_observed_result": "The PoC reported {\"configured_quota_bytes\":2048,\"reserved_usage_bytes\":1024,\"actual_chunk_bytes\":3072,\"accepted_duplicate_uploads\":12,\"stored_chunk_records\":12}, proving that duplicate uploads for one logical file exceeded the configured quota without server rejection.",
+  "verification_method": "The exploit driver measures both the server's tracked quota usage via CrackFilesDiskUsage and the actual bytes written under the crack chunk storage directory. Verification passes only if tracked usage stays within quota while actual stored bytes exceed it after accepted uploads.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/output/poc-output.json",
+    "PoC stdout contained status=vulnerable with configured_quota_bytes=2048, reserved_usage_bytes=1024, and actual_chunk_bytes=3072."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction stages a disposable copy of the checked-out repo under reproduction/.work/repo-copy so the original target_repo_dir remains unmodified while the host-based build fills in missing embedded-asset placeholder files required by this dry-run snapshot."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/go.mod",
+      "reproduction/main.go"
+    ]
+  }
+}

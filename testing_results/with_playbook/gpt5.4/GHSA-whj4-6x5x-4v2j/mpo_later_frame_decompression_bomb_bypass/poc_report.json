@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirmed that a crafted MPO later frame bypasses Pillow's default decompression-bomb guard, while the same oversized JPEG bytes are blocked when opened directly.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a standalone `20000x10000` JPEG is rejected with `DecompressionBombError`, but the same later-frame JPEG bytes load successfully when reached as frame 2 of a crafted MPO, with substantial memory growth during the unchecked load.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Pillow commit `e55c000d1b848fa6b7df2db171c6dbc00b2175a4`, built the reproduction image, and printed `EVOHUNT_MPO_BOMB_BYPASS_CONFIRMED`. The standalone JPEG control failed with `DecompressionBombError`, while the crafted MPO later frame loaded successfully at `20000x10000` and increased reported RSS from `15488` KB to `211072` KB (`rss_delta=195584` KB).",
+  "verification_method": "The verifier installs the pinned target checkout, generates a two-frame MPO with a tiny first frame and a later JPEG SOF patched to `20000x10000`, then compares two paths using the same later-frame JPEG bytes: direct JPEG open must raise `DecompressionBombError`, and MPO `seek(1) -> load()` must succeed and emit the proof marker.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Verifier output included `EVOHUNT_MPO_BOMB_BYPASS_CONFIRMED`.",
+    "The direct JPEG control path failed with `DecompressionBombError: Image size (200000000 pixels) exceeds limit of 178956970 pixels`.",
+    "The MPO bypass path reported `later_frame_size=[20000, 10000]` and `status=load_ok`.",
+    "The MPO bypass path reported `rss_before=15488`, `rss_after_load=211072`, and `rss_delta=195584` in KB."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "e55c000d1b848fa6b7df2db171c6dbc00b2175a4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

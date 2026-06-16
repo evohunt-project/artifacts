@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution_and_object_shape",
+  "summary": "The Docker-based reproduction confirmed that `hasOwnProperty` token collisions break internal plain-object lookup maps, causing DOM API denial of service and sibling parse-path corruption.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that attacker-controlled class tokens or selector strings can trigger `TypeError` exceptions in `getElementsByClassName`, and that the same anti-pattern corrupts attribute parsing when `hasOwnProperty` is used as an attribute name before another attribute.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned xmldom at tag 0.8.12, built the reproduction image, and printed `QUERY_TRIGGER_CONFIRMED`, `CONTENT_TRIGGER_CONFIRMED`, `ATTRIBUTE_TRACKING_CORRUPTION_CONFIRMED`, and `OBJECT_SHAPE_HASOWNPROPERTY_DOS_CONFIRMED`.",
+  "verification_method": "The verification helper runs a Node harness inside the container. It asserts that `getElementsByClassName` throws the expected TypeError when the reserved token is present in either the selector or parsed DOM content, and it separately verifies that attribute parsing returns a corrupted text-only document for `<r hasOwnProperty=\"1\" x=\"2\"/>`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `QUERY_TRIGGER_CONFIRMED` for an attacker-controlled selector string against a benign DOM.",
+    "The run printed `CONTENT_TRIGGER_CONFIRMED` for a benign query against a DOM parsed from `class=\"hasOwnProperty x\"`.",
+    "The run printed `ATTRIBUTE_TRACKING_CORRUPTION_CONFIRMED` after verifying that `<r hasOwnProperty=\"1\" x=\"2\"/>` produced no `documentElement` and degraded into escaped text.",
+    "The verification helper emitted `OBJECT_SHAPE_HASOWNPROPERTY_DOS_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0.8.12",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

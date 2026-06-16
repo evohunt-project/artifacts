@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "account_enumeration",
+  "summary": "The Docker-based reproduction confirms that Craft CMS 4.16.17's shipped forgot-password flow returns a success response for a real credentialed account and a validation error for a nonexistent account, and that enabling `preventUserEnumeration` normalizes the response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the default forgot-password endpoint leaks account existence by returning different responses for existing and nonexistent users.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned vulnerable Craft CMS revision, built the reproduction image, executed the controller-path Codeception tests, and produced `OK (2 tests, 13 assertions)` followed by the proof line confirming `Password reset email sent.` for `user1` and `Invalid username or email.` for `does-not-exist` under the shipped default.",
+  "verification_method": "The run script injects a focused Codeception unit test into the pinned Craft checkout, exercises `UsersController::actionSendPasswordResetEmail()` with an existing and a nonexistent login name, and then checks both the status codes and messages. A second assertion verifies that enabling `preventUserEnumeration` changes both paths to the same success response, distinguishing the leak from a generic mail or setup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction run completed successfully through `./reproduction/run.sh`.",
+    "Codeception reported `OK (2 tests, 13 assertions)`.",
+    "The verification script emitted `[evohunt] PROOF: existing account returns a success message while a nonexistent account returns a validation error under the shipped default`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out tag `4.16.17`, asserts commit `b5f17cd3246cf10034a914464964757b0b84bcd3`, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b5f17cd3246cf10034a914464964757b0b84bcd3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/password_reset_enumeration_test.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction clones the audited Caddy snapshot and confirms that malformed expression matcher JSON panics during config validation instead of returning a normal validation error.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make caddy validate crash with an interface-conversion panic while decoding a malformed http.matchers.expression object from JSON.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit db256b53e517191f52eca4ea11d415d7a11e729f, built the reproduction image, and ran go run ./cmd/caddy validate --config /app/bad_expr_missing_keys.json inside the container. The command panicked with 'interface conversion: interface {} is nil, not string' and a stack frame at /target-repo/modules/caddyhttp/celmatcher.go:115, then exited with status 2.",
+  "verification_method": "verify.sh runs go run ./cmd/caddy validate --config /app/bad_expr_missing_keys.json inside the mounted target checkout, requires a non-zero exit, and greps for both the exact panic string and the /target-repo/modules/caddyhttp/celmatcher.go:115 stack frame.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted the exact panic string 'interface conversion: interface {} is nil, not string'.",
+    "The stack trace included /target-repo/modules/caddyhttp/celmatcher.go:115 inside MatchExpression.UnmarshalJSON.",
+    "The run completed with [evohunt] SUCCESS: CEL matcher panic reproduced."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "db256b53e517191f52eca4ea11d415d7a11e729f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/bad_expr_missing_keys.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "Running `./reproduction/run.sh` against Angular commit `b2b903957a5bafc343f8970e0562d3d812a121af` cloned the upstream repository, built the Dockerized verifier, and demonstrated that a malicious sourcemap caused Angular's linker sourcemap loader to recover attacker-selected local file contents (`TOP_SECRET_EVOHUNT`) from `secret.html`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that attacker-controlled sourcemap paths are resolved to an arbitrary local file and that the recovered file contents become available through the linker sourcemap-loading path with the external-template precondition `line=0` and `column=0`.",
+  "actual_observed_result": "The documented host command completed successfully and printed JSON showing `mappedFile` equal to the attacker-selected `secret.html`, `line` equal to `0`, `column` equal to `0`, and `recoveredTemplate` equal to `TOP_SECRET_EVOHUNT`, followed by `EVOHUNT_SUCCESS` and the wrapper's success banner.",
+  "verification_method": "`reproduction/verify.sh` runs `tsx` against `reproduction/poc.ts` and fails unless the output contains `\"recoveredTemplate\":\"TOP_SECRET_EVOHUNT\"`, `\"line\":0`, `\"column\":0`, and `EVOHUNT_SUCCESS`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "{\"sourcePath\":\"/tmp/evohunt-sourcemap-tDa8CY/pkg/malicious.js\",\"secretPath\":\"/tmp/evohunt-sourcemap-tDa8CY/secret.html\",\"mappedFile\":\"/tmp/evohunt-sourcemap-tDa8CY/secret.html\",\"line\":0,\"column\":0,\"recoveredTemplate\":\"TOP_SECRET_EVOHUNT\"}",
+    "EVOHUNT_SUCCESS",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host into a temporary workspace under the session directory, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b2b903957a5bafc343f8970e0562d3d812a121af",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/poc.ts"
+    ]
+  }
+}

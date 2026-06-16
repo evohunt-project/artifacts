@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction clones Decidim `v0.30.4`, generates the upstream comments dummy app, and proves that the GraphQL mutation root can create a comment on an unpublished proposal that the query path refuses to expose.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that querying the unpublished proposal through GraphQL returns no commentable object while the mutation-root `commentable(...){ addComment(...) }` call still creates a comment on that unpublished proposal.",
+  "actual_observed_result": "Running `./reproduction/run.sh` completed successfully and emitted `QUERY_REJECTED_MUTATION_CREATED_COMMENT`. The proof JSON recorded `query_visible=false`, `comment_delta=1`, `mutation_response.commentable.addComment.id=1`, `mutation_response.commentable.addComment.body=\"evohunt unpublished proposal comment\"`, and `proposal_published=false`.",
+  "verification_method": "The reproduction generates `decidim-comments/spec/decidim_dummy_app` with Decidim's own test-app task, then executes a one-off RSpec proof that 1) queries the unpublished proposal through `Decidim::Api::QueryType` and expects `commentable` to be `nil`, and 2) executes the mutation-root `commentable(...){ addComment(...) }` path and expects the stored comment count to increase by one for the same unpublished proposal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The successful run emitted the `QUERY_REJECTED_MUTATION_CREATED_COMMENT` marker after the one-off RSpec proof completed.",
+    "The runtime proof recorded `query_visible=false`, `comment_delta=1`, `commentable_type=\"Decidim::Proposals::Proposal\"`, `commentable_id=1`, and `proposal_published=false`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.30.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_inside_container.sh",
+      "reproduction/poc_spec.rb"
+    ]
+  }
+}

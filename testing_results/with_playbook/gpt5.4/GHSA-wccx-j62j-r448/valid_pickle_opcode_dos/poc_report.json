@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction clones the pinned upstream `v0.1.8` revision, feeds a valid protocol-0 float pickle into both `fickling.loads()` and the CLI safety-check path, and verifies that both crash with uncaught `NotImplementedError` for the unimplemented `FLOAT` opcode.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A valid pickle using the protocol-0 `FLOAT` opcode should trigger an uncaught `NotImplementedError` instead of being rejected safely, demonstrating an availability failure in Fickling's default parser and CLI scan paths.",
+  "actual_observed_result": "Running `./reproduction/run.sh` on the generated bundle printed `PROOF_FLOAT_OPCODE_CRASH: TODO: Add support for Opcode FLOAT`, then `PROOF_CLI_FLOAT_OPCODE_CRASH`, and the CLI traceback ended at `fickling/fickle.py` with `NotImplementedError: TODO: Add support for Opcode FLOAT`. The run finished with `VERIFICATION_PASSED` and `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "Inside the container, `reproduce.py` first calls `fickling.loads(pickle.dumps(1.25, protocol=0))` and requires a `NotImplementedError` containing the exact `TODO: Add support for Opcode FLOAT` fragment. It then writes the same payload to disk, invokes `python -m fickling --check-safety` against that file, and requires the same fragment in the CLI traceback. Host-side `run.sh` tees the container output and fails unless both proof markers and the `VERIFICATION_PASSED` footer appear.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "PROOF_FLOAT_OPCODE_CRASH: TODO: Add support for Opcode FLOAT",
+    "PROOF_CLI_FLOAT_OPCODE_CRASH",
+    "CLI traceback ends in `NotImplementedError: TODO: Add support for Opcode FLOAT` at `fickling/fickle.py`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b6a983a3960cf1698276cb8647fd0007247a5eeb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/reproduce.py"
+    ]
+  }
+}

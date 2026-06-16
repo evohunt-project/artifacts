@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:16:52Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_61a15eaf",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-m272-9rp6-32mc/GHSA-m272-9rp6-32mc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "csrf_get_method_confusion_standard_rpc_handler",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_61a15eaf/csrf_get_method_confusion_standard_rpc_handler",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_61a15eaf/csrf_get_method_confusion_standard_rpc_handler/vulnerability_report.json",
+      "title": "StandardRPCHandler accepts GET requests for POST-only procedures, enabling browser-driven CSRF",
+      "vulnerability_type": "csrf_method_confusion",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is client-side prototype pollution in StandardRPCJsonSerializer.deserialize() via attacker-controlled meta/maps path segments, but this finding is server-side GET method confusion in StandardRPCMatcher and StandardRPCCodec that dispatches POST-only procedures over GET.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only qualifying finding targets server-side GET transport handling in @orpc/server, while the advisory targets client-side deserialization in @orpc/client that writes through attacker-controlled meta/maps segments into prototype-bearing objects before validation.",
+    "evidence": [
+      "The advisory JSON names packages/client/src/adapters/standard/rpc-json-serializer.ts and describes prototype pollution through deserialize() processing of meta and maps segments such as __proto__ and constructor.",
+      "Upstream fix commit 1dba06fc6f938c2486de303c2fa096bc1c8418b5 adds Object.hasOwn(...) checks inside StandardRPCJsonSerializer.deserialize() before descending attacker-controlled path segments, confirming the advisory root cause is unsafe path traversal during deserialization.",
+      "The qualifying finding's report and PoC instead target packages/server/src/adapters/standard/rpc-matcher.ts, packages/server/src/adapters/standard/rpc-codec.ts, and packages/server/src/plugins/strict-get-method.ts, showing GET requests can invoke POST-only procedures and mutate server state.",
+      "The finding never describes or exercises the advisory's deserializer write vectors, Object.prototype pollution, or the pre-validation deserialize path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_61a15eaf/csrf_get_method_confusion_standard_rpc_handler",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_61a15eaf/csrf_get_method_confusion_standard_rpc_handler/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_61a15eaf/csrf_get_method_confusion_standard_rpc_handler/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

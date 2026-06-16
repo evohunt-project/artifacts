@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "revocation_bypass",
+  "summary": "The Docker-based reproduction generates a revoked code-signing certificate chain, confirms the leaf serial is present in the CRL, and shows that Signify's default VerificationContext still accepts the revoked leaf while hard-fail revocation mode rejects the same certificate.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a certificate listed in a CRL is still accepted by Signify's default verification path, while an explicitly hardened verification context rejects it as revoked.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Signify v0.9.1, built the reproduction image, and emitted CRL_HAS_SERIAL=True, DEFAULT_VERIFY_OK=CN=EvoHunt Root CA -> CN=Revoked Leaf, and STRICT_VERIFY_ERR=CertificateVerificationError: Chain verification from CN=Revoked Leaf ... failed: CRL indicates the end-entity certificate was revoked ..., followed by EVOHUNT_STRICT_REJECTION.",
+  "verification_method": "The helper first generates a local CA, a code-signing leaf certificate, and a CRL that explicitly revokes the leaf. It then runs VerificationContext.verify() twice against the same leaf: once with Signify's default settings and once with allow_fetching=true plus revocation_mode=hard-fail against the leaf's local CRL distribution point. The run only succeeds if the default path accepts the revoked certificate and the hardened path rejects it with a revocation message.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "CRL_HAS_SERIAL=True",
+    "DEFAULT_VERIFY_OK=CN=EvoHunt Root CA -> CN=Revoked Leaf",
+    "STRICT_VERIFY_ERR=CertificateVerificationError: Chain verification from CN=Revoked Leaf ... failed: CRL indicates the end-entity certificate was revoked ...",
+    "EVOHUNT_STRICT_REJECTION: hard-fail revocation mode rejected the same certificate"
+  ],
+  "limitations_or_blockers": [
+    "The PoC exercises the shared VerificationContext path directly instead of minting a PE file, but SignedData.verify() and AuthenticodeSignature.verify() reach the same defaults via _create_verification_context()."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "bb096df5fe167b97a21a0aa1c5d55de8c31d8614",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

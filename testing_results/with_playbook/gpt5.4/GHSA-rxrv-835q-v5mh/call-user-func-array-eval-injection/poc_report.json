@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_dynamic_evaluation",
+  "summary": "The Docker-based reproduction confirms that a crafted array-form callback reaches the unescaped eval path in call_user_func_array, executes attacker-controlled JavaScript during callback resolution, and returns an attacker-selected callable.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print EVOHUNT_CALL_USER_FUNC_ARRAY_CODE_EXEC_CONFIRMED after attacker-controlled JavaScript executes during callback resolution, and the returned callable should execute attacker-selected code.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned locutus at 57ea89d4da3b9bcfc983fd27da77a1bdd5d53f01, built the reproduction image, printed EVOHUNT_CALL_USER_FUNC_ARRAY_CODE_EXEC_CONFIRMED, printed that the returned callable executed attacker-selected body 1337, and exited successfully.",
+  "verification_method": "verify.js requires the vulnerable helper from the mounted checkout, triggers the cb[1] injection, asserts that a global proof marker was set during eval, and checks that the returned callable executes the attacker-selected body.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed EVOHUNT_CALL_USER_FUNC_ARRAY_CODE_EXEC_CONFIRMED.",
+    "The verification helper confirmed that attacker-controlled JavaScript set the proof marker before normal callback validation completed.",
+    "The returned callable executed attacker-selected code and printed 1337."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh shallow-clones the target repository on the host from the v2.0.38 tag, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "57ea89d4da3b9bcfc983fd27da77a1bdd5d53f01",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js"
+    ]
+  }
+}

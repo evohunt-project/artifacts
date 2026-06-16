@@ -1,0 +1,88 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:05:39.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fe5f66f",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-8h58-w33p-wq3g/GHSA-8h58-w33p-wq3g.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "dearmor_limit_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fe5f66f/dearmor_limit_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fe5f66f/dearmor_limit_bypass/vulnerability_report.json",
+      "title": "Dearmor body size limits are ignored for armored message payloads",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is an ASCII-armor body limit bypass in `src/armor/reader.rs`, while the advisory fixes recursion and deep nesting in composed message parsing and signed-message readers.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "pkesk_short_wrapped_key_panic",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fe5f66f/pkesk_short_wrapped_key_panic",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fe5f66f/pkesk_short_wrapped_key_panic/vulnerability_report.json",
+      "title": "Short wrapped PKESK session keys panic during AES-KW unwrap",
+      "vulnerability_type": "availability_panic_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a short-buffer underflow panic in the PKESK decrypt path (`src/types/pkesk.rs`, `src/types/params/plain_secret.rs`, `src/crypto/aes_kw.rs`), not the advisory's deeply nested message parsing recursion bug.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause. The advisory is a stack-overflow denial of service from deeply nested message handling, but the accepted session findings are an armor body-size limit bypass and a PKESK decrypt-path panic.",
+    "evidence": [
+      "The advisory summary describes a crash from parsing deeply nested message layers, such as many signatures, in rPGP's message handling subsystem.",
+      "The upstream fix commit `e82f2c7494ba277d62fd372d69b2c008473bbef8` is titled `fix: recursion issues in deeply nested messages` and rewrites `src/composed/message/parser.rs`, replaces signed-message readers with `src/composed/message/reader/signed_many.rs`, and adds deep-nesting regression tests and fuzz crash files.",
+      "The `dearmor_limit_bypass` finding is rooted in `src/armor/reader.rs` body reads ignoring `DearmorOptions::limit`; its PoC only demonstrates that a 1-byte dearmor limit is bypassed for armored payload bytes.",
+      "The `pkesk_short_wrapped_key_panic` finding is rooted in `src/types/pkesk.rs`, `src/types/params/plain_secret.rs`, and `src/crypto/aes_kw.rs`; its PoC mutates a PKESK wrapped session key to one byte and crashes during decrypt-path AES-KW unwrap.",
+      "The session manifest under `.judge/input_manifest.json` marks only `dearmor_limit_bypass` and `pkesk_short_wrapped_key_panic` as final `qualifying_vuln` findings."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fe5f66f/dearmor_limit_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fe5f66f/dearmor_limit_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fe5f66f/dearmor_limit_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fe5f66f/pkesk_short_wrapped_key_panic",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fe5f66f/pkesk_short_wrapped_key_panic/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fe5f66f/pkesk_short_wrapped_key_panic/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

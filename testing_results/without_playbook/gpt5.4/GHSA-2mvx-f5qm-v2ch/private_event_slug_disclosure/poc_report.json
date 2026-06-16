@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that My Calendar treats the seeded event as hidden for anonymous users but still discloses its slug in the first redirect response for `?mc_id=<occur_id>`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a private event that anonymous users cannot view directly and then demonstrate that an anonymous `mc_id` request returns an HTTP 302 `Location` header containing the hidden event slug.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned My Calendar at `9b58483dccb75a596014213ffe3376eb2d330f1a`, installed WordPress, activated the plugin, seeded a private event, confirmed `EVOHUNT_HIDDEN=1`, and observed `HTTP/1.1 302 Found` with `Location: http://wordpress/mc-events/private-calendar-event-evohunt-private-slug-leak/`. The verifier then emitted `[evohunt] LEAK_CONFIRMED private event slug disclosed in redirect` and the runner finished with `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The run first checks that the seeded event is hidden from anonymous users by evaluating `mc_event_is_hidden()`. It then sends an anonymous request for `/?mc_id=<occur_id>` and passes only if the first response is an HTTP 302 whose `Location` header contains the expected slug for that hidden event.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The seed step emitted `EVOHUNT_OCCUR_ID=2` and `EVOHUNT_EXPECTED_SLUG=private-calendar-event-evohunt-private-slug-leak`.",
+    "The visibility check emitted `EVOHUNT_HIDDEN=1`, confirming the plugin considers the seeded event hidden from anonymous users.",
+    "The anonymous request returned `HTTP/1.1 302 Found` with `Location: http://wordpress/mc-events/private-calendar-event-evohunt-private-slug-leak/`.",
+    "The verifier emitted `[evohunt] LEAK_CONFIRMED private event slug disclosed in redirect` and the runner emitted `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout read-only into the runtime containers at `/target-repo` while also exposing it as the installed plugin source.",
+    "pinned_commit_or_ref": "9b58483dccb75a596014213ffe3376eb2d330f1a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/docker-compose.yml",
+      "reproduction/seed-private-event.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

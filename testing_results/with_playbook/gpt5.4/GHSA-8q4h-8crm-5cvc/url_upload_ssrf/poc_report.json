@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The reproduction confirms that a URL upload to an attacker-controlled public-looking address triggers a guarded first fetch and then an unguarded second request that reaches a loopback-only canary service through redirect handling in get_headers().",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should produce a second outbound request to the attacker URL and then a redirected request from the target into its own loopback canary service, proving SSRF bypass of validate_address().",
+  "actual_observed_result": "Running ./reproduction/run.sh against commit 5e463d1384972dffcb736ad3c94f35af10656ca2 uploaded poc.txt successfully, logged ATTACKER_REQUEST count=1 and count=2 on the attacker service, and logged EVOHUNT_CANARY_HIT method=GET path=/canary from inside the target container during the POST /php/connector.minimal.php upload request.",
+  "verification_method": "run.sh launches the target and attacker on an isolated 11.0.0.0/24 Docker network, uses an exploit helper to perform cmd=upload with upload[0]=http://11.0.0.2:8001/poc.txt, and then verifies both the second attacker-side request and the loopback-only canary hit in the target logs. The canary proves the redirected second request reached a destination that the guarded fetch path would normally reject.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Attacker logs show ATTACKER_REQUEST count=1 method=GET path=/poc.txt and ATTACKER_REQUEST count=2 method=GET path=/poc.txt.",
+    "Target logs show EVOHUNT_CANARY_HIT method=GET path=/canary during the upload request.",
+    "The upload response added poc.txt to the managed files volume, confirming the SSRF happened on the repository-owned URL-upload path rather than on a failing bootstrap or unrelated request."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the target container at /target-repo.",
+    "pinned_commit_or_ref": "5e463d1384972dffcb736ad3c94f35af10656ca2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/start_target.sh",
+      "reproduction/attacker_server.py",
+      "reproduction/canary_server.py",
+      "reproduction/exploit.py"
+    ]
+  }
+}

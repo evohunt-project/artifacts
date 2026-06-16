@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "output_injection_xss",
+  "summary": "The Docker-based reproduction clones the matching upstream D-Tale commit, stores an HTML payload in an attacker-controlled dataset, enables HTML rendering for that column, opens the page in headless Chromium, and verifies same-origin exfiltration of a secret from a separate victim dataset.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause passive page load of the attacker dataset to execute injected JavaScript and exfiltrate the victim dataset secret VICTIM_TOP_SECRET from another D-Tale instance on the same origin.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, installed the pinned frontend dependencies, compiled the target frontend bundles, started D-Tale, created attacker and victim datasets, visited /dtale/main/2 in Playwright, and printed verifier JSON showing {\"status\": \"ok\", \"attacker_data_id\": \"2\", \"secret\": \"VICTIM_TOP_SECRET\", \"exfiltrated\": \"VICTIM_TOP_SECRET\"}.",
+  "verification_method": "The verifier first confirms that the payload round-trips through /dtale/data/<attacker_data_id>, then launches headless Chromium to load the attacker page and waits for a local exfiltration listener to receive the secret fetched through same-origin calls to /dtale/processes and /dtale/data/<victim_data_id>.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run successfully created an attacker-controlled dataset and updated its column format to {\"fmt\":{\"html\":true}}.",
+    "The browser visit to /dtale/main/2 triggered same-origin requests to /dtale/processes and /dtale/data/1?ids=[\"0-0\"].",
+    "The verifier observed and printed the success JSON {\"status\": \"ok\", \"attacker_data_id\": \"2\", \"secret\": \"VICTIM_TOP_SECRET\", \"exfiltrated\": \"VICTIM_TOP_SECRET\"}."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "27fb6f600f77170bcacb40d960ed4c43614139fe",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py",
+      "reproduction/python-requirements.txt"
+    ]
+  }
+}

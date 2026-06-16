@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The reproduction seeds a purchased downloadable-link record that points at a loopback proof server, invokes the vulnerable customer download controller, and verifies that the internal response body is returned through the storefront download flow.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should make Bagisto fetch `http://127.0.0.1:18080/proof.txt` from inside the vulnerable container via the purchased-download controller and return the proof token to the attacker-controlled download path.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Bagisto at `813e28551dd1d3207b9e275e6c2bd63f68f0f8b0`, installed dependencies, migrated MySQL, executed the vulnerable controller path, printed `EVOHUNT_LOOPBACK_SSRF_PROOF`, and confirmed `verified_download_used=1`.",
+  "verification_method": "The verification helper starts a loopback HTTP server with a unique proof token, invokes `DownloadableProductController::download()` as the owning customer, checks that the resulting download body exactly matches the loopback token, and confirms that the repository-side download counter incremented. This distinguishes a real server-side fetch from a generic file response or setup artifact.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted the exact proof token `EVOHUNT_LOOPBACK_SSRF_PROOF` from the downloaded file body.",
+    "The run emitted `verified_download_used=1`, confirming that the normal purchased-download path completed and updated application state.",
+    "The success signal appeared only after the vulnerable controller fetched the loopback URL through the application context."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "813e28551dd1d3207b9e275e6c2bd63f68f0f8b0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.php"
+    ]
+  }
+}

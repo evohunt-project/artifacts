@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "multipart_upload_quota_bypass",
+  "summary": "The reproduction starts a Mist-backed Wisp application with `max_files_size` set to 8 bytes, then sends a 1,050,000-byte multipart upload in multiple TCP write phases. Wisp responds with `200 OK` and reports the full uploaded file size, confirming that the configured file-size limit was bypassed.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an endpoint configured with `max_files_size=8` still accepts a 1,050,000-byte multipart upload and returns the proof string `proof accepted bytes=1050000 limit=8`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `ba26ff7968deec7304410e11ba7872ff8c87d944`, built the reproduction container, and produced `HTTP/1.1 200 OK` with body `proof accepted bytes=1050000 limit=8` before printing `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The exploit sends the multipart body in three phases so the uploaded file data is read before the terminating boundary arrives. Verification only passes if the HTTP response status is 200 and the exact proof string `proof accepted bytes=1050000 limit=8` is observed, distinguishing quota bypass from a normal rejection or parser failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP/1.1 200 OK",
+    "proof accepted bytes=1050000 limit=8",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "ba26ff7968deec7304410e11ba7872ff8c87d944",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/app.gleam",
+      "reproduction/exploit.py",
+      "reproduction/gleam.toml",
+      "reproduction/manifest.toml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

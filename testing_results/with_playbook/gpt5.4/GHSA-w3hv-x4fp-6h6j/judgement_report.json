@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:28:13.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8d566b68",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-w3hv-x4fp-6h6j/GHSA-w3hv-x4fp-6h6j.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "stale_scoped_mcp_token_survives_task_teardown",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8d566b68/stale_scoped_mcp_token_survives_task_teardown",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8d566b68/stale_scoped_mcp_token_survives_task_teardown/vulnerability_report.json",
+      "title": "Task-scoped MCP token survives task deletion and remains authorized for workspace actions",
+      "vulnerability_type": "token_lifecycle_auth_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a stale scoped-token lifecycle flaw on the `/mcp` bearer-token path after task deletion, while the advisory is a missing `Origin` validation check in the WebSocket upgrade handler at `packages/server/src/ws-bridge.ts:80-91`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's WebSocket-origin-validation bug. The only qualifying finding concerns stale task-scoped MCP bearer tokens remaining valid after task teardown, which is a different code path, guard failure, and exploit mechanism.",
+    "evidence": [
+      "The advisory describes cross-origin WebSocket hijacking caused by accepting `ws://localhost:3000/ws` upgrades without validating `req.headers.origin` in `packages/server/src/ws-bridge.ts:80-91`.",
+      "The only final qualifying finding's exploit path is `start task -> server creates scoped MCP token -> runtime records token -> source task completes or is deleted -> attacker replays stale token to /mcp -> scoped tool executes`, centered on token issuance/verification and missing teardown revocation.",
+      "The preserved session checklist marked the browser/WebSocket auth boundary as cleared and the task-scoped MCP token lifecycle family as the accepted finding, confirming the session did not materialize a final finding on the advisory's WebSocket origin-check root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8d566b68/stale_scoped_mcp_token_survives_task_teardown",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8d566b68/stale_scoped_mcp_token_survives_task_teardown/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8d566b68/stale_scoped_mcp_token_survives_task_teardown/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

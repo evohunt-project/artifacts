@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution_and_object_shape",
+  "summary": "The Docker-based reproduction confirms that Convict follows the inherited constructor path during config.set(), overwrites the process-global Object.assign static method, and breaks a subsequent Object.assign call in the same process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should let config.set('constructor.assign', 'EVOHUNT_POLLUTED') replace Object.assign with attacker-controlled data while config.getProperties() still appears empty, and a subsequent Object.assign call should fail with a TypeError.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the upstream node-convict repository at commit e4964f278458809e475369b2bec6467317ef5a9c, built the reproduction image, and ran the helper against /target-repo. The container printed EVOHUNT_AFTER=EVOHUNT_POLLUTED and EVOHUNT_PROPS={}, then the child Node process failed with TypeError: Object.assign is not a function, and the verifier emitted [evohunt] EVOHUNT_POC_CONFIRMED.",
+  "verification_method": "The helper script spawns a fresh child Node process, requires the vulnerable Convict entrypoint from the mounted repository, performs config.set('constructor.assign', 'EVOHUNT_POLLUTED'), and then calls Object.assign. Verification passes only if the child exits nonzero, stdout shows the overwritten Object.assign value and empty getProperties() result, and stderr contains the expected TypeError from the broken Object.assign call.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Stdout contained EVOHUNT_AFTER=EVOHUNT_POLLUTED, proving the global Object.assign binding was overwritten.",
+    "Stdout contained EVOHUNT_PROPS={}, showing the mutation did not appear in Convict's exported config properties.",
+    "Stderr contained TypeError: Object.assign is not a function from the child Node process after the overwrite.",
+    "The verifier printed [evohunt] EVOHUNT_POC_CONFIRMED and run.sh completed successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "e4964f278458809e475369b2bec6467317ef5a9c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_clobber.js"
+    ]
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:18:50.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8d9a6dc",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-9fjp-q3c4-6w3j/GHSA-9fjp-q3c4-6w3j.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "cloud_function_prototype_constructor_validator_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8d9a6dc/cloud_function_prototype_constructor_validator_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8d9a6dc/cloud_function_prototype_constructor_validator_bypass/vulnerability_report.json",
+      "title": "Cloud function validator bypass via prototype.constructor dispatch alias",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets `FunctionsRouter` and `triggers` cloud-function validator dispatch, not the deeply nested `$or`/`$and`/`$nor` query handling in `RestQuery` that GHSA-9fjp-q3c4-6w3j fixes before the transform pipeline.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "custom_objectid_wildcard_acl_takeover",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8d9a6dc/custom_objectid_wildcard_acl_takeover",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8d9a6dc/custom_objectid_wildcard_acl_takeover/vulnerability_report.json",
+      "title": "Wildcard custom objectId seeds a public write ACL and enables account takeover",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding abuses `_User.objectId=\"*\"` and ACL seeding in `ClassesRouter`/`RestWrite`, not the advisory's pre-validation query-depth bypass in `RestQuery` and the logical-operator transform path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:L/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described root cause: deeply nested logical query conditions reaching `RestQuery`'s transformation pipeline before query-depth validation. The two qualifying findings are separate Parse Server issues in cloud-function validator dispatch and custom objectId ACL handling.",
+    "evidence": [
+      "The advisory and referenced patch identify a DoS root cause in deep `$or`/`$and`/`$nor` query handling; the fix adds `validateQueryDepth()` at the start of `_UnsafeRestQuery.execute()` before `buildRestWhere()` in `src/RestQuery.js`.",
+      "The cloud-function finding follows `POST /functions/:functionName -> FunctionsRouter.handleCloudFunction -> triggers.getFunction()/maybeRunValidator` and bypasses validator enforcement through `prototype.constructor`, which is unrelated to query-depth validation or logical-operator transforms.",
+      "The custom-objectId finding follows `_User` signup and update paths in `ClassesRouter` and `RestWrite`, where `objectId=\"*\"` seeds a public write ACL and enables account takeover; it does not involve `RestQuery`, `findObjectWithKey`, or request-complexity guards.",
+      "The session's own component checklist records the only request-complexity hypothesis as pruned after a handled `500` with `RangeError: Maximum call stack size exceeded` in `findObjectWithKey`, and no final qualifying finding was produced for that advisory-related path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8d9a6dc/cloud_function_prototype_constructor_validator_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8d9a6dc/cloud_function_prototype_constructor_validator_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8d9a6dc/cloud_function_prototype_constructor_validator_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8d9a6dc/custom_objectid_wildcard_acl_takeover",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8d9a6dc/custom_objectid_wildcard_acl_takeover/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8d9a6dc/custom_objectid_wildcard_acl_takeover/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

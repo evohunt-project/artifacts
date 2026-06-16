@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cors_information_disclosure",
+  "summary": "The reproduction bundle clones a pinned vulnerable Glances commit, starts the REST API without authentication, and verifies that an attacker-origin request can read the process list via permissive CORS.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should return HTTP 200 for a request with Origin: http://evil.example to /api/4/processlist, emit an Access-Control-Allow-Origin value that permits browser reads, and expose process entries containing username and cmdline data.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 1f5aead12c368a477fb89647da30c610105de3ca, built the verifier image, started Glances inside the container, and observed Access-Control-Allow-Origin: * on /api/4/processlist. The verifier parsed a non-empty process list and extracted name=python, username=root, and the Glances launch command line from the cross-origin-readable JSON response.",
+  "verification_method": "The verifier starts Glances in web mode, sends a request with Origin: http://evil.example to /api/4/processlist, checks that the response status is 200, validates that Access-Control-Allow-Origin is either * or the attacker origin, and parses a non-empty process list containing cmdline and username fields.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] process_count=3",
+    "[evohunt] access_control_allow_origin=*",
+    "[evohunt] leaked_name=python",
+    "[evohunt] leaked_username=root",
+    "[evohunt] leaked_cmdline=/tmp/glances-venv/bin/python -m glances -w --disable-webui --disable-autodiscover -p 61280",
+    "[evohunt] SUCCESS: cross-origin processlist read verified"
+  ],
+  "limitations_or_blockers": [
+    "The session snapshot is a source export without .git metadata, so the reproduction bundle pins upstream commit 1f5aead12c368a477fb89647da30c610105de3ca, which reproduces the same vulnerable behavior."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "1f5aead12c368a477fb89647da30c610105de3ca",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/probe_cors.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

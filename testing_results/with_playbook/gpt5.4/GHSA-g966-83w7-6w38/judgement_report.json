@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:42:10.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_05e88e33",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-g966-83w7-6w38/GHSA-g966-83w7-6w38.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "outside_public_worker_dispatch",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_05e88e33/outside_public_worker_dispatch",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_05e88e33/outside_public_worker_dispatch/vulnerability_report.json",
+      "title": "Path traversal in module worker selection exposes outside-public worker scripts",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding exploits worker preselection in `workerConfig.matchesPath()` and `WithWorkerName()` before CGI path parsing, while the advisory targets Unicode case-folding length expansion in `splitPos()` and `splitCgiPath()` that miscomputes `SCRIPT_NAME` and `SCRIPT_FILENAME`. The reported path does not rely on Unicode casing or the advisory's split-index bug.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described Unicode case-folding bug in `splitPos()` and `splitCgiPath()` or an equivalent `SCRIPT_NAME`/`PATH_INFO` confusion path.",
+    "evidence": [
+      "The advisory and fixing commit `04fdc0c1e8fde94e2c1ad86217e962c88d27c53e` center on `cgi.go` `splitPos()` computing a byte offset on `strings.ToLower(path)` and then slicing the original path, producing incorrect `SCRIPT_NAME` and `SCRIPT_FILENAME` for certain Unicode characters.",
+      "The only qualifying finding, `outside_public_worker_dispatch`, instead uses `caddy/workerconfig.go` path normalization in `matchesPath()` plus `WithWorkerName()` preselection in `caddy/module.go`, after which `NewRequestWithContext()` skips `splitCgiPath()` when a worker is already assigned.",
+      "Its report and PoC demonstrate traversal payloads like `/../secret/secret-worker.php` and `/%2e%2e/secret/secret-worker.php`; they do not exercise Unicode case folding, split-position drift, or execution of a non-PHP file via miscomputed `.php` detection."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_05e88e33/outside_public_worker_dispatch",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_05e88e33/outside_public_worker_dispatch/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_05e88e33/outside_public_worker_dispatch/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

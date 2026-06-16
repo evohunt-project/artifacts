@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:41:08.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8cd3143b",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-wvhv-qcqf-f3cx/GHSA-wvhv-qcqf-f3cx.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "http_acl_non_get_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8cd3143b/http_acl_non_get_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8cd3143b/http_acl_non_get_bypass/vulnerability_report.json",
+      "title": "Bulk download, upload, and delete helpers bypass `.goshs` folder ACLs",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": true,
+      "advisory_match_reason": "This finding identifies the same missing `.goshs` ACL enforcement on `PUT`, `POST .../upload`, and `?delete` routes that the advisory fixes in `httpserver/updown.go` and `httpserver/handler.go`. Its extra `?bulk` read bypass is broader than the advisory but does not change the shared root cause on the advisory-matched mutation paths.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "http_acl_non_get_bypass",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8cd3143b/http_acl_non_get_bypass",
+      "status": "qualifying_vuln",
+      "title": "Bulk download, upload, and delete helpers bypass `.goshs` folder ACLs",
+      "vulnerability_type": "broken_access_control"
+    },
+    "reason": "The selected finding matches GHSA-wvhv-qcqf-f3cx because it identifies the same missing `.goshs` authorization checks on state-changing file-server routes. In the copied PoC workspace, an unauthenticated requester successfully wrote into a protected folder with `PUT`, deleted `protected/.goshs` through the vulnerable delete route, and then read `protected/secret.txt` without credentials.",
+    "evidence": [
+      "The advisory fix commit `f212c4f4a126556bab008f79758e21a839ef2c0f` adds `.goshs` auth enforcement to `put()`, `upload()`, `deleteFile()`, and `handleMkdir()`, and blocks deletion or overwrite of `.goshs` itself.",
+      "The selected finding report points to the same vulnerable code family: `httpserver/server.go` dispatches `POST .../upload` and `PUT`, `httpserver/updown.go` performs the writes, and `httpserver/handler.go` handles `?delete` without reloading and enforcing the folder ACL.",
+      "Fresh runtime evidence from `/Users/lumi/ziyue/EvoHunt-Run/advisory_8cd3143b/.judge/poc_runs/http_acl_non_get_bypass/run.log` shows `/protected/` and `/protected/secret.txt` were initially blocked, unauthenticated `PUT` inside the protected folder succeeded, unauthenticated deletion of `protected/.goshs` succeeded, and the previously protected `secret.txt` then became readable.",
+      "The copied verifier emitted `EVOHUNT_POC_SUCCESS: unauthenticated PUT and delete bypassed protected .goshs ACL and exposed secret.txt`, satisfying both bug activation and exploit-success runtime predicates."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "http_acl_non_get_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8cd3143b/http_acl_non_get_bypass",
+      "executed": true,
+      "command": "REPO_DIR=/Users/lumi/ziyue/EvoHunt-Run/advisory_8cd3143b/.judge/poc_runs/http_acl_non_get_bypass/target-repo bash reproduction/verify.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8cd3143b/.judge/poc_runs/http_acl_non_get_bypass/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8cd3143b/.judge/poc_runs/http_acl_non_get_bypass/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8cd3143b/.judge/poc_runs/http_acl_non_get_bypass/poc_execution.json",
+      "observed_effect": "The copied verifier confirmed that `/protected/` and `/protected/secret.txt` initially required authentication, then an unauthenticated `PUT` created `put-created.txt` inside the protected directory, an unauthenticated `?delete` removed `protected/.goshs`, and a follow-up unauthenticated GET returned `200` with the contents of the previously protected `secret.txt`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

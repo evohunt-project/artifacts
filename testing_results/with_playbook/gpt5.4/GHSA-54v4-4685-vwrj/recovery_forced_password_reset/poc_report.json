@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "improper_authentication",
+  "summary": "The Docker-based reproduction confirms that an anonymous caller can invoke the public recovery endpoint for the default administrator account and invalidate the old password without any reset-token or inbox-verification step.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow an anonymous caller to reset the administrator password through `/recovery/perform` and make the old `administrator` password fail at `/login/validate`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` installed Easy!Appointments v1.5.2, verified that the default administrator login worked before the attack, triggered an anonymous recovery request for `administrator` / `john@example.org`, and printed `EVOHUNT_PROOF anonymous recovery reset confirmed: administrator old password rejected after unauthenticated /recovery/perform`.",
+  "verification_method": "The helper performs a baseline login as `administrator` with password `administrator`, submits the public recovery form for the same username/email pair, and then attempts the old login again. Verification passes only if the baseline login succeeds before the attack and the old password is rejected afterward.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed the proof string `EVOHUNT_PROOF anonymous recovery reset confirmed: administrator old password rejected after unauthenticated /recovery/perform`.",
+    "The pre-attack baseline login to `/login/validate` succeeded for `administrator` / `administrator`.",
+    "The post-attack login with the old password failed, proving that the public recovery request changed the stored credential state."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at tag `1.5.2`, verifies the pinned vulnerable commit, and mounts that checkout into the helper container at `/target-repo` while Docker Compose serves the checked-out application.",
+    "pinned_commit_or_ref": "48d32686b0f40fc782c2bdf1bde4baafa4dbeea4 (tag 1.5.2)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/target-config.php",
+      "reproduction/target-docker-compose.yml"
+    ]
+  }
+}

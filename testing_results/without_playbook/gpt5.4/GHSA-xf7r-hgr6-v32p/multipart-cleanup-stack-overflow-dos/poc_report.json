@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stack_overflow_dos",
+  "summary": "The reproduction starts a Multer-backed upload endpoint from the vulnerable source, submits 25,000 tiny file parts plus a malformed trailing part, and confirms that cleanup crashes with an uncaught stack-overflow `RangeError`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should trigger an uncaught `RangeError: Maximum call stack size exceeded` during upload cleanup and print the proof string `EVOHUNT_STACK_OVERFLOW_CONFIRMED`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `cccf0fe0e64150c4f42ccf6654165c0d66b9adab`, built the reproduction container, executed the crafted multipart upload, and printed `EVOHUNT_STACK_OVERFLOW_CONFIRMED`, `ERROR_NAME=RangeError`, and `ERROR_MESSAGE=Maximum call stack size exceeded`.",
+  "verification_method": "The verifier launches a local HTTP server using the pinned vulnerable Multer source, sends a crafted multipart request that uploads 25,000 tiny files and then a malformed trailing part, and treats the run as successful only if the server emits an uncaught `RangeError` and prints the exact proof string `EVOHUNT_STACK_OVERFLOW_CONFIRMED`. A fixed `v2.1.1` checkout returns `500 MISSING_FIELD_NAME` instead of crashing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Verifier output contained `EVOHUNT_STACK_OVERFLOW_CONFIRMED`.",
+    "Verifier output contained `ERROR_NAME=RangeError`.",
+    "Verifier output contained `ERROR_MESSAGE=Maximum call stack size exceeded`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "cccf0fe0e64150c4f42ccf6654165c0d66b9adab",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

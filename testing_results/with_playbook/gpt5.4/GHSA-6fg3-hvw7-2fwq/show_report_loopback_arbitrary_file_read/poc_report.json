@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The reproduction clones a pinned vulnerable Playwright commit, builds the CLI, starts `show-report` as a victim user, and demonstrates that a different local user can read a victim-only secret file over `localhost:9323/trace/file?path=...` even though direct filesystem access to that file is denied.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A local attacker user should be unable to read `/home/victim/secret.txt` directly, but should recover the exact secret bytes through the victim's loopback `show-report` server.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the target repository, checked out commit `4b1b9d681f8a7b1dffafa973ef705f28661d4607`, built the reproduction image, started `show-report` as the victim account, confirmed the attacker account could not `cat` the victim file directly, and then retrieved the proof string `EVOHUNT_SECRET_PROOF` through `http://localhost:9323/trace/file?path=/home/victim/secret.txt`.",
+  "verification_method": "The container first verifies that the attacker user cannot read the victim-owned `0600` secret file directly. It then requests the same file through the loopback `show-report` route and checks that the exact proof string is returned. That distinguishes a real cross-user file disclosure from a generic startup success or attacker self-read.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The direct attacker `cat /home/victim/secret.txt` check failed as expected.",
+    "The attacker `curl http://localhost:9323/trace/file?path=/home/victim/secret.txt` request returned the exact proof string `EVOHUNT_SECRET_PROOF`.",
+    "The report server was started through the real vulnerable Playwright `show-report` code path on the pinned pre-fix commit."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "4b1b9d681f8a7b1dffafa973ef705f28661d4607",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

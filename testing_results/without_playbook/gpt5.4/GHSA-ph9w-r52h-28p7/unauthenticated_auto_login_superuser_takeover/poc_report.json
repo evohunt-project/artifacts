@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction cloned Langflow at the pinned 1.7.1 commit, launched the 1.7.1 release container with default auto-login behavior, and verified that an unauthenticated request to /api/v1/auto_login returned a bearer token that authenticated as the superuser account.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an unauthenticated GET /api/v1/auto_login returns a valid bearer token that can access superuser-protected endpoints such as /api/v1/users/whoami and /api/v1/users/.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned https://github.com/langflow-ai/langflow.git at commit 47ce5bf27e688e4cfbc48a745c24a72bac6b62d7, started a Langflow 1.7.1 container, and printed proof JSON showing auto_login_status=200, repo_version=1.7.1, service_version=1.7.1, whoami_username=langflow, whoami_is_superuser=true, and the proof string EVOHUNT_PROOF: unauthenticated GET /api/v1/auto_login yielded a superuser bearer token.",
+  "verification_method": "The verifier waits for /api/v1/version to return version 1.7.1, confirms the mounted source checkout is version 1.7.1, requests /api/v1/auto_login without credentials, extracts the returned bearer token, and then uses that token against /api/v1/users/whoami and /api/v1/users/. The run only succeeds if the token works and whoami reports is_superuser=true.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed auto_login_status=200 for the unauthenticated GET /api/v1/auto_login request.",
+    "The reproduction printed whoami_username=langflow and whoami_is_superuser=true after using the returned bearer token.",
+    "The reproduction printed user_listing_total_count=1 after successfully reaching the superuser-protected GET /api/v1/users/ endpoint.",
+    "The reproduction printed the explicit proof string EVOHUNT_PROOF: unauthenticated GET /api/v1/auto_login yielded a superuser bearer token."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the verifier container at /target-repo.",
+    "pinned_commit_or_ref": "47ce5bf27e688e4cfbc48a745c24a72bac6b62d7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

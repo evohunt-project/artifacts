@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirmed that tiny trailer-chain payloads can saturate all blackd formatter workers and delay benign requests for a sustained period.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause sub-kilobyte trailer-chain requests to monopolize all blackd workers long enough that a benign formatting request is delayed by at least several seconds while the heavy requests still return HTTP 200.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned psf/black at commit 35ea67920b7f6ac8e09be1c47278752b1e827f76, built the reproduction image, and observed a benign request delay of 19.096 seconds while two concurrent 904-byte heavy requests each completed in about 19.6 seconds with HTTP 200. The run printed `EVOHUNT_PROOF benign_delay_seconds=19.096 worker_count=2 payload_bytes=904`.",
+  "verification_method": "The helper script measures a baseline benign request, then sends one heavy trailer-chain request per blackd worker and issues a benign request during the flood. The run is only marked successful if the benign request still succeeds, every heavy request returns HTTP 200, and both the heavy-request durations and the benign-request delay exceed the configured proof threshold.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction reported `payload_bytes: 904` and `worker_count: 2` inside the containerized environment.",
+    "The benign request was delayed for 19.096 seconds while the heavy requests were in flight.",
+    "Both heavy requests returned HTTP 200 and took 19.596 and 19.685 seconds respectively.",
+    "The run emitted the proof string `EVOHUNT_PROOF benign_delay_seconds=19.096 worker_count=2 payload_bytes=904`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "35ea67920b7f6ac8e09be1c47278752b1e827f76",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_blackd_trailer_dos.py"
+    ]
+  }
+}

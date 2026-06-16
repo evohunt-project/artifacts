@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:01:44.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_6f0578ae",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-h7cj-j2vv-qw8r/GHSA-h7cj-j2vv-qw8r.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "multipart_quota_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_6f0578ae/multipart_quota_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_6f0578ae/multipart_quota_bypass/vulnerability_report.json",
+      "title": "Multipart continuation undercounts part sizes and bypasses upload limits",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets multipart quota accounting in `wisp.require_form` and `multipart_body`, while the advisory targets percent-encoded traversal in `serve_static` caused by sanitizing `..` before `uri.percent_decode`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's `serve_static` root cause: percent-encoded `..` survives sanitization because decoding happens after `string.replace(each: \"..\", with: \"\")`, enabling arbitrary file read.",
+    "evidence": [
+      "The advisory and upstream fix both center on `serve_static` in `src/wisp.gleam`, where the patch moves `uri.percent_decode` ahead of `string.replace(each: \"..\", with: \"\")` to block `%2e%2e` traversal.",
+      "The only manifest-listed final qualifying finding is `multipart_quota_bypass`, whose report and reproduced PoC concern `wisp.require_form` multipart continuation handling in `multipart_body` around `src/wisp.gleam:1082-1172`.",
+      "That multipart finding demonstrates oversized upload acceptance and availability impact, not traversal to `serve_static`, percent-decoding behavior, or arbitrary file read."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_6f0578ae/multipart_quota_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_6f0578ae/multipart_quota_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_6f0578ae/multipart_quota_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

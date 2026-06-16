@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction confirms that the dynamic OAuth client-registration flow issues server-side localhost discovery and registration requests when a low-privilege user triggers OAuth auth setup for a crafted generic OAuth2 credential.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show the vulnerable OAuth flow making GET requests to localhost well-known discovery endpoints and a POST request to a localhost registration endpoint, then returning an authorization URI rooted at that attacker-controlled localhost server.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned n8n@2.18.0 source revision, built the reproduction image, verified the mounted checkout commit, and emitted EVOHUNT_PROOF oauth2_localhost_ssrf together with the observed request sequence GET /.well-known/oauth-protected-resource/mcp, GET /.well-known/oauth-authorization-server/issuer, POST /register, plus a localhost authorization URI.",
+  "verification_method": "The host run script clones and pins the vulnerable repository revision, the container verifies that /target-repo is exactly commit 6336f0a447eab3600b1fe13216f1abd5b6e25dff, and the proof helper asserts the exact localhost request sequence and authorization URI before emitting the unique proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run log contains EVOHUNT_PROOF oauth2_localhost_ssrf.",
+    "The proof output records GET /.well-known/oauth-protected-resource/mcp, GET /.well-known/oauth-authorization-server/issuer, and POST /register against a 127.0.0.1 listener.",
+    "The proof output includes an authorization URI beginning with http://127.0.0.1:<port>/authorize?."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, verifies the exact commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6336f0a447eab3600b1fe13216f1abd5b6e25dff (tag n8n@2.18.0)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/oauth_localhost_ssrf_proof.js",
+      "reproduction/package-lock.json",
+      "reproduction/package.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

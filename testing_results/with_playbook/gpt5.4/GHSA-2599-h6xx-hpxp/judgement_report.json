@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:24:32.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d8d9ce36",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-2599-h6xx-hpxp/GHSA-2599-h6xx-hpxp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "cross_host_git_credential_leak",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d8d9ce36/cross_host_git_credential_leak",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d8d9ce36/cross_host_git_credential_leak/vulnerability_report.json",
+      "title": "Cross-host Git Credential Leak via Exact-Path Repository Match",
+      "vulnerability_type": "origin_and_url_boundary_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets Git credential scoping in `src/poetry/utils/authenticator.py` and `src/poetry/vcs/git/backend.py`, not the advisory's wheel entry path containment bug in `src/poetry/installation/wheel_installer.py`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "project_plugin_pth_autoexec",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d8d9ce36/project_plugin_pth_autoexec",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d8d9ce36/project_plugin_pth_autoexec/vulnerability_report.json",
+      "title": "Project-local `.pth` Auto-Exec via `.poetry/plugins` Startup Loading",
+      "vulnerability_type": "unsafe_dynamic_evaluation",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets project-local plugin bootstrap through `site.addsitedir()` in `src/poetry/plugins/plugin_manager.py`, not the advisory's wheel installer write-to-disk path traversal.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's wheel-installation root cause: untrusted wheel entry paths reaching `WheelDestination.write_to_fs()` in `src/poetry/installation/wheel_installer.py` without a containment check before disk write.",
+    "evidence": [
+      "The advisory and patch point to `src/poetry/installation/wheel_installer.py`, where Poetry 2.3.2 built `target_path = Path(self.scheme_dict[scheme]) / path` and 2.3.3 added `resolve()` plus `is_relative_to()` containment checks before writing.",
+      "The qualifying finding `cross_host_git_credential_leak` instead describes credential reuse across Git hosts in `src/poetry/utils/authenticator.py` and `src/poetry/vcs/git/backend.py`.",
+      "The qualifying finding `project_plugin_pth_autoexec` instead describes startup execution of checked-in `.pth` files via `PluginManager.add_project_plugin_path()` and `site.addsitedir()`.",
+      "The session's only archive write finding is the non-qualifying tar-sdist extraction issue in `src/poetry/utils/helpers.py`; the session checklist explicitly cleared the ZIP family and did not report the advisory's wheel-entry write path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d8d9ce36/cross_host_git_credential_leak",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d8d9ce36/cross_host_git_credential_leak/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d8d9ce36/cross_host_git_credential_leak/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d8d9ce36/project_plugin_pth_autoexec",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d8d9ce36/project_plugin_pth_autoexec/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d8d9ce36/project_plugin_pth_autoexec/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

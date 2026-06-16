@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:08:32.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3fd86fe4",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-8qwj-4jxw-m8jw/GHSA-8qwj-4jxw-m8jw.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "jws_verifyjwt_audience_string_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3fd86fe4/jws_verifyjwt_audience_string_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3fd86fe4/jws_verifyjwt_audience_string_bypass/vulnerability_report.json",
+      "title": "verifyJWT audience string form bypasses audience enforcement",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a logic bug in `KJUR.jws.JWS.verifyJWT` audience validation (`src/jws-3.3.js`), not the advisory's negative-exponent arithmetic flaw in `BigInteger.modPow` within `ext/jsbn2.js`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "malformed_asn1_length_fatal_abort",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3fd86fe4/malformed_asn1_length_fatal_abort",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3fd86fe4/malformed_asn1_length_fatal_abort/vulnerability_report.json",
+      "title": "Malformed ASN.1 length fields fatally abort Node parser consumers",
+      "vulnerability_type": "availability_panics_and_validation_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an ASN.1 child-length parsing abort in `ASN1HEX.getChildIdx` and its parser callers, whereas the advisory is a negative-exponent bug in `ext/jsbn2.js` that breaks signature verification.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause: GHSA-8qwj-4jxw-m8jw is the negative-exponent handling bug in `BigInteger.modPow` in `ext/jsbn2.js`, while the session's qualifying findings cover unrelated JWT audience-validation logic and ASN.1 length parsing behavior.",
+    "evidence": [
+      "The advisory details and upstream fix patch place the root cause in `ext/jsbn2.js`, where `bnModPow` failed to handle negative exponents before commit `5ea1c32bb2aa894b4bd29849839afe4f98728195` added an `e.signum() < 0` guard and modular-inverse path.",
+      "The `jws_verifyjwt_audience_string_bypass` finding reports a documented-string-form audience check bypass in `KJUR.jws.JWS.verifyJWT` (`src/jws-3.3.js`) using a valid JWT with a mismatched `aud` claim; it does not involve `modPow`, negative exponents, or the advisory's signature-verification arithmetic flaw.",
+      "The `malformed_asn1_length_fatal_abort` finding reports out-of-range child enumeration in `ASN1HEX.getChildIdx` (`src/asn1hex-1.1.js`) leading to fatal V8 aborts in parser entrypoints such as `X509.readCertPEM` and `KEYUTIL.parsePBES2`; this is an availability bug unrelated to the advisory's cryptographic verification root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3fd86fe4/jws_verifyjwt_audience_string_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3fd86fe4/jws_verifyjwt_audience_string_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3fd86fe4/jws_verifyjwt_audience_string_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3fd86fe4/malformed_asn1_length_fatal_abort",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3fd86fe4/malformed_asn1_length_fatal_abort/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3fd86fe4/malformed_asn1_length_fatal_abort/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

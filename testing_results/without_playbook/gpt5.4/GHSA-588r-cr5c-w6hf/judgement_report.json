@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:39:31.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d154cfa1",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-588r-cr5c-w6hf/GHSA-588r-cr5c-w6hf.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "opaque_attribute_header_memory_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d154cfa1/opaque_attribute_header_memory_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d154cfa1/opaque_attribute_header_memory_dos/vulnerability_report.json",
+      "title": "Unknown EXR header attributes can trigger unbounded memory allocation during file open",
+      "vulnerability_type": "unbounded_memory_allocation_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns unknown header attribute handling in `ImfHeader.cpp` and `ImfOpaqueAttribute.cpp`, while the advisory describes a signed 32-bit overflow in `internal_exr_undo_piz()` that mis-advances `wavbuf` during PIZ decompression and causes later OOB read/write in the wavelet decode path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "A",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's PIZ decoder integer overflow root cause. The only qualifying finding is a separate EXR header parsing memory-allocation issue.",
+    "evidence": [
+      "The advisory describes `internal_exr_undo_piz()` advancing `wavbuf` with signed 32-bit arithmetic (`wavbuf += nx * ny * wcount`), causing pointer wrap and subsequent OOB read/write in the PIZ wavelet decode path.",
+      "The only qualifying finding points to `src/lib/OpenEXR/ImfHeader.cpp` and `src/lib/OpenEXR/ImfOpaqueAttribute.cpp`, where an attacker-controlled opaque attribute size is used to allocate memory while reading EXR headers.",
+      "The finding's exploit path is file open -> header parsing -> `OpaqueAttribute::readValueFrom` allocation, which is distinct from the advisory's file decode -> `internal_exr_undo_piz()` -> `wav_2D_decode` / `wdec14_4()` control flow.",
+      "Session manifest `.judge/input_manifest.json` lists only `opaque_attribute_header_memory_dos` as a qualifying finding, so there is no alternative qualifying finding that matches the advisory root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d154cfa1/opaque_attribute_header_memory_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d154cfa1/opaque_attribute_header_memory_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d154cfa1/opaque_attribute_header_memory_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

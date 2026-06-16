@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "memory_corruption",
+  "summary": "The Docker-based reproduction confirms that the public token-bitmask application API can corrupt a sibling tensor row outside the supplied logical view when `indices` is unchecked.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should compile the target library and then print a proof signal showing that a sibling row outside the provided logical DLTensor view was modified while the visible row remained unchanged.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `mlc-ai/xgrammar` at `aa44ded202fdaa2cb55f48deb31d17c9822a8a1f`, built the reproduction image, compiled the target library inside the container, and the harness printed `sibling_row_corrupted=1`, `logical_view_touched=0`, and `VULNERABLE` before the script exited successfully.",
+  "verification_method": "The harness constructs a 1-row logical view into larger backing arrays for both logits and bitmask, calls `xgrammar::ApplyTokenBitmaskInplaceCPU(..., indices={1})`, and then checks whether the sibling backing row was overwritten even though the logical view row was untouched. The run only succeeds if the exact `VULNERABLE` proof string is observed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The harness output contained `sibling_row_corrupted=1`.",
+    "The harness output contained `logical_view_touched=0`.",
+    "The harness output contained the terminal proof string `VULNERABLE`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, initializes submodules, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "aa44ded202fdaa2cb55f48deb31d17c9822a8a1f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/config.cmake",
+      "reproduction/repro.cc",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that the direct local terminal path rejects a missing secure-session ID while the proxied cluster terminal path still opens an interactive shell and executes attacker-supplied commands.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an OTP-enabled user is blocked from direct local terminal access without X-Secure-Session-ID, but can still open a proxied cluster terminal and execute the proof command through the websocket proxy path.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit e43f137c92e2907859dc02eb2c021ea4568b1c7c, built the reproduction image, and executed the harness. The harness printed LOCAL_SECURE_SESSION_ENFORCED for the negative control, then PROXIED_REMOTE_PTY_OPENED and EVOHUNT_PTY_PROXY_BYPASS after the proxied websocket terminal executed the proof command.",
+  "verification_method": "The verification helper requires both the negative-control marker for local enforcement and the positive markers for proxied terminal access and command execution. This distinguishes the real bypass from a generic websocket failure, auth error, or shell startup issue.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container run printed LOCAL_SECURE_SESSION_ENFORCED.",
+    "The container run printed PROXIED_REMOTE_PTY_OPENED.",
+    "The container run printed EVOHUNT_PTY_PROXY_BYPASS."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "e43f137c92e2907859dc02eb2c021ea4568b1c7c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/go.mod",
+      "reproduction/main.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

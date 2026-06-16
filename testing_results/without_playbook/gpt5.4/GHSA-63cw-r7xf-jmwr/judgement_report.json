@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:51:41.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2bf7d60f",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-63cw-r7xf-jmwr/GHSA-63cw-r7xf-jmwr.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "proxyproto_acl_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2bf7d60f/proxyproto_acl_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2bf7d60f/proxyproto_acl_bypass/vulnerability_report.json",
+      "title": "proxyproto trusts arbitrary PROXY headers and allows source-IP ACL bypass",
+      "vulnerability_type": "source_ip_spoofing_acl_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns `proxyproto` trusting attacker-supplied PROXY headers and `acl` consuming the forged client IP on DNS listeners, while the advisory is a DoH GET denial-of-service issue in `plugin/pkg/doh/doh.go` caused by missing early size validation before `req.URL.Query()`, base64 decoding, and DNS message unpacking. The components, entrypoint, exploit mechanism, and root cause do not overlap.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding in this session identifies the advisory-described vulnerable code or root cause. The only qualifying finding is a `proxyproto` plus `acl` source-IP spoofing bypass, not the CoreDNS DoH GET pre-validation resource-amplification path described in GHSA-63cw-r7xf-jmwr.",
+    "evidence": [
+      "The advisory describes oversized `/dns-query?dns=...` GET requests reaching `requestToMsgGet()` and `base64ToMsg()` in `plugin/pkg/doh/doh.go`, where missing early size validation causes expensive query parsing, base64 decoding, and DNS unpacking before rejection.",
+      "The only qualifying finding identifies a separate path: arbitrary PROXY header trust in `proxyproto`, `RemoteAddr()` rewriting, and downstream `acl` evaluation using the forged client IP.",
+      "The finding's PoC evidence demonstrates an ACL bypass on a TCP DNS listener by forging `192.0.2.55`; it does not involve the HTTPS DoH endpoint, oversized `dns` query parameters, or pre-rejection CPU and memory amplification."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2bf7d60f/proxyproto_acl_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2bf7d60f/proxyproto_acl_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2bf7d60f/proxyproto_acl_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

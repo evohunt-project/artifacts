@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:38:13.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0cf65701",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-wmfp-5q7x-987x/GHSA-wmfp-5q7x-987x.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "absolute_path_template_root_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0cf65701/absolute_path_template_root_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0cf65701/absolute_path_template_root_bypass/vulnerability_report.json",
+      "title": "Absolute path fallback in render tags bypasses configured template roots",
+      "vulnerability_type": "arbitrary_file_read",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same LiquidJS root-cause path the advisory describes: `layout`/`render`/`include` resolution reaches `Loader.candidates()`, which appends `fs.fallback(file)`, and the default Node fallback resolves attacker-chosen absolute paths via `require.resolve()` outside the configured roots.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "absolute_path_template_root_bypass",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0cf65701/absolute_path_template_root_bypass",
+      "status": "qualifying_vuln",
+      "title": "Absolute path fallback in render tags bypasses configured template roots",
+      "vulnerability_type": "arbitrary_file_read"
+    },
+    "reason": "The only final qualifying finding matches the advisory-described vulnerable code and root cause, and the copied PoC achieved the advisory impact. The same tag lookup path fell through to the default Node fallback and rendered an absolute-path file outside the configured template root.",
+    "evidence": [
+      "The advisory says the `layout`, `render`, and `include` tags allow arbitrary file access because LiquidJS falls back to `require.resolve()` without constraining the resolved path to configured directories.",
+      "The finding report points to the same vulnerable path in `repo/src/fs/loader.ts`, `repo/src/fs/fs-impl.ts`, and the tag entrypoints in `repo/src/tags/render.ts`, `repo/src/tags/include.ts`, and `repo/src/tags/layout.ts`.",
+      "The copied PoC run log shows an absolute `{% render %}` rendered the vulnerable checkout's out-of-root `package.json` while `--root` pointed at an empty directory, exposing `\"name\": \"liquidjs\"` and `\"version\": \"10.24.0\"`.",
+      "The same run log then printed `[evohunt] cli root bypass confirmed` and `[evohunt] proof: ABSOLUTE_PATH_TEMPLATE_ROOT_BYPASS`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "absolute_path_template_root_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0cf65701/absolute_path_template_root_bypass",
+      "executed": true,
+      "command": "node bin/liquid.js --root /Users/lumi/ziyue/EvoHunt-Run/advisory_0cf65701/.judge/poc_runs/absolute_path_template_root_bypass/workspace/.host-repro/empty-root --no-relative-reference --template '{% render \"/Users/lumi/ziyue/EvoHunt-Run/advisory_0cf65701/.judge/poc_runs/absolute_path_template_root_bypass/workspace/.host-repro/repo/package.json\" %}'",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0cf65701/.judge/poc_runs/absolute_path_template_root_bypass/workspace/.host-repro/repo",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0cf65701/.judge/poc_runs/absolute_path_template_root_bypass/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0cf65701/.judge/poc_runs/absolute_path_template_root_bypass/poc_execution.json",
+      "observed_effect": "The adapted validation command rendered the vulnerable checkout's `package.json` through an absolute `{% render %}` even though `--root` pointed at an empty directory, exposing out-of-root file contents with `\"name\": \"liquidjs\"` and `\"version\": \"10.24.0\"` and printing the proof marker.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

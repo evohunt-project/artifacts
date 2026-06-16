@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stored_xss",
+  "summary": "The Docker-based reproduction clones the pinned OpenMeetings commit, injects a targeted regression test, and confirms that attacker-controlled private-message HTML is stored unchanged and rendered into recipient-facing markup without escaping.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should prove that attacker-controlled private-message HTML survives storage and is emitted unescaped by the recipient-facing messages UI, which would allow script execution in the victim browser.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `https://github.com/apache/openmeetings.git`, checked out commit `41677b22f9ba4236ac890332da823821065a5ca8`, built the reproduction image `evohunt-advisory_01cc35b8-private_message_stored_xss`, executed the targeted Maven validation inside the container, and finished with the stored-XSS verification success marker plus Maven `BUILD SUCCESS`.",
+  "verification_method": "The helper script runs the targeted `TestStoredXssPrivateMessage` validation inside the container, then verifies that `/target-repo/openmeetings-web/target/surefire-reports/TEST-org.apache.openmeetings.web.security.TestStoredXssPrivateMessage.xml` exists and records one passing test with zero failures, errors, or skips. It also requires the Maven output to end with `BUILD SUCCESS`, distinguishing the vulnerable rendering path from an unrelated build or runtime failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `[evohunt] SUCCESS: stored XSS validation completed` after the helper verified the targeted surefire report.",
+    "The Maven execution ended with `[INFO] BUILD SUCCESS` and a reactor summary showing `Openmeetings Web ... SUCCESS`.",
+    "The host-side wrapper completed with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, injects the helper test file, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "41677b22f9ba4236ac890332da823821065a5ca8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/execute-test.sh",
+      "reproduction/TestStoredXssPrivateMessage.java"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction confirms that a pre-issued CalDAV token still authenticates a user after the account is moved into the email-confirmation-required state that blocks the normal username and password login path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After a user enters the email-confirmation-required state, normal credential verification should reject the account, but the same user's previously issued CalDAV token should still succeed on the CalDAV BasicAuth path because account state is not re-checked there.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Vikunja at commit 3ba5192b1bd0607998bdaf9259d795fb14530384, built the helper image, and executed the proof test. The test passed and verify.sh printed CALDAV_TOKEN_STATE_BYPASS_CONFIRMED followed by the run-level SUCCESS marker, confirming that the stale token path still authenticates after the account enters the blocked state exercised by the test.",
+  "verification_method": "The helper test creates a real CalDAV token through the repository code, moves the same user into StatusEmailConfirmationRequired in the test database, verifies that the normal credential path rejects the user, and then checks that caldav.BasicAuth still authenticates the same username and token pair.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "go test -mod=mod -run TestCaldavTokenBypassesEmailConfirmationState exited successfully inside the reproduction container.",
+    "The helper test verifies both halves of the boundary: the normal credential check rejects the blocked user state and the CalDAV BasicAuth path still succeeds.",
+    "verify.sh printed CALDAV_TOKEN_STATE_BYPASS_CONFIRMED and run.sh printed the final SUCCESS marker."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3ba5192b1bd0607998bdaf9259d795fb14530384",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/go.mod",
+      "reproduction/go.sum",
+      "reproduction/common_test.go",
+      "reproduction/caldav_token_bypass_test.go"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "account_takeover",
+  "summary": "The Docker-based reproduction confirms that a low-privileged member can enumerate another pending invitee and claim that account through the legacy invitation acceptance endpoint, then authenticate as the victim with an attacker-chosen password.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should let a member enumerate a pending invitee ID via `/rest/users`, forge `POST /rest/invitations/:id/accept` for that victim, and then log in as the hijacked user with the attacker-chosen password.",
+  "actual_observed_result": "Running `./reproduction/run.sh` from the final folder built `evohunt-advisory_c44551a9-legacy_invite_account_takeover`, installed the filtered n8n workspace, built the needed backend dependency chain, and executed the exploit test successfully. The run emitted `EVOHUNT_PROOF: legacy_invite_account_takeover_verified owner_id=aa14dc18-f5ff-4106-8936-8599af781145 member_id=c1cce101-55ab-4ccf-8108-453013e7855f victim_id=a3da6d51-a30d-4b1a-89f1-aab179297dbe victim_email=p2gann@a2mrcrl.edu`, after which a fresh `/rest/login` as `p2gann@a2mrcrl.edu` with the attacker-chosen password returned HTTP 200 for the victim account.",
+  "verification_method": "The verifier provisions a fresh upstream checkout, runs a custom integration test against the real controllers and SQLite-backed test environment, creates a legitimate low-privilege member, enumerates a second pending invite through `/rest/users`, forges the legacy acceptance request for that victim, and finally performs a fresh `/rest/login` using the attacker-chosen password. Success requires both the exact `EVOHUNT_PROOF` marker and a successful fresh victim login, which rules out unrelated startup issues or a false-positive controller response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final run emitted `EVOHUNT_PROOF: legacy_invite_account_takeover_verified owner_id=aa14dc18-f5ff-4106-8936-8599af781145 member_id=c1cce101-55ab-4ccf-8108-453013e7855f victim_id=a3da6d51-a30d-4b1a-89f1-aab179297dbe victim_email=p2gann@a2mrcrl.edu`.",
+    "Jest reported `PASS test/integration/evohunt.invitation-takeover.test.ts` with the test `a low-privileged member can enumerate and claim another pending invite`.",
+    "The exploit test performed a fresh `/rest/login` for the victim email with the attacker-chosen password and received HTTP 200."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8e81f3e31398b04fd6f8cc27cf844980cd382117",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/evohunt.invitation-takeover.test.ts"
+    ]
+  }
+}

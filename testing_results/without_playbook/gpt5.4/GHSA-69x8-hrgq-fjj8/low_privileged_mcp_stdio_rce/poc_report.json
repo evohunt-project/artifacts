@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authenticated_remote_code_execution",
+  "summary": "The reproduction bundle cloned the vulnerable LiteLLM ref, started the proxy with a low-privileged internal-user token, and used `/mcp-rest/test/tools/list` to force the proxy to execute an attacker-controlled stdio MCP server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privileged API caller should be able to make the proxy execute an attacker-chosen local program and return the `ping` tool exposed by that spawned MCP server.",
+  "actual_observed_result": "Running `./reproduction/run.sh` returned HTTP 200 from `/mcp-rest/test/tools/list`, listed the attacker-controlled `ping` tool, wrote `/tmp/evohunt_mcp_rce_proof.txt` with `spawned-by-mcp-test-route`, and emitted `EVOHUNT_SUCCESS: low-privileged caller caused arbitrary stdio process execution`.",
+  "verification_method": "Inside the container, the reproduction installs LiteLLM from the mounted vulnerable checkout, starts the proxy with a custom auth policy that maps `low-priv-key` to `INTERNAL_USER`, sends a POST request with `transport=stdio` and attacker-controlled `command` and `args`, verifies that the response includes the `ping` tool from the attacker-controlled MCP server, and checks that the spawned process created `/tmp/evohunt_mcp_rce_proof.txt` with the expected marker.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response body included `{\"error\": null, \"message\": \"Successfully retrieved tools\", \"tools\": [{\"name\": \"ping\", ...}]}`.",
+    "The proof file `/tmp/evohunt_mcp_rce_proof.txt` contained `spawned-by-mcp-test-route`.",
+    "The run emitted `EVOHUNT_SUCCESS: low-privileged caller caused arbitrary stdio process execution`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "38d477507dad09c560db18a15ca8fb0e33bf2a4b (tag: v1.82.6-nightly)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_entrypoint.py",
+      "reproduction/evil_stdio_server.py",
+      "reproduction/poc_config.yaml",
+      "reproduction/poc_custom_auth.py"
+    ]
+  }
+}

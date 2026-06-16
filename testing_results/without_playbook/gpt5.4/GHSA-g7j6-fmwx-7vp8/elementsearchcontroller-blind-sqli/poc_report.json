@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "blind_sql_injection",
+  "summary": "The final Docker-based reproduction cloned the pinned vulnerable Craft CMS commit, created a low-privilege control-panel user, and used `criteria[where]` on the element search endpoint to recover the administrator username from the database.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should let a low-privilege authenticated control-panel user use the element search endpoint as a boolean blind SQL injection oracle and recover the randomly generated administrator username from the `users` table.",
+  "actual_observed_result": "Running `./reproduction/run.sh` from the final finding folder completed successfully and printed `EVOHUNT_SUCCESS recovered admin username: victim5add3ac1` after recovering the full admin username via injected SQL predicates. The proof output reported `baseline_result_count=2` and `false_result_count=0`, confirming that the injected predicate controlled whether results were returned.",
+  "verification_method": "The reproduction logs in as the generated low-privilege `attacker01` account, confirms that `criteria[where]=1=1` returns results while `criteria[where]=0=1` returns none, then iterates over character positions in `SELECT username FROM users WHERE admin = 1 ORDER BY id LIMIT 1`. The run only succeeds if the recovered string exactly matches the randomly generated administrator username created during installation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final run printed `EVOHUNT_SUCCESS recovered admin username: victim5add3ac1`.",
+    "The proof details reported `attacker_username=attacker01`, `baseline_result_count=2`, and `false_result_count=0`.",
+    "The final run exited with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the reproduction image, and mounts that checkout into the container at runtime.",
+    "pinned_commit_or_ref": "32a54bd54eeaf906f96e0569358a9372a3c942f6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/project-craft.php",
+      "reproduction/project-web-index.php",
+      "reproduction/setup_attacker.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

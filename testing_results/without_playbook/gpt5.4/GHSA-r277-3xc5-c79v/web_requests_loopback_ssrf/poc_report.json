@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "localhost_ssrf",
+  "summary": "The reproduction starts a loopback-only HTTP server, confirms that `127.0.0.1` is blocked, then uses `127.1` to fetch the same resource successfully through the vulnerable helper.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The helper should not be able to fetch loopback-only content, but the bypass should return the marker from the local HTTP service when addressed as `127.1`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` created a disposable venv, served `secret.html` on `127.0.0.1:8123`, observed the expected localhost-blocking error for `127.0.0.1`, then retrieved the secret marker successfully through `http://127.1:8123/secret.html`.",
+  "verification_method": "The PoC checks two conditions: the canonical loopback form must be blocked with the helper's local-file restriction error, and the alternate loopback form must return a 200 response containing the exact proof marker from the loopback-only server.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The blocked control request returned `Error: Access to local files is restricted` for `http://127.0.0.1:8123/secret.html`.",
+    "The bypass request to `http://127.1:8123/secret.html` returned HTTP 200 and the `EVOHUNT_LOOPBACK_PROOF` marker."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction installs a small set of Python dependencies into a local disposable virtual environment because the repository import chain is not self-contained in the base environment."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc.py",
+      "reproduction/secret.html"
+    ]
+  }
+}

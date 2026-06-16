@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction clones Rollup v4.58.0, builds the native parser from source, verifies a benign parse succeeds, and then triggers a SIGSEGV in a child process by parsing a deeply nested valid source string.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should prove a real process-level availability failure by showing that a benign parse succeeds but a second child process parsing deeply nested valid input dies with SIGSEGV.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned rollup v4.58.0 at commit 33f39c1f205ea2eadaf4b589e493453e2baa3662, built the native parser in Docker, and printed: EVOHUNT_SUCCESS benign parse succeeded and deeply nested valid input crashed the child parser process with SIGSEGV.",
+  "verification_method": "The container-side verifier first spawns a child process that loads the built dist/parseAst.js entrypoint and parses a benign script, requiring a normal exit and Program AST. It then spawns a second child that parses a deeply nested but valid script and accepts the run only if that child terminates by SIGSEGV or an equivalent crash exit code instead of returning a normal parse result or a recoverable JavaScript exception.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verifier confirmed that the built parser could successfully parse a benign input before the exploit attempt.",
+    "The exploit child terminated with SIGSEGV while parsing deeply nested valid input.",
+    "The reproduction emitted the exact success marker: EVOHUNT_SUCCESS benign parse succeeded and deeply nested valid input crashed the child parser process with SIGSEGV."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "33f39c1f205ea2eadaf4b589e493453e2baa3662",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run-container.sh",
+      "reproduction/verify_native_stack_overflow.js"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that Deno 2.5.6 honors environment proxy targets after the allow-net check, allowing fetch() to reach an otherwise disallowed local proxy endpoint while the explicit proxy API remains blocked.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should make `fetch(\"http://example.com/test\")` succeed through a local proxy endpoint even though the process is only granted `--allow-net=example.com`, proving unauthorized access to a disallowed subsequent system.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned denoland/deno at commit 1b5f3112af364a3327b26f720746819c4f20f20d, downloaded the matching official Deno 2.5.6 binary, started a local proxy service, and observed the vulnerable fetch return `proxy-bypass-ok`. The verifier also confirmed that `Deno.createHttpClient({ proxy: { url: \"http://127.0.0.1:8765\" } })` failed with `Requires net access to \"127.0.0.1:8765\"`, showing the explicit proxy path is correctly gated while the env-proxy path is not.",
+  "verification_method": "verify.sh starts a local HTTP service on 127.0.0.1:8765, runs the pinned Deno 2.5.6 binary with `HTTP_PROXY=http://127.0.0.1:8765` and `--allow-net=example.com`, and checks for both the vulnerable success signal (`proxy-bypass-ok`) and the proxy server log entry `GET http://example.com/test HTTP/1.1`. It then runs a negative control using Deno.createHttpClient({ proxy }) and requires that path to fail at the proxy permission gate.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The vulnerable fetch printed `proxy-bypass-ok`.",
+    "The local proxy server observed `GET http://example.com/test HTTP/1.1`, confirming traffic reached a disallowed local endpoint.",
+    "The explicit-proxy negative control failed with `Requires net access to \"127.0.0.1:8765\"`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container. verify.sh derives the release version from the mounted source and downloads the matching official Deno binary for the proof run.",
+    "pinned_commit_or_ref": "1b5f3112af364a3327b26f720746819c4f20f20d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/proxy_server.py",
+      "reproduction/proof_fetch.ts",
+      "reproduction/explicit_proxy_blocked.ts",
+      "reproduction/verify.sh"
+    ]
+  }
+}

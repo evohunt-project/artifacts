@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction confirms that the pinned Jervis revision ships a multibranch job generator that trusts fork pull requests and couples that trust decision to attacker-controlled pipeline/build execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should confirm that the shipped Job DSL path generates a fork-PR-trusting multibranch job and that the default Jervis build path reaches attacker-controlled execution logic.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `ff0d9b0b726c32e29fa3b9b44deae2bc9356736c`, built the verification image, and printed the matched trust/execution-chain lines followed by `EVOHUNT_PROOF: fork PRs are trusted and attacker-controlled build logic reaches Jenkins execution.`",
+  "verification_method": "The helper inspects the pinned repository's shipped entrypoints and succeeds only if the Job DSL entrypoint loads the multibranch helper, the helper contains `TrustEveryone` for fork PRs plus repository `Jenkinsfile` execution, and the documented shared-library path reaches `generator.generateAll()` inside `sh`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output matched the `TrustEveryone` trait configuration in `jobs/jenkins_job_multibranch_pipeline.groovy`.",
+    "Container output matched the repository `Jenkinsfile` configuration and the shared-library execution path that reaches `generator.generateAll()` inside `sh`.",
+    "Container output included `EVOHUNT_PROOF: fork PRs are trusted and attacker-controlled build logic reaches Jenkins execution.`"
+  ],
+  "limitations_or_blockers": [
+    "This bundle validates the shipped trust-and-execution chain directly rather than booting a live Jenkins controller, because the decisive repository-owned boundary failure is the generated multibranch trust policy."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "ff0d9b0b726c32e29fa3b9b44deae2bc9356736c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

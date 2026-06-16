@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stack_exhaustion_dos",
+  "summary": "The Docker-based reproduction rebuilds rssn at the pinned vulnerable commit, constructs an attacker-controlled left-deep expression, and confirms that calling Expr::pre_order_walk triggers an unrecoverable Rust stack-overflow abort.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause Expr::pre_order_walk to recurse through a deeply nested attacker-controlled expression until the Rust runtime aborts with a stack-overflow error, demonstrating a real availability impact.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned rssn at commit 82a8687bad55302feac27ca1bdffbfbf12745c78, built the reproduction image, compiled the harness, and then aborted with exit status 134 after printing \"thread 'main' (...) has overflowed its stack\" and \"fatal runtime error: stack overflow, aborting\". The verification helper emitted \"EVOHUNT_POC_SUCCESS: observed Rust stack-overflow abort while walking attacker-controlled expression\".",
+  "verification_method": "The host run script builds and runs a Docker container whose verify.sh helper compiles a small harness against the mounted vulnerable checkout, executes it with a 10000-node left-deep expression, requires a non-zero exit status, and checks the captured log for Rust's stack-overflow abort string plus the explicit EVOHUNT_POC_SUCCESS oracle.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The harness printed \"walking left-deep expression of depth 10000\" immediately before traversing attacker-controlled input.",
+    "The process terminated with exit status 134 after the Rust runtime reported \"has overflowed its stack\" and \"fatal runtime error: stack overflow, aborting\".",
+    "The verification helper printed \"EVOHUNT_POC_SUCCESS: observed Rust stack-overflow abort while walking attacker-controlled expression\".",
+    "The host orchestrator printed \"[evohunt] SUCCESS: reproduction completed and verified\" after the check passed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out commit 82a8687bad55302feac27ca1bdffbfbf12745c78, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "82a8687bad55302feac27ca1bdffbfbf12745c78",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc.Cargo.toml",
+      "reproduction/poc.main.rs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

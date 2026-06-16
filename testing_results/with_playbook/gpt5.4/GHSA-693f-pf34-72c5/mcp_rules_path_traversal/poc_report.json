@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The Docker-based reproduction cloned the pinned vulnerable revision, started the shipped MCP HTTP server, and used unauthenticated `tools/call` requests to overwrite, read, and delete files outside `~/.praison/rules`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should let an unauthenticated local HTTP client use the `praisonai.rules.create`, `praisonai.rules.show`, and `praisonai.rules.delete` tools to overwrite, read, and delete files outside the intended rules directory.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `cf66a74122dc3e34fb07e663ea16dabe99a1c6ee`, built the reproduction image, started the MCP HTTP server, and printed `EVOHUNT_SUCCESS: overwrite, read, and delete all succeeded` after the owned file was overwritten, the secret file contents were returned, and the delete target no longer existed.",
+  "verification_method": "The verification helper starts the vulnerable MCP HTTP server inside the container, sends direct JSON-RPC `tools/call` requests for create/show/delete, and then checks the on-disk file state plus the JSON-RPC response text to distinguish real filesystem breakout from a generic startup or parser failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The create response returned `Rule created: ../../owned.txt` and the target file outside `~/.praison/rules` changed to `pwned-overwrite`.",
+    "The show response returned the exact text `top-secret\\n` from a file outside the rules directory.",
+    "The delete response returned `Rule deleted: ../../delete_me.txt` and the target file no longer existed after the run."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "cf66a74122dc3e34fb07e663ea16dabe99a1c6ee",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/serve_mcp.py",
+      "reproduction/verify.py"
+    ]
+  }
+}

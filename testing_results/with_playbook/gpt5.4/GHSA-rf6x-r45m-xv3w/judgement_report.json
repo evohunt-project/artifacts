@@ -1,0 +1,148 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:05:38.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-rf6x-r45m-xv3w/GHSA-rf6x-r45m-xv3w.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "auto_login_superuser_token_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/auto_login_superuser_token_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/auto_login_superuser_token_bypass/vulnerability_report.json",
+      "title": "Default auto_login route issues unauthenticated superuser bearer tokens",
+      "vulnerability_type": "authentication_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is an unauthenticated token-issuance flaw in `/api/v1/auto_login`, not the advisory's authenticated IDOR in `DELETE /api/v1/api_key/{api_key_id}` and `delete_api_key()`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "mcp_cross_user_resource_read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/mcp_cross_user_resource_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/mcp_cross_user_resource_read/vulnerability_report.json",
+      "title": "Global MCP resource helpers expose other users' flow files",
+      "vulnerability_type": "improper_authorization",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is cross-user MCP resource enumeration and read access in `api/v1/mcp.py` and `mcp_utils.py`, not missing ownership verification in API-key deletion.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "private_flow_webhook_execution",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/private_flow_webhook_execution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/private_flow_webhook_execution/vulnerability_report.json",
+      "title": "Webhook endpoint executes private flows without authentication or webhook enablement",
+      "vulnerability_type": "unauthenticated_flow_execution",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is unauthenticated execution of private flows through `/api/v1/webhook/{flow_id_or_name}`, not deletion of another user's API key through the advisory's delete path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "H",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "v2_files_path_traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/v2_files_path_traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/v2_files_path_traversal/vulnerability_report.json",
+      "title": "Multipart filename traversal in /api/v2/files enables arbitrary local file write",
+      "vulnerability_type": "path_traversal_arbitrary_file_write",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a filename traversal bug in `/api/v2/files` and the local storage backend, not the advisory's missing ownership check in API-key deletion.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's root cause: an authenticated user deleting another user's API key because `DELETE /api/v1/api_key/{api_key_id}` called `delete_api_key()` without passing or checking the caller's user id.",
+    "evidence": [
+      "The advisory patch updates only the API-key deletion path by passing `current_user.id` into `delete_api_key()` in `src/backend/base/langflow/api/v1/api_key.py` and enforcing `api_key.user_id == user_id` in `src/backend/base/langflow/services/database/models/api_key/crud.py`.",
+      "None of the four qualifying findings reference the advisory files or describe deleting another user's API key; they instead concern `/api/v1/auto_login`, `/api/v1/mcp`, `/api/v1/webhook/{flow_id_or_name}`, and `/api/v2/files`.",
+      "The session input manifest lists exactly four final `qualifying_vuln` findings, and each one is a distinct Langflow root cause unrelated to API-key ownership checks."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/auto_login_superuser_token_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/auto_login_superuser_token_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/auto_login_superuser_token_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/mcp_cross_user_resource_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/mcp_cross_user_resource_read/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/mcp_cross_user_resource_read/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/private_flow_webhook_execution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/private_flow_webhook_execution/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/private_flow_webhook_execution/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/v2_files_path_traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/v2_files_path_traversal/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69e97beb/v2_files_path_traversal/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

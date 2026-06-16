@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication_information_disclosure",
+  "summary": "The Docker-based reproduction clones the vulnerable Glances commit, starts web mode without API authentication, and verifies that /api/4/config and /api/4/processlist disclose planted secrets.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should allow an unauthenticated client to read the planted jwt_secret_key from /api/4/config and the planted proof-process argv token from /api/4/processlist.",
+  "actual_observed_result": "Running ./reproduction/run.sh printed a proof object containing \"config_secret\": \"EVOHUNT_PROOF_JWT_SECRET_20260601\", \"proof_pid\": 33, and \"proof_cmdline\": [\"python3\", \"-c\", \"import time; time.sleep(300)\", \"EVOHUNT_PROOF_CMDLINE_SECRET_20260601\"], followed by the success marker \"EVOHUNT_SUCCESS: unauthenticated_rest_api_disclosure\".",
+  "verification_method": "The verifier waits for /api/4/status, fetches /api/4/config and checks the exact planted jwt_secret_key, then fetches /api/4/processlist and confirms that the exact dedicated proof PID returned by the API contains the planted argv secret. This excludes false positives from startup failures or the verifier process itself.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GET /api/4/config returned the planted value EVOHUNT_PROOF_JWT_SECRET_20260601 from the Glances configuration.",
+    "GET /api/4/processlist returned the dedicated proof process pid 33 with cmdline [\"python3\", \"-c\", \"import time; time.sleep(300)\", \"EVOHUNT_PROOF_CMDLINE_SECRET_20260601\"].",
+    "The run emitted the success marker EVOHUNT_SUCCESS: unauthenticated_rest_api_disclosure."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "ee2dfa52ba8d7c299fd783f98d8f34839036c244",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.py"
+    ]
+  }
+}

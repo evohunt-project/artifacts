@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The reproduction confirms that a low-privilege member can coerce n8n's OAuth dynamic client registration flow into sending discovery and registration requests to an internal-only HTTP service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The attacker container should be unable to reach the private OAuth metadata host directly, but after creating a malicious `oAuth2Api` credential and calling `/rest/oauth2-credential/auth`, the n8n server should fetch protected-resource metadata, fetch authorization-server metadata, and POST dynamic client registration data to that private host.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `n8n@2.18.0`, launched `n8nio/n8n:2.18.0` plus an internal-only OAuth metadata service on a private Docker network, and then executed the exploit from an attacker container outside that network. The exploit reported `DIRECT_ACCESS_BLOCKED=1`, created a member-owned `oAuth2Api` credential, and received an authorization URI sourced from `http://oauth-internal:18080/authorize?...`. Host-side verification then confirmed that the private service logs contained the protected-resource discovery GET, the authorization-server metadata GET, and the dynamic client registration POST.",
+  "verification_method": "The exploit helper first verifies that the attacker container cannot resolve or connect to the private `oauth-internal` service directly. It then drives the real n8n REST API to create a low-privilege user, create the malicious OAuth2 credential, and request the auth URI. `run.sh` treats the run as successful only if the auth URI points at the private service and the private service logs show the expected GET/GET/POST sequence.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The attacker helper printed `DIRECT_ACCESS_BLOCKED=1`, showing the attacker container could not reach the private OAuth metadata host directly.",
+    "The attacker helper printed an `AUTH_URI` whose host was `oauth-internal:18080`, proving the returned authorization URL was sourced from the private service's metadata.",
+    "The private OAuth metadata service logs contained `GET /.well-known/oauth-protected-resource/issuer1`, `GET /.well-known/oauth-authorization-server/issuer1`, and `POST /register`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "n8n@2.18.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/oauth_server.py"
+    ]
+  }
+}

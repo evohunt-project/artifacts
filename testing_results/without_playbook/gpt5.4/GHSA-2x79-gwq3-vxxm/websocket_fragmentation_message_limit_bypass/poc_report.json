@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "websocket_resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that fragmented websocket frames bypass the configured ws_max_msg_size check, deliver an oversized reassembled message to the application callback, and temporarily grow server RSS with unfinished fragments.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A server configured with ws_max_msg_size=1024 should nevertheless acknowledge a 1536-byte fragmented logical message and show measurable memory growth while a much larger unfinished fragmented payload remains buffered on a live connection.",
+  "actual_observed_result": "Running ./reproduction/run.sh from the final session-root finding folder cloned commit 5128747363055201d3ecf0e29bf0a961703c9fa0, built the reproduction image, compiled the minimal websocket server, observed the proof string received=1536 after sending a 1536-byte fragmented message against a 1024-byte limit, and measured server RSS growth from 24460KB to 30712KB while a 6.3MB unfinished fragmented payload remained open.",
+  "verification_method": "The verifier starts a websocket server with ws_max_msg_size fixed at 1024 bytes, sends three masked fragments totaling 1536 bytes, and requires the server to respond with received=1536. It then opens a second websocket connection, sends 7000 masked 900-byte fragments without a final frame, and checks that server VmRSS increases by at least 2048KB while the connection stays open.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verification output contained: [verify] oversized_message_result=received=1536 with ws_max_msg_size=1024.",
+    "The verification output contained: [verify] rss_growth_kb=6252 baseline=24460 inflated=30712.",
+    "The run completed with: [verify] SUCCESS: fragmented websocket frames bypassed the configured message limit."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "5128747363055201d3ecf0e29bf0a961703c9fa0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/server.c",
+      "reproduction/verify.py"
+    ]
+  }
+}

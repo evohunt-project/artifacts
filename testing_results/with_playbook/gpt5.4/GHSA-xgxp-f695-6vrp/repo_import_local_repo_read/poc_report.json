@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The reproduction shows that a low-privilege SSH user cannot read a private victim repo directly, but can import the victim's on-host `file://` Git path into a repo they own and then read the victim content from the imported copy.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should let the attacker import a private on-host repository through `repo import file://...` and then read `secret-from-victim` from the imported repo even though direct reads of the victim repo are denied.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `85e19f1efe706115c1a5a16820b25b8ea61d6056`, built Soft Serve in the container, created a private victim repo, verified that the attacker could not read the victim repo directly, then imported `file:///work/data/repos/victim.git` with a benign HTTP `--lfs-endpoint` and successfully read `secret-from-victim` from the imported repo. The run ended with the verification signal `EVOHUNT_IMPORT_LOCAL_REPO_READ_CONFIRMED`.",
+  "verification_method": "The helper script first attempts a direct attacker read of the private victim repo and expects that read to fail. It then performs the `file://` import and verifies that `repo blob imported README.md` returns the exact secret string from the previously inaccessible victim repo. This distinguishes the vulnerability from a generic import success or unrelated server error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The direct attacker read of `victim` failed before the import step.",
+    "The attacker-owned imported repo returned the exact contents `secret-from-victim` after the `file://` import.",
+    "The run emitted the success signal `EVOHUNT_IMPORT_LOCAL_REPO_READ_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "85e19f1efe706115c1a5a16820b25b8ea61d6056",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

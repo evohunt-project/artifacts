@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:43:53.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8abaa5c4",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-gc42-3jg7-rxr2/GHSA-gc42-3jg7-rxr2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "mplex_stale_blocking_stream_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8abaa5c4/mplex_stale_blocking_stream_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8abaa5c4/mplex_stale_blocking_stream_dos/vulnerability_report.json",
+      "title": "Default mplex blocker state lets a remote peer permanently stall other substreams after one blocked stream is dropped",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a `libp2p-mplex` stale `blocking_stream` state bug in `muxers/mplex`, while the advisory targets attacker-controlled gossipsub `PRUNE.backoff` handling and overflow in gossipsub backoff time arithmetic.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying final finding identifies the advisory-described gossipsub `PRUNE.backoff` overflow path. The only qualifying finding is a separate mplex connection-stall bug.",
+    "evidence": [
+      "`.judge/input_manifest.json` lists `mplex_stale_blocking_stream_dos` as the only final `qualifying_vuln` finding in this session.",
+      "`mplex_stale_blocking_stream_dos/vulnerability_report.json` attributes the issue to stale `blocking_stream` state in `muxers/mplex/src/io.rs` after a blocked substream is dropped, which is a different component and root cause from the advisory.",
+      "The advisory describes attacker-controlled gossipsub `ControlPrune.backoff` values reaching the PRUNE backoff update path and causing `Duration`/`Instant` overflow during gossipsub backoff storage updates.",
+      "In the checked-out upstream tree, the advisory path is gossipsub `handle_prune` -> `remove_peer_from_mesh` -> `backoffs.update_backoff` in `protocols/gossipsub/src/behaviour.rs` and `protocols/gossipsub/src/backoff.rs`, not the mplex muxer code reported by the session.",
+      "`artifacts/component_family_checklist.md` marks the gossipsub family as `pruned` and the mplex family as the accepted finding, confirming the session never materialized a qualifying finding for the advisory component."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8abaa5c4/mplex_stale_blocking_stream_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8abaa5c4/mplex_stale_blocking_stream_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8abaa5c4/mplex_stale_blocking_stream_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

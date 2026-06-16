@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "query_plan_information_disclosure",
+  "summary": "The Docker-based reproduction confirms that a non-master client can request `explain=queryPlanner` on a publicly readable class and receive raw MongoDB query-plan metadata.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make an unauthenticated request to a readable Parse class return MongoDB explain output that exposes the collection namespace, query shape, and server metadata instead of rejecting the request as master-key only.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned parse-server at `9cda64fdc01fd5b8b242c74c039bbd9ccf639a52`, built the helper image, started MongoDB and Parse Server, created a publicly readable `PublicMessage` class, and wrote `reproduction/last_run/observed_explain.json`. That file shows `results.queryPlanner.namespace` equal to `parse.PublicMessage`, `results.command.find` equal to `PublicMessage`, `results.serverInfo.version` equal to `8.0.23`, and internal MongoDB server parameters, while the exploit request only used `X-Parse-Application-Id: app`.",
+  "verification_method": "The container helper rejects the run unless the exploit response contains `results.queryPlanner.namespace === \"parse.PublicMessage\"` and `results.command.find === \"PublicMessage\"`. After the container exits, `run.sh` verifies the generated `reproduction/last_run/observed_explain.json` file contains those expected values and prints the `EVOHUNT_SUCCESS` proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/last_run/observed_explain.json contains `results.queryPlanner.namespace` set to `parse.PublicMessage`.",
+    "reproduction/last_run/observed_explain.json contains `results.command.find` set to `PublicMessage` and `results.serverInfo.version` set to `8.0.23`.",
+    "The run printed `EVOHUNT_SUCCESS: unauthenticated explain exposed MongoDB query-plan data`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "9cda64fdc01fd5b8b242c74c039bbd9ccf639a52",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.js"
+    ]
+  }
+}

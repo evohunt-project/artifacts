@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:14:04.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b89e5d8",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-jj7c-x25r-r8r3/GHSA-jj7c-x25r-r8r3.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "artifact_bytecode_unbounded_decompression_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b89e5d8/artifact_bytecode_unbounded_decompression_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b89e5d8/artifact_bytecode_unbounded_decompression_dos/vulnerability_report.json",
+      "title": "ProgramArtifact bytecode decompression is unbounded and permits local denial of service",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets artifact JSON bytecode decompression in `Artifact::read_from_file` and `Program::read`, while the advisory targets Brillig foreign-call result allocation for nested composite arrays in `convert_ssa_foreign_call` and `allocate_foreign_call_result_array`. The reported sink, files, and root-cause mechanism do not overlap.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's vulnerable Brillig compiler path that under-allocates nested foreign-call result arrays with composite element types. The only final qualifying finding is a separate local artifact gzip-decompression denial of service.",
+    "evidence": [
+      "The advisory describes a compiler-side heap corruption bug in Brillig foreign-call result allocation for nested arrays, specifically the nested-array handling in `convert_ssa_foreign_call` and `allocate_foreign_call_result_array` where semantic length is used instead of semi-flattened size.",
+      "The only final qualifying finding reports a different path: `noir-execute execute/check-witness -> Artifact::read_from_file -> Program::deserialize_program_base64 -> Program::read -> GzDecoder::read_to_end`.",
+      "That finding's code locations are `tooling/artifact_cli/src/fs/artifact.rs`, `tooling/noirc_artifacts/src/program.rs`, and `acvm-repo/acir/src/circuit/mod.rs`, not the Brillig allocation code described by the advisory."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b89e5d8/artifact_bytecode_unbounded_decompression_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b89e5d8/artifact_bytecode_unbounded_decompression_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b89e5d8/artifact_bytecode_unbounded_decompression_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

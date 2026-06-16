@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction clones oRPC v1.13.5, mounts it into a Node container, and runs a helper that submits an empty batch to the real handler path and verifies that the promise stays pending.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The helper should confirm that a valid empty batch request never produces a response and that no per-item handler dispatch occurs.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned oRPC v1.13.5, built the reproduction image, installed the workspace dependencies in the container, and printed `EVOHUNT_EMPTY_BATCH_HANG_CONFIRMED` after the empty batch request stayed pending with zero per-item dispatches.",
+  "verification_method": "The helper races the real `handler.handle(...)` promise against a short timeout and treats the timeout winning, with zero per-item dispatches, as the proof signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container run printed `EVOHUNT_EMPTY_BATCH_HANG_CONFIRMED`.",
+    "The helper verified that the handler promise was still pending after the timeout race.",
+    "The helper verified that the per-item interceptor was never reached for the empty batch."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "44a1a1ee9b7f7c12eaeb3ed385a99929ffd27ee7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run-repro.sh",
+      "reproduction/verify-empty-batch-hang.ts"
+    ]
+  }
+}

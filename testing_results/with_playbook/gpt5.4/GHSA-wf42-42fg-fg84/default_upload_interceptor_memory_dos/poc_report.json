@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction cloned the pinned Nest commit, confirmed the vulnerable Multer wrapper pattern in the checkout, then ran a helper service that exercises the same default `multer()` call pattern used by the exported upload interceptors. Uploading a 220 MiB multipart file under a 384 MiB memory limit killed the server process and broke the client request.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A large multipart upload should exhaust memory on the default in-memory upload path, terminate the server process, and cause the client upload to fail instead of returning a normal HTTP response.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `bcb4747f7598a9d2655c8184a6d729ebefa07fbd`, built the reproduction image, confirmed the vulnerable wrapper pattern in the pinned checkout, started the helper upload service, and then killed the server during a 220 MiB multipart upload. The run reported `server_exit=137`, `curl_status=52`, and `EVOHUNT_UPLOAD_MEMORY_DOS_CONFIRMED`.",
+  "verification_method": "The verifier first checks that the pinned checkout still contains the vulnerable `multer()` wrapper pattern in the exported upload interceptors. It then launches a helper service that exercises the same default `multer()` call pattern with pinned dependency versions and treats the run as successful only if the server dies with exit code 137 and the client upload fails with a broken connection rather than receiving a normal response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verification run reported `server_exit=137` for the helper server process.",
+    "The upload client failed with `curl_status=52` and `curl: (52) Empty reply from server`.",
+    "The verifier printed `EVOHUNT_UPLOAD_MEMORY_DOS_CONFIRMED` before `run.sh` returned success."
+  ],
+  "limitations_or_blockers": [
+    "The runtime helper exercises the exact default `multer()` call pattern exposed by the pinned Nest upload interceptors after statically confirming that the checkout still contains that wrapper pattern, rather than importing the source TypeScript interceptors directly inside the container."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "bcb4747f7598a9d2655c8184a6d729ebefa07fbd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/upload_harness.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

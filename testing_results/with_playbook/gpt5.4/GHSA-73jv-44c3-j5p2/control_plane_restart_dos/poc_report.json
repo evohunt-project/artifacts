@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction logs in as a low-privilege custom user, calls POST /api/core/restart-master, and confirms that the same session cookie is invalid after the Ajenti master restart fires.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privilege authenticated user should be able to trigger a control-plane restart of Ajenti and cause the previously valid session cookie to fail on a protected endpoint after the restart.",
+  "actual_observed_result": "Running ./reproduction/run.sh started Ajenti with a low-privilege custom user, obtained a valid session, received HTTP 200 from POST /api/core/restart-master, observed the restart log message, and then saw the same cookie receive HTTP 401 from /api/core/sidebar after the restart.",
+  "verification_method": "The verifier checks three signals together: successful low-privilege login, HTTP 200 from the restart route, and HTTP 401 from a protected endpoint when reusing the same cookie after a short delay. It also greps the Ajenti log for the restart message to distinguish a real restart from a generic auth failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The restart request returned HTTP 200 for the low-privilege session.",
+    "The same cookie later returned HTTP 401 on /api/core/sidebar.",
+    "Ajenti logged the restart signal \"Will restart the process now\"."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "eb0235d241e9f6bf4f4033ff50bbff7c275a047c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

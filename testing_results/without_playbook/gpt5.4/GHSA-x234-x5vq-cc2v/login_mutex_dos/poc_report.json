@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_dos",
+  "summary": "The Docker-based reproduction confirms that a small burst of bad password-login requests can queue a legitimate password login behind the global login mutex and delay it by many seconds.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show a normal successful password login completing quickly, then show a later successful password login delayed well beyond baseline after concurrent bad login attempts are queued.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the bundled target snapshot at commit b16b322e2f41262af9f544d29b8cfe4ae79e0292, built the target in the container, installed the app, measured a baseline successful-login median of about 0.070 seconds, then delayed a successful login to about 23.93 seconds after five bad password attempts were queued ahead of it.",
+  "verification_method": "The probe performs several baseline successful logins, launches concurrent failed password-logins, then measures the next successful login. The run is only accepted if the delayed successful login exceeds both a fixed 5-second threshold and 20x the measured baseline, which distinguishes mutex-induced queueing from normal network jitter.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline successful logins completed in approximately 0.054s, 0.071s, and 0.070s, for a median of about 0.070s.",
+    "Five attacker-triggered bad logins completed sequentially at roughly 6.072s, 9.091s, 16.111s, 22.119s, and 24.123s.",
+    "The legitimate successful login issued under load completed in about 23.928s and still returned HTTP 200 with a valid token payload.",
+    "Server logs showed the delayed legitimate login immediately after the serialized failed logins, matching the probe timings."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the bundled target-repo git snapshot on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b16b322e2f41262af9f544d29b8cfe4ae79e0292",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/login_dos_probe.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

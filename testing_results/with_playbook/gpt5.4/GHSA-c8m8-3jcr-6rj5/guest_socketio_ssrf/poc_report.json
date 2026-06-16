@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The reproduction starts the FUXA base image with the vulnerable Socket.IO runtime sources overlaid from commit `b78f6159d02a56ce5ff48207feb936afb3534fc8`, enables `secureEnabled=true`, starts a loopback-only proof HTTP service, and uses a guest Socket.IO client to exfiltrate the proof token through `device-webapi-request`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A guest Socket.IO client with no JWT should be able to request `http://127.0.0.1:8089/secret` through `device-webapi-request` and receive `SSRF_PROOF_TOKEN=alpha-9f5d7c2b` back from the FUXA server.",
+  "actual_observed_result": "Running `./reproduction/run.sh` printed `SSRF verification passed: SSRF_PROOF_TOKEN=alpha-9f5d7c2b` followed by `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The helper starts an internal proof HTTP service bound to `127.0.0.1:8089`, starts FUXA with `secureEnabled=true`, then uses a Socket.IO client without any token to emit `device-webapi-request`. Verification passes only if the returned `result` field exactly matches the proof token from the loopback-only service.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final bundle command `./reproduction/run.sh` completed successfully.",
+    "The helper printed `SSRF verification passed: SSRF_PROOF_TOKEN=alpha-9f5d7c2b`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, mounts that checkout into the container, and the container overlays the vulnerable runtime source files onto the compatible FUXA base image before starting the server.",
+    "pinned_commit_or_ref": "b78f6159d02a56ce5ff48207feb936afb3534fc8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_entry.sh",
+      "reproduction/internal_proof_service.py",
+      "reproduction/verify_ssrf.py"
+    ]
+  }
+}

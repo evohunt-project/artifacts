@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle created separate victim and attacker users, uploaded a file into the victim flow, enumerated the victim download URL through the global MCP resource listing with the attacker's own API key, and then fetched that file through the unauthenticated V1 download route.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The helper should enumerate a victim flow file URI from the global MCP resource listing while authenticated as a low-privileged attacker and then retrieve the victim file bytes through the unauthenticated V1 download route, finally emitting EVOHUNT_FILE_POC_SUCCESS.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Langflow v1.7.0 at commit b6ed2bc4d9d6a00e4bd8363495edfec6f091ccfc, built the reproduction image, created distinct victim and attacker users, gave the attacker their own API key, uploaded a secret victim file, enumerated a leaked /api/v1/files/download/.../secret.txt URI from the global MCP resource list, fetched that URI without authentication with HTTP 200, and printed EVOHUNT_FILE_POC_SUCCESS.",
+  "verification_method": "The helper fails unless the attacker can create an API key, obtain the victim flow file URL from handle_list_resources(), and fetch the victim-controlled proof string from the leaked download path without sending any authentication to the V1 file route. On success it prints EVOHUNT_FILE_POC_SUCCESS.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output contained attacker_visible_flows_before_exploit=0, showing the attacker did not already have ordinary access to victim flows.",
+    "Container output contained a leaked MCP URI in the form http://localhost:7860/api/v1/files/download/<victim-flow-id>/<timestamp>_secret.txt.",
+    "Container output contained download_status=200 for the unauthenticated V1 file request.",
+    "run.sh observed the expected proof signal EVOHUNT_FILE_POC_SUCCESS."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, stages the required source tree into the Docker build context, and mounts the checked-out repository into the container at /target-repo.",
+    "pinned_commit_or_ref": "b6ed2bc4d9d6a00e4bd8363495edfec6f091ccfc",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/file_poc.py"
+    ]
+  }
+}

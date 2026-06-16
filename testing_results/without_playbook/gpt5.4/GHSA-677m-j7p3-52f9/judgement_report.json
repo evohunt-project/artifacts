@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:53:40.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0f0a625a",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-677m-j7p3-52f9/GHSA-677m-j7p3-52f9.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "socketio_parser_binary_reconstruction_stack_exhaustion",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0f0a625a/socketio_parser_binary_reconstruction_stack_exhaustion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0f0a625a/socketio_parser_binary_reconstruction_stack_exhaustion/vulnerability_report.json",
+      "title": "Nested binary-event payload causes stack exhaustion in packet reconstruction",
+      "vulnerability_type": "remote_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets recursive payload reconstruction in `binary.reconstructPacket()` after a normal single attachment, while the advisory fixes missing `maxAttachments` enforcement in `decodeString()` that lets attackers declare and buffer too many attachments.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause. The accepted finding is a stack-exhaustion DoS from deeply nested payload reconstruction, while the advisory describes memory exhaustion from accepting and buffering an unbounded number of binary attachments.",
+    "evidence": [
+      "The advisory summary says 'socket.io allows an unbounded number of binary attachments' and the advisory details describe the server waiting for many attachments and buffering them until memory is exhausted.",
+      "Each referenced upstream patch adds a `maxAttachments` decoder option and rejects `n > maxAttachments` inside `decodeString()`/`Decoder.add()`, which is an attachment-count parsing guard rather than a reconstruction-depth guard.",
+      "The accepted finding report identifies recursive `_reconstructPacket()` traversal in `binary.js` as the vulnerable operation and attributes the failure to attacker-controlled nesting depth.",
+      "The bundled PoC uses the packet prefix `51-` with one binary placeholder and varies only array nesting depth before the single attachment is reconstructed, producing `RangeError: Maximum call stack size exceeded` instead of attachment buffering or memory growth from a large declared attachment count."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0f0a625a/socketio_parser_binary_reconstruction_stack_exhaustion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0f0a625a/socketio_parser_binary_reconstruction_stack_exhaustion/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0f0a625a/socketio_parser_binary_reconstruction_stack_exhaustion/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

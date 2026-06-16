@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:48:26.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_920f1465",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-3936-cmfr-pm3m/GHSA-3936-cmfr-pm3m.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "blackd_trailer_chain_cpu_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_920f1465/blackd_trailer_chain_cpu_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_920f1465/blackd_trailer_chain_cpu_dos/vulnerability_report.json",
+      "title": "Sub-kilobyte trailer chains cause blackd worker starvation and service-level DoS",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is rooted in blackd's HTTP formatting path and expensive trailer-chain processing in Black's line splitting logic, not in the advisory's cache filename construction from unsanitized `--python-cell-magics` input.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding in this session identifies the advisory-described arbitrary file write caused by unsanitized `--python-cell-magics` flowing into Black's cache filename.",
+    "evidence": [
+      "The advisory describes a cache-file path construction flaw: `Mode.get_cache_key()` incorporates `python_cell_magics`, and `black.cache.get_cache_file()` uses that cache key in the filename.",
+      "The only qualifying finding, `blackd_trailer_chain_cpu_dos`, instead follows `blackd.handle()` to `black.format_file_contents()` and then into expensive RHS trailer splitting in `black.linegen`, producing worker-starvation DoS rather than cache-path arbitrary write.",
+      "The session's separate file-write-style finding, `black_symlink_external_write`, is non-qualifying and is based on explicit symlink root discovery drift, which is also a different root cause from the advisory's cache filename bug."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_920f1465/blackd_trailer_chain_cpu_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_920f1465/blackd_trailer_chain_cpu_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_920f1465/blackd_trailer_chain_cpu_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

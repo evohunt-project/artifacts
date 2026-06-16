@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction builds CoreDNS 1.14.3, starts a server with `proxyproto` and `acl`, shows that a normal query is refused, and then shows that the same query succeeds when the client forges a PROXY header for an allowed IP address.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an otherwise blocked DNS query becomes authorized solely because the client prepends a forged PROXY header naming an allowed source IP.",
+  "actual_observed_result": "Running ./reproduction/run.sh produced a baseline `rcode=5` (`REFUSED`) response, then produced `rcode=0 answers=1.2.3.4` for the forged-header query, and finally confirmed that an explicit proxy allow-list blocks the same forgery on the guarded variant.",
+  "verification_method": "The verification helper builds CoreDNS from the mounted target repository, runs a vulnerable and a guarded configuration, and compares exact DNS outcomes for normal and forged-header TCP queries. The oracle distinguishes a true authorization bypass from a startup failure, parser error, or generic network issue.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline query to the vulnerable configuration returned `rcode=5 answers=`.",
+    "Forged-header query to the vulnerable configuration returned `rcode=0 answers=1.2.3.4`.",
+    "Forged-header query to the guarded configuration returned `rcode=5 answers=`.",
+    "The verification helper emitted `EVOHUNT_PROXYPROTO_BYPASS_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "17fceec6d93fd1dde5ba6888c363f131ff6d647f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/probe.go",
+      "reproduction/verify.sh",
+      "reproduction/Corefile.vuln",
+      "reproduction/Corefile.safe"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_dynamic_evaluation",
+  "summary": "The Docker-based reproduction confirms that request data reflected by `respond` is re-executed by the `templates` middleware, leaking an attacker-selected environment secret and a root-relative file from the checked-out target repository.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause an injected template payload to execute through the `templates` middleware and return the proof environment variable plus repository-root file content in the HTTP response.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `e2eee6a7fce366321294c9c2a79f3146891dcbdf`, built Caddy inside the container, and printed `EVOHUNT_PROOF_ENV=template-pwned`, `EVOHUNT_PROOF_FILE=README.md`, and `EVOHUNT_STATUS=success`.",
+  "verification_method": "The reproduction starts Caddy with `templates` in front of `respond {http.request.body}`, injects `{{env \"EVOHUNT_TEMPLATE_SECRET\"}}` and `{{readFile \"README.md\"}}`, and verifies that the response body exactly contains the proof secret and known repository README content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_PROOF_ENV=template-pwned",
+    "EVOHUNT_PROOF_FILE=README.md",
+    "EVOHUNT_STATUS=success"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "e2eee6a7fce366321294c9c2a79f3146891dcbdf",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Caddyfile",
+      "reproduction/reproduce.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

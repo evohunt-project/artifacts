@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated pre-approval file write",
+  "summary": "A reproduced HTTP call to account_signTransaction was denied by Clef, but the attacker-supplied selector was still persisted into 4byte-custom.json before approval.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The request should cause a new attacker-controlled selector entry to be written to the configured 4byte custom database even though the signing request is not approved.",
+  "actual_observed_result": "The HTTP response returned a JSON-RPC error with message request denied, and the created 4byte-custom.json file contained {\"912bb098\":\"evohuntWriteProbe999999(uint256)\"}.",
+  "verification_method": "The reproduction starts a fresh Clef instance with a dedicated writable custom DB path, sends a signTransaction request with a selector absent from the bundled 4byte database, then verifies that the response is denied and that the custom DB file was created with the expected attacker-controlled mapping.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/output/response.json",
+    "reproduction/output/4byte-custom.json",
+    "reproduction/output/clef.log"
+  ],
+  "limitations_or_blockers": [
+    "The PoC builds the local Clef binary from the session repo and requires Go plus network access for any missing module downloads."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/clef_poc_ui.py"
+    ]
+  }
+}

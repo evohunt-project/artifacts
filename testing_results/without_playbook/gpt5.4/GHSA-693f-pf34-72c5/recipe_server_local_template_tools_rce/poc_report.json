@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "local_template_tools_rce",
+  "summary": "The Docker-based reproduction clones a vulnerable PraisonAI commit, starts the recipe server, submits an attacker-controlled absolute recipe path, and proves that template-local tools.py executes in the server process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make POST /v1/recipes/run execute attacker-controlled Python from a local recipe directory's tools.py, return a successful recipe response, and write the proof marker file.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 004dcfef45e8fe8b48591140ac31b03c930469cd, built the reproduction image, installed the mounted source tree, started the recipe server, received HTTP 200 with recipe status success, wrote /tmp/evohunt-recipe-server-rce/proof.txt with owned via server, and printed EVOHUNT_SUCCESS: recipe server executed attacker-controlled template tools.py.",
+  "verification_method": "The helper creates a minimal attacker-controlled recipe directory with agents.yaml and a malicious tools.py, starts the recipe server, posts the absolute path to /v1/recipes/run, and verifies both the success response and the proof file contents. The run fails unless the attacker-controlled module body actually executes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction received HTTP 200 and a JSON response with recipe server-rce-test and status success.",
+    "The exploit helper observed /tmp/evohunt-recipe-server-rce/proof.txt with the exact contents owned via server.",
+    "The container printed EVOHUNT_SUCCESS: recipe server executed attacker-controlled template tools.py after verification passed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "004dcfef45e8fe8b48591140ac31b03c930469cd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/serve_target.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

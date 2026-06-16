@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that a single rejected multi-filter extension query still triggers one full backend scan per supplied filter and appends a results object to the same 400 response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should warm the marketplace cache, send a rejected 1000-filter query, and confirm that the 400 error response is followed by a results object while the server logs show 1000 repeated backend scans for the same request ID.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned github.com/coder/code-marketplace at commit b5576b1a147e08714f1bb6ceff5f545393d6be5b, built the target, generated a 2000-extension corpus, sent a rejected 1000-filter query, and printed `EVOHUNT_POC_SUCCESS request_id=be03f739-7c2c-41fc-8e3e-b087bfcdf892 filters=1000 walk_count=1000 got_count=1000 elapsed_ms=377 body_contains_results=true status=400`.",
+  "verification_method": "The verification helper waits for the server, sends the attack request, parses the requestId from the first JSON error object, confirms that the same raw 400 body also contains a results object, and counts walk-extensions and got-extensions-for-filter log entries for that exact request ID.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The raw 400 response begins with the Too many filters error JSON and is immediately followed by a second JSON document containing query results.",
+    "The verbose server log contains 1000 walk extensions entries for the rejected request's request_id.",
+    "The verbose server log contains 1000 got extensions for filter entries for the same request_id."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b5576b1a147e08714f1bb6ceff5f545393d6be5b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/generate_extensions.go",
+      "reproduction/verify.go"
+    ]
+  }
+}

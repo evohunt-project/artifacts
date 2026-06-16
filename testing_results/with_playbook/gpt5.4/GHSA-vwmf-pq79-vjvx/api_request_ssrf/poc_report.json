@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction confirms that the named `APIRequest` component still reaches localhost even when SSRF protection is enabled, because the component invokes the validator in warning-only mode and then performs the request anyway.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that strict SSRF validation blocks a localhost URL while the real `APIRequest` component still performs the localhost fetch and returns the proof response body.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `langflow` at `699e35688f1c6ba5a123f685e2ef6374ba404937`, built the Docker image, created a localhost HTTP proof server inside the container, observed `STRICT_VALIDATOR_BLOCKED=1`, and then showed that the actual component still made the request with `SERVER_HIT_COUNT=1`, `RESULT_STATUS=200`, and `RESULT_BODY={\"proof\": \"evohunt-ssrf-ok\"}`.",
+  "verification_method": "The helper enables `LANGFLOW_SSRF_PROTECTION_ENABLED`, verifies that `validate_url_for_ssrf(..., warn_only=False)` rejects the same localhost URL, and then executes the real `APIRequestComponent.make_api_request()` path. The run fails unless the localhost server is hit exactly once and the component returns the expected proof body.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`STRICT_VALIDATOR_BLOCKED=1` showed that the repository's strict SSRF validator would reject the localhost target when enforcement is enabled.",
+    "`SERVER_HIT_COUNT=1` proved that the real `APIRequest` component still sent a request to the localhost proof service.",
+    "`RESULT_STATUS=200` and `RESULT_BODY={\"proof\": \"evohunt-ssrf-ok\"}` showed that the internal response body was returned through the vulnerable component path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "699e35688f1c6ba5a123f685e2ef6374ba404937",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/execute.sh",
+      "reproduction/prove_api_request_ssrf.py"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_file_upload_and_write",
+  "summary": "The Docker-based reproduction confirms that Crawl4AI v0.8.0 accepts an attacker-controlled `output_path` on `/screenshot`, writes the PNG server-side into `/app/static/assets`, and immediately serves that planted file back over HTTP.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the target service to create `/app/static/assets/evohunt-proof.png` from an attacker-requested screenshot and expose it at `/static/assets/evohunt-proof.png` under the service's own origin.",
+  "actual_observed_result": "Running the final packaged `./reproduction/run.sh` from the session-root finding folder cloned commit `a5354f267aeeb793bf26e6566a89aa8f1f33809e`, built the target image, started the service, posted to `/screenshot` with `output_path=/app/static/assets/evohunt-proof.png`, received a success response naming that path, and fetched the planted file back from `/static/assets/evohunt-proof.png` with a valid PNG header.",
+  "verification_method": "The helper container serves an attacker-controlled HTML page, waits for the target `/health` endpoint, triggers `/screenshot`, then fetches `/static/assets/evohunt-proof.png` and checks for the exact PNG file signature (`89504e470d0a1a0a`). This distinguishes a real server-side write from a generic success response or an unrelated startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The target API responded with `{\"success\": true, \"path\": \"/app/static/assets/evohunt-proof.png\"}`.",
+    "A follow-up GET to `/static/assets/evohunt-proof.png` returned HTTP 200 with `Content-Type: image/png`.",
+    "The fetched file began with the expected PNG signature `89504e470d0a1a0a0000000d49484452`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out commit `a5354f267aeeb793bf26e6566a89aa8f1f33809e`, builds the target image from that checkout, and runs a helper container that drives and verifies the exploit over Docker networking.",
+    "pinned_commit_or_ref": "a5354f267aeeb793bf26e6566a89aa8f1f33809e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

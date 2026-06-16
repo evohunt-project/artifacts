@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:30:38.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_93229406",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-2c4m-g7rx-63q7/GHSA-2c4m-g7rx-63q7.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "inherited_property_intrinsic_corruption",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_93229406/inherited_property_intrinsic_corruption",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_93229406/inherited_property_intrinsic_corruption/vulnerability_report.json",
+      "title": "Inherited-property traversal corrupts shared intrinsics in setIn",
+      "vulnerability_type": "prototype_pollution_and_object_shape",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets inherited-property traversal through `object[key]` and corruption of `Object.prototype.toString.call`, while the advisory targets the separate `POLLUTED_KEYS.includes(key)` bypass that re-enables the classic `constructor/prototype` prototype-pollution path when `Array.prototype.includes` is hijacked.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's vulnerable code/root cause. The only scanned final qualifying finding is a different bug in the same exported `setIn` API.",
+    "evidence": [
+      "The advisory describes prototype pollution in `set-in` >=2.0.1 where the denylist check in `index.js` uses `POLLUTED_KEYS.includes(key)`, and a crafted environment with `Array.prototype.includes = () => false` re-enables the `['constructor', 'prototype', 'polluted']` write into `Object.prototype`.",
+      "The fix referenced by the advisory (`b8e1dabfdbd35c8d604b6324e01d03f280256c3d`) replaces the `includes`-based check with direct string comparisons and adds a regression test named `resilience against hijacked Array.prototype.includes`, which is specific to the advisory's root cause.",
+      "The only scanned final qualifying finding, `inherited_property_intrinsic_corruption`, instead depends on `recursivelySetIn(object[key], ...)` following inherited properties and then assigning through `set()` to corrupt `Object.prototype.toString.call` via `['toString', 'call']`.",
+      "That finding's own evidence and PoC report explicitly state that the classic `['constructor', 'prototype', 'polluted']` path is blocked by the denylist, confirming it is not the advisory-described vulnerable condition."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_93229406/inherited_property_intrinsic_corruption",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_93229406/inherited_property_intrinsic_corruption/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_93229406/inherited_property_intrinsic_corruption/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

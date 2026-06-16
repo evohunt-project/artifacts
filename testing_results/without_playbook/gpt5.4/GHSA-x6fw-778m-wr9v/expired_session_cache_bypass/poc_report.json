@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "session_expiry_auth_bypass",
+  "summary": "The Docker-based reproduction confirms that a session token cached once by Parse Server remains usable for authenticated writes after the backing _Session record has expired, until the auth cache TTL elapses.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should allow an expired session token to update its user record during the stale-cache window, confirm the write with a master-key read, and then show that the same token is rejected with code 209 after the cache TTL expires.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned parse-community/parse-server at 6b1b50c8baf7e332e47307f81db7c48bca924bdc, started the target with sessionLength=1 and cacheTTL=5000, primed the auth cache, then successfully performed PUT /parse/users/:objectId with the expired token after 2.2 seconds (HTTP 200). After another 3.2 seconds, the same token failed with HTTP 400 and Parse error code 209 (\"Session token is expired.\").",
+  "verification_method": "The exploit script checks the exact status transition, reads the user back with the master key to confirm pocTouched=true was written during the stale window, and then requires the same expired token to fail once the cache TTL has elapsed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run log contains \"stale-window update 200\" for PUT /parse/users/:objectId after the session had already expired.",
+    "The run log contains a master-key read showing \"pocTouched\":true on the updated _User object.",
+    "The run log contains \"post-ttl update 400 {\\\"code\\\":209,\\\"error\\\":\\\"Session token is expired.\\\"}\" after the cache TTL elapsed.",
+    "The run log ends with \"VALIDATION_SUCCESS stale cache preserved expired session access before TTL expiry\" and \"SUCCESS: reproduction completed and verified\"."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, starts a Mongo sidecar, and mounts the checked-out tree into the verification container.",
+    "pinned_commit_or_ref": "6b1b50c8baf7e332e47307f81db7c48bca924bdc",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

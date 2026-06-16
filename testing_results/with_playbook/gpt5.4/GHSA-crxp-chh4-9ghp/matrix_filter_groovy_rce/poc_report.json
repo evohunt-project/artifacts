@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_dynamic_evaluation",
+  "summary": "The packaged Docker-based reproduction clones the pinned vulnerable Jervis commit, builds the project inside the container, feeds a malicious friendly-label matrix value into the default matrix-axis computation path, and verifies controller-side Groovy execution by checking for the `EVOHUNT_MATRIX_RCE` proof file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should cause `PipelineGenerator.getBuildableMatrixAxes()` to execute attacker-controlled Groovy during matrix-filter evaluation and emit the proof string `EVOHUNT_MATRIX_RCE`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `6586b9fe6c654efbc891f9e5410ba07298a90b38`, built the reproduction image, executed the helper harness, printed `PROOF=EVOHUNT_MATRIX_RCE`, then printed `[evohunt] proof: EVOHUNT_MATRIX_RCE` and `[evohunt] SUCCESS: matrix filter Groovy execution reproduced`.",
+  "verification_method": "The container copies the mounted repository into a writable workspace, runs `./gradlew -I /app/init.gradle evohuntValidateMatrixRce`, and then verifies that `/tmp/evohunt-matrix-proof.txt` exists and contains exactly `EVOHUNT_MATRIX_RCE`. This distinguishes real controller-side Groovy execution from a build failure or unrelated parser error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Gradle task output included `PROOF_EXISTS=true`.",
+    "Gradle task output included `PROOF=EVOHUNT_MATRIX_RCE`.",
+    "The verifier printed `[evohunt] proof: EVOHUNT_MATRIX_RCE`.",
+    "The packaged run ended with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6586b9fe6c654efbc891f9e5410ba07298a90b38",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/init.gradle",
+      "reproduction/validate_matrix_rce.groovy"
+    ]
+  }
+}

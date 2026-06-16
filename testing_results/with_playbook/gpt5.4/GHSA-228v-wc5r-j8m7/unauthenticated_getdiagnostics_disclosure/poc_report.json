@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that GetDiagnostics stays reachable and returns SSH path metadata even when guest login is required and the dashboard endpoint is denied.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an unauthenticated caller receives a 403 from GetDashboard but still gets a 200 response with SshFoundKey and SshFoundConfig from GetDiagnostics.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 24cced0c8c806800f79cc2d8462ab0a193ddebcd, built the reproduction image, started OliveTin with guest login required, observed GetDashboard return 403, and printed EVOHUNT_DIAGNOSTICS_BYPASS_CONFIRMED {\"SshFoundKey\":\"not found at /root/.ssh/id_rsa\",\"SshFoundConfig\":\"not found at /root/.ssh/config\"}.",
+  "verification_method": "The verifier first checks Init for loginRequired=true and showDiagnostics=false, then compares the protected dashboard RPC against the diagnostics RPC under the same unauthenticated caller. The run only passes when GetDashboard is denied, GetDiagnostics still returns 200, and the diagnostics response contains the SSH path fields.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed EVOHUNT_DIAGNOSTICS_BYPASS_CONFIRMED together with the returned SshFoundKey and SshFoundConfig values.",
+    "The verification helper observed loginRequired=true and showDiagnostics=false from Init before attempting the protected and unprotected RPCs.",
+    "The verifier confirmed a 403 from GetDashboard and a 200 from GetDiagnostics under the same unauthenticated session."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "24cced0c8c806800f79cc2d8462ab0a193ddebcd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/config.yaml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

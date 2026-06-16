@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:25:54.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e458dfaf",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-ph9w-r52h-28p7/GHSA-ph9w-r52h-28p7.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated_auto_login_superuser_takeover",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e458dfaf/unauthenticated_auto_login_superuser_takeover",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e458dfaf/unauthenticated_auto_login_superuser_takeover/vulnerability_report.json",
+      "title": "Unauthenticated auto-login endpoint issues a superuser bearer token by default",
+      "vulnerability_type": "authentication_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets unauthenticated token minting at GET /api/v1/auto_login via default AUTO_LOGIN behavior, while the advisory targets path traversal and arbitrary file read in download_profile_picture at GET /api/v1/files/profile_pictures/{folder_name}/{file_name}.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause. The advisory is an unauthenticated path traversal in the profile picture download handler, but the only final qualifying finding is a separate authentication-bypass issue in the auto-login endpoint.",
+    "evidence": [
+      "The advisory JSON names `download_profile_picture` in `src/backend/base/langflow/api/v1/files.py` and describes unsanitized `folder_name` and `file_name` path handling that permits arbitrary file read via `/api/v1/files/profile_pictures/{folder_name}/{file_name}`.",
+      "`.judge/input_manifest.json` lists exactly one final qualifying finding: `unauthenticated_auto_login_superuser_takeover`, whose report traces exploitation through `GET /api/v1/auto_login` in `src/backend/base/langflow/api/v1/login.py` plus default `AUTO_LOGIN` and superuser-creation behavior.",
+      "The finding's runtime artifacts (`artifacts/unauthenticated_auto_login_superuser_takeover/auto_login_response.txt`, `whoami.json`, and `users.json`) prove superuser token minting and privileged API access, not profile-picture path traversal or file disclosure from the advisory endpoint."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e458dfaf/unauthenticated_auto_login_superuser_takeover",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e458dfaf/unauthenticated_auto_login_superuser_takeover/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e458dfaf/unauthenticated_auto_login_superuser_takeover/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

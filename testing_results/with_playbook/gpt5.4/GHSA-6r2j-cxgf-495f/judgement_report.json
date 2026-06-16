@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:36:29.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cdb19c2a",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-6r2j-cxgf-495f/GHSA-6r2j-cxgf-495f.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "session_class_route_backdoor",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cdb19c2a/session_class_route_backdoor",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cdb19c2a/session_class_route_backdoor/vulnerability_report.json",
+      "title": "Generic _Session class route allows attacker-controlled session creation",
+      "vulnerability_type": "broken_access_control_session_forgery",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a generic _Session write-path bug in RestWrite/Auth that lets an authenticated user store attacker-chosen session fields. The advisory root cause is RestQuery.redirectClassNameForKey failing to reapply target-class access checks after query redirection, enabling redirected reads of protected classes such as _Session.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's query-redirection root cause. The only qualifying finding is a separate _Session class-route/session-forgery issue, so the advisory remains unmatched in this session.",
+    "evidence": [
+      "The advisory and upstream fix describe a query-handling flaw where redirectClassNameForKey redirects a find operation into another class without reapplying the target class's security checks.",
+      "The 8.6.21 security patch in src/RestQuery.js re-runs enforceRoleSecurity after redirectClassNameForKey, rejects unauthenticated redirected access to _Session, and scopes redirected _Session results to the authenticated user.",
+      "session_class_route_backdoor instead targets POST /classes/_Session and PUT /classes/_Session/:objectId, where RestWrite.handleSession/createSession persist attacker-controlled sessionToken and expiresAt values that Auth later trusts.",
+      "Because the qualifying finding does not depend on redirectClassNameForKey, redirected query reads, or missing post-redirect class checks, it does not identify the advisory-described vulnerable code or equivalent control-flow condition."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cdb19c2a/session_class_route_backdoor",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cdb19c2a/session_class_route_backdoor/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cdb19c2a/session_class_route_backdoor/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

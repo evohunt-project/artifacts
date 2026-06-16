@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control_local_admin_takeover",
+  "summary": "The reproduction compiles the pinned Caddy commit in a container, starts it as root with the default local admin API enabled, and shows that a low-privilege user can seize the loopback admin listener to expose a root-only file and stop the service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privilege local user should be unable to read `/root/secret-proof.txt` directly, but after unauthenticated `POST /load` to `localhost:2019`, the same user should be able to retrieve the proof string over HTTP from the reconfigured root-owned Caddy process.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned pinned commit `e2eee6a7fce366321294c9c2a79f3146891dcbdf`, built the Docker image, compiled Caddy inside the container, started the service as root, confirmed the baseline response, then had the low-privilege `attacker` user POST a malicious config to `/load`. The same low-privilege user then retrieved `EVOHUNT-LOCAL-ADMIN-ROOT-SECRET` over HTTP from `/root/secret-proof.txt`, and the script successfully issued unauthenticated `POST /stop` afterward.",
+  "verification_method": "The container script first verifies that the `attacker` user cannot directly read `/root/secret-proof.txt`. It then reloads Caddy through `/load`, fetches the same file over HTTP as `attacker`, and pipes the result into `verify.sh`, which requires the exact proof string `EVOHUNT-LOCAL-ADMIN-ROOT-SECRET`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "BASELINE_RESPONSE: baseline",
+    "VERIFICATION_PASSED: EVOHUNT-LOCAL-ADMIN-ROOT-SECRET",
+    "PROOF_STRING: EVOHUNT-LOCAL-ADMIN-ROOT-SECRET"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "e2eee6a7fce366321294c9c2a79f3146891dcbdf",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

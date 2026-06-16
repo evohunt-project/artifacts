@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The reproduction clones Actual tag v26.2.0, installs the sync-server workspace, authenticates as a BASIC user, and verifies that `POST /sync/upload-user-file` can write a blob outside the configured `user-files` root by abusing `X-ACTUAL-FILE-ID` path traversal.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a low-privilege authenticated user can make `/sync/upload-user-file` create a `.blob` file outside the configured `user-files` directory.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `actualbudget/actual` at commit `0d6742664b7a5f111013bc6392bf3fda5e2c8a7c`, built the verifier image, and observed `POST 200 /upload-user-file` plus `EVOHUNT_UPLOAD_TRAVERSAL_PROOF`. The helper printed `userFilesRoot=/work/repo/packages/sync-server/test-user-files` and `escapedPath=/work/repo/packages/owned-by-basic-user.blob`, proving the file landed outside the configured root.",
+  "verification_method": "The helper imports the live `app-sync.ts` handler from the pinned repository, creates the test database and session fixtures, sends the malicious upload with a BASIC-user token, and fails unless the written path is outside `userFilesRoot`, the payload bytes match exactly, and the proof string is emitted. `run.sh` also greps the captured output for `EVOHUNT_UPLOAD_TRAVERSAL_PROOF` before reporting success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "POST 200 /upload-user-file",
+    "EVOHUNT_UPLOAD_TRAVERSAL_PROOF",
+    "userFilesRoot=/work/repo/packages/sync-server/test-user-files",
+    "escapedPath=/work/repo/packages/owned-by-basic-user.blob",
+    "status=200"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0d6742664b7a5f111013bc6392bf3fda5e2c8a7c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.mjs",
+      "reproduction/run-inside.sh"
+    ]
+  }
+}

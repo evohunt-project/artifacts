@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The reproduction confirms that `serialize()` with `populate: ['*']` leaks fields marked hidden while plain `serialize()` keeps them suppressed.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print `PROOF_SERIALIZE_HIDDEN_LEAK` and show that `serialize(user)` omits hidden fields while `serialize(user, { populate: ['*'] })` includes `password`, `secretData`, and `hiddenDate`.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 4b63e041404208d20cf60e5300e3700f8f3c7cb5, installed dependencies in a clean Node 22 container, and printed `PROOF_SERIALIZE_HIDDEN_LEAK` together with DTO output where the normal serializer returned only `id` and `name`, while the populated serializer also returned `password`, `secretData`, and `hiddenDate`.",
+  "verification_method": "The container-side validation script builds a minimal SQLite-backed entity with hidden fields, compares `serialize(user)` against `serialize(user, { populate: ['*'] })`, and exits non-zero unless the hidden fields stay absent from the first DTO and appear in the second.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed the exact proof marker `PROOF_SERIALIZE_HIDDEN_LEAK`.",
+    "The normal DTO output contained only `id` and `name`.",
+    "The populated DTO output contained hidden `password`, `secretData`, and `hiddenDate` fields."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh fetches the upstream repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "4b63e041404208d20cf60e5300e3700f8f3c7cb5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/validate-serialize-hidden.ts"
+    ]
+  }
+}

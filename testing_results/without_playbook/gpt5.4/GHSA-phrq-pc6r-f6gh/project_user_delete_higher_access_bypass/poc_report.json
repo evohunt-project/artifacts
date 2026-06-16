@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction installs the vulnerable MantisBT commit, creates a private project with a manager attacker and administrator victim, and confirms that the manager can remove the higher-privileged victim through the REST project-user deletion endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should prove that a lower-privileged project manager can successfully invoke DELETE /api/rest/projects/{project_id}/users/{user_id} against a higher-privileged project administrator and thereby revoke that victim's access to the private project.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 84b0fc3d46d9071afb32fda574c676eba4d5ef17, built the reproduction image, installed MantisBT, created the exploit scenario, and printed the expected proof signals: attacker role manager, victim role administrator, DELETE returning HTTP 204, victim project access changing from HTTP 200 to HTTP 404, and final SUCCESS lines.",
+  "verification_method": "The verification helper provisions a private project and two low-global-privilege users with different project roles, confirms the victim can access the project before deletion, confirms the attacker sees itself as manager and the victim as administrator, performs the REST DELETE with the attacker's API token, and then checks that the victim receives HTTP 404 for the project and no longer appears in the project user list.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed: attacker role before exploit: manager.",
+    "The run printed: victim role before exploit: administrator.",
+    "The run printed: DELETE /api/rest/projects/1/users/3 returned 204.",
+    "The run printed: victim GET /api/rest/projects/1 changed from HTTP 200 to HTTP 404.",
+    "The run printed: SUCCESS: lower-privileged project manager removed a higher-privileged project administrator from a private project.",
+    "The run printed: SUCCESS: reproduction completed and verified."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "84b0fc3d46d9071afb32fda574c676eba4d5ef17",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/setup_instance.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

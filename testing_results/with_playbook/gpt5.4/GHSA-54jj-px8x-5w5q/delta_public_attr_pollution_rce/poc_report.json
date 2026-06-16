@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution_and_object_shape",
+  "summary": "A two-stage Delta exploit rewrites `deepdiff.serialization.SAFE_TO_IMPORT` through non-dunder path traversal and then unpickles `os.system` / `posix.system`, producing a marker file inside the reproduction container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should print the stage-one and stage-two success messages and create `/tmp/evohunt_delta_marker` inside the container after a second Delta unpickles `os.system` / `posix.system`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `deepdiff` at `60ac5b903dbd662e0e83bf7b481df97d42f693df`, built the Docker image, printed `stage one polluted SAFE_TO_IMPORT`, `stage two executed os.system`, `EVOHUNT_SUCCESS`, and `[evohunt] verification passed: /tmp/evohunt_delta_marker created`.",
+  "verification_method": "`reproduction/verify.sh` runs `exploit.py` with `PYTHONPATH=/target-repo`, requires `/target-repo/deepdiff/__init__.py` to exist, and then checks for `/tmp/evohunt_delta_marker` as the proof oracle.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "stdout: `stage one polluted SAFE_TO_IMPORT`",
+    "stdout: `stage two executed os.system`",
+    "stdout: `EVOHUNT_SUCCESS`",
+    "stdout: `[evohunt] verification passed: /tmp/evohunt_delta_marker created`"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "60ac5b903dbd662e0e83bf7b481df97d42f693df",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

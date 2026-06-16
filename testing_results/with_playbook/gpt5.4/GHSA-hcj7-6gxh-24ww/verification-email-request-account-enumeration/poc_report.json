@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The packaged reproduction clones parse-server tag 8.6.16, starts a fresh server with MongoDB, creates an unverified user, and proves that the verification-email resend endpoint distinguishes existing and nonexistent email addresses.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proof should show that POST /verificationEmailRequest returns success for an existing unverified account while returning a distinct 400 error for a nonexistent email address, demonstrating account-existence disclosure.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 20abb1cf36214d05b4be7a081a41c6df5becf42b, built parse-server, started it against a fresh MongoDB container, created victim@example.com, and printed `EVOHUNT_PROOF_VERIFICATION_EMAIL_ENUMERATION` after observing HTTP 200 with `{}` for victim@example.com and HTTP 400 with `No user found with email absent@example.com` for absent@example.com.",
+  "verification_method": "The helper script signs up a user, sends paired POST requests to /verificationEmailRequest for an existing and a nonexistent email, and only succeeds if the existing email returns HTTP 200 while the nonexistent email returns HTTP 400 with the exact account-discovery error text.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof marker: EVOHUNT_PROOF_VERIFICATION_EMAIL_ENUMERATION",
+    "Existing account response: HTTP 200 with empty JSON body",
+    "Nonexistent account response: HTTP 400 with JSON error `No user found with email absent@example.com`"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "20abb1cf36214d05b4be7a081a41c6df5becf42b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/prove.js",
+      "reproduction/run-in-container.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "session_integrity_bypass",
+  "summary": "The Docker-based reproduction confirms that an authenticated user can send `{\"expiresAt\": null}` to their `_Session` object and keep that session valid after the configured expiry window.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause an untouched control session to expire while the tampered target session remains accepted after the same expiry window, and the helper should print `[evohunt] SESSION_EXPIRY_BYPASS_CONFIRMED`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` from the final finding folder cloned parse-server at `372a6cc6134c17e4869090a9043b086ddfdcc526`, started the vulnerable server with `sessionLength=2`, `expireInactiveSessions=true`, and `extendSessionOnUse=false`, then showed `controlAfter.status=400` with `code=209` and `error=\"Session token is expired.\"` while `targetAfter.status=200` still returned the target user and original session token after the same 3-second wait. The helper then printed `[evohunt] SESSION_EXPIRY_BYPASS_CONFIRMED control_expired=true target_alive=true`.",
+  "verification_method": "The helper creates separate control and target users, fetches the target session object ID via `/sessions/me`, overwrites it with `{\"expiresAt\": null}`, waits beyond the configured session lifetime, and then confirms that the control token is rejected while the modified target token still succeeds on `/users/me`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed a structured result showing the control session failed with `code 209` while the modified target session still returned HTTP 200.",
+    "The verification helper emitted `[evohunt] SESSION_EXPIRY_BYPASS_CONFIRMED control_expired=true target_alive=true`, which is only reached when both the negative and positive controls behave as expected.",
+    "The reproduction exercised the real `/sessions/:objectId` and `/users/me` paths on the pinned upstream commit with short session-expiry settings."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "372a6cc6134c17e4869090a9043b086ddfdcc526",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify_session_expiry_bypass.js"
+    ]
+  }
+}

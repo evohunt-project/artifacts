@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that a zero-step sequence sent through `expand()` reaches the non-progress numeric loop and crashes the exploit child with a fatal engine error.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the exploit child process stop making progress inside numeric sequence expansion and terminate abnormally instead of returning from `expand('{1..3..0}')`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `isaacs/brace-expansion` at `dc20357ee74ab18df00d596573764428ede66b3d`, built the Docker image, installed dependencies, and emitted `EVOHUNT_PROOF: sequence_progress_dos` followed by `EVOHUNT_DETAIL: exploit child crashed with a fatal engine error`.",
+  "verification_method": "The helper first performs a control expansion to prove the build is functional, then spawns a separate Node child that only executes `expand('{1..3..0}')`. The run passes only if that child never reaches the completion marker and instead times out or exits with a fatal engine-error signature.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction emitted `EVOHUNT_PROOF: sequence_progress_dos`.",
+    "The reproduction emitted `EVOHUNT_DETAIL: exploit child crashed with a fatal engine error`.",
+    "The control expansion succeeded before the exploit child was launched."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "dc20357ee74ab18df00d596573764428ede66b3d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/sequence_progress_proof.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

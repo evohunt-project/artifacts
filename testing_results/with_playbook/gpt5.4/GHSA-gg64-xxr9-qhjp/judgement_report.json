@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:47:17.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cb64a8fb",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-gg64-xxr9-qhjp/GHSA-gg64-xxr9-qhjp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "api_pat_2fa_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cb64a8fb/api_pat_2fa_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cb64a8fb/api_pat_2fa_bypass/vulnerability_report.json",
+      "title": "API basic-auth personal access token issuance bypasses two-factor authentication",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a missing 2FA re-check during Basic-auth PAT issuance in internal/context/auth.go and internal/route/api/v1/user/app.go, not the advisory's symlink-based .git/config write through UpdateRepoFile from the API contents route.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's vulnerable code/root cause: updating .git/config through the API contents update path by writing through a repository symlink that reaches UpdateRepoFile.",
+    "evidence": [
+      "The advisory describes PUT /api/v1/repos/:owner/:repo/contents/* passing a cleaned attacker-controlled path into UpdateRepoFile, so a committed symlink such as link -> .git/config can still update Git metadata and lead to RCE.",
+      "The only final qualifying finding, api_pat_2fa_bypass, is rooted in internal/context/auth.go returning a user after Basic-auth password verification without checking db.TwoFactors.IsEnabled, and internal/route/api/v1/user/app.go then minting a PAT for that user.",
+      "That qualifying finding does not involve repository file mutation, symlink dereference, .git/config, or the API contents write path named in the advisory.",
+      "A filesystem-adjacent finding exists only as windows_git_alias_write, but it is non_qualifying_vuln and describes a different Windows trailing-space .git alias mechanism rather than the advisory's symlink-to-.git/config bug."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cb64a8fb/api_pat_2fa_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cb64a8fb/api_pat_2fa_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cb64a8fb/api_pat_2fa_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

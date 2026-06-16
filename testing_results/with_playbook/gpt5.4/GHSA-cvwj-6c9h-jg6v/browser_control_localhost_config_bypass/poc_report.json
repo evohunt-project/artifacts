@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated Browser Control session can bypass the dashboard's direct remote-access guard and read the localhost-only Parse Dashboard config, including the Parse master key.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a direct remote HTTP request to /parse-dashboard-config.json is blocked, while an unauthenticated Browser Control session can still navigate to the loopback-only endpoint and exfiltrate a response containing the Parse master key.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned parse-dashboard at commit 8a34c2f0d6af5ad11793f49b9427dad4b26f1b81, built the reproduction image, started the vulnerable Browser Control service, observed the direct response {\"success\":false,\"error\":\"Parse Dashboard can only be remotely accessed via HTTPS\"}, created an unauthenticated browser-control session, navigated to http://127.0.0.1:4040/parse-dashboard-config.json, received an evaluate response containing \\\"masterKey\\\":\\\"world\\\", and emitted EVOHUNT_SUCCESS browser-control leaked localhost-only Parse Dashboard config including the Parse master key.",
+  "verification_method": "The run script first confirms that the direct remote request is rejected, then starts an unauthenticated Browser Control session, drives the server-side browser to the loopback-only config route, and checks the evaluate response for the exact leaked master-key string. This distinguishes the vulnerability from a generic startup success, a public config route, or an unrelated browser-control failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Direct request evidence: {\"success\":false,\"error\":\"Parse Dashboard can only be remotely accessed via HTTPS\"}",
+    "Browser Control session creation succeeded without authentication and returned a sessionId.",
+    "Evaluate response contained \\\"masterKey\\\":\\\"world\\\" from the loopback-only config document.",
+    "The run ended with the success sentinel: EVOHUNT_SUCCESS browser-control leaked localhost-only Parse Dashboard config including the Parse master key."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8a34c2f0d6af5ad11793f49b9427dad4b26f1b81",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run-container.sh"
+    ]
+  }
+}

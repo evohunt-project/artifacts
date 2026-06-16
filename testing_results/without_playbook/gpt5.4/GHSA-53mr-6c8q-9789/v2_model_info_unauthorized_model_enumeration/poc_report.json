@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that a read-only key scoped to `allowed-model` can still enumerate the unauthorized `secret-model` through LiteLLM's `/v2/model/info` endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction bundle should show that the same low-privileged key receives only `allowed-model` from `/v1/model/info` but receives both `allowed-model` and the unauthorized `secret-model` metadata from `/v2/model/info`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned LiteLLM at commit `38d477507dad09c560db18a15ca8fb0e33bf2a4b`, started PostgreSQL and the vulnerable proxy, generated a read-only key restricted to `allowed-model`, and observed `V1_MODELS ['allowed-model']` versus `V2_MODELS ['allowed-model', 'secret-model']`. The run also printed the leaked `secret-model` metadata, including `api_base=https://secret.internal.example/v1`, `model=openai/gpt-4`, `model_info_id=secret-model-id`, and the hidden description field.",
+  "verification_method": "The verification helper starts the proxy, generates a scoped read-only key, calls `/v1/model/info` and `/v2/model/info` with that exact key, and asserts that `secret-model` is absent from the v1 response but present in the v2 response. The helper also extracts and prints the leaked model metadata so the result is distinguishable from a generic startup issue or unrelated response mismatch.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The packaged run printed `V1_MODELS ['allowed-model']` for the scoped read-only key.",
+    "The packaged run printed `V2_MODELS ['allowed-model', 'secret-model']` for the same key.",
+    "The packaged run printed `LEAKED_MODEL {\"api_base\": \"https://secret.internal.example/v1\", \"description\": \"Model that should remain hidden from the restricted key\", \"model\": \"openai/gpt-4\", \"model_info_id\": \"secret-model-id\", \"model_name\": \"secret-model\"}`.",
+    "The packaged run ended with `SUCCESS: read-only key restricted to allowed-model received unauthorized secret-model metadata from /v2/model/info`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh fetches LiteLLM from the upstream Git repository on the host, checks out the pinned vulnerable release commit, stages a temporary build context, and mounts the checked-out host tree into the container at /target-repo.",
+    "pinned_commit_or_ref": "38d477507dad09c560db18a15ca8fb0e33bf2a4b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/config.yaml",
+      "reproduction/verify.sh",
+      "reproduction/verify.py"
+    ]
+  }
+}

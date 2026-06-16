@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:31:54.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_00103126",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-9xrj-h377-fr87/GHSA-9xrj-h377-fr87.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "active_storage_diskservice_path_traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_00103126/active_storage_diskservice_path_traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_00103126/active_storage_diskservice_path_traversal/vulnerability_report.json",
+      "title": "Active Storage DiskService path traversal via unsanitized blob keys",
+      "vulnerability_type": "path_traversal_arbitrary_file_read_write",
+      "advisory_match": true,
+      "advisory_match_reason": "Same vulnerable method (`ActiveStorage::Service::DiskService#path_for`) and same missing path normalization and root-containment check on blob keys described by GHSA-9xrj-h377-fr87.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "active_storage_diskservice_path_traversal",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_00103126/active_storage_diskservice_path_traversal",
+      "status": "qualifying_vuln",
+      "title": "Active Storage DiskService path traversal via unsanitized blob keys",
+      "vulnerability_type": "path_traversal_arbitrary_file_read_write"
+    },
+    "reason": "The only in-scope qualifying finding matches the advisory root cause exactly: vulnerable Rails v7.2.3 `DiskService#path_for` joins attacker-controlled blob keys into filesystem paths without enforcing storage-root containment. The judge-run PoC from a copied workspace reproduced out-of-root file read and write through `../../` keys, which is the advisory-described impact.",
+    "evidence": [
+      "The advisory patch for GHSA-9xrj-h377-fr87 identifies `DiskService#path_for` as the primary filesystem security check and adds `File.expand_path` plus an explicit root-prefix containment check to stop path traversal.",
+      "The vulnerable v7.2.3 source returns `File.join root, folder_for(key), key` from `activestorage/lib/active_storage/service/disk_service.rb` and uses that path in `download`, `upload`, and `delete`, so blob keys with `../` can escape the storage root.",
+      "Judge-run PoC evidence in `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_00103126/.judge/poc_runs/active_storage_diskservice_path_traversal/run.log` shows `READ_BODY=\"TOP-SECRET\\n\"` for `key=../../secret.txt`, proving an out-of-root file read through the vulnerable path.",
+      "The same judge-run log shows `WRITE_BODY=\"WRITE_OK\\n\"`, `OWNED_BODY=\"PWNED\\n\"`, and `EVOHUNT_SUCCESS: network path traversal and arbitrary write reproduced`, proving out-of-root arbitrary file write through the same root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "active_storage_diskservice_path_traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_00103126/active_storage_diskservice_path_traversal",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_00103126/.judge/poc_runs/active_storage_diskservice_path_traversal/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_00103126/.judge/poc_runs/active_storage_diskservice_path_traversal/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_00103126/.judge/poc_runs/active_storage_diskservice_path_traversal/poc_execution.json",
+      "observed_effect": "The judge-run PoC cloned Rails v7.2.3, built the Docker harness, then used blob keys containing `../../` to read `/secret.txt` and write `/owned.txt` outside the configured storage root. `run.log` records `READ_BODY=\"TOP-SECRET\\n\"`, `WRITE_BODY=\"WRITE_OK\\n\"`, `OWNED_BODY=\"PWNED\\n\"`, and the success marker.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

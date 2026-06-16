@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:08:32.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_72646eed",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-7g56-fwxj-cm23/GHSA-7g56-fwxj-cm23.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "default_unauthenticated_runscript_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_72646eed/default_unauthenticated_runscript_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_72646eed/default_unauthenticated_runscript_rce/vulnerability_report.json",
+      "title": "Default deployment allows unauthenticated server-side JavaScript execution via /api/runscript",
+      "vulnerability_type": "unauthenticated_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets POST /api/runscript and the default secureEnabled=false authorization fallback, while the advisory targets POST /api/upload in server/api/projects/index.js, which lacks auth middleware and writes attacker-controlled files.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's /api/upload unrestricted file-upload path or its missing-auth file-write root cause.",
+    "evidence": [
+      "The advisory JSON describes FUXA v1.2.7 /api/upload as an unrestricted file upload that allows unauthenticated arbitrary file writes.",
+      "The referenced FUXA source at server/api/projects/index.js shows prjApp.post('/api/upload', function (req, res) { ... fs.writeFileSync(filePath, basedata, encoding); }) without secureFnc or an authorization check.",
+      "The accepted finding report instead describes POST /api/runscript, where secureFnc is present and exploitation depends on default secureEnabled=false behavior plus verifyGroups() returning admin-equivalent access before Module._compile executes attacker-controlled script.code."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_72646eed/default_unauthenticated_runscript_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_72646eed/default_unauthenticated_runscript_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_72646eed/default_unauthenticated_runscript_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

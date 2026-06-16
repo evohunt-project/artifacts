@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The reproduction clones the last vulnerable upstream commit, loads guarddog/utils/archives.py, feeds it a zip with a ../ member, and verifies that GuardDog writes the proof file outside the extraction root.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make safe_extract() create the proof file outside the intended extraction directory when it processes the crafted zip entry.",
+  "actual_observed_result": "Running ./reproduction/run.sh checked out 5ca1d2e930c4f2c423c94306e2cfba28b6066c02, built the reproduction image, and printed extract_root=/tmp/evohunt-guarddog-zip-slip-d7aqe56l/extract-root, escaped_path=/tmp/evohunt-guarddog-zip-slip-d7aqe56l/outside/proof.txt/outside/proof.txt, escaped_exists=True, escaped_within_extract_root=False, escaped_content=EVOHUNT_ZIP_TRAVERSAL_PROOF, and VERIFICATION_PASSED.",
+  "verification_method": "verify.sh runs exploit.py inside the container and requires the exact signals escaped_exists=True, escaped_within_extract_root=False, escaped_content=EVOHUNT_ZIP_TRAVERSAL_PROOF, and VERIFICATION_PASSED. The helper also fails closed if the checked-out archives.py no longer contains the vulnerable extraction line.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "extract_root=/tmp/evohunt-guarddog-zip-slip-d7aqe56l/extract-root",
+    "escaped_path=/tmp/evohunt-guarddog-zip-slip-d7aqe56l/outside/proof.txt/outside/proof.txt",
+    "escaped_exists=True",
+    "escaped_within_extract_root=False",
+    "escaped_content=EVOHUNT_ZIP_TRAVERSAL_PROOF",
+    "VERIFICATION_PASSED"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "5ca1d2e930c4f2c423c94306e2cfba28b6066c02",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

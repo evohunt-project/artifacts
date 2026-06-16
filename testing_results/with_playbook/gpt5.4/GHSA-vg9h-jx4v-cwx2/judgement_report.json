@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:20:12.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_930f69b4",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-vg9h-jx4v-cwx2/GHSA-vg9h-jx4v-cwx2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unbounded_b64_zlib_decompression_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_930f69b4/unbounded_b64_zlib_decompression_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_930f69b4/unbounded_b64_zlib_decompression_dos/vulnerability_report.json",
+      "title": "Unbounded base64+zlib expansion in the default parser chain enables denial of service",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets the `/json/visjs` parser chain and the unbounded `zlib.decompress(decoded)` path in `unfurl/parsers/parse_compressed.py`, while the advisory fixes `unfurl/app.py:web_app()` reading `debug` with `getboolean()` before passing it to Flask debug mode.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No finalized qualifying finding identifies the advisory's root cause: Unfurl's `debug` configuration is read as a string and passed into Flask debug mode, leaving the Werkzeug debugger enabled even when config says `False`.",
+    "evidence": [
+      "The advisory patch `4c0a07ab1e9af3a1ddf0e7f47153ec9ba77946dd` changes `unfurl/app.py` from `config['UNFURL_APP'].get('debug')` to `config['UNFURL_APP'].getboolean('debug')`, which is specific to the Flask debug-mode configuration path.",
+      "The session manifest and orchestrator final response identify `unbounded_b64_zlib_decompression_dos` as the only finalized qualifying finding for this run.",
+      "That finding's exploit path is `/json/visjs` -> `unfurl/parsers/parse_compressed.py` -> `zlib.decompress(decoded)` -> worker OOM, which is a denial-of-service parser bug rather than debug-mode misconfiguration or Werkzeug debugger exposure.",
+      "No finalized qualifying finding references `web_app()`, `app.run(debug=...)`, `UNFURL_APP.debug`, `getboolean('debug')`, or any equivalent debugger-exposure root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_930f69b4/unbounded_b64_zlib_decompression_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_930f69b4/unbounded_b64_zlib_decompression_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_930f69b4/unbounded_b64_zlib_decompression_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

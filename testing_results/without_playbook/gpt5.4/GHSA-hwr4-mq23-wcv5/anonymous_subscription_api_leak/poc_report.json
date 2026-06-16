@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "access_control_bypass_information_disclosure",
+  "summary": "The reproduction starts a minimal Mercure hub with anonymous subscriptions and the active-subscriptions API enabled, opens a subscription, and then retrieves the active subscription list without sending any JWT.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated request to `/.well-known/mercure/subscriptions` should return HTTP 200 and expose the active subscriber UUID and topic selector even though no subscriber JWT was provided.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `https://github.com/dunglas/mercure.git` at commit `13c9ef40001cac5026f1c9eca2fa2e36f706168a`, built the reproduction container, opened an anonymous subscription on `https://example.com/private-feed/user-42`, and then received HTTP 200 plus that topic and its subscriber UUID from `/.well-known/mercure/subscriptions` without a JWT. The run printed `[evohunt] PROOF: anonymous subscription metadata exposed without a JWT` and exited successfully.",
+  "verification_method": "The container-side verifier runs a Go harness against the pinned checkout and requires two concrete signals: the exact proof string `[evohunt] PROOF: anonymous subscription metadata exposed without a JWT` and the leaked topic line `\"topic\": \"https://example.com/private-feed/user-42\"` in the unauthenticated JSON response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted `[evohunt] subscriptions_status=200`.",
+    "The unauthenticated JSON response contained `\"subscriber\": \"urn:uuid:...\"`.",
+    "The unauthenticated JSON response contained `\"topic\": \"https://example.com/private-feed/user-42\"`.",
+    "The verifier emitted `[evohunt] PROOF: anonymous subscription metadata exposed without a JWT` before the host script printed the success banner."
+  ],
+  "limitations_or_blockers": [
+    "The session checkout does not include Git metadata, so the rerunnable bundle pins the upstream Mercure repository commit `13c9ef40001cac5026f1c9eca2fa2e36f706168a`, where the same vulnerable logic was revalidated during this run."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "13c9ef40001cac5026f1c9eca2fa2e36f706168a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/probe.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

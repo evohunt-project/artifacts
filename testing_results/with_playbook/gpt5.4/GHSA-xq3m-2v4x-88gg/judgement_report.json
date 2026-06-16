@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:56:03.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69b35ac7",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-xq3m-2v4x-88gg/GHSA-xq3m-2v4x-88gg.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "decode_unknown_group_stack_exhaustion",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69b35ac7/decode_unknown_group_stack_exhaustion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69b35ac7/decode_unknown_group_stack_exhaustion/vulnerability_report.json",
+      "title": "Unknown-group recursion in decode() exhausts the JavaScript call stack",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a byte-decoding availability bug in `src/decoder.js` and `src/reader.js` where unknown group fields recurse through `Reader.skipType(3)` without a depth limit. The advisory instead concerns malicious JSON descriptors reaching runtime code generation through reflection APIs and the upstream fix sanitizes `Type` names in `src/type.js` before generated functions are built.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "pbts_filename_command_injection",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69b35ac7/pbts_filename_command_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69b35ac7/pbts_filename_command_injection/vulnerability_report.json",
+      "title": "pbts executes attacker-controlled filenames through child_process.exec",
+      "vulnerability_type": "command_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a CLI shell-injection bug in `cli/pbts.js` where attacker-controlled filenames are concatenated into a command string and passed to `child_process.exec`. The advisory root cause is in protobufjs reflection and descriptor loading (`Root.fromJSON` to `Type` runtime code generation), not the `pbts` CLI wrapper.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "A",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No finalized qualifying finding identifies the advisory's vulnerable reflection/code-generation path. GHSA-xq3m-2v4x-88gg is about crafted JSON descriptors loaded through reflection APIs such as `Root.fromJSON`, with untrusted type metadata flowing into runtime code generation; the only qualifying findings here are an unknown-group decode stack exhaustion bug and a separate `pbts` CLI shell injection bug.",
+    "evidence": [
+      "The advisory describes arbitrary code execution from crafted protobuf JSON descriptors loaded through reflection APIs, and upstream fix commit `535df44` adds `name = name.replace(/\\\\W/g, \"\")` in `src/type.js` before generated functions are constructed.",
+      "In the vulnerable tree, `Root.fromJSON` in `src/root.js` loads namespace descriptors with `root.addJSON(json.nested).resolveAll()`, and `Type.generateConstructor` in `src/type.js` passes `mtype.name` into `util.codegen`, which is the advisory's runtime-codegen boundary.",
+      "The `decode_unknown_group_stack_exhaustion` finding instead traces `Type.decode()` default unknown-field handling in `src/decoder.js` to recursive `Reader.skipType(3)` logic in `src/reader.js`, which is a distinct availability flaw on binary message decoding.",
+      "The `pbts_filename_command_injection` finding instead traces `cli/pbts.js` command construction to `child_process.exec`, which is a distinct CLI shell-injection sink unrelated to descriptor loading or reflection code generation."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69b35ac7/decode_unknown_group_stack_exhaustion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69b35ac7/decode_unknown_group_stack_exhaustion/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69b35ac7/decode_unknown_group_stack_exhaustion/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69b35ac7/pbts_filename_command_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69b35ac7/pbts_filename_command_injection/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_69b35ac7/pbts_filename_command_injection/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

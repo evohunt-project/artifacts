@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_rce",
+  "summary": "The reproduction starts a default FUXA server instance, submits an unauthenticated test script to /api/runscript that writes a proof file, and verifies code execution by reading the file contents back through a second unauthenticated /api/runscript request.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit should execute attacker-supplied JavaScript in the server process and create a proof file that can then be read back, demonstrating arbitrary code execution.",
+  "actual_observed_result": "The validated exploit request returned \"ok\", created /private/tmp/evohunt-rce-proof in the server runtime, and a second request returned the proof string \"pwned\".",
+  "verification_method": "The run script starts the bundled server snapshot with default settings, sends one unauthenticated request that writes a proof file, then sends a second unauthenticated request that reads the proof file. Success requires the verifier response to contain the exact proof string rather than a generic error or startup artifact.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The first POST /api/runscript exploit request returns \"ok\".",
+    "The second POST /api/runscript verifier request returns the proof string \"pwned\".",
+    "The proof file is created within the server runtime at /private/tmp/evohunt-rce-proof during validation."
+  ],
+  "limitations_or_blockers": [
+    "The host-based run.sh reproduction expects node, npm, and curl to be available locally."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/target/server/package.json",
+      "reproduction/target/server/package-lock.json"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The reproduction clones the vulnerable survey-pdf revision, loads the Node entrypoint from source, serves two attacker-controlled loopback image responses, and confirms that SurveyPDF.raw() both requests those URLs and produces different PDFs for different server-controlled image bodies.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the Node PDF export path to request attacker-chosen loopback image URLs and embed server-controlled image bytes into the generated PDF output.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned surveyjs/survey-pdf at dc4cdaec14634385c0e2c520b66689b41893de0d, built the helper image, observed loopback requests to /red.png and /blue.png during SurveyPDF.raw('arraybuffer'), and produced different PDF hashes for the two server-controlled image bodies: 8425777a282ed22c4dde962ae4a2681fbdba8f0c1ccf605efa3aa776918cd3f4 and fae85d5e5f98c2aafff7d4196f0c48bf3ba3144bd8be548616a3575f9ad4dcbd.",
+  "verification_method": "The verification helper starts a local HTTP server inside the container, triggers two SurveyPDF.raw('arraybuffer') exports with different attacker-controlled image URLs, asserts that both requests were received, and compares SHA-256 hashes of the resulting PDFs to prove that fetched response bodies influenced the output rather than a generic startup path or cached failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verification script logged the observed loopback requests: /red.png and /blue.png.",
+    "The script emitted distinct PDF hashes for the red and blue server-controlled image responses: 8425777a282ed22c4dde962ae4a2681fbdba8f0c1ccf605efa3aa776918cd3f4 and fae85d5e5f98c2aafff7d4196f0c48bf3ba3144bd8be548616a3575f9ad4dcbd.",
+    "The export completed successfully, showing the requests came from the real Node PDF generation path rather than from a failing harness."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "dc4cdaec14634385c0e2c520b66689b41893de0d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/package.json",
+      "reproduction/package-lock.json",
+      "reproduction/verify.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

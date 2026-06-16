@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:35:56.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5e4fe25e",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-p6pv-q7rc-g4h9/GHSA-p6pv-q7rc-g4h9.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "public-page-sections-cross-store-deleted-disclosure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5e4fe25e/public-page-sections-cross-store-deleted-disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5e4fe25e/public-page-sections-cross-store-deleted-disclosure/vulnerability_report.json",
+      "title": "Public page section endpoint discloses deleted and cross-store content",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "This is a different Spree access-control bug: `PageSectionsController#show` performs a global `with_deleted.find(params[:id])` lookup without store or publication checks, whereas the advisory is the guest-order token bypass in `OrdersController#show` and `authorize_access`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's root cause: completed guest orders are retrievable by order number alone because `OrdersController#show` does not require the associated token and `authorize_access` returns true for guest orders.",
+    "evidence": [
+      "The advisory names `storefront/app/controllers/spree/orders_controller.rb`, specifically `complete_order_finder.new(number: params[:id], token: params[:token], store: current_store).execute.first` and the guest-order branch in `authorize_access`.",
+      "The run manifest exposes one qualifying finding: `public-page-sections-cross-store-deleted-disclosure`.",
+      "That finding targets `storefront/app/controllers/spree/page_sections_controller.rb` and a global `Spree::PageSection.with_deleted.find(params[:id])` lookup that leaks foreign or deleted page-builder content, which is a different controller, lookup path, and missing guard than the advisory's guest-order token bypass."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5e4fe25e/public-page-sections-cross-store-deleted-disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5e4fe25e/public-page-sections-cross-store-deleted-disclosure/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5e4fe25e/public-page-sections-cross-store-deleted-disclosure/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:54:37.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_daaa60f9",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-qpr4-jrj4-6f27/GHSA-qpr4-jrj4-6f27.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "expired-session-cache-bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_daaa60f9/expired-session-cache-bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_daaa60f9/expired-session-cache-bypass/vulnerability_report.json",
+      "title": "Expired session tokens remain valid via session auth cache",
+      "vulnerability_type": "session_expiry_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is a PostgreSQL SQL injection caused by improper escaping of dot-notation field names during query construction for sort and related query parameters, while this finding is a session-auth cache validation flaw in src/Auth.js and src/middlewares.js. It does not involve PostgreSQL query generation, dot-notation field escaping, or any SQL sink.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's PostgreSQL dot-notation SQL injection root cause.",
+    "evidence": [
+      "The advisory JSON describes SQL injection in Parse Server's PostgreSQL handling of dot-notation field names, especially through the sort parameter, with possible related exposure in distinct and where queries.",
+      "The affected code family in Parse Server is the PostgreSQL query-construction path, including dot-notation helpers in src/Adapters/Storage/Postgres/PostgresStorageAdapter.js such as transformDotFieldToComponents() and transformDotField().",
+      "The only final qualifying finding in this run is expired-session-cache-bypass, which the report and session checklist localize to handleParseSession() and getAuthForSessionToken() returning a cached user without revalidating _Session.expiresAt.",
+      "That finding reproduces continued authentication on /users/me after session expiry and optional renewal via extendSessionOnUse, which is unrelated to PostgreSQL-only SQL generation or dot-notation escaping."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_daaa60f9/expired-session-cache-bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_daaa60f9/expired-session-cache-bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_daaa60f9/expired-session-cache-bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

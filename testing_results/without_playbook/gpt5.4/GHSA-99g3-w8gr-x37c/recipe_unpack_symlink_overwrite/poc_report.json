@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "archive_extraction_arbitrary_file_overwrite",
+  "summary": "The Docker-based reproduction confirms that a crafted .praison archive can use a symlink member plus a same-name regular file to overwrite a file outside the extraction directory during `praisonai recipe unpack`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should invoke the vulnerable recipe bundle unpack path and overwrite a proof file outside the extraction directory with the attacker-controlled marker `EVOHUNT_SYMLINK_OVERWRITE_CONFIRMED`.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the upstream repository, checked out vulnerable commit 7a7df247c8e9f78e4db505cd5a36b50cee6f548d, built the verifier image, invoked the real `praisonai recipe unpack` path, and changed the proof file outside the extraction directory from `ORIGINAL` to `EVOHUNT_SYMLINK_OVERWRITE_CONFIRMED`.",
+  "verification_method": "The helper script creates a malicious .praison archive, invokes the real `praisonai recipe unpack` path from the mounted vulnerable checkout, and then checks whether the external proof file changed from `ORIGINAL` to the exact attacker-controlled marker.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `[evohunt] unpack exit code: 0` after invoking the vulnerable unpack path.",
+    "The reproduction printed `[evohunt] proof target after: EVOHUNT_SYMLINK_OVERWRITE_CONFIRMED`, confirming an out-of-directory overwrite.",
+    "The reproduction completed with `[evohunt] SUCCESS: EVOHUNT_SYMLINK_OVERWRITE_CONFIRMED` and `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "7a7df247c8e9f78e4db505cd5a36b50cee6f548d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_poc.py"
+    ]
+  }
+}

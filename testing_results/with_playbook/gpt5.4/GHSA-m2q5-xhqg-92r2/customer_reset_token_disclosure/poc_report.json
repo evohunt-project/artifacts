@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction built EverShop v2.1.0, created a customer account through the public API, requested a password reset for that account, and observed the raw reset token in the unauthenticated HTTP response. The run then hashed the disclosed token and verified that it matched the reset_password_token row stored for the victim email.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated caller should receive a live password-reset token in the JSON response from POST /api/customers/reset-password for an existing customer account.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned EverShop v2.1.0, built the application in a containerized Node 18 environment, created a victim customer account, requested a reset, received a 128-hex token in the response, and verified that the token's SHA-256 matched the stored reset_password_token value for that victim email.",
+  "verification_method": "The reproduction container starts a local PostgreSQL-backed EverShop instance, creates a customer over the public API, requests a reset for that customer, extracts the disclosed token, computes its SHA-256, and compares that hash to the latest reset_password_token row for the same email. The run only succeeds if both the raw token disclosure and the hash match are observed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reset-initiation HTTP response contained the victim email and a raw 128-hex reset token.",
+    "The reproduction verifier printed the computed SHA-256 of the disclosed token and the matching reset_password_token hash from PostgreSQL.",
+    "The run emitted the exact proof string EVOHUNT_RESET_TOKEN_DISCLOSED_AND_STORED."
+  ],
+  "limitations_or_blockers": [
+    "In the current v2.1.0 build, POST /api/customers/password throws on an import-resolution bug in the downstream consumer path. The reproduced claim is therefore scoped to live reset-token disclosure rather than completed password reset."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout read-only into the reproduction container at /target-repo.",
+    "pinned_commit_or_ref": "70a786fadcbd55f1641f0088189da4cfe44aa79c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

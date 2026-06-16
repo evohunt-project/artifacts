@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:50:47.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_4f653080",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-6384-m2mw-rf54/GHSA-6384-m2mw-rf54.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "pathprefix_dotdot_auth_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_4f653080/pathprefix_dotdot_auth_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_4f653080/pathprefix_dotdot_auth_bypass/vulnerability_report.json",
+      "title": "PathPrefix route confusion allows /../ to bypass protected frontend middleware",
+      "vulnerability_type": "path_normalization_auth_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a raw-path PathPrefix routing confusion caused by SkipClean(true) and prefix matching on r.URL.Path; the advisory is a ForwardAuth subrequest header-handling flaw where attacker-controlled X-Forwarded-Prefix survives despite trustForwardHeader=false.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory root cause. The accepted session finding bypasses BasicAuth through raw-path PathPrefix route selection on unclean paths, while the advisory requires ForwardAuth behind a trusted upstream proxy and attacker-controlled X-Forwarded-Prefix reaching the auth service despite trustForwardHeader=false.",
+    "evidence": [
+      "The advisory describes pkg/middlewares/auth/forward.go copying request headers into the auth subrequest and failing to strip or rebuild X-Forwarded-Prefix when trustForwardHeader=false.",
+      "The advisory's exploit narrative depends on ForwardAuth, a trusted upstream proxy, and an auth service making authorization decisions from X-Forwarded-Prefix, often after StripPrefix adds a second prefix value.",
+      "The finding report instead identifies repo/server/server_configuration.go:639 (SkipClean(true)) and repo/rules/rules.go:96 (raw strings.HasPrefix on r.URL.Path) as the vulnerable mechanism.",
+      "The finding reproduction configures Traefik v1.7.34 with two PathPrefix frontends and BasicAuth on /admin; it does not configure ForwardAuth, trustForwardHeader=false, a trusted upstream proxy, or any X-Forwarded-Prefix-based authorization flow."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_4f653080/pathprefix_dotdot_auth_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_4f653080/pathprefix_dotdot_auth_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_4f653080/pathprefix_dotdot_auth_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

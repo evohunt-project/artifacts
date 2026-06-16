@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass_execution_hijack",
+  "summary": "The reproduction starts a fresh n8n 2.14.0 instance, creates a public hosted chat workflow, lets a victim create a waiting execution, and then shows that an unauthenticated attacker can scan `/chat` from a different `sessionId` and resume the victim execution with attacker-controlled content.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow an unauthenticated attacker to discover the victim-created waiting chat execution, receive its pending prompt over `/chat`, and force the workflow to continue with attacker-controlled input even though the attacker uses a different `sessionId`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` fetched `https://github.com/n8n-io/n8n.git` at commit `2374f40ec36795904b4011fb81018da818a76ee8`, built the reproduction image, started a fresh n8n 2.14.0 instance, created a hosted public chat workflow, triggered a victim session, scanned execution IDs `1..25` over the unauthenticated `/chat` endpoint, found the waiting execution as execution `1`, and forced the workflow to emit the proof string `Accepted reply: attacker-controlled` while the final execution record contained `victim-session`, `attacker-session`, and `attacker-controlled`.",
+  "verification_method": "The container-side exploit script verifies the mounted checkout and installed `n8n` binary are both `2.14.0`, creates a public hosted chat workflow, triggers a victim session, scans low-numbered execution IDs over `/chat` from a different `sessionId`, submits an attacker-controlled reply when the waiting execution accepts attacker traffic, then polls the authenticated execution record until success and verifies it contains the victim session ID, attacker session ID, and attacker-controlled reply.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The bundle confirmed that both the mounted checkout and the installed `n8n` binary were version `2.14.0`.",
+    "The attacker scan over `/chat` found the victim's waiting execution using `sessionId=attacker-session` and execution ID `1`.",
+    "The workflow returned the proof signal `Accepted reply: attacker-controlled`, and the successful execution record contained `victim-session`, `attacker-session`, and `attacker-controlled`, confirming cross-session execution takeover."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh initializes a temporary host checkout from GitHub, fetches and checks out the pinned vulnerable commit, mounts that checkout at `/target-repo`, and then runs a container that starts a fresh n8n 2.14.0 instance and executes the exploit flow.",
+    "pinned_commit_or_ref": "2374f40ec36795904b4011fb81018da818a76ee8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.mjs"
+    ]
+  }
+}

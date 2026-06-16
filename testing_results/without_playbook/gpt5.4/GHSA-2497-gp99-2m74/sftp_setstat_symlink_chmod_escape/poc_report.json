@@ -1,0 +1,24 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "symlink_following_permission_modification",
+  "summary": "The reproduction creates a file outside the server root, adds an in-root symlink to that file, invokes the same Filesystem.Chmod sink used by the SFTP Setstat path, and confirms that the external file's mode changes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should change mode bits on a file outside the sandbox by operating on an in-root symlink.",
+  "actual_observed_result": "The external file mode changed from 0600 to 0777, and the helper printed a success marker after verifying the before-and-after values.",
+  "verification_method": "The helper records the external file's mode before and after calling Filesystem.Chmod on the in-root symlink and fails unless the outside file's permissions actually change.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The helper prints the external file path and its mode before exploitation.",
+    "The helper prints the external file mode after chmod and exits successfully only if the outside mode changed to 0777.",
+    "The proof uses the real repository Filesystem implementation rather than a mock."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/main.go"
+    ]
+  }
+}

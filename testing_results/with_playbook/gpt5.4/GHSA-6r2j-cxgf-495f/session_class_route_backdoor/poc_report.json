@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control_session_forgery",
+  "summary": "The Docker-based reproduction confirms that a low-privilege authenticated user can create a `_Session` through the generic class route with an attacker-chosen `sessionToken` and far-future `expiresAt`, and that the server later accepts the chosen token for authenticated API access.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should show that an authenticated attacker can mint a secondary session for their own account by storing an attacker-chosen `sessionToken` and `expiresAt` in `_Session`, then successfully authenticate with that chosen token.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Parse Server 8.6.20 at commit `bf248d80db39b2f00f0df9682ae38a8a1666db7e`, built the reproduction image, started MongoDB and Parse Server, and the exploit completed with `EVOHUNT_SESSION_ROUTE_POC_OK userId=UCLSzb3nyH chosenToken=r:evohunt-fixed-1780605561639 expiresAt=2099-01-01T00:00:00.000Z`.",
+  "verification_method": "The exploit signs up a normal user, uses that low-privilege session to `POST /1/classes/_Session` with a chosen token and expiry, verifies via a master-key read that the stored `_Session` record contains the chosen expiry, and then calls `GET /1/users/me` with the attacker-chosen token to confirm the server trusts it for authentication.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final reproduction run emitted the exact proof string `EVOHUNT_SESSION_ROUTE_POC_OK userId=UCLSzb3nyH chosenToken=r:evohunt-fixed-1780605561639 expiresAt=2099-01-01T00:00:00.000Z`.",
+    "The exploit helper verifies that the stored `_Session` object preserves the attacker-chosen `expiresAt` value before attempting authentication with the chosen token.",
+    "The exploit helper completes only after `/1/users/me` succeeds with the attacker-chosen session token, distinguishing the bug from a generic object-creation success."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "bf248d80db39b2f00f0df9682ae38a8a1666db7e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/start-server.js",
+      "reproduction/exploit.js"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The Docker-based reproduction confirms that create, update, and replace archive ../-prefixed paths outside cwd and preserve the traversal entry name by default.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that create, update, and replace each archive ../secret.txt from outside cwd and emit archive entries whose path remains ../secret.txt while the body contains the secret file contents.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 1f0c2c9006b10199cf2686f8ef43e79a1773e1aa, built the target package, and verified that create, update, and replace each produced an archive entry ../secret.txt whose body matched the secret content stored outside cwd.",
+  "verification_method": "The verification helper creates a temp root, stores a secret file outside cwd, runs create/update/replace with ../secret.txt, then parses each resulting tarball and asserts that the entry path is ../secret.txt and the entry body matches the expected secret string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction emitted JSON showing create archived ../secret.txt with body CREATESECRET.",
+    "The reproduction emitted JSON showing update archived ../secret.txt with body UPDATESECRET.",
+    "The reproduction emitted JSON showing replace archived ../secret.txt with body REPLACESECRET."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "1f0c2c9006b10199cf2686f8ef43e79a1773e1aa",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

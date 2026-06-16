@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction bundle confirms that a small base64+zlib payload sent through the real `/json/visjs` Flask route forces large in-memory expansion and OOM-kills a 512 MB-limited worker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A sanity request should succeed, and the malicious request should terminate the containerized worker with exit code 137 after the vulnerable parser path inflates attacker-controlled data without a size bound.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned upstream commit `f0d0a7c350d482bcd5de75fa542c7189126cf71a`, built the helper image, completed a benign `/json/visjs` sanity request, and then ran the malicious request. The exploit container printed the payload length and was OOM-killed with exit code 137, which the host-side script treated as the expected proof signal.",
+  "verification_method": "The run script first executes `sanity_check.py` against the mounted target checkout to confirm the Flask route works normally. It then runs `trigger_dos.py` under `docker run --memory=512m --memory-swap=512m`. Verification passes only if the sanity check succeeds and the exploit container exits with code 137, distinguishing the bug from a generic startup or dependency failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The sanity check printed `SANITY_OK status=200`, proving the mounted target repository and `/json/visjs` route worked before the exploit.",
+    "The exploit run printed `TRIGGER_START payload_len=86986` and then terminated with exit code 137 (`Killed`).",
+    "The host-side `run.sh` only reports success when the exploit run exits with code 137 after the sanity request has already passed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the upstream target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "f0d0a7c350d482bcd5de75fa542c7189126cf71a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/requirements.lock.txt",
+      "reproduction/sanity_check.py",
+      "reproduction/trigger_dos.py",
+      "reproduction/payload_64mb_b64zlib.txt"
+    ]
+  }
+}

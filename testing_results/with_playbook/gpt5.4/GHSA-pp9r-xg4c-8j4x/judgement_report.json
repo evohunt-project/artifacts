@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:43:30.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c01d31e9",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-pp9r-xg4c-8j4x/GHSA-pp9r-xg4c-8j4x.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "staticdir_hidden_directory_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c01d31e9/staticdir_hidden_directory_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c01d31e9/staticdir_hidden_directory_bypass/vulnerability_report.json",
+      "title": "StaticDir include_dot_files(false) does not block hidden-directory file access",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets `StaticDir` hidden-directory filtering in `crates/serve-static/src/dir.rs`, not the advisory's unbounded request-body reads in `Request::form_data()` / `FormData::read()` or the `Extractible` body-source path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "tus_deferred_length_max_size_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c01d31e9/tus_deferred_length_max_size_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c01d31e9/tus_deferred_length_max_size_bypass/vulnerability_report.json",
+      "title": "Deferred-length TUS uploads bypass the configured max_size limit",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets deferred-length upload handling in `crates/tus/src/handlers/{post,patch}.rs` and `crates/tus/src/stores/disk.rs`, not the advisory's form-data parser path that buffers request bodies in memory without a size check.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's vulnerable code or root cause. The advisory is about unbounded in-memory body collection in `Request::form_data()`, `FormData::read()`, and `Extractible` body extraction, while the session's qualifying findings are a `StaticDir` hidden-directory disclosure and a separate `salvo-tus` deferred-length upload size-limit bypass.",
+    "evidence": [
+      "The advisory JSON describes denial of service from unbounded memory allocation in form-data parsing, specifically `Request::form_data()`, `FormData::read()`, multipart handling, and `#[derive(Extractible)]` body-source extraction.",
+      "`.judge/input_manifest.json` lists exactly two final `qualifying_vuln` findings in this session: `staticdir_hidden_directory_bypass` and `tus_deferred_length_max_size_bypass`.",
+      "`staticdir_hidden_directory_bypass/vulnerability_report.json` ties its root cause to `crates/serve-static/src/dir.rs` only checking the final path component before serving hidden-directory files such as `/.git/config`.",
+      "`tus_deferred_length_max_size_bypass/vulnerability_report.json` ties its root cause to `salvo-tus` deferred-length upload handling in `crates/tus/src/handlers/post.rs`, `crates/tus/src/handlers/patch.rs`, and `crates/tus/src/stores/disk.rs`, with disk growth past the configured `Tus-Max-Size`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c01d31e9/staticdir_hidden_directory_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c01d31e9/staticdir_hidden_directory_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c01d31e9/staticdir_hidden_directory_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c01d31e9/tus_deferred_length_max_size_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c01d31e9/tus_deferred_length_max_size_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c01d31e9/tus_deferred_length_max_size_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

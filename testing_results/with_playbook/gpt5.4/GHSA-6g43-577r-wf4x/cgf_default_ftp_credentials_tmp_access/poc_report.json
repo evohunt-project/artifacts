@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "hardcoded_default_credentials_arbitrary_file_access",
+  "summary": "The Docker-based reproduction cloned the pinned vulnerable CHF commit, started the CGF FTP service, logged in with the shipped `admin` / `free5gc` credentials, uploaded and retrieved an attacker-controlled proof file, and retrieved the service-generated `config.json` from the exposed `/tmp` FTP root.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should prove that the embedded CGF FTP service accepts the hardcoded credentials and allows unauthorized read/write access within the service-exposed `/tmp` root.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `9fbf02ffd990c8a67b0ac2cff535dee62e3f1290`, built the reproduction image, started CHF inside the container, and printed a proof JSON showing `login_ok=true`, `proof_file_present=true`, `proof_payload_matches=true`, `config_contains_credentials=true`, followed by the success signal `EVOHUNT_CGF_FTP_PROOF_OK`.",
+  "verification_method": "The container helper waits for the FTP listener, then `exploit.py` authenticates with `admin` / `free5gc`, stores a known proof payload, retrieves that same file, retrieves `config.json`, and checks that the file payload and embedded credentials match expected values before printing `EVOHUNT_CGF_FTP_PROOF_OK`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `EVOHUNT_CGF_FTP_PROOF_OK`.",
+    "The proof JSON included `retrieved_proof` with the exact string `EVOHUNT_CGF_DEFAULT_FTP_CREDENTIALS\\n`.",
+    "The retrieved `config.json` excerpt contained `\"user\": \"admin\"`, `\"pass\": \"free5gc\"`, and `\"basePath\": \"/tmp\"`."
+  ],
+  "limitations_or_blockers": [
+    "The FTP server is confined to the configured `/tmp` base path; this proof demonstrates unauthorized access to that exposed root rather than unrestricted filesystem traversal."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the upstream target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "9fbf02ffd990c8a67b0ac2cff535dee62e3f1290",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/exploit.py",
+      "reproduction/server.pem",
+      "reproduction/server.key"
+    ]
+  }
+}

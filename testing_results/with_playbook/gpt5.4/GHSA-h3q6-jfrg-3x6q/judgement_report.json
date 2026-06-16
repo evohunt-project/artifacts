@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:58:29.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f904b07e",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-h3q6-jfrg-3x6q/GHSA-h3q6-jfrg-3x6q.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "server_side_request_forgery_node_image_fetch",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f904b07e/server_side_request_forgery_node_image_fetch",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f904b07e/server_side_request_forgery_node_image_fetch/vulnerability_report.json",
+      "title": "Server-side PDF export fetches attacker-controlled image URLs in the Node entrypoint",
+      "vulnerability_type": "server_side_request_forgery",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a repository-owned SSRF in src/utils/image/node.ts that fetches attacker-controlled image URLs with node-fetch(), while the advisory is an inherited jsPDF Node loadFile() local file inclusion/path traversal flaw remediated by upgrading the jspdf dependency.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's jsPDF loadFile() local file inclusion/path traversal root cause; the only materialized qualifying finding is a separate SSRF in survey-pdf's own Node image loader.",
+    "evidence": [
+      "The session's .judge/input_manifest.json and logs/orchestrator_final_response.md identify server_side_request_forgery_node_image_fetch as the only materialized final qualifying finding.",
+      "The advisory JSON states that survey-pdf is affected because it depends on vulnerable jsPDF versions <= 3.0.4 and that the fix was to upgrade jsPDF to >= 4.0.0.",
+      "npm package metadata shows survey-pdf 1.12.58 depends on jspdf '^2.3.0 || ^3', while 1.12.59 expands the dependency to '^2.3.0 || ^3 || ^4'.",
+      "The upstream jsPDF advisory GHSA-f8cm-6447-x5h2 states that user control of the first argument to the Node build's loadFile method enables local file inclusion/path traversal.",
+      "The qualifying finding instead traces attacker-controlled image URLs through src/utils/image/node.ts to node-fetch(url), which is a different sink and a different root cause from jsPDF loadFile()."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f904b07e/server_side_request_forgery_node_image_fetch",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f904b07e/server_side_request_forgery_node_image_fetch/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f904b07e/server_side_request_forgery_node_image_fetch/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

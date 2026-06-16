@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirmed that a share-link token for one file can authorize unrelated bulk-download and delete routes in the v1.1.4 release.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A token created for shared.txt should not authorize unrelated routes, but the PoC should use that token to bulk-read secret.txt and delete secret.txt.",
+  "actual_observed_result": "Running ./reproduction/run.sh printed `EVOHUNT_SUCCESS: share token bypassed auth on unrelated bulk-download and delete routes` after the container verified that unauthenticated bulk download returned 401, the tokenized bulk route returned the unrelated secret contents, the tokenized delete route returned 200, and the unrelated file was removed.",
+  "verification_method": "The containerized helper first confirms that `/?bulk&file=/secret.txt` is blocked without a token, then replays the share token on the bulk-download route and checks the returned zip for the exact `top-secret` contents. It next replays the same token on the delete route and verifies that `secret.txt` disappears while the token still works on its intended shared file.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final run emitted `EVOHUNT_SUCCESS: share token bypassed auth on unrelated bulk-download and delete routes`.",
+    "The reproduction observed a 401 response on the unrelated bulk route without a token.",
+    "The reproduction extracted `top-secret` from the unrelated bulk-download zip when the share token was replayed.",
+    "The reproduction confirmed that the unrelated `secret.txt` file was deleted via the tokenized delete route."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5b5228ff042f284bc432e706699cf7252caf96fa",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh"
+    ]
+  }
+}

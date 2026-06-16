@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:08:25.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7ae8a8f6",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-hqjg-pww4-pcgq/GHSA-hqjg-pww4-pcgq.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "credential-store-world-readable",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7ae8a8f6/credential-store-world-readable",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7ae8a8f6/credential-store-world-readable/vulnerability_report.json",
+      "title": "OAuth credential store writes a world-readable token file",
+      "vulnerability_type": "insecure_credential_permissions",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a local credential-file permission issue in `src/auth/file_credential_store.ts`, while the advisory fixes `Files.fetchRemote()` in `src/core/files.ts` to stop malicious remote filenames from escaping the project directory during `clone` or `pull`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "P",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:P/VC:L/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's path traversal root cause in remote file synchronization. The only final qualifying finding is a separate local disclosure issue in the OAuth credential store.",
+    "evidence": [
+      "The advisory summary and fix concern `clone`/`pull` writing outside the project directory through malicious remote script filenames.",
+      "The upstream patch for commit `ba6bd666fe74de54950122b5d92ecf1dcc02a9d3` adds an `isInside()` containment check in `src/core/files.ts` around `Files.fetchRemote()` path resolution before writing synchronized files.",
+      "The pre-fix vulnerable code path in `src/core/files.ts` resolved `path.resolve(contentDir, `${f.name}${ext}`)` and derived a local path without verifying the result stayed inside `contentDir`.",
+      "The session's only qualifying finding instead targets `src/auth/file_credential_store.ts:182`, where `fs.writeFileSync(this.filePath, JSON.stringify(store, null, 2))` creates `~/.clasprc.json` with umask-derived permissions, and its PoC proves cross-user token disclosure rather than path traversal."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7ae8a8f6/credential-store-world-readable",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7ae8a8f6/credential-store-world-readable/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7ae8a8f6/credential-store-world-readable/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

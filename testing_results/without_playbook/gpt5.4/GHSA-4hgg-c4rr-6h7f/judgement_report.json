@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:30:56.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bb5b34c",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-4hgg-c4rr-6h7f/GHSA-4hgg-c4rr-6h7f.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "host_token_cross_host_access",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bb5b34c/host_token_cross_host_access",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bb5b34c/host_token_cross_host_access/vulnerability_report.json",
+      "title": "Host-scoped token can read and modify arbitrary hosts",
+      "vulnerability_type": "broken_access_control_idor",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is about `GET /api/extclients/{network}` and `GET /api/nodes/{network}` leaking WireGuard private keys and missing per-user filtering, while this finding targets missing host-ID binding on host-token routes such as `/api/v1/fallback/host/{hostid}` and `/api/v1/host/{hostid}/peer_info`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable list handlers or the private-key disclosure root cause.",
+    "evidence": [
+      "The advisory JSON describes a `platform-user` obtaining WireGuard private keys by calling `GET /api/extclients/{network}` or `GET /api/nodes/{network}` because those list endpoints return full records without ownership filtering.",
+      "The public fix commit `5617d97c` (`NM-258: hide extclient private keys in list api`) changes `controllers/ext_client.go` to filter `GET /api/extclients/{network}` results by user access and blank `PrivateKey`, and changes `controllers/node.go` to blank `StaticNode.PrivateKey` in node list responses.",
+      "The only qualifying finding instead reports that any valid host token can target another host ID on `/api/v1/fallback/host/{hostid}` and `/api/v1/host/{hostid}/peer_info` because the authenticated host identity is not bound to the path parameter."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bb5b34c/host_token_cross_host_access",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bb5b34c/host_token_cross_host_access/vulnerability_report.json",
+      "poc_report_path": null,
+      "poc_report_status": "missing"
+    }
+  ]
+}

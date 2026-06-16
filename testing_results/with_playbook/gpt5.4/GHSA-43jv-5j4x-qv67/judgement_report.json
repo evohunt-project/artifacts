@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:52:34.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c9eb0eba",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-43jv-5j4x-qv67/GHSA-43jv-5j4x-qv67.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "envoy_grpc_client_ip_spoof",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c9eb0eba/envoy_grpc_client_ip_spoof",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c9eb0eba/envoy_grpc_client_ip_spoof/vulnerability_report.json",
+      "title": "Envoy gRPC ext_auth mode trusts spoofable x-forwarded-for metadata for client IP policy decisions",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a forwarded-header trust bug on the Envoy gRPC Authorization/Check path, while the advisory is a separate case-insensitive encoded-slash path-matching flaw in Heimdall's route and rule evaluation logic.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's encoded-slash root cause. The only qualifying finding is an unrelated x-forwarded-for trust issue in the Envoy gRPC ext_auth request-context path.",
+    "evidence": [
+      "The advisory describes authorization bypass caused by case-sensitive handling of URL-encoded slashes, where lowercase %2f is not rejected or normalized consistently when encoded slashes are disallowed.",
+      "The advisory patch updates Heimdall's route and rule path-processing logic to detect encoded slashes case-insensitively and to unescape path values without the old %2F-only handling, specifically in internal/rules/route_matcher.go and internal/rules/rule_impl.go.",
+      "The session's only final qualifying finding targets internal/handler/envoyextauth/grpcv3/request_context.go, where attacker-supplied x-forwarded-for gRPC metadata is trusted for Request.ClientIPAddresses on Authorization/Check; that is a different input channel, code path, and root-cause mechanism from the advisory's path-interpretation flaw."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c9eb0eba/envoy_grpc_client_ip_spoof",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c9eb0eba/envoy_grpc_client_ip_spoof/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c9eb0eba/envoy_grpc_client_ip_spoof/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

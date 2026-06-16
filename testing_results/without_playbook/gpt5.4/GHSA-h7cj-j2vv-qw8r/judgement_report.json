@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:06:07.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f0578ae",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-h7cj-j2vv-qw8r/GHSA-h7cj-j2vv-qw8r.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "multipart_upload_quota_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f0578ae/multipart_upload_quota_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f0578ae/multipart_upload_quota_bypass/vulnerability_report.json",
+      "title": "Fragmented multipart uploads bypass configured file-size limits",
+      "vulnerability_type": "multipart_upload_quota_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is a percent-decoded path traversal in `serve_static` where `string.replace(\"..\", \"\")` runs before `uri.percent_decode`, enabling arbitrary file read via `%2e%2e`. This finding instead concerns multipart quota accounting in `read_multipart` and `multipart_body`, where fragmented uploads are written before `max_files_size` is decremented.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described root cause in `wisp.serve_static`. The only qualifying finding proves a multipart upload quota-bypass in different code paths and with different security impact.",
+    "evidence": [
+      "The advisory describes `src/wisp.gleam` `serve_static` sanitizing with `string.replace(each: \"..\", with: \"\")` before `uri.percent_decode`, which lets percent-encoded `..` survive and become traversal during file reads.",
+      "The fixing change moves `uri.percent_decode` before the `\"..\"` stripping step in `serve_static`, confirming the advisory root cause is decode-before-sanitize ordering on static file paths.",
+      "The session manifest at `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f0578ae/.judge/input_manifest.json` lists only one final `qualifying_vuln` finding: `multipart_upload_quota_bypass`.",
+      "That finding is grounded in `src/wisp.gleam:1086`, `src/wisp.gleam:1153`, and `src/wisp.gleam:1172`, where multipart body chunks are appended before quota decrementing; its reproduced effect is oversized upload acceptance (`proof accepted bytes=1050000 limit=8`), not arbitrary file read through `serve_static`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f0578ae/multipart_upload_quota_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f0578ae/multipart_upload_quota_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f0578ae/multipart_upload_quota_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

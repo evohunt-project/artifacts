@@ -1,0 +1,22 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The reproduction provisions a minimal Django ASGI app with RemoteUserMiddleware and shows that a Remote-User header authenticates the caller as an arbitrary username.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The unauthenticated request should be treated as an authenticated user chosen by the attacker, and a matching Django user should be created or reused.",
+  "actual_observed_result": "The reproduction returned HTTP 200 with {\"is_authenticated\": true, \"username\": \"attacker\"} and confirmed that the attacker user record existed after the request.",
+  "verification_method": "The exploit script sends a real ASGI HTTP request with a Remote-User header and verifies both the HTTP response body and the created user record in the SQLite database.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "{\"status\": 200, \"payload\": {\"is_authenticated\": true, \"username\": \"attacker\"}, \"user_exists\": true}"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction shows that a single crafted Bedrock login attempt reaches the pre-auth ClientData warning sink and forces repeated warning lines into PocketMine-MP's default file-backed logger even with `xbox-auth=on`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should send a crafted login request whose unexpected ClientData fields are logged one-by-one as `Unexpected JSON property for ClientData` warnings before authentication completes.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned PocketMine-MP `5.39.2`, built the reproduction image, started the server with `xbox-auth=on`, sent one crafted self-signed login attempt, received the expected `You need to authenticate to Xbox Live.` disconnect, and verified 65 repeated warning lines in `server.log` from the pre-auth ClientData parser.",
+  "verification_method": "The verification helper waits for the server to accept UDP traffic, sends the crafted login packet, and then counts `Unexpected JSON property for ClientData` lines in `server.log`. Success requires at least the configured number of repeated warning lines, which distinguishes the vulnerability from a generic connection failure or early handshake rejection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `[evohunt] verified 65 repeated warning lines in /tmp/login-warning-log-amplification/data/server.log`.",
+    "The server log contained `ClientData JWT body: Unexpected JSON property for ClientData: UnexpectedClientDataField000 = 'amplify-0'` and subsequent numbered fields from the same login attempt.",
+    "The server still responded with `You need to authenticate to Xbox Live.`, confirming that the warning fanout happens before authentication finishes rather than as a post-auth side effect."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, creates the verification container, and copies that checkout into `/target-repo` before starting the exploit and verification flow.",
+    "pinned_commit_or_ref": "a6ced39472135aacb64cd75b06c5adb452b9db20",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/prepare-node-tooling.sh",
+      "reproduction/start-server.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

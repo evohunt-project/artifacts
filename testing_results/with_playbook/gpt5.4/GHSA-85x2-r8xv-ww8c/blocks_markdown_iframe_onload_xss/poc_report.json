@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stored_xss",
+  "summary": "The reproduction clones Kirby 4.9.0, runs the blocks paste/import path on an attacker-controlled iframe payload, and verifies that markdown fallback rendering preserves the executable iframe onload sink unchanged while writer-backed text blocks strip a control javascript: link.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that `<iframe src=\"https://example.org\" onload=\"window.top.__xss=1\"></iframe>` survives parse, paste normalization, and frontend markdown rendering unchanged, demonstrating a stored passive-view executable HTML sink.",
+  "actual_observed_result": "Running ./reproduction/run.sh succeeded. The container printed JSON showing `parsed[0].type` and `pasted[0].type` were `markdown`, `rendered` exactly matched `<iframe src=\"https://example.org\" onload=\"window.top.__xss=1\"></iframe>`, and the control payload `<p><a href=\"javascript:alert(1)\">x</a></p>` was rewritten to `<p><a rel=\"noreferrer\">x</a></p>`.",
+  "verification_method": "A containerized PHP harness clones the target repository at tag 4.9.0, mounts it read-only at /target-repo, executes Blocks::parse() -> BlocksField::pasteBlocks() -> Block::toHtml() on the malicious iframe payload, and fails closed unless the rendered HTML exactly preserves the attacker-controlled iframe while the writer-backed control payload loses its javascript: href.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/run-output.txt",
+    "The reproduction printed `status: reproduced` with `rendered` equal to `<iframe src=\"https://example.org\" onload=\"window.top.__xss=1\"></iframe>`.",
+    "The reproduction printed the control result with `text` equal to `<p><a rel=\"noreferrer\">x</a></p>`, confirming the surviving bug is the markdown fallback path rather than the writer-backed sanitization path.",
+    "The run completed successfully from the final folder layout via ./reproduction/run.sh."
+  ],
+  "limitations_or_blockers": [
+    "The verifier proves that Kirby emits a live executable iframe onload sink unchanged; it does not launch a browser to observe JavaScript execution, but the proof relies on standard browser handling of iframe event attributes."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag and commit, builds the reproduction image, and mounts that checkout into the container read-only.",
+    "pinned_commit_or_ref": "4.9.0 (d952dfc0a890979c863ec5fa11660e37400f0f4c)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.php"
+    ]
+  }
+}

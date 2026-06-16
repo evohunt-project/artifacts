@@ -1,0 +1,28 @@
+{
+  "status": "failed",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle clones Flowise `3.1.0`, installs dependencies, and uses the real node controller/service/custom-function path to verify that a low-privileged request context can read workspace secrets.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print a success marker after a low-privileged custom-function request returns the seeded `STATIC_SECRET` and runtime-backed `EVOHUNT_RUNTIME_SECRET` values.",
+  "actual_observed_result": "Running `./reproduction/run.sh` exited during the host-side preflight because the session host only had `284284` KiB free, below the script's 4 GiB minimum for a temporary clone, dependency install, and Docker build.",
+  "verification_method": "The helper invokes `nodesController.executeCustomFunction` with a low-privileged permission set, uses the repository's real `CustomFunction` implementation plus database-backed variable loading, and verifies that the returned object contains both seeded secrets.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "`run.sh` printed: `[evohunt] insufficient free disk space for clone, dependency install, and docker build: 284284 KiB available, 4194304 KiB required`."
+  ],
+  "limitations_or_blockers": [
+    "This session host had only about 278 MiB free on the writable volume, so the Docker-based reproduction could not be completed here even though the controller-path helper had already been validated locally."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify-controller.js"
+    ]
+  }
+}

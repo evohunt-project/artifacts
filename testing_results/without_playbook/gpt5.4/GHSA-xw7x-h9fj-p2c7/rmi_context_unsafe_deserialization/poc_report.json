@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_deserialization_rce",
+  "summary": "The reproduction starts an RMI service under the vulnerable OpenTelemetry Java agent, sends a forged CONTEXT_CALL_ID request, and confirms that the server deserializes an attacker-controlled gadget object and executes its readObject() logic.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the instrumented RMI server to deserialize an attacker-controlled object via the synthetic context-propagation endpoint and emit the proof marker EVOHUNT_RMI_CONTEXT_POC_1780278003 from inside the server JVM.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the repository at 778754b1f528693498a2f73aeae6018d3d456a77, downloaded the published vulnerable v2.26.0 javaagent, launched the demo RMI service, sent the forged context-propagation call to the exported service port, and observed EVOHUNT_RMI_CONTEXT_POC_1780278003 in both the server log and the proof file while health checks passed before and after exploitation.",
+  "verification_method": "The run script first performs a legitimate RMI call to learn the exported service port and confirm baseline health, then triggers the exploit, verifies the exact proof marker in the server log and proof file, and finally repeats the legitimate RMI call to show the marker came from deserialization rather than a startup failure or unrelated crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The runtime server log emitted EVOHUNT_RMI_CONTEXT_POC:EVOHUNT_RMI_CONTEXT_POC_1780278003 after the forged CONTEXT_CALL_ID request.",
+    "The runtime proof file contained EVOHUNT_RMI_CONTEXT_POC_1780278003, showing server-side gadget execution reached the proof sink.",
+    "The runtime health checks before and after exploitation both reported HEALTH_OK:Hello health PORT:34431."
+  ],
+  "limitations_or_blockers": [
+    "The demonstration uses a helper serializable gadget class that is already present on the demo server classpath. Real-world impact depends on deserializable gadget types available in the target JVM."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, mounts that checkout into the container at /target-repo, and the container downloads the published v2.26.0 javaagent artifact that matches the mounted vulnerable snapshot.",
+    "pinned_commit_or_ref": "778754b1f528693498a2f73aeae6018d3d456a77",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run-container.sh",
+      "reproduction/src/poc/ExploitClient.java",
+      "reproduction/src/poc/ExploitGadget.java",
+      "reproduction/src/poc/HealthClient.java",
+      "reproduction/src/poc/ServerMain.java",
+      "reproduction/src/poc/Greeter.java",
+      "reproduction/src/poc/GreeterImpl.java"
+    ]
+  }
+}

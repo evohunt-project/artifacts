@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_upload_rce",
+  "summary": "The Docker-based reproduction confirms that a low-privileged backend user can upload a crafted theme ZIP, place attacker-controlled PHP under public/templates/evil/, and execute it through the web server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should build the vulnerable stack, seed a backend uploader account with only theme read/upload permissions, upload a crafted theme archive, and then return the exact proof string from /templates/evil/poc.php while executing as the web server user.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned ci4ms at 418f0bf2b04ee9b046ea296c55d31466ecd0c919, built the upstream Docker stack, seeded the minimal uploader role, uploaded the crafted theme ZIP, and retrieved http://app/templates/evil/poc.php with the proof body EVOHUNT_THEME_RCE_OK, marker=33d7799590c2e2313c0afb590c5ae03db1aac3d7f96389b2ca0f4e3eeff50b36, and user=www-data.",
+  "verification_method": "The helper container logs in as the seeded uploader account, uploads the crafted archive through the real theme upload form with CSRF and session handling, then requests the deployed PHP payload and requires the exact proof string, fixed marker hash, and web-server username before reporting success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final self-contained rerun printed the proof URL http://app/templates/evil/poc.php from inside the reproduction network.",
+    "The proof response body contained EVOHUNT_THEME_RCE_OK and marker=33d7799590c2e2313c0afb590c5ae03db1aac3d7f96389b2ca0f4e3eeff50b36.",
+    "The proof response body reported user=www-data, confirming execution in the target web application context.",
+    "The host-side run script completed with the success signal [evohunt] SUCCESS: reproduction completed and verified."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, starts the cloned upstream Docker stack, and mounts that checkout into the helper container at /target-repo.",
+    "pinned_commit_or_ref": "418f0bf2b04ee9b046ea296c55d31466ecd0c919",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

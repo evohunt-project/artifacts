@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_arbitrary_file_read",
+  "summary": "The Docker-based reproduction cloned the pinned vulnerable repository, started Stata-MCP in HTTP mode with a minimal fake Stata binary, connected to the exposed localhost MCP endpoint without credentials, and used `read_file` to retrieve the contents of an attacker-chosen proof file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should expose the `read_file` MCP tool over the localhost HTTP transport and return the exact `EVOHUNT_SECRET_READ_SUCCESS` contents of a proof file chosen by the client.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the reproduction image, cloned commit `f6e93b7dd367abfb17110d821720bfcb0e167c44`, installed the target package in the container, and printed `TOOLS=help,read_file,get_data_info,write_dofile,append_dofile,ado_package_install,load_figure,mk_dir,stata_do` followed by `PROOF=EVOHUNT_SECRET_READ_SUCCESS`.",
+  "verification_method": "The helper script creates a proof file with a unique string, starts `stata-mcp -t http`, initializes a streamable-HTTP MCP client with no authentication, calls `read_file` on the proof file path, and compares the returned text to the exact proof string. A mismatch or startup failure causes a non-zero exit.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/last_run.txt contains `TOOLS=help,read_file,get_data_info,write_dofile,append_dofile,ado_package_install,load_figure,mk_dir,stata_do`.",
+    "reproduction/last_run.txt contains `PROOF=EVOHUNT_SECRET_READ_SUCCESS`.",
+    "The run output reports `SERVER_LOG=/tmp/evohunt-http-read-k8jgw39p/server.log`, showing the target server reached the point where the unauthenticated tool call succeeded."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host from GitHub, checks out the pinned vulnerable commit, and mounts that checkout read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "f6e93b7dd367abfb17110d821720bfcb0e167c44",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/fake_stata.py"
+    ]
+  }
+}

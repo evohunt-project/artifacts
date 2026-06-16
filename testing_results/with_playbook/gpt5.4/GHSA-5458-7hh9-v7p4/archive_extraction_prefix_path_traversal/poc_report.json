@@ -1,0 +1,28 @@
+{
+  "status": "failed",
+  "vulnerability_type": "path_traversal",
+  "summary": "The reproduction bundle pins PF4J commit 2ed63d16c4610779eb36f54c2e2df572a94ea2b7 and uses a Java harness to verify that a crafted ZIP plugin writes a sibling-prefix path outside the intended extraction directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should show that a crafted plugin ZIP causes PF4J to create /.../plugin-poc_evil/pwned.txt outside the intended plugin-poc extraction directory.",
+  "actual_observed_result": "Executing ./reproduction/run.sh cloned https://github.com/pf4j/pf4j.git, checked out 2ed63d16c4610779eb36f54c2e2df572a94ea2b7, and then failed at the docker build step because the host does not provide the docker binary. Separately, the direct Java harness succeeded against the same pinned commit during validation.",
+  "verification_method": "Inside the container, verify.sh copies the checked-out repository to a writable workspace, compiles the pf4j module plus Pf4jArchiveExtractionHarness.java, runs the harness, and requires the exact success string after confirming that the escaped file exists outside the intended extraction directory.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "artifacts/archive_runsh_attempt.log shows that run.sh cloned the target repository and checked out 2ed63d16c4610779eb36f54c2e2df572a94ea2b7 before failing at `docker build` with `docker: command not found`."
+  ],
+  "limitations_or_blockers": [
+    "The session host lacks the `docker` executable required to build and run the reproduction container."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2ed63d16c4610779eb36f54c2e2df572a94ea2b7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Pf4jArchiveExtractionHarness.java",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_write",
+  "summary": "The Docker-based reproduction confirms that FUXA v1.2.7 accepts an unauthenticated upload request whose crafted destination escapes the intended upload directory and overwrites server/main.js with attacker-controlled content.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should use POST /api/upload without credentials to overwrite a chosen application file outside the normal upload directory and leave attacker-controlled bytes on disk.",
+  "actual_observed_result": "Running ./reproduction/run.sh emitted UPLOAD_POC_OK and returned {\"location\":\"/resources/main.js\"}. The verification helper confirmed that the SHA-256 hash of server/main.js changed and that the file content became evohunt-upload-overwrite.",
+  "verification_method": "The verification helper starts the vulnerable server, records the original hash of server/main.js, performs the crafted unauthenticated POST /api/upload request, then requires both a changed SHA-256 digest and exact file content equality with the proof string. This distinguishes a real arbitrary overwrite from a benign upload response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "STDOUT contained the proof marker UPLOAD_POC_OK.",
+    "The upload response JSON reported {\"location\":\"/resources/main.js\"}.",
+    "The target file server/main.js changed hash and its content matched the attacker-controlled proof string evohunt-upload-overwrite."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "bbd738d21d7192d5eaaf58577de68eced4a609eb (tag: v1.2.7)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/common.sh",
+      "reproduction/package.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

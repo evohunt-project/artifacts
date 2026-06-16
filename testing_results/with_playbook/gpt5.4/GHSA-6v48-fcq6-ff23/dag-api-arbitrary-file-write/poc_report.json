@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_write",
+  "summary": "The reproduction creates a low-privilege developer account on the pinned vulnerable commit and uses `POST /api/v1/dags` to create `/tmp/evohunt-vuln-commit-proof` outside the DAG root.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should cause the vulnerable `CreateNewDAG` path to create `/tmp/evohunt-vuln-commit-proof` outside the configured DAG directory and populate it with the default DAG YAML.",
+  "actual_observed_result": "Running `./reproduction/run.sh` printed `EVOHUNT_PROOF: developer-created file outside the DAG root`, `EVOHUNT_PROOF_FILE: /tmp/evohunt-vuln-commit-proof`, and `EVOHUNT_PROOF_CONTENT: command: echo hello`.",
+  "verification_method": "The helper starts the pinned vulnerable server, creates admin and developer accounts, triggers the create API with an absolute-path `name`, and then verifies that the target file exists and contains the expected default DAG content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_PROOF: developer-created file outside the DAG root",
+    "EVOHUNT_PROOF_FILE: /tmp/evohunt-vuln-commit-proof",
+    "EVOHUNT_PROOF_CONTENT: command: echo hello"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh fetches the exact vulnerable Dagu commit on the host, checks it out into a temporary repository, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6c53bfdaa6beec62a3936b8c5b233efb8bd22c7b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.py"
+    ]
+  }
+}

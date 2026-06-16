@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:10:45.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_a7f65d2c",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-hwr4-mq23-wcv5/GHSA-hwr4-mq23-wcv5.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "anonymous_subscription_api_leak",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_a7f65d2c/anonymous_subscription_api_leak",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_a7f65d2c/anonymous_subscription_api_leak/vulnerability_report.json",
+      "title": "Anonymous subscription API leaks active subscriber metadata",
+      "vulnerability_type": "access_control_bypass_information_disclosure",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an authorization gap on `/.well-known/mercure/subscriptions*` when anonymous subscriptions are enabled. The advisory instead concerns `TopicSelectorStore` match-cache key collisions caused by string-concatenating `topicSelector` and `topic`, so the vulnerable code and root cause do not align.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's cache-key collision in `TopicSelectorStore`. The only qualifying finding instead reports unauthenticated access to the subscriptions API in anonymous mode, which is a different authorization flaw.",
+    "evidence": [
+      "The advisory JSON describes cache poisoning in `TopicSelectorStore` because the match cache key was built as `\"m_\" + topicSelector + \"_\" + topic`, allowing distinct selector/topic pairs containing underscores to collide.",
+      "Advisory fix commit `4964a69be904fd61e35b5f1e691271663b6fdd64` removes `topicselectorcache.go` and replaces string-encoded match keys in `topicselector.go` with a typed `matchCacheKey` struct, confirming the target root cause is cache-key construction during topic-selector matching.",
+      "The qualifying finding's report attributes its issue to `registerSubscriptionHandlers` and `initSubscription` exposing `/.well-known/mercure/subscriptions*` without JWT enforcement when anonymous subscriptions are enabled; it does not describe a collision, cache poisoning, or private-update match bypass through `TopicSelectorStore`.",
+      "The qualifying finding's reproduction bundle clones Mercure commit `13c9ef40001cac5026f1c9eca2fa2e36f706168a`, which postdates the advisory fix commit, so its PoC does not execute the advisory-vulnerable cache-collision code path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_a7f65d2c/anonymous_subscription_api_leak",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_a7f65d2c/anonymous_subscription_api_leak/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_a7f65d2c/anonymous_subscription_api_leak/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

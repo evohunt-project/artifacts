@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:17:50.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8fe894f5",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-vc68-257w-m432/GHSA-vc68-257w-m432.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "htj2k_decode_stride_overflow",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8fe894f5/htj2k_decode_stride_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8fe894f5/htj2k_decode_stride_overflow/vulnerability_report.json",
+      "title": "HTJ2K decode uses signed int row-byte arithmetic that overflows on very wide images",
+      "vulnerability_type": "integer_overflow_memory_corruption",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an HTJ2K row-byte signed-overflow in `internal_ht.cpp`, while the advisory fixes a different root cause: PXR24 decompression accepts short zlib output in `compression.c` and then `undo_pxr24_impl` reconstructs pixels past `outSize` in `internal_pxr24.c`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding in this run identifies the advisory's PXR24 short-output handling and outSize-check omission; the only final qualifying finding is a separate HTJ2K arithmetic-overflow bug.",
+    "evidence": [
+      "The input manifest lists exactly one final qualifying finding: `/Users/lumi/ziyue/EvoHunt-Run/advisory_8fe894f5/htj2k_decode_stride_overflow`.",
+      "That finding report cites `src/lib/OpenEXRCore/compression.c:460` and `src/lib/OpenEXRCore/internal_ht.cpp:211` and `:216`, and its PoC verifies a UBSan signed-overflow in the HTJ2K decode path.",
+      "The advisory and upstream fix patch target `src/lib/OpenEXRCore/compression.c` short-output handling together with `src/lib/OpenEXRCore/internal_pxr24.c` bounds checks based on `outSize`, which is a different parser path and root cause.",
+      "The advisory impact is heap information disclosure from reading uninitialized PXR24 scratch bytes into decoded pixels, not the HTJ2K stride-overflow condition reported by the finding."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8fe894f5/htj2k_decode_stride_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8fe894f5/htj2k_decode_stride_overflow/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8fe894f5/htj2k_decode_stride_overflow/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

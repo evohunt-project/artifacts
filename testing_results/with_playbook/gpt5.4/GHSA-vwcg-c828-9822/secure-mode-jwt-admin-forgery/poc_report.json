@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "token_lifecycle_and_predictable_identifiers",
+  "summary": "The reproduction enables FUXA secure mode, forges an admin-equivalent JWT with the built-in signing key `frangoteam751`, and uses that token to create a new administrator account.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A forged JWT signed with the built-in secure-mode key should be accepted by the server, and the forged token should authorize a protected route such as `POST /api/users`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned FUXA v1.2.9, started the server with `secureEnabled=true`, forged a JWT signed with `frangoteam751`, created a new `forged-admin` account through `POST /api/users`, and then retrieved that account from the protected `/api/users` response.",
+  "verification_method": "The container waits for `/api/version`, generates a JWT with the built-in secret and forged admin group claims, calls `POST /api/users` with that token, then fetches `/api/users` and checks for HTTP 200 plus the exact `\"username\":\"forged-admin\"` marker. This distinguishes a real auth bypass from a server started without secure mode.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The forged JWT was accepted by a secure-mode server.",
+    "The protected `POST /api/users` route succeeded with the forged token.",
+    "The follow-up protected `GET /api/users` returned HTTP 200 and contained the `forged-admin` record."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "19c2471833e410eea235b81857ddcfde7b3851a0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

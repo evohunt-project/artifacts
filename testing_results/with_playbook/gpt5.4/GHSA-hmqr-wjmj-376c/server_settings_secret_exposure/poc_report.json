@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction confirms that a low-privileged authenticated user can call `GET /api/server/settings` and receive unmasked server secrets from the pinned vulnerable Netmaker commit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should authenticate a low-privileged service user, call the vulnerable settings endpoint, and surface `okta-secret-token` and `smtp-secret-pass` in the JSON response while `client_secret` stays masked.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `48f21474e61646f91c82f461ef224b4ddc1c3cc5`, built the Docker image, copied the helper test into the mounted checkout, and executed `go test -tags ee ./controllers -run TestEvoHuntLowPrivUserCanReadServerSettingsSecrets -v`. The test passed after logging a low-privileged response that contained `okta-secret-token` and `smtp-secret-pass` and showed `client_secret` as `..................`.",
+  "verification_method": "The helper test performs the full exploit flow in-process: it initializes the vulnerable settings store, authenticates a low-privileged service user, invokes `GET /api/server/settings`, and fails unless the response leaks the configured Okta and SMTP secrets while masking `ClientSecret`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The test output logged `okta-secret-token` inside the `/api/server/settings` response body.",
+    "The test output logged `smtp-secret-pass` inside the same response body.",
+    "The response still showed `client_secret` as `..................`, confirming the endpoint applied only partial redaction."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the public Netmaker repository on the host, checks out the pinned vulnerable commit, and mounts that checkout read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "48f21474e61646f91c82f461ef224b4ddc1c3cc5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/evohunt_server_settings_exposure_test.go"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "oauth_token_exfiltration",
+  "summary": "The reproduction provisions a public chatflow that references an OAuth2-backed credential, then shows that an unauthenticated attacker can extract the credential UUID from public metadata and call the public refresh endpoint to obtain a fresh access token.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should emit the success signal after an unauthenticated request recovers the credential UUID from a public chatflow and a second unauthenticated request receives `EVOHUNT-PROOF-TOKEN` from `/api/v1/oauth2-credential/refresh/:credentialId`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Flowise at commit `55b6913c03f0dba37cc207975f0c0d0786e0f3c7`, started the application and a local OAuth2 token service, created an OAuth2 credential and public chatflow as the owner, and then observed `EVOHUNT_SUCCESS public chatflow leaked credential id and unauthenticated oauth refresh returned EVOHUNT-PROOF-TOKEN` from the attacker phase.",
+  "verification_method": "The container script compares the credential UUID leaked by the unauthenticated public chatflow response with the UUID created during owner setup, asserts that the unauthenticated refresh response contains `tokenInfo.access_token` equal to `EVOHUNT-PROOF-TOKEN`, and finally confirms through an authenticated credential readback that the attacker-triggered refresh updated stored credential state.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated public chatflow response exposed the credential UUID embedded in `flowData`.",
+    "The unauthenticated refresh response returned `tokenInfo.access_token` equal to `EVOHUNT-PROOF-TOKEN`.",
+    "An authenticated credential readback after the attacker request showed the persisted `access_token` and rotated `refresh_token` values created by the unauthenticated refresh."
+  ],
+  "limitations_or_blockers": [
+    "The bundle provisions a local OAuth2 token service so the target can perform a real refresh-token exchange without depending on third-party accounts or external secrets."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "55b6913c03f0dba37cc207975f0c0d0786e0f3c7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/mock_oauth_server.js"
+    ]
+  }
+}

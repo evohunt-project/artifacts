@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:48:05.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b7da709d",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-5jg4-p4qw-cgfr/GHSA-5jg4-p4qw-cgfr.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "cbor_stack_exhaustion_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b7da709d/cbor_stack_exhaustion_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b7da709d/cbor_stack_exhaustion_dos/vulnerability_report.json",
+      "title": "CBOR decoder lacks nesting limits and crashes on deeply nested attacker input",
+      "vulnerability_type": "stack_exhaustion_dos",
+      "advisory_match": true,
+      "advisory_match_reason": "Same `@stablelib/cbor` decoder root cause as the advisory: recursive descent in `packages/cbor/cbor.ts` without a maximum-depth guard, fixed upstream by commit `0149e18d9d4736e22c257744ca945ebce7899a01`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "cbor_stack_exhaustion_dos",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b7da709d/cbor_stack_exhaustion_dos",
+      "status": "qualifying_vuln",
+      "title": "CBOR decoder lacks nesting limits and crashes on deeply nested attacker input",
+      "vulnerability_type": "stack_exhaustion_dos"
+    },
+    "reason": "The selected finding matches the advisory's vulnerable code and root cause in `@stablelib/cbor`, and the copied PoC reproduced the advisory-described stack-exhaustion denial of service in the vulnerable decode path.",
+    "evidence": [
+      "The advisory and finding both identify recursive CBOR decoding in `packages/cbor/cbor.ts` with no depth limit; the finding also cites the fixing upstream commit `0149e18d9d4736e22c257744ca945ebce7899a01` that adds `maxDepth`.",
+      "The copied PoC run at `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b7da709d/.judge/poc_runs/cbor_stack_exhaustion_dos/run.log` shows `Decoding nested CBOR payload: depth=12000 bytes=12001` immediately before an uncaught `RangeError: Maximum call stack size exceeded`.",
+      "That same run log contains recursive frames in `packages/cbor/lib/cbor.js` (`Decoder._decodeValue` and `Decoder._decodeArray`) and ends with `EVOHUNT_PROOF: stack exhaustion confirmed` plus `[+] Verification succeeded`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "cbor_stack_exhaustion_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b7da709d/cbor_stack_exhaustion_dos",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b7da709d/.judge/poc_runs/cbor_stack_exhaustion_dos/finding_copy",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b7da709d/.judge/poc_runs/cbor_stack_exhaustion_dos/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b7da709d/.judge/poc_runs/cbor_stack_exhaustion_dos/poc_execution.json",
+      "observed_effect": "The copied reproduction built the pinned vulnerable StableLib commit, decoded a 12,000-level nested array payload, emitted an uncaught `RangeError: Maximum call stack size exceeded` with recursive frames in `packages/cbor/lib/cbor.js`, and then printed `EVOHUNT_PROOF: stack exhaustion confirmed`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

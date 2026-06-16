@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction clones Flowise 3.1.0, seeds a non-public chatflow with file upload enabled, confirms the sibling public read route denies access, then uploads and downloads a text file through the public attachment APIs without authenticating.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that a non-public chatflow still rejects unauthenticated public reads while allowing unauthenticated attachment upload and subsequent retrieval from the same private chatflow storage namespace.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Flowise at commit `378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97`, built the required `packages/components` and `packages/server` workspaces in the container, seeded a private chatflow, completed the guard check that requires `GET /api/v1/public-chatflows/:id` to return `401`, printed a successful unauthenticated upload response for `flowise-upload-proof.txt` through `/api/v1/attachments/:chatflowId/:chatId`, and then printed `hello-from-upload` from `/api/v1/get-upload-file` without authenticating.",
+  "verification_method": "The verifier seeds a private chatflow with upload support, checks that the public chatflow read helper returns `401`, performs an unauthenticated upload with a deterministic file body, then downloads the same tuple and asserts that the streamed response matches the uploaded content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verifier completed its sibling public chatflow read gate check and would have aborted unless `GET /api/v1/public-chatflows/:id` returned `401` for the seeded private flow.",
+    "The unauthenticated upload response printed by the run returned `flowise-upload-proof.txt` with parsed content `hello-from-upload\\n`.",
+    "The unauthenticated download response printed by the run matched the exact uploaded content `hello-from-upload`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/seed.sql"
+    ]
+  }
+}

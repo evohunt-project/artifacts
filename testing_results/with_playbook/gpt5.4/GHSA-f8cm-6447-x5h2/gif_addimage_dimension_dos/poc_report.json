@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction bundle clones jsPDF v3.0.4, builds the distribution in a container, and feeds addImage a 35-byte crafted GIF whose declared dimensions force the GIF decoder into an unhandled allocation failure.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should drive addImage -> processGIF89A -> decodeAndBlitFrameRGBA into an unbounded frame-width-by-frame-height allocation and terminate the Node run with an unhandled allocation-failure signal rather than safely rejecting the image.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit a504e973eeebac633351b41860945ca2a2cdf096, built dist/jspdf.node.min.js inside the container, printed TRIGGERING_GIF_DIMENSION_DOS, and then raised RangeError: Array buffer allocation failed from decodeAndBlitFrameRGBA -> processGIF89A -> addImage. verify.sh observed the failing exit status and marked the run as verified.",
+  "verification_method": "verify.sh runs the trigger script inside the container, captures stdout and stderr, and requires both the trigger marker and the GIF allocation-failure signal (RangeError: Array buffer allocation failed or the equivalent fatal invalid-size signal) together with a non-zero process exit status.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run output contains TRIGGERING_GIF_DIMENSION_DOS before the decoder is invoked.",
+    "The run output contains RangeError: Array buffer allocation failed with a stack trace through decodeAndBlitFrameRGBA, processGIF89A, and addImage.",
+    "The verifier recorded EXIT_STATUS=1 and printed [evohunt] VERIFIED: unbounded GIF dimension allocation reached the addImage GIF path.",
+    "The host run script finished with [evohunt] SUCCESS: reproduction completed and verified."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "a504e973eeebac633351b41860945ca2a2cdf096",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.js",
+      "reproduction/verify.sh",
+      "reproduction/package-lock.json"
+    ]
+  }
+}

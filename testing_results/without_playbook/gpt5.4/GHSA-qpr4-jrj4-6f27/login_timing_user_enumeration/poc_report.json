@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "timing_side_channel_user_enumeration",
+  "summary": "The Docker-based reproduction confirms that Parse Server 8.6.27 exposes a measurable login timing gap that reveals whether a username exists.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Wrong-password requests for an existing account should take materially longer than the same requests for a non-existing account because only the existing-account path performs bcrypt verification.",
+  "actual_observed_result": "Running ./reproduction/run.sh against the pinned Parse Server 8.6.27 tag produced an average login time of 45.26 ms for a real username and 0.92 ms for a random non-existing username, for a 44.34 ms timing gap above the 15 ms verification threshold.",
+  "verification_method": "The helper starts Parse Server, creates one user, sends 12 wrong-password login requests for that real username and 12 for a random non-existing username, verifies that both cases return the same 404 Invalid username/password response, and then requires the average timing delta to exceed 15 ms.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Timing summary: existing_user_avg_ms=45.26, missing_user_avg_ms=0.92, delta_ms=44.34, threshold_ms=15.0.",
+    "Proof string emitted by the reproduction: EVOHUNT_TIMING_GAP_CONFIRMED existing_avg_ms=45.26 missing_avg_ms=0.92 delta_ms=44.34."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, starts MongoDB in Docker, and mounts that checkout into the verification container.",
+    "pinned_commit_or_ref": "8.6.27",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/measure_timing.py"
+    ]
+  }
+}

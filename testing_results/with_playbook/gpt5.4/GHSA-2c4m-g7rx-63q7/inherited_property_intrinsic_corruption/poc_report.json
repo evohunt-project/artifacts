@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution_and_object_shape",
+  "summary": "The Docker-based reproduction confirms that setIn can traverse inherited properties, bypass the intended classic prototype-pollution denylist, and corrupt the shared Object.prototype.toString intrinsic on the pinned vulnerable commit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a classic constructor/prototype pollution path is blocked, but a short inherited-property path still corrupts Object.prototype.toString.call and causes a TypeError when the intrinsic is invoked.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit d87c1a09fa2edb55cd76440a67d83d1cb828df11, built the reproduction image, and emitted the proof lines '[evohunt] classic prototype path blocked by denylist', '[evohunt] PROOF: inherited-property traversal corrupted Object.prototype.toString.call', and '[evohunt] observed failure: TypeError: Object.prototype.toString.call is not a function'.",
+  "verification_method": "The containerized verifier first checks that the classic constructor/prototype pollution path is rejected, then triggers setIn({}, ['toString', 'call'], null) and confirms that a subsequent Object.prototype.toString.call({}) invocation fails with the expected TypeError. This distinguishes the accepted inherited-property corruption bug from both the older denylisted prototype-pollution path and unrelated runtime failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] classic prototype path blocked by denylist",
+    "[evohunt] PROOF: inherited-property traversal corrupted Object.prototype.toString.call",
+    "[evohunt] observed failure: TypeError: Object.prototype.toString.call is not a function"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "d87c1a09fa2edb55cd76440a67d83d1cb828df11",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

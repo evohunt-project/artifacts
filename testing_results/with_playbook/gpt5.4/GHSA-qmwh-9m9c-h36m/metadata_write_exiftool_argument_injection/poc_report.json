@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "argument_injection_file_write",
+  "summary": "The Docker-based reproduction confirms that a crafted metadata value injects additional ExifTool arguments and causes the target container to create `/home/gotenberg/evohunt-proof.pdf` outside the request working directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make `POST /forms/pdfengines/metadata/write` return HTTP 404 because the expected output file was moved away, while the target container gains `/home/gotenberg/evohunt-proof.pdf` with attacker-chosen path components and metadata.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the bundled vulnerable source snapshot, rebuilt the target image, sent the crafted metadata request, observed the expected HTTP 404 response, and verified inside the target container that `/home/gotenberg/evohunt-proof.pdf` existed with `Title : poc`, `Directory : /home/gotenberg`, and `File Name : evohunt-proof.pdf`.",
+  "verification_method": "The run script first confirms the proof file is absent, then uses the helper image to submit the crafted multipart request and assert the HTTP 404 / `Not Found` response. After that it uses `docker exec` against the target container to confirm file existence and to query the created PDF with `exiftool`, proving that injected `Directory` and `FileName` arguments controlled the final output path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The helper request observed the expected HTTP 404 response from `POST /forms/pdfengines/metadata/write` after the output file was moved out of the request directory.",
+    "The target container contained `/home/gotenberg/evohunt-proof.pdf` after the request even though that path did not exist before exploitation.",
+    "Inspecting the created file inside the container reported `Title : poc`, `Directory : /home/gotenberg`, and `File Name : evohunt-proof.pdf`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the bundled bare target-repository snapshot on the host, checks out the pinned vulnerable commit, rebuilds the target image from that checkout, and then exercises the vulnerability against the rebuilt container.",
+    "pinned_commit_or_ref": "ec683616a3ed3a39f667befd4d64acf1485fb0ed",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/page_1.pdf",
+      "reproduction/source-repo.git"
+    ]
+  }
+}

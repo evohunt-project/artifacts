@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The reproduction feeds a valid protocol-4 pickle with a dotted `STACK_GLOBAL` module name into `fickling.load(...)` and verifies that the scanner aborts with an uncaught `ValueError` rather than a structured safety verdict.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The crafted pickle should crash the Fickling safety-analysis path with an uncaught `ValueError`, demonstrating attacker-triggerable denial of service for scanner or guarded-loader integrations.",
+  "actual_observed_result": "Running the reproduction printed a JSON record showing `triggered=true`, `error_type=\"ValueError\"`, and the expected dotted-module validation message from the public `fickling.load(...)` API.",
+  "verification_method": "The helper script constructs a minimal protocol-4 pickle that uses `STACK_GLOBAL` with `collections.abc` and verifies that `fickling.load(...)` raises `ValueError` whose message contains the dotted-module identifier failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction emitted a JSON record showing the expected `ValueError` type.",
+    "The reproduction emitted a JSON record whose message contains `Extracted identifiers are not valid Python identifiers` and the `collections.abc` module string."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction expects the original target repository checkout to be present as the session-root `repo/` sibling directory.",
+    "The reproduction creates a throwaway virtual environment and downloads the small Python dependencies `stdlib_list` and `typing_extensions` from PyPI if they are not already installed."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc.py"
+    ]
+  }
+}

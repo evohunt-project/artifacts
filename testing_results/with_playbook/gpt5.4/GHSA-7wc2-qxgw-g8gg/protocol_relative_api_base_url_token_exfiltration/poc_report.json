@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "origin_and_url_boundary_mismatches",
+  "summary": "The reproduction bundle confirms that Authlib's api_base_url request helpers send Authorization: Bearer secret-token to an attacker-controlled host when the caller supplies a protocol-relative request target.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should show that a trusted relative request stays on the configured base host while a protocol-relative //host/path request is rewritten onto the attacker-controlled host and still carries the OAuth Authorization header.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Authlib v1.5.2, built the reproduction image, and executed a harness that started trusted and attacker loopback HTTP servers. The run printed trusted_records for /api/users/me and /api/users/async with Authorization: Bearer secret-token, and attacker_records for /steal and /steal-async with the same Authorization header, followed by EVOHUNT_POC_SUCCESS protocol-relative api_base_url token exfiltration.",
+  "verification_method": "The exploit harness performs real network requests through the shipped sync and async OAuth client helpers, records requests on trusted and attacker loopback servers, and fails unless the trusted requests stay on the base host and the attacker server receives Authorization: Bearer secret-token from protocol-relative inputs.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "trusted_records= [{'path': '/api/users/me', 'authorization': 'Bearer secret-token'}, {'path': '/api/users/async', 'authorization': 'Bearer secret-token'}]",
+    "attacker_records= [{'path': '/steal', 'authorization': 'Bearer secret-token'}, {'path': '/steal-async', 'authorization': 'Bearer secret-token'}]",
+    "EVOHUNT_POC_SUCCESS protocol-relative api_base_url token exfiltration"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "68b6ee2da9e218f5c8b89aa76ff8c3cc29d81c52",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

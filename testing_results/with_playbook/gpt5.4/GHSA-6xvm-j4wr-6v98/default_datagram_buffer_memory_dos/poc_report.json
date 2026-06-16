@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirmed that Quinn's default DATAGRAM receive buffering amplifies memory by datagram count rather than by payload volume alone. With the same nominal 1,250,000 payload bytes, the tiny-datagram run buffered about 1.19 million queued DATAGRAMs and showed much higher peak RSS than the large-datagram baseline.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The verification should show that one-byte DATAGRAM flooding on a default connection retains roughly one queued DATAGRAM object per payload byte and drives a peak RSS at least three times larger than a baseline run that carries a similar payload volume in far fewer DATAGRAMs.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned quinn-rs/quinn at b2b930a0662b18b2e351264a21e175478bb3c3f1, built the Docker image, and executed the probe twice. The large-datagram baseline reported drained_datagrams=919, drained_payload_bytes=919000, peak_rss=5760. The tiny-datagram run reported drained_datagrams=1186789, drained_payload_bytes=1186789, peak_rss=49792, and the verifier emitted VERIFICATION PASSED.",
+  "verification_method": "The helper builds the probe once, runs it in large and tiny modes, and parses the emitted key=value result lines. Success requires the large baseline to retain at least hundreds of DATAGRAMs, the tiny mode to retain at least one million DATAGRAMs, and the tiny-mode peak RSS to exceed the large-mode peak RSS by more than 3x. This distinguishes count-based memory amplification from a generic compile-time or startup memory spike.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "mode=large datagram_size=1000 sent_datagrams=1250 sent_payload_bytes=1250000 drained_datagrams=919 drained_payload_bytes=919000 peak_rss=5760 drained_error=ApplicationClosed(ApplicationClose { error_code: 0, reason: b\"done\" })",
+    "mode=tiny datagram_size=1 sent_datagrams=1250000 sent_payload_bytes=1250000 drained_datagrams=1186789 drained_payload_bytes=1186789 peak_rss=49792 drained_error=ApplicationClosed(ApplicationClose { error_code: 0, reason: b\"done\" })",
+    "VERIFICATION PASSED tiny_rss=49792 large_rss=5760 tiny_drained_datagrams=1186789 large_drained_datagrams=919"
+  ],
+  "limitations_or_blockers": [
+    "QUIC DATAGRAM delivery is intentionally unreliable, so the verifier checks lower bounds and relative amplification instead of requiring exact payload-byte equality between the two runs."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b2b930a0662b18b2e351264a21e175478bb3c3f1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Cargo.toml",
+      "reproduction/src/main.rs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

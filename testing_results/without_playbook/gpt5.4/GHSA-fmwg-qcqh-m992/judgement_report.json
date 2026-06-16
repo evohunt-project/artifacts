@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:41:59.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_092ad076",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-fmwg-qcqh-m992/GHSA-fmwg-qcqh-m992.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "pdfengines-merge-split-local-file-inclusion",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_092ad076/pdfengines-merge-split-local-file-inclusion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_092ad076/pdfengines-merge-split-local-file-inclusion/vulnerability_report.json",
+      "title": "PDF merge and split routes accept attacker-chosen local watermark and stamp paths",
+      "vulnerability_type": "local_file_inclusion",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is in the PDF engines merge and split watermark or stamp path handling (`pkg/modules/pdfengines`, `pkg/modules/pdfcpu`, and `pkg/modules/pdftk`), while the advisory is a Chromium `extraHttpHeaders` scope regex ReDoS in `pkg/modules/chromium/routes.go`; the entrypoints, vulnerable code, sink, and impact do not overlap.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's root cause: compiling user-supplied `extraHttpHeaders` scope regexes in Chromium without a `MatchTimeout`, which enables catastrophic backtracking and worker hangs on `/forms/chromium/screenshot/url`.",
+    "evidence": [
+      "The advisory details and fix commit `cfb48d9af48cb236244eabe5c67fe1d30fb3fe25` both point to `pkg/modules/chromium/routes.go`, where `regexp2.Compile(scope, regexp2.None)` gained `p.MatchTimeout = 5 * time.Second` for `extraHttpHeaders` scope handling.",
+      "The only final qualifying finding targets `POST /forms/pdfengines/merge` and `POST /forms/pdfengines/split`, with code locations in `pkg/modules/pdfengines/routes.go`, `pkg/modules/pdfcpu/pdfcpu.go`, and `pkg/modules/pdftk/pdftk.go`.",
+      "Its reproduced behavior is local file inclusion into a returned PDF via attacker-chosen watermark or stamp paths, not regex backtracking, Chromium header scoping, or a denial-of-service worker hang."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_092ad076/pdfengines-merge-split-local-file-inclusion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_092ad076/pdfengines-merge-split-local-file-inclusion/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_092ad076/pdfengines-merge-split-local-file-inclusion/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

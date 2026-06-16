@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction starts the vulnerable RestAPI from release `3.3.5` without provisioning `RASPAP_API_KEY`, then shows that `GET /ddns` is denied without a token and succeeds with `access_token: insecure`, leaking the seeded DDNS password.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A caller using the built-in token `insecure` should be able to retrieve the configured DDNS password from the protected `/ddns` endpoint.",
+  "actual_observed_result": "Running `./reproduction/run.sh` against commit `8dc0308a1db21c220de392fe0eac3e6053236a75` returned `403` for unauthenticated `GET /ddns`, then `200` for the same request with `access_token: insecure`, and the response body exposed `EVOHUNT-DDNS-PASSWORD`.",
+  "verification_method": "The verifier seeds `/etc/ddclient.conf` inside the container, starts the vulnerable FastAPI service from the mounted repository, confirms unauthenticated access is rejected, then repeats the request with `access_token: insecure` and asserts that the JSON `password` field matches the seeded secret.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Verifier output: `[evohunt] proof: /ddns returned the seeded DDNS password when accessed with access_token=insecure`.",
+    "Verifier output: `[evohunt] leaked secret: EVOHUNT-DDNS-PASSWORD`.",
+    "Server log: `GET /ddns HTTP/1.1` returned `403` without a token and `200` with `access_token: insecure`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8dc0308a1db21c220de392fe0eac3e6053236a75",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py",
+      "reproduction/verify.sh",
+      "reproduction/requirements.txt"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stdout_protocol_injection",
+  "summary": "The Docker-based reproduction shows that a benign JavaScript module whose source returns \"real\" can make Elixir observe {:ok, \"forged\"} when attacker-controlled stdout is mistaken for a trusted NodeJS protocol response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the injected helper module return an Elixir-visible result of {:ok, \"forged\"} even though the helper's source hard-codes return \"real\", proving attacker-controlled stdout spoofed the protocol response.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned upstream commit 9cd32e631e82a722ff0e61b588a2813461a53dcd, built the reproduction image, compiled the package inside the container, and printed RESULT={:ok, \"forged\"}, VERIFICATION=passed, and [evohunt] SUCCESS: reproduction completed and verified.",
+  "verification_method": "The container-side verifier first checks that the injected helper module source contains return \"real\", then runs poc.exs and exits successfully only if the output includes RESULT={:ok, \"forged\"} and VERIFICATION=passed. This distinguishes protocol spoofing from a generic crash, parse failure, or unrelated console noise.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "RESULT={:ok, \"forged\"}",
+    "VERIFICATION=passed",
+    "[evohunt] verification passed: forged stdout protocol response accepted",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "9cd32e631e82a722ff0e61b588a2813461a53dcd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/poc.exs",
+      "reproduction/injected-logger.js"
+    ]
+  }
+}

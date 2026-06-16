@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction clones the audited Caddy snapshot and confirms that a remote admin client certificate scoped to one config subtree can fetch a sibling config object that only shares the same path prefix.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make an mTLS-authenticated remote admin GET to /config/apps/http/servers/tenant-admin succeed even though the client certificate is only authorized for /config/apps/http/servers/tenant-a, and the response should contain the unauthorized sibling object.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit db256b53e517191f52eca4ea11d415d7a11e729f, built the reproduction image, and ran TestEvoHuntRemoteAdminPathPrefixBypass successfully. The real admin handler processed the mTLS request, and the injected test confirmed HTTP 200 plus the sibling tenant-admin response object.",
+  "verification_method": "verify.sh copies the pinned repository into a writable workspace, injects remote_admin_prefix_bypass_test.go, runs go test . -run '^TestEvoHuntRemoteAdminPathPrefixBypass$' -count=1 -v, and relies on the test assertions plus a log grep for \"verified_chains\":1 to distinguish the unauthorized sibling read from unrelated handler behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The test run logged \"verified_chains\":1 for the remote admin request, showing that the request traversed the mTLS-protected remote admin path.",
+    "TestEvoHuntRemoteAdminPathPrefixBypass passed only after asserting that the response code was 200 and that the body contained the sibling tenant-admin object with :81.",
+    "The run completed with [evohunt] SUCCESS: remote admin ACL prefix bypass reproduced."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "db256b53e517191f52eca4ea11d415d7a11e729f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/remote_admin_prefix_bypass_test.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

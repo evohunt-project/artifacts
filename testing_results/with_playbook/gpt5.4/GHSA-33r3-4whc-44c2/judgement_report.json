@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:42:27.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_008a361d",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-33r3-4whc-44c2/GHSA-33r3-4whc-44c2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "migrate_json_config_code_execution",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_008a361d/migrate_json_config_code_execution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_008a361d/migrate_json_config_code_execution/vulnerability_report.json",
+      "title": "vp migrate splices raw JSON config bytes into executable vite.config code",
+      "vulnerability_type": "code_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is raw-JSON-to-JavaScript injection in `repo/crates/vite_migration/src/vite_config.rs` and `repo/packages/cli/src/migration/migrator.ts`, whereas the advisory is version-string path traversal in `downloadPackageManager()` and `vite_install::download_package_manager`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "static_run_config_stack_overflow",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_008a361d/static_run_config_stack_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_008a361d/static_run_config_stack_overflow/vulnerability_report.json",
+      "title": "Deeply nested run config causes a stack-overflow abort in static config extraction",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is recursive AST-descent stack overflow in `repo/crates/vite_static_config/src/lib.rs`, not attacker-controlled directory traversal during package-manager download and install, so the vulnerable code and control flow do not match the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable `vite-plus/binding` `downloadPackageManager()` path or its root cause of using an untrusted package-manager version string as a filesystem path component under `VP_HOME`.",
+    "evidence": [
+      "The advisory describes `vite-plus/binding` `downloadPackageManager()` accepting an untrusted `version` string and using it in filesystem paths under `VP_HOME/package_manager/<pm>/<version>/...`, enabling traversal outside `VP_HOME`.",
+      "A disposable source inspection under `.judge` confirmed that `packages/cli/binding/src/package_manager.rs` forwards `options.version` into `vite_install::download_package_manager`, and `crates/vite_install/src/package_manager.rs` constructs `target_dir = home_dir.join(\"package_manager\").join(&bin_name).join(&version)` for installs.",
+      "Neither of the two qualifying findings reference `packages/cli/binding`, `downloadPackageManager()`, `VP_HOME`, `vite_install::download_package_manager`, or package-manager install path construction; they instead cover migration config code injection and static-config stack-overflow DoS.",
+      "The only session artifact in the archive/path family is a `no_vuln` review of `vite_js_runtime` and `vite_setup` extraction flows, which is not a qualifying finding and does not cover the advisory's binding/package-manager root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_008a361d/migrate_json_config_code_execution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_008a361d/migrate_json_config_code_execution/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_008a361d/migrate_json_config_code_execution/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_008a361d/static_run_config_stack_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_008a361d/static_run_config_stack_overflow/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_008a361d/static_run_config_stack_overflow/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction clones Wisp v2.2.1, mounts it read-only into a container, injects a small helper module that uses a real multi-chunk body reader, and demonstrates that both a 200-byte multipart field and a 200-byte multipart file are accepted despite 120-byte configured limits.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print proof strings showing that Wisp accepted multipart field and file payloads larger than the configured 120-byte caps, demonstrating the size-limit bypass that enables memory and disk exhaustion.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned pinned commit `987d3641fa038f749f68621a87b5e9a42ee9ef83`, built the reproduction image, and printed `BODY_LIMIT_BYPASSED value_len=200 limit=120`, `FILE_LIMIT_BYPASSED file_len=200 limit=120`, and `VERIFICATION_PASSED multipart chunk quota bypass reproduced`.",
+  "verification_method": "Inside the container, the helper copies the mounted target repository to a writable workspace, injects `evohunt_poc.gleam`, runs `gleam run -m evohunt_poc`, and then `verify.sh` checks for the exact proof strings that distinguish real quota bypass from a normal `413 Content too large` rejection or an unrelated parser failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "BODY_LIMIT_BYPASSED value_len=200 limit=120",
+    "FILE_LIMIT_BYPASSED file_len=200 limit=120",
+    "VERIFICATION_PASSED multipart chunk quota bypass reproduced"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "987d3641fa038f749f68621a87b5e9a42ee9ef83",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run-inside-container.sh",
+      "reproduction/verify.sh",
+      "reproduction/evohunt_poc.gleam"
+    ]
+  }
+}

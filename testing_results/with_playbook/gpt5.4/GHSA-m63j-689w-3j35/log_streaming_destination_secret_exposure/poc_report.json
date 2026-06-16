@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a low-privileged global member can list log-streaming destinations and recover secret-bearing webhook configuration data from the API response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow a global member account to read a webhook destination whose serialized response still contains the secret Authorization header Bearer SECRET123.",
+  "actual_observed_result": "Running ./reproduction/run.sh from the final session-root finding folder cloned n8n, checked out the vulnerable 2.14.0 code at commit 2374f40ec36795904b4011fb81018da818a76ee8, built image tag evohunt-advisory_4c45c5a8-log_streaming_destination_secret_exposure, executed the targeted integration test, printed EVOHUNT_LOG_STREAMING_SECRET_LEAK_CONFIRMED, printed {\"destinationId\":\"1784d732-2c70-4bfe-8436-70927e0909ec\",\"leakedJsonHeaders\":\"{\\\"Authorization\\\":\\\"Bearer SECRET123\\\"}\"}, and finished with PASS test/integration/evohunt-log-streaming-secret-leak.test.ts plus the reproduction success banner.",
+  "verification_method": "The helper test creates a webhook log-streaming destination as the owner with a secret Authorization header, lists destinations as a global member, locates the created destination, asserts that jsonHeaders still contains Bearer SECRET123, and emits a proof string only when the member-visible response includes the leaked secret.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_LOG_STREAMING_SECRET_LEAK_CONFIRMED",
+    "{\"destinationId\":\"1784d732-2c70-4bfe-8436-70927e0909ec\",\"leakedJsonHeaders\":\"{\\\"Authorization\\\":\\\"Bearer SECRET123\\\"}\"}",
+    "PASS test/integration/evohunt-log-streaming-secret-leak.test.ts",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2374f40ec36795904b4011fb81018da818a76ee8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/evohunt-log-streaming-secret-leak.test.ts"
+    ]
+  }
+}

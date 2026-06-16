@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "regex_dos",
+  "summary": "The Docker-based reproduction confirms that attacker-controlled `_ClientVersion` input can stall Parse Server 8.6.13 before authentication and rate limiting while still reaching the normal application response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make an unauthenticated POST /1/functions/nope request with a malicious `_ClientVersion` body field take more than 5 seconds longer than the benign baseline while both requests still return the same `Invalid function` response.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Parse Server tag 8.6.13 at commit f376abb60e38a7bce723163ec7ab4fb9697df79d, built the helper image, started MongoDB and Parse Server, and measured a 7.971 ms baseline request versus a 10358.003 ms malicious request. Both requests returned HTTP 400 with the expected `Invalid function` body, so the malicious `_ClientVersion` added 10350.032 ms of synchronous processing delay before the same application response.",
+  "verification_method": "The helper sends two unauthenticated POST requests to /1/functions/nope: one with `_ClientVersion=js1.0.0` and one with 128000 dashes. Verification passes only if both responses contain the expected `Invalid function` message and the malicious request exceeds the baseline by at least 5 seconds.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline request JSON: {\"status\": 400, \"elapsed_ms\": 7.971, \"body\": \"{\\\"code\\\":141,\\\"error\\\":\\\"Invalid function: \\\\\\\"nope\\\\\\\"\\\"}\"}",
+    "Attack request JSON: {\"status\": 400, \"elapsed_ms\": 10358.003, \"body\": \"{\\\"code\\\":141,\\\"error\\\":\\\"Invalid function: \\\\\\\"nope\\\\\\\"\\\"}\"}",
+    "Verifier output: [evohunt] SUCCESS: attack request delayed the same unauthenticated Invalid function response by 10350.032 ms"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the public parse-community/parse-server repository on the host, checks out tag 8.6.13, verifies that the checkout resolves to commit f376abb60e38a7bce723163ec7ab4fb9697df79d, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "f376abb60e38a7bce723163ec7ab4fb9697df79d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/start-target.js",
+      "reproduction/timed_request.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

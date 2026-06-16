@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "file_upload_policy_bypass",
+  "summary": "The Docker-based reproduction confirms that an extensionless upload with `Content-Type: text/html; charset=utf-8` bypasses Parse Server's default HTML-upload block, is stored with a `.html` suffix, and is served back as active HTML.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that a control upload with `Content-Type: text/html` is rejected, while the parameterized `text/html; charset=utf-8` upload succeeds, returns a `.html` file, and is then served back as `text/html` from the target service.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Parse Server at commit `6b1b50c8baf7e332e47307f81db7c48bca924bdc`, built the pinned target image, started MongoDB plus Parse Server, rejected the control upload with `File upload of extension html is disabled.`, accepted the parameterized upload with HTTP 201, returned a `.html` file URL, and served the uploaded HTML body back with `Content-Type: text/html; charset=utf-8`.",
+  "verification_method": "The harness performs both the control and exploit requests, then verifies that the control path returned the HTML-block error, the exploit response name ends in `.html`, and a follow-up GET on that returned URL responds with a `Content-Type: text/html` header and the uploaded HTML body.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The control request returned the expected `File upload of extension html is disabled.` error.",
+    "The exploit upload returned a Parse file name ending in `.html` even though the requested filename had no extension.",
+    "A follow-up GET on the returned file URL responded with `Content-Type: text/html; charset=utf-8` and the uploaded HTML payload."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the target image from that checkout, and mounts the checkout read-only into the reproduction container at `/target-repo`.",
+    "pinned_commit_or_ref": "6b1b50c8baf7e332e47307f81db7c48bca924bdc",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

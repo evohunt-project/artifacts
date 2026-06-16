@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "builder_yaml_callback_rce",
+  "summary": "The Docker-based reproduction confirms that a crafted builder YAML callback entry reaches the config-materialization path and executes an attacker-chosen command on the host running the vulnerable ADK code.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted callback reference in `root_agent.yaml` to execute during agent construction and create the proof marker `/tmp/evohunt_builder_yaml_rce_marker` inside the reproduction container.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the reproduction image, cloned the vulnerable commit, mounted it at `/target-repo`, and printed `EVOHUNT_BUILDER_YAML_RCE_OK` with `marker_path=/tmp/evohunt_builder_yaml_rce_marker`.",
+  "verification_method": "The verifier writes a malicious YAML file, calls `from_config()`, and then fails closed unless the proof marker exists. The run only passes when the attacker-controlled callback is invoked during config materialization rather than when parsing merely errors out.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Verifier output contained the exact proof string `EVOHUNT_BUILDER_YAML_RCE_OK`.",
+    "Verifier output reported `marker_path=/tmp/evohunt_builder_yaml_rce_marker` after agent materialization.",
+    "The helper aborts if the callback does not run or if the loaded agent name is not the expected crafted value."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the reproduction image, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "cf0f372528c7e6ece8596db4e44f18a8eb370314",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

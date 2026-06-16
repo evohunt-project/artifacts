@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authorization_user_disclosure",
+  "summary": "The reproduction starts a minimal Kirby 4.9.0 site with a restricted editor role, confirms that the editor cannot access the admin user directly, then shows that the same editor can still recover the admin's ID and email from the page lock endpoint after the admin creates a content lock.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A restricted authenticated user should be able to learn the hidden admin's user ID and email from /api/pages/demo/lock once the admin has locked the page, even though direct access to /api/users/admin is blocked.",
+  "actual_observed_result": "Executing ./reproduction/run.sh cloned Kirby at d952dfc0a890979c863ec5fa11660e37400f0f4c, built the reproduction image, and printed the leaked lock response {\"lock\":{\"state\":\"lock\",\"data\":{\"user\":\"admin\",\"email\":\"admin@example.test\",\"time\":1780296600,\"unlockable\":false}}} followed by EVOHUNT_CONTENT_LOCK_USER_DISCLOSURE_CONFIRMED.",
+  "verification_method": "The container first checks that the restricted editor cannot access /api/users/admin directly. It then creates a page lock as the admin and verifies with jq that /api/pages/demo/lock returns lock.state=lock plus the hidden admin identity fields user=admin and email=admin@example.test.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Direct user lookup for the restricted editor did not return HTTP 200 for /api/users/admin.",
+    "The lock endpoint returned {\"lock\":{\"state\":\"lock\",\"data\":{\"user\":\"admin\",\"email\":\"admin@example.test\",\"time\":1780296600,\"unlockable\":false}}}.",
+    "The helper emitted the proof string EVOHUNT_CONTENT_LOCK_USER_DISCLOSURE_CONFIRMED."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "d952dfc0a890979c863ec5fa11660e37400f0f4c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

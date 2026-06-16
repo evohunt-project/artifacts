@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction clones the vulnerable upstream release, sets a dearmor size limit of 1 byte, and still successfully dearmors an 11-byte armored body, proving that armored body bytes bypass `DearmorOptions::limit`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should ignore a 1-byte dearmor limit and still print `DEARMOR_LIMIT_BYPASS_OK:hello world`, demonstrating that the advertised dearmor body-size guard is not enforced.",
+  "actual_observed_result": "Running `./reproduction/run.sh` on 2026-06-03 cloned commit `24b8cc906d8358a5591510655e1081e2b034d5c6`, built the helper container, and printed `DEARMOR_LIMIT_BYPASS_OK:hello world`. The wrapper script verified that signal and emitted `DEARMOR_LIMIT_BYPASS_CONFIRMED`.",
+  "verification_method": "The helper crate invokes `Dearmor::with_options(..., DearmorOptions::default().set_limit(1))` on a small armored message and prints a fixed success marker only if dearmoring still succeeds. The host run script greps for that marker to distinguish a real limit bypass from build or runtime failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container stdout included `DEARMOR_LIMIT_BYPASS_OK:hello world`.",
+    "The host wrapper emitted `DEARMOR_LIMIT_BYPASS_CONFIRMED` after matching the bypass marker."
+  ],
+  "limitations_or_blockers": [
+    "The PoC uses a 1-byte configured limit to keep the demonstration small and fast; it exercises the same unchecked body-read path that also defeats the default 1 GiB limit."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "24b8cc906d8358a5591510655e1081e2b034d5c6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_in_container.sh",
+      "reproduction/Cargo.toml",
+      "reproduction/main.rs"
+    ]
+  }
+}

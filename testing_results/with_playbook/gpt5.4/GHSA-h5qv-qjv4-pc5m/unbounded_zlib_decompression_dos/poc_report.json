@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction clones the pinned vulnerable revision, mounts it read-only into the container, proves a benign `/json/visjs` request succeeds, and then drives the same route into memory exhaustion with a precomputed base64url+zlib payload.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The helper should print `CONTROL_STATUS 200` for a benign request, then the crafted compressed request should exhaust memory on the vulnerable parser path and terminate the containerized process with exit code 137 before the helper can print `UNEXPECTED_SUCCESS`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `442c2be70885049c57b807220e848988732644cb`, built the reproduction image, printed `CONTROL_STATUS 200` and `PAYLOAD_BYTES 1391528`, and then completed with the host-side success check that the exploit phase terminated via exit code 137 instead of returning normally.",
+  "verification_method": "The host-side `run.sh` captures container output and enforces three checks: the benign control request must succeed with `CONTROL_STATUS 200`, the exploit phase must terminate with exit code 137 under the 512 MB memory limit, and the helper must not print `UNEXPECTED_SUCCESS`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final run printed `CONTROL_STATUS 200`, confirming the shipped `/json/visjs` route handled a benign request before the exploit.",
+    "The final run printed `PAYLOAD_BYTES 1391528`, showing the exploit input remained small on the wire relative to the memory exhaustion it triggered.",
+    "The final `run.sh` success path confirmed the exploit phase ended with exit code 137 and without `UNEXPECTED_SUCCESS`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "442c2be70885049c57b807220e848988732644cb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py",
+      "reproduction/payload_1g.txt",
+      "reproduction/requirements-lock.txt"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The reproduction cloned Agno v2.3.23, launched a minimal AgentOS instance from the mounted source, and confirmed that unauthenticated HTTP requests can read seeded sensitive session data from the stock API.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow unauthenticated requests to `/config`, `/sessions`, and `/sessions/victim-session` to succeed and leak the seeded session owner, metadata, and secret-bearing session state.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `agno-agi/agno` at commit `d667f085b3392f9c66719caca364ef3cc73a3f7b`, built the reproduction image, started a minimal AgentOS instance inside the container, and printed `EVOHUNT_UNAUTHENTICATED_AGENTOS_SESSION_READ_CONFIRMED` after unauthenticated reads returned the seeded `victim-user` session and `session_state.api_token=demo-token-12345`.",
+  "verification_method": "The container seeds a sensitive AgentOS session into SQLite, starts the shipped FastAPI app from the mounted target checkout, sends HTTP requests without any `Authorization` header, and only prints the proof string after `/config` exposes the configured agent and `/sessions/{id}` returns the seeded secret values.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container stdout included `EVOHUNT_UNAUTHENTICATED_AGENTOS_SESSION_READ_CONFIRMED`.",
+    "The unauthenticated `/sessions/victim-session?type=agent` response exposed `user_id=victim-user`, `metadata.classification=sensitive`, and `session_state.api_token=demo-token-12345`.",
+    "The unauthenticated `/config` response exposed the configured `seeded-agent` identifier."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "d667f085b3392f9c66719caca364ef3cc73a3f7b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/seeded_app.py",
+      "reproduction/exercise_target.py"
+    ]
+  }
+}

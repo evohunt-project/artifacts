@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_flow_execution",
+  "summary": "The packaged reproduction confirms that the default webhook route executes a PRIVATE flow with webhook disabled when triggered by an unauthenticated caller.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a private flow with webhook=false, trigger it unauthenticated through POST /api/v1/webhook/{endpoint_name}, and observe an owner-context side effect inside the container.",
+  "actual_observed_result": "Running ./reproduction/run.sh completed successfully and printed EVOHUNT_SUCCESS with endpoint_name=<generated value>, webhook_flag=False, and access_type=PRIVATE after the unauthenticated webhook trigger created the proof file in the container.",
+  "verification_method": "The helper starts Langflow 1.7.1, creates and activates a normal user, imports the WebhookTest flow fixture with a unique endpoint_name, verifies that the created flow is still PRIVATE with webhook=false, then POSTs to /api/v1/webhook/{endpoint_name} without authentication and waits for the proof file to appear with the attacker-supplied path marker in its contents.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The created flow response reported access_type=PRIVATE and webhook=false.",
+    "The unauthenticated webhook trigger produced the proof file inside the container.",
+    "The run printed EVOHUNT_SUCCESS: private_flow_webhook_execution."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "47ce5bf27e688e4cfbc48a745c24a72bac6b62d7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

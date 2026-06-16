@@ -1,0 +1,21 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_deserialization_protection_bypass",
+  "summary": "After enabling `fickling.always_check_safety()`, malicious pickle bytes still executed through both `pickle.loads(...)` and `_pickle.loads(...)` because those entry points remain unhooked.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The generic Fickling safety hook should block unsafe pickle deserialization, but the PoC demonstrates attacker-controlled code execution by creating marker files during `pickle.loads(...)` and `_pickle.loads(...)`.",
+  "actual_observed_result": "Running the reproduction script created `reproduction/evidence/pickle_loads_marker.txt` and `reproduction/evidence/_pickle_loads_marker.txt`, confirming that both deserialization paths executed the payload after the hook was enabled.",
+  "verification_method": "The script builds a pickle payload whose only effect is writing marker files through Python's standard library. Success is declared only if both markers are created after `fickling.always_check_safety()` is active.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/evidence/pickle_loads_marker.txt",
+    "reproduction/evidence/_pickle_loads_marker.txt"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": []
+  }
+}

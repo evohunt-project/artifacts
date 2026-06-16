@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The reproduction starts Parse Server 8.6.12 with email verification enabled, creates verified and unverified users, and confirms that the public verification-email resend endpoint exposes different responses for verified, unverified, and nonexistent email addresses.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A successful run should prove a direct account-existence and verification-state oracle by showing `POST /verificationEmailRequest` returns success for an unverified existing email, `already verified` for a verified account, and `No user found...` for a nonexistent email, while the sibling password-reset route normalizes the nonexistent case to success.",
+  "actual_observed_result": "Running ./reproduction/run.sh against commit 8c8eb460229733abf061dbad52cae246a8de52a4 produced `200 {}` for `unverified@example.test`, `400 {\"code\":-1,\"error\":\"Email verified@example.test is already verified.\"}` for `verified@example.test`, `400 {\"code\":205,\"error\":\"No user found with email missing@example.test\"}` for `missing@example.test`, and `200 {}` for `POST /requestPasswordReset` on `missing@example.test`.",
+  "verification_method": "The helper script boots the pinned vulnerable version in Docker, creates one verified account and one unverified account, then sends four HTTP requests and asserts the exact response-status and body differences across the public verification-email resend path and its password-reset sibling.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted the proof marker `EVOHUNT_PROOF: verification-email-resend-enumeration`.",
+    "The reproduced responses were `200 {}` for the unverified existing email, `400` with `Email verified@example.test is already verified.` for the verified account, and `400` with `No user found with email missing@example.test` for the nonexistent email.",
+    "The sibling `POST /requestPasswordReset` request for the same nonexistent email returned `200 {}`, confirming that the family already contains a normalized branch and that the leak is specific to the verification-email resend flow."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8c8eb460229733abf061dbad52cae246a8de52a4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify_repro.js"
+    ]
+  }
+}

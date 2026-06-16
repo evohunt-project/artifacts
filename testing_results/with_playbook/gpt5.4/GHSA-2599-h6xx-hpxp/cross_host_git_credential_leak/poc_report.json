@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "origin_and_url_boundary_mismatches",
+  "summary": "Running `./reproduction/run.sh` cloned Poetry 2.3.2, built the verifier image, and confirmed that a Git fetch to an attacker-controlled host received the victim repository's Basic Auth credentials when the attacker reused the private repository path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The verifier should observe an outbound Git HTTP probe to the attacker host carrying `Authorization: Basic ...` for credentials that were configured for a different host.",
+  "actual_observed_result": "The container observed `/org/one.git/info/refs?service=git-upload-pack` with `Authorization: Basic bGVha2VkLXVzZXI6bGVha2VkLXBhc3M=` and reported success.",
+  "verification_method": "The verifier starts a local HTTP server, configures Poetry credentials for `http://private.example/org/one.git`, patches `Git._fetch_remote_refs()` to use that authenticator, triggers a fetch to `http://127.0.0.1:<port>/org/one.git`, and asserts that the attacker host receives the exact leaked Basic Auth header.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] observed request path: /org/one.git/info/refs?service=git-upload-pack",
+    "[evohunt] observed authorization: Basic bGVha2VkLXVzZXI6bGVha2VkLXBhc3M=",
+    "[evohunt] SUCCESS: attacker host received the victim repository credentials"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "a84cd0f1bedb5769ef6ef7389d8ee99b93b9ba4c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.py"
+    ]
+  }
+}

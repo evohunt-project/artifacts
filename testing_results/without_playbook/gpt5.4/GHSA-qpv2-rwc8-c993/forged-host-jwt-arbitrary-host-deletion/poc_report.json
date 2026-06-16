@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "forged_jwt_auth_bypass",
+  "summary": "The Docker-based reproduction clones the pinned Netmaker v1.5.0 source, starts the service, registers a victim host, and then deletes that host by sending an unsigned forged JWT to the host deletion endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that DELETE /api/hosts/{hostid} accepts a forged host JWT, returns the deleted host JSON, and removes the victim from the admin-visible host list.",
+  "actual_observed_result": "Running ./reproduction/run.sh against commit 6b7d33fa7749c87e6b3c59b1a544d80c727c478b returned HTTP 200 with the victim host JSON for the forged DELETE request and printed EVOHUNT_SUCCESS after confirming the victim host no longer appeared in /api/hosts.",
+  "verification_method": "The helper script confirms the victim host exists via an authenticated admin query, sends the forged JWT delete request, re-queries /api/hosts to ensure the victim disappeared, and requires the exact success marker EVOHUNT_SUCCESS to be printed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "DELETE /api/hosts/11111111-1111-4111-8111-111111111111 returned HTTP 200 and a JSON body describing the deleted victim host.",
+    "The final run emitted the proof string EVOHUNT_SUCCESS: forged host JWT deleted victim host 11111111-1111-4111-8111-111111111111.",
+    "The verification step confirmed that the victim host was present before the forged request and absent from the admin-visible host list afterward."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, verifies the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "6b7d33fa7749c87e6b3c59b1a544d80c727c478b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh"
+    ]
+  }
+}

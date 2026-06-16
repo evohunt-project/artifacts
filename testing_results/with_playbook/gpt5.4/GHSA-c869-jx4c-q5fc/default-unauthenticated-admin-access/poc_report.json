@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction mounts the vulnerable FUXA `v1.2.10` source tree, initializes the real users runtime and admin-only users API, and confirms that a caller without any token can list users and create a new admin user while `secureEnabled=false`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated caller should be able to reach an admin-only API route, read the existing user list, and create a new admin user without providing any JWT or API key.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned FUXA `v1.2.10` at `b873cdf32a63bcfaa6de8b724781f63c6f977c69`, built the Docker image, mounted the cloned repository into the container, and printed `EVOHUNT:UNAUTH_GET_STATUS=200`, `EVOHUNT:UNAUTH_POST_STATUS=200`, `EVOHUNT:INITIAL_USERS=admin`, `EVOHUNT:FINAL_USERS=admin,attacker`, and `EVOHUNT:SUCCESS unauthenticated caller listed users and created an admin user via /api/users while secureEnabled=false`.",
+  "verification_method": "The Node.js harness uses the repository's own `verify-api-or-token` middleware, `users` API route, and `runtime/users` storage module. It verifies that an unauthenticated GET returns the seeded admin row with a bcrypt password hash and that an unauthenticated POST creates a second user with admin group `-1`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT:UNAUTH_GET_STATUS=200",
+    "EVOHUNT:UNAUTH_POST_STATUS=200",
+    "EVOHUNT:INITIAL_USERS=admin",
+    "EVOHUNT:FINAL_USERS=admin,attacker",
+    "EVOHUNT:SUCCESS unauthenticated caller listed users and created an admin user via /api/users while secureEnabled=false"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at tag `v1.2.10`, verifies commit `b873cdf32a63bcfaa6de8b724781f63c6f977c69`, and mounts that checkout into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "b873cdf32a63bcfaa6de8b724781f63c6f977c69",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/harness.js"
+    ]
+  }
+}

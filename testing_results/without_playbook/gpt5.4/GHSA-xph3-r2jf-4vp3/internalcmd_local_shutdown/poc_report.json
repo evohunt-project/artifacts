@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_local_admin_command_dos",
+  "summary": "The Docker-based reproduction confirmed that a localhost client can issue INTERNALCMD performShutdown against a source-tree Haraka deployment without config/internalcmd_key and force the service to exit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should let an unauthenticated localhost SMTP client send INTERNALCMD performShutdown, receive the command acknowledgement, and trigger the server shutdown path so the service exits.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Haraka v3.1.3, started the service on 127.0.0.1:2525 inside the container, received the expected 250 Command sent for execution. Check Haraka logs for results. response to INTERNALCMD performShutdown, and then logged [INFO] [-] [server] Shutting down. before the service exited.",
+  "verification_method": "The verification helper starts Haraka from a writable copy of the mounted vulnerable checkout, removes any internalcmd_key, sends INTERNALCMD performShutdown over localhost, and then requires both the exact SMTP acknowledgement and the server shutdown log line before declaring success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit client received 250 Command sent for execution. Check Haraka logs for results.",
+    "The target log emitted [INFO] [-] [server] Shutting down.",
+    "The vulnerable service exited after processing the unauthenticated localhost command."
+  ],
+  "limitations_or_blockers": [
+    "Installed-mode deployments created with haraka -i generate config/internalcmd_key automatically; the reproduction targets the documented source-tree deployment path where that file is absent."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "215d2811aaae2d3cf7551bd55ccfb18b14d894e2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

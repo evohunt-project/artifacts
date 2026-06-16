@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that a `global:member` account can create a dynamic-registration OAuth2 credential and trigger n8n to issue loopback GET and POST requests to attacker-chosen HTTP endpoints during `/rest/oauth2-credential/auth`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause a low-privileged member's `/rest/oauth2-credential/auth` request to make n8n send loopback discovery GETs and a registration POST to an attacker-controlled observer on `127.0.0.1:18089`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned n8n commit `2374f40ec36795904b4011fb81018da818a76ee8`, built the reproduction image, started n8n 2.14.0, created owner and member accounts, stored a malicious `oAuth2Api` credential, invoked `/rest/oauth2-credential/auth`, and observed the expected GET `/.well-known/oauth-protected-resource/mcp`, GET `/.well-known/oauth-authorization-server/as`, and POST `/register` sequence on the loopback observer. The run emitted the exact success signal `SSRF_VERIFIED: member-triggered dynamic OAuth registration reached the loopback observer`.",
+  "verification_method": "`reproduction/verify.mjs` starts a loopback observer and only exits successfully if the observer records the protected-resource discovery GET, the authorization-server metadata GET, and the registration POST with the expected OAuth payload after the member-triggered `/rest/oauth2-credential/auth` call. `reproduction/run.sh` additionally greps for the exact success signal in `reproduction/last-run.log`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/last-run.log contains `SSRF_VERIFIED: member-triggered dynamic OAuth registration reached the loopback observer`.",
+    "The observer captured GET `/.well-known/oauth-protected-resource/mcp` from `axios/1.13.5` on `127.0.0.1:18089`.",
+    "The observer captured GET `/.well-known/oauth-authorization-server/as` from `axios/1.13.5` on `127.0.0.1:18089`.",
+    "The observer captured POST `/register` with n8n's dynamic client registration JSON body, including `redirect_uris`, `grant_types`, and `client_name`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2374f40ec36795904b4011fb81018da818a76ee8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.mjs"
+    ]
+  }
+}

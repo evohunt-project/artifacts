@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "improper_access_control",
+  "summary": "The Docker-based reproduction creates a low-privilege `internal_user_view_only` key, seeds attacker and victim spend rows, and confirms that the low-privilege key can read victim-team analytics from `/global/spend/teams`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a non-admin internal viewer key can retrieve cross-tenant spend analytics and see `victim-team` data in the `/global/spend/teams` response.",
+  "actual_observed_result": "Running `./reproduction/run.sh` completed successfully and emitted `EVOHUNT_SUCCESS: internal_user_viewer read victim-team analytics`. The logged response contained both `attacker-team` and `victim-team`, with `victim-team` showing `total_spend` 99.0.",
+  "verification_method": "The helper script creates a low-privilege internal viewer via `/user/new`, seeds attacker and victim spend records directly in Postgres, requests `/global/spend/teams` with the low-privilege key, and asserts that the response contains `victim-team` in both the team list and the aggregated spend output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container logs contain `EVOHUNT_SUCCESS: internal_user_viewer read victim-team analytics`.",
+    "The observed `/global/spend/teams` response included `teams: [\"attacker-team\", \"victim-team\"]`.",
+    "The observed `total_spend_per_team` output included `{ \"team_id\": \"victim-team\", \"total_spend\": 99.0 }`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "38d477507dad09c560db18a15ca8fb0e33bf2a4b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/docker-compose.yml",
+      "reproduction/entrypoint.sh",
+      "reproduction/reproduce.py"
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:49:18.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_16ebe93d",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-xf7r-hgr6-v32p/GHSA-xf7r-hgr6-v32p.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "multipart_field_sparse_array_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_16ebe93d/multipart_field_sparse_array_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_16ebe93d/multipart_field_sparse_array_dos/vulnerability_report.json",
+      "title": "Sparse multipart field indices trigger CPU-bound request parsing stalls",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory patch and regression test target orphaned-file cleanup in the async `fileFilter` callback after malformed multipart input triggers `MISSING_FIELD_NAME`, while this finding targets `appendField(req.body, fieldname, value)` sparse-array CPU amplification in the text-field shaping path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies GHSA-xf7r-hgr6-v32p's vulnerable code or root cause. The advisory fixes incomplete cleanup in Multer's file-upload path when an asynchronous `fileFilter` callback runs after request abortion on malformed multipart input; the surviving session finding is a separate text-field parsing DoS in `append-field` sparse-array conversion.",
+    "evidence": [
+      "The advisory fix commit `739919097dde3921ec31b930e4b9025036fa74ee` adds `if (errorOccured) { appender.removePlaceholder(placeholder); return fileStream.resume() }` inside `lib/make-middleware.js`'s `fileFilter` callback and introduces `test/async-file-filter-orphan.js`, which sends a malformed multipart body with a missing field name and asserts that no orphan files remain in the upload directory.",
+      "The only surviving final finding's exploit path is `busboy` text-field handling through `appendField(req.body, fieldname, value)`, using attacker-controlled names like `a[100000000]` and `a[x]` to trigger sparse-array conversion and CPU-bound request parsing stalls.",
+      "Session artifacts identify parser availability/cleanup as cleared and accept only the field/object-shaping issue: `artifacts/component_family_checklist.md` marks the cleanup family `cleared`, and `logs/orchestrator_final_response.md` states that `multipart_field_sparse_array_dos` is the surviving materialized finding."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_16ebe93d/multipart_field_sparse_array_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_16ebe93d/multipart_field_sparse_array_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_16ebe93d/multipart_field_sparse_array_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

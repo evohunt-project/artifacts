@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction builds a minimal in-process CometBFT RPC environment with the real tx indexer, seeds 200000 indexed transactions, issues a `per_page=1` `tx_search` request against the real HTTP endpoint, and verifies that the request still forces full-result materialization and a large allocation delta.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print a proof line showing that a single `per_page=1` `tx_search` request over 200000 indexed transactions returned only one result but still allocated tens of megabytes, demonstrating that pagination does not bound the server-side search work.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned CometBFT commit, built the Docker image, and printed `EVOHUNT_TXSEARCH_PROOF status=200 total=200000 returned=1 alloc_delta=143242752 elapsed_ms=371 ...`, confirming that a single `per_page=1` request still forced full-result work over all 200000 indexed transactions.",
+  "verification_method": "The helper seeds the real KV tx indexer, serves the real HTTP `tx_search` route, issues a broad query, and checks that the response contains exactly one returned transaction while `total_count` remains 200000 and the measured allocation delta exceeds the configured proof threshold.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `EVOHUNT_TXSEARCH_PROOF status=200 total=200000 returned=1 alloc_delta=143242752 elapsed_ms=371 ...`.",
+    "The HTTP response returned only one transaction while reporting `total=200000`, proving that pagination happened after the broad query had already matched the full set.",
+    "The measured allocation delta exceeded 143 MB for a single small paginated request."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b471ffbe728968c606e62c1a352480f2d4c7b30c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify_tx_search.go"
+    ]
+  }
+}

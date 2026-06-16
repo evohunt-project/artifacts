@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction builds Gogs 0.13.4, enables 2FA on a disposable user through the web flow, then demonstrates that password-only Basic auth can still mint a PAT and use that PAT for token-authenticated API access.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should enable 2FA for a test user, then still obtain a fresh PAT from POST /api/v1/users/alice/tokens using only the user's password, and finally use that PAT to authenticate successfully to GET /api/v1/user.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Gogs at d958a47a0e9d8747e399c687fdb3ec64a3b1a736, built the Docker image, started a disposable Gogs instance, created user alice, enabled 2FA for that user through the web flow, then still minted a PAT via password-only Basic auth and finished with the expected EVOHUNT_SUCCESS proof marker.",
+  "verification_method": "The helper script logs in through the web UI, enables 2FA with the generated TOTP secret, sends the password-only PAT creation request under HTTP Basic auth, and then verifies that the returned PAT authenticates to the token-only /api/v1/user route. The run fails if 2FA blocks PAT issuance or if the minted PAT cannot authenticate.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verifier printed EVOHUNT_SUCCESS=basic-auth PAT creation bypassed 2FA and the minted token authenticated successfully.",
+    "The verifier printed a fresh EVOHUNT_PAT value after 2FA had already been enabled for alice.",
+    "The container run completed with [evohunt] SUCCESS: reproduction completed and verified."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "d958a47a0e9d8747e399c687fdb3ec64a3b1a736",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/app.ini",
+      "reproduction/reproduce.sh",
+      "reproduction/verify_2fa_bypass.py"
+    ]
+  }
+}

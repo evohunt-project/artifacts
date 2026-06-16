@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "graphql_introspection_bypass",
+  "summary": "The reproduction bundle confirms that public GraphQL `__schema` introspection is blocked while public `__type` introspection still succeeds against the same server configuration.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should start the vulnerable GraphQL endpoint with `graphQLPublicIntrospection` disabled, show that `__schema` is rejected with the expected 403 error, and still return type metadata for a public `__type` query.",
+  "actual_observed_result": "Running the materialized `./reproduction/run.sh` from the final `graphql_public_introspection_bypass/` folder cloned Parse Server `8.6.15`, built the target inside the container, started MongoDB and the GraphQL endpoint, returned HTTP 403 with `Introspection is not allowed` for `query { __schema { types { name } } }`, returned HTTP 200 with `data.__type.kind = \"SCALAR\"` for `query { __type(name: \"Object\") { kind } }`, and emitted the proof string `EVOHUNT_PROOF public __type introspection succeeded while public __schema remained blocked`.",
+  "verification_method": "The helper script performs both GraphQL requests and exits successfully only when the `__schema` request is rejected with the exact public-introspection error and the `__type` request returns the expected scalar metadata. This distinguishes a real bypass from a generic startup issue, auth failure, or unrelated GraphQL error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Standard output included a JSON object with `schema_status: 403`, `schema_body.errors[0].message: \"Introspection is not allowed\"`, `type_status: 200`, and `type_body.data.__type.kind: \"SCALAR\"`.",
+    "Standard output included the exact proof line `EVOHUNT_PROOF public __type introspection succeeded while public __schema remained blocked`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at the pinned vulnerable tag, mounts that checkout into the container, and executes the verification helper there.",
+    "pinned_commit_or_ref": "8.6.15",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/repro.js"
+    ]
+  }
+}

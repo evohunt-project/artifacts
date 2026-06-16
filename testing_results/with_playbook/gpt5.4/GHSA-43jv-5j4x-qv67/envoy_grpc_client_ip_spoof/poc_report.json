@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a direct Envoy ext_auth gRPC caller can spoof x-forwarded-for, turn a denied IP-based policy into an allow decision, and obtain the configured upstream Authorization header.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the same unauthenticated Authorization/Check request is denied without spoofed metadata but allowed when x-forwarded-for is set to an IP address that the policy trusts, proving an authorization bypass on the gRPC ext_auth path.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Heimdall at 7fffdb1fd0fe25f9a5e692afb459a810814862a7 (v0.17.13), built the target inside the container, and produced the exact proof lines `without_spoof grpc_code=7 http_code=403 authz_header=\"\"`, `with_spoof grpc_code=0 authz_header=\"Bearer internal-upstream-token\"`, followed by `verification=passed`.",
+  "verification_method": "The containerized helper client issues one Authorization/Check request without spoofed metadata and one with x-forwarded-for=203.0.113.7, then the run script exact-matches both expected client outputs and prints the relevant Heimdall transaction log lines. This distinguishes a real policy bypass from a startup issue, unrelated transport failure, or generic error path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Client output included `without_spoof grpc_code=7 http_code=403 authz_header=\"\"`.",
+    "Client output included `with_spoof grpc_code=0 authz_header=\"Bearer internal-upstream-token\"`.",
+    "Heimdall runtime logs showed a denied first transaction and a successful second transaction that recorded x-forwarded-for=203.0.113.7, ending with `verification=passed`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag and commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "7fffdb1fd0fe25f9a5e692afb459a810814862a7 (tag: v0.17.13)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_in_container.sh",
+      "reproduction/config.yaml",
+      "reproduction/rules.yaml",
+      "reproduction/client.go",
+      "reproduction/client.go.mod",
+      "reproduction/client.go.sum"
+    ]
+  }
+}

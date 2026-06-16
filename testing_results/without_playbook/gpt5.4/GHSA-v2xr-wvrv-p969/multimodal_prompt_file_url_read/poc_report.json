@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_read_ssrf",
+  "summary": "The reproduction bundle clones the pinned vulnerable repository state, imports the vulnerable multimodal prompt code, and verifies that a file://localhost/etc/passwd#.jpg payload leaks the exact /etc/passwd bytes through the generated data URL.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the multimodal prompt path to treat file://localhost/etc/passwd#.jpg as an image, open /etc/passwd, and embed the exact file bytes into the generated data:image/jpeg;base64 payload.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository at commit 0f412de0a4694680684b0981d08faae38152f80b, built the Docker image, and printed EVOHUNT_POC_SUCCESS after decoding a data URL whose bytes matched /etc/passwd exactly. The run also printed the first leaked line: root:x:0:0:root:/root:/bin/bash.",
+  "verification_method": "The helper script decodes the generated data URL and compares the bytes byte-for-byte with /etc/passwd from inside the container. The run succeeds only if the leaked bytes match exactly and the script prints EVOHUNT_POC_SUCCESS.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction run printed EVOHUNT_POC_SUCCESS.",
+    "The helper decoded the generated data:image/jpeg;base64 payload and verified it matched /etc/passwd byte-for-byte.",
+    "The run printed the first leaked line from /etc/passwd: root:x:0:0:root:/root:/bin/bash."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0f412de0a4694680684b0981d08faae38152f80b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

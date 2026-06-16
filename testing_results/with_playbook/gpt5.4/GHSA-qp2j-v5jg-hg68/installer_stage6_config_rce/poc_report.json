@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "installer_config_rce",
+  "summary": "The reproduction clones LibreNMS 1.47, installs dependencies in a containerized copy of the mounted checkout, abuses the installer stage-skip to write attacker-controlled PHP into `config.php`, and confirms execution on the follow-up request.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should cause the second installer request to execute attacker-controlled PHP from the generated `config.php` and emit the proof string `INSTALLER_STAGE6_RCE_CONFIRMED installer-rce-confirmed`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the helper image, cloned and pinned LibreNMS `1.47`, installed the target dependencies, posted a malicious `dbhost` value to `/install.php`, and then printed `INSTALLER_STAGE6_RCE_CONFIRMED installer-rce-confirmed` after the follow-up request.",
+  "verification_method": "The container-side helper first checks that the installer created `config.php`, then sends a follow-up request to the same installer path, and only reports success if that request causes creation of `/tmp/evohunt-installer-proof` and emits the exact proof string. This distinguishes real config-file execution from a generic installer error or setup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Standard output contained `INSTALLER_STAGE6_RCE_CONFIRMED installer-rce-confirmed`.",
+    "The helper only prints that line after the follow-up installer request creates `/tmp/evohunt-installer-proof` inside the container.",
+    "The exploit path exercised the real bootstrap flow by first generating `config.php` and then re-entering `/install.php` to load it."
+  ],
+  "limitations_or_blockers": [
+    "The vulnerable path is only reachable while the deployment still exposes the installer bootstrap surface because `config.php` is absent."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, verifies the pinned vulnerable commit behind the `1.47` tag, and mounts that checkout into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "refs/tags/1.47 (03d6d76908b21612988af0ab112a787863ba183a)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh"
+    ]
+  }
+}

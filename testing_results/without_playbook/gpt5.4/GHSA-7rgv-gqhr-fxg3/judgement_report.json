@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:09:35.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e661f044",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-7rgv-gqhr-fxg3/GHSA-7rgv-gqhr-fxg3.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "json_schema_exact_float_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e661f044/json_schema_exact_float_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e661f044/json_schema_exact_float_bypass/vulnerability_report.json",
+      "title": "Unescaped decimal points in float-bound schemas let exact-value checks accept 0e5 as 0.0",
+      "vulnerability_type": "json_schema_validation_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets unescaped decimal points in JSON Schema float-regex generation in cpp/json_schema_converter.cc, while the advisory describes a multi-layer nested-parentheses parser DoS fixed by adding a nesting limit in cpp/grammar_parser.cc.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only final qualifying finding is a JSON Schema numeric-validation bypass and does not identify the advisory's nested-grammar parser crash or its root-cause code path.",
+    "evidence": [
+      "The advisory summary and details describe a segmentation fault or memory exhaustion when XGrammar processes a malicious grammar rule containing about 30,000 layers of nested parentheses.",
+      "The upstream v0.1.31...v0.1.32 patch changes cpp/grammar_parser.cc to add max_nest_layer and a \"Nest layer exceeded the maximum limit\" check in EBNFParser::ParseElement, matching a nesting-driven parser DoS root cause.",
+      "The session finding instead points to GenerateFloatRangeRegex and GenerateNumber behavior in cpp/json_schema_converter.cc, and its reproduced effect is that an exact-0.5 schema accepts {\"x\":0e5} and yields a parsed value of 0.0."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e661f044/json_schema_exact_float_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e661f044/json_schema_exact_float_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e661f044/json_schema_exact_float_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that jsPDF 4.0.0's default PNG `addImage` path accepts a tiny crafted PNG with attacker-controlled dimensions and fails with a `RangeError` during image decoding, aborting PDF generation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should trigger the default PNG parser route on a 65-byte dimension-bomb PNG and produce the proof string plus a `RangeError` showing the decoder attempted an invalid or impossible buffer allocation.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned jsPDF at `e6cf03db2499ef0a9ccc54b2aba45156c5b32b3c`, built the reproduction image, mounted the checkout, and printed `[evohunt] PROOF=PNG_DIMENSION_BOMB_TRIGGERED` followed by `[evohunt] ERROR=RangeError: Array buffer allocation failed`.",
+  "verification_method": "The verification helper mounts the pinned target checkout, extracts the exact published `jspdf-4.0.0` release bundle, invokes `doc.addImage(new Uint8Array(payload), \"PNG\", ...)` with the crafted 65-byte PNG, and checks for the proof string, the pinned fast-png version, and a `RangeError` emitted by the vulnerable PNG decode path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] PNG_SIZE=65",
+    "[evohunt] FAST_PNG_VERSION=6.4.0",
+    "[evohunt] PROOF=PNG_DIMENSION_BOMB_TRIGGERED",
+    "[evohunt] ERROR=RangeError: Array buffer allocation failed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo. The helper then uses the exact published jspdf 4.0.0 bundle included in the reproduction directory to exercise the vulnerable runtime path while the mounted checkout provides the pinned source provenance.",
+    "pinned_commit_or_ref": "e6cf03db2499ef0a9ccc54b2aba45156c5b32b3c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh",
+      "reproduction/jspdf-4.0.0.tgz"
+    ]
+  }
+}

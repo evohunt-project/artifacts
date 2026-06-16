@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction seeds a victim-owned staged import, has another low-privilege importer process it by ID, and verifies that ownership flips to the attacker even though the import itself fails validation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privilege user with the normal `import` permission should be able to claim another user's staged import through the process endpoint, causing `imports.created_by` to change to the attacker.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `9e23117f9c6d2f595372eae1f83ca4f7d7f8ff9e`, built the reproduction image, seeded a victim-owned import and an attacker token with `import` permission, and called the process endpoint on the victim import ID. The request returned `process_http_code=500` with `status=import-errors`, but `owner_after_process=2` and the run emitted `EVOHUNT_IMPORT_TAKEOVER_PROOF`, confirming that ownership changed to the attacker despite the validation failure.",
+  "verification_method": "The run script deliberately submits a null field mapping so the request reaches the vulnerable ownership rewrite and then stops with a deterministic validation error. It verifies the exploit by checking that the attacker really has the `import` permission, that the API returned the expected `import-errors` response, and that the persisted `imports.created_by` value changed from the victim to the attacker.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/last-run/setup.json",
+    "reproduction/last-run/process_response.json",
+    "reproduction/last-run/owner_after_process.txt",
+    "reproduction/last-run/run.log"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones `https://github.com/snipe/snipe-it.git` on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "9e23117f9c6d2f595372eae1f83ca4f7d7f8ff9e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/bootstrap_case.php",
+      "reproduction/container_run.sh"
+    ]
+  }
+}

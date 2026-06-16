@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:54:01.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ab83c31b",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-xph3-r2jf-4vp3/GHSA-xph3-r2jf-4vp3.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "smtp_overlong_data_line_rewrite_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ab83c31b/smtp_overlong_data_line_rewrite_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ab83c31b/smtp_overlong_data_line_rewrite_dos/vulnerability_report.json",
+      "title": "Overlong SMTP DATA lines trigger amplified rewrite work and permit unauthenticated denial of service",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets the SMTP DATA overlong-line rewrite path in `connection.js`, while the advisory targets `__proto__` header parsing in `haraka-email-message/lib/header.js` and the resulting `uncaughtException` worker exit.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "status_queue_discard_arbitrary_file_deletion",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ab83c31b/status_queue_discard_arbitrary_file_deletion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ab83c31b/status_queue_discard_arbitrary_file_deletion/vulnerability_report.json",
+      "title": "STATUS QUEUE DISCARD permits arbitrary local file deletion outside the queue directory",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets the localhost `STATUS QUEUE DISCARD` command in `plugins/status.js` and its unchecked `fs.unlink(path.join(queue_dir, file))` sink, not the advisory's MIME header parser `__proto__` crash path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or an equivalent root cause. The advisory is a `__proto__` email-header crash in `haraka-email-message/lib/header.js` that propagates to Haraka's global `uncaughtException` exit path, while the qualifying findings cover unrelated DATA-line rewrite amplification and localhost STATUS file deletion logic.",
+    "evidence": [
+      "The advisory JSON describes a `__proto__:` header name reaching `haraka-email-message/lib/header.js::_add_header`, causing a `TypeError` and then `process.exit(1)` through `haraka.js`'s `uncaughtException` handler.",
+      "The `smtp_overlong_data_line_rewrite_dos` finding traces attacker input to recursive overlong-line rewriting in `connection.js::_process_data()` during SMTP DATA handling before size rejection, not to MIME header storage or the advisory crash path.",
+      "The `status_queue_discard_arbitrary_file_deletion` finding traces localhost STATUS input to `plugins/status.js::queue_discard` and `fs.unlink(path.join(queue_dir, file))`, which is a different entrypoint, sink, and root cause from the advisory."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ab83c31b/smtp_overlong_data_line_rewrite_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ab83c31b/smtp_overlong_data_line_rewrite_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ab83c31b/smtp_overlong_data_line_rewrite_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ab83c31b/status_queue_discard_arbitrary_file_deletion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ab83c31b/status_queue_discard_arbitrary_file_deletion/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ab83c31b/status_queue_discard_arbitrary_file_deletion/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

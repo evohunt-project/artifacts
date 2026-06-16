@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_normalization_auth_bypass",
+  "summary": "The Docker-based reproduction confirms that a dot-segmented path can match an unprotected PathPrefix frontend in Traefik while the backend normalizes the same path into a protected admin resource.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that a direct request to /admin/secret is blocked by frontend basic auth with HTTP 401, while a request to /public/../admin/secret reaches the protected backend resource without authentication and returns the proof string top_secret.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Traefik v1.7.34, built the reproduction image, started the backend and Traefik, and produced the expected differential result: /admin/secret returned HTTP 401 Unauthorized, while /public/../admin/secret returned HTTP 200 OK with the JSON body {\"result\": \"top_secret\", \"raw_path\": \"/public/../admin/secret\", \"normalized_path\": \"/admin/secret\"}.",
+  "verification_method": "The reproduction compares the status codes of the protected direct request and the dot-segment bypass request, then verifies that the bypass response body contains the exact proof string top_secret and the normalized admin path. This distinguishes a real middleware bypass from a generic startup issue or unrelated proxy error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "runtime/result.json records direct_status=401 and bypass_status=200.",
+    "runtime/direct_admin_headers.txt captures the protected frontend's 401 Unauthorized response.",
+    "runtime/bypass_admin_headers.txt captures the bypass request's 200 OK response.",
+    "runtime/bypass_admin_body.txt contains the proof JSON with raw_path /public/../admin/secret and normalized_path /admin/secret.",
+    "runtime/traefik.log shows Basic auth failed for /admin/secret and then forwards /public/../admin/secret through the unprotected public frontend."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.7.34",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_run.sh",
+      "reproduction/backend_server.py"
+    ]
+  }
+}

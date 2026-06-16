@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:05:30.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f3f1918",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-wfq2-52f7-7qvj/GHSA-wfq2-52f7-7qvj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "always_check_safety_pickle_loads_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f3f1918/always_check_safety_pickle_loads_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f3f1918/always_check_safety_pickle_loads_bypass/vulnerability_report.json",
+      "title": "always_check_safety() leaves pickle.loads unhooked, enabling deserialization RCE bypass",
+      "vulnerability_type": "deserialization_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a runtime-hook coverage bug in `repo/fickling/hook.py` for `pickle.loads(...)`; the advisory is a static-analysis false negative in `fickling/analysis.py` where `runpy` imports are not classified as unsafe.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "stack_global_dotted_module_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f3f1918/stack_global_dotted_module_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f3f1918/stack_global_dotted_module_dos/vulnerability_report.json",
+      "title": "Valid dotted STACK_GLOBAL module names crash Fickling safety analysis with an uncaught ValueError",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is an uncaught parser exception in `StackGlobal.run()` for dotted module names; although the failure propagates through `analysis.py`, it is not the advisory's `UnsafeImports`/`runpy` blocklist omission or equivalent control-flow condition.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's root cause: `fickling/analysis.py` fails to treat `runpy`, `runpy.run_path`, and `runpy.run_module` as unsafe imports, leading to a `SUSPICIOUS` verdict instead of overtly malicious classification.",
+    "evidence": [
+      "The advisory JSON describes a specific `UnsafeImports`/blocklist gap in `fickling/analysis.py` for `runpy`-based gadgets and says that the vulnerable behavior is misclassification of malicious pickles as `SUSPICIOUS`.",
+      "Historical source capture in `logs/execution_history.jsonl` shows the analyzed checkout's `UnsafeImportsML.UNSAFE_MODULES` includes entries such as `pty` but no `runpy`, which matches the advisory-described root cause.",
+      "The `always_check_safety_pickle_loads_bypass` finding targets `repo/fickling/hook.py` leaving `pickle.loads(...)` unhooked after `always_check_safety()`, with end-to-end execution bypassing the runtime hook rather than a false-negative result from `check_safety(...)`.",
+      "The `stack_global_dotted_module_dos` finding targets dotted-module validation in `repo/fickling/fickle.py` and an uncaught `ValueError` that bubbles through `analysis.py`; it is a parser crash, not a missing-unsafe-import classification for `runpy`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f3f1918/always_check_safety_pickle_loads_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f3f1918/always_check_safety_pickle_loads_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f3f1918/always_check_safety_pickle_loads_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f3f1918/stack_global_dotted_module_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f3f1918/stack_global_dotted_module_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6f3f1918/stack_global_dotted_module_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

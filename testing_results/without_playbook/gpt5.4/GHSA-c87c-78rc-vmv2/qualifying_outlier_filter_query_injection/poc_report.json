@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "query_injection_rce",
+  "summary": "The reproduction starts a local D-Tale instance, enumerates a dataset ID, stores an attacker-controlled outlier filter, and triggers server-side pandas query execution that writes a proof file from the application process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the attacker-controlled outlier-filter query to execute a shell command in the D-Tale process and write the string evohunt_rce into reproduction/proof.txt.",
+  "actual_observed_result": "The run script created a local virtual environment, installed the target repository, started D-Tale on 127.0.0.1, enumerated the dataset ID through /dtale/process-keys, stored the malicious outlier filter through /dtale/save-column-filter/<id>, and triggered /dtale/data-export/<id>. The HTTP response returned a pandas evaluation error after execution, and reproduction/proof.txt contained evohunt_rce.",
+  "verification_method": "The PoC verifies that the exact proof string appears in reproduction/proof.txt after the HTTP trigger path runs. It also checks that /dtale/process-keys and /dtale/save-column-filter/<id> succeed before the trigger request, distinguishing real server-side execution from an unrelated local file write.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/proof.txt contains evohunt_rce",
+    "The unauthenticated /dtale/process-keys request returned a live dataset identifier",
+    "The trigger request to /dtale/data-export/<id> returned the pandas scalar-bool evaluation error after executing the payload"
+  ],
+  "limitations_or_blockers": [
+    "The chosen pandas expression performs its side effect before raising a pandas evaluation error, so the trigger request fails closed after command execution instead of returning filtered data."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc.py"
+    ]
+  }
+}

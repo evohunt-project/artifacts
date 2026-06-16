@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that the default public Oxia service accepts unauthenticated client write and read requests when started without an explicit auth provider.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start the default standalone public service and allow an unauthenticated client to write an attacker-chosen record and read back the exact proof string.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 7972221e8fb3bce4d367d9edfbd5ac04e8528a5a, built the target inside the container, started the standalone public service, printed a successful unauthenticated put response for /evohunt/unauthenticated-default-access, and then read back EVOHUNT_UNAUTHENTICATED_PUBLIC_SERVICE_ACCESS_CONFIRMED without supplying any token or other authentication material.",
+  "verification_method": "reproduction/verify.sh builds the target from the mounted checkout, starts oxia standalone with default auth behavior on 127.0.0.1:16648, performs an unauthenticated client put followed by an unauthenticated client get, and compares the returned value to the exact proof string EVOHUNT_UNAUTHENTICATED_PUBLIC_SERVICE_ACCESS_CONFIRMED.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed a successful unauthenticated put response for key /evohunt/unauthenticated-default-access with version_id 0.",
+    "The unauthenticated get returned the exact proof string EVOHUNT_UNAUTHENTICATED_PUBLIC_SERVICE_ACCESS_CONFIRMED.",
+    "The final host-side script printed [evohunt] SUCCESS: reproduction completed and verified."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "7972221e8fb3bce4d367d9edfbd5ac04e8528a5a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The reproduction bundle starts the vulnerable Docker API from the pinned Crawl4AI v0.8.0 source tree, sends a crafted `/screenshot` request with an attacker-chosen `output_path`, and verifies that an existing server-side file was overwritten with PNG bytes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should overwrite `/home/appuser/proof/overwrite.txt` inside the target container and print the success marker `EVOHUNT_SUCCESS output_path arbitrary file overwrite confirmed`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Crawl4AI `v0.8.0`, built the pinned reproduction image, started the Docker API from the mounted source tree, and produced `{\"success\":true,\"path\":\"/home/appuser/proof/overwrite.txt\"}`. The preexisting proof file was overwritten and began with the PNG magic bytes `89504e470d0a1a0a`.",
+  "verification_method": "The container helper pre-creates a file containing `BEFORE`, triggers `/screenshot` with that path as `output_path`, and then checks that the file no longer begins with `BEFORE`, that it starts with the PNG magic bytes `89504e470d0a1a0a`, and that the API response echoes the attacker-chosen absolute path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The packaged run printed `RESPONSE={\"success\":true,\"path\":\"/home/appuser/proof/overwrite.txt\"}`.",
+    "The packaged run printed `OVERWRITTEN_PATH=/home/appuser/proof/overwrite.txt`.",
+    "The packaged run printed `FILE_MAGIC=89504e470d0a1a0a`.",
+    "The packaged run printed the success marker `EVOHUNT_SUCCESS output_path arbitrary file overwrite confirmed`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at the pinned vulnerable tag, verifies the resolved commit, and mounts that checkout read-only into the container.",
+    "pinned_commit_or_ref": "a5354f267aeeb793bf26e6566a89aa8f1f33809e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_inside_container.sh",
+      "reproduction/attacker_page.html"
+    ]
+  }
+}

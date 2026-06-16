@@ -1,0 +1,40 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated `POST /market/pdp/piece` request can queue a PDP notify callback that reaches a loopback-only HTTP listener inside the vulnerable container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the attacker-controlled `notify` URL to be posted by the PDP notify worker to `127.0.0.1:19090/proof`, proving blind SSRF to a loopback-only service that the attacker cannot contact directly.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Curio at commit `b72224a720f58032df5bb56178cdba38d7cdb5dd`, built the reproduction image, launched Yugabyte plus the PDP harness, sent the unauthenticated `POST /market/pdp/piece` trigger from a separate attacker container, and exited with `[evohunt] SUCCESS: unauthenticated PDP notify callback reached an internal loopback-only service`.",
+  "verification_method": "The run script first requires the unauthenticated trigger request to return HTTP 200 with a `pieceCID` body, then waits for the harness log oracle `EVOHUNT_PROOF: internal loopback callback reached`. The loopback listener only exists on `127.0.0.1` inside the vulnerable container, so the proof string demonstrates that the worker-side `http.Post` performed the internal callback rather than the attacker container reaching the service directly.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final packaged reproduction completed with `[evohunt] SUCCESS: unauthenticated PDP notify callback reached an internal loopback-only service`.",
+    "`run.sh` validates that the unauthenticated `POST /market/pdp/piece` request returns HTTP 200 and includes `pieceCID` in the response body before declaring success.",
+    "`run.sh` only exits successfully after the vulnerable container logs `EVOHUNT_PROOF: internal loopback callback reached`, which is the explicit oracle for the loopback SSRF."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction compiles the exact vulnerable PDP handler and notify-task source into a slim harness instead of building the entire Curio binary, so the PoC stays self-contained and avoids unrelated Filecoin FFI build dependencies."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b72224a720f58032df5bb56178cdba38d7cdb5dd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/prepare_harness.sh",
+      "reproduction/harness_template/go.mod",
+      "reproduction/harness_template/pdp/mini.go",
+      "reproduction/harness_template/lib/paths/stub.go",
+      "reproduction/harness_template/lib/dealdata/stub.go",
+      "reproduction/harness_template/lib/proof/stub.go",
+      "reproduction/harness_template/lib/passcall/stub.go",
+      "reproduction/harness_template/harmony/harmonydb/harmonydb.go",
+      "reproduction/harness_template/harmony/harmonytask/stub.go",
+      "reproduction/harness_template/harmony/resources/stub.go",
+      "reproduction/harness_template/harmony/taskhelp/stub.go",
+      "reproduction/harness_template/cmd/pdp_ssrf_harness/main.go"
+    ]
+  }
+}

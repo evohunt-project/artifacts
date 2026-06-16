@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "memory_exhaustion_dos",
+  "summary": "The Docker-based reproduction compiles the exact vulnerable OpenWire parser from the pinned Artemis 2.44.0 revision, sends only the oversized 4-byte frame length over TCP, and triggers OutOfMemoryError in OpenWireFrameParser.decode.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should compile the exact vulnerable OpenWire parser from the pinned repository revision, send only an oversized 4-byte length header over TCP, and observe an OutOfMemoryError originating from OpenWireFrameParser.decode.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 437105493d75b6156ba7bb1f77bae93de2182e30, built the Docker image, compiled the exact parser source from the mounted checkout, and printed EVOHUNT_OPENWIRE_OOM_CONFIRMED with an OutOfMemoryError stack trace rooted in OpenWireFrameParser.decode.",
+  "verification_method": "verify.sh requires the exact proof string EVOHUNT_OPENWIRE_OOM_CONFIRMED and a stack trace containing OpenWireFrameParser.decode before reporting success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The packaged rerun printed EVOHUNT_OPENWIRE_OOM_CONFIRMED after sending only the oversized length header.",
+    "The captured stack trace includes org.apache.activemq.artemis.core.protocol.openwire.OpenWireFrameParser.decode(OpenWireFrameParser.java:72).",
+    "The reproduction finished through ./reproduction/run.sh and ended with [evohunt] SUCCESS: reproduction completed and verified."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "437105493d75b6156ba7bb1f77bae93de2182e30",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/NettyOpenWireOomHarness.java",
+      "reproduction/pom.xml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

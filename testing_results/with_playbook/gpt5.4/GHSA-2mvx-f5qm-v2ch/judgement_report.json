@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:34:07.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_32bf8eb6",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-2mvx-f5qm-v2ch/GHSA-2mvx-f5qm-v2ch.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "personal_event_vcal_disclosure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_32bf8eb6/personal_event_vcal_disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_32bf8eb6/personal_event_vcal_disclosure/vulnerability_report.json",
+      "title": "Anonymous single-event vCal export leaks personal events",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an anonymous `/?vcal=<occur_id>` single-event ICS export disclosure caused by `mc_private_event()` overwriting the personal-event privacy decision. The advisory is a different unauthenticated flow: `wp_ajax_nopriv_mcjs_action` with `behavior=loadupcoming`, unsafe `parse_str()` handling of `args`, and attacker-controlled `switch_to_blog( $args['site'] )` in upcoming-events processing.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only real final qualifying finding is a separate broken-access-control issue in the public single-event vCal export path. It does not identify the advisory's `mc_ajax_mcjs_action` `loadupcoming` handler, the unsafe `parse_str()` of attacker-controlled `args`, or the missing authorization check before `switch_to_blog( $args['site'] )` that causes multisite cross-site disclosure and single-site DoS.",
+    "evidence": [
+      "The advisory describes unauthenticated requests to `wp-admin/admin-ajax.php?action=mcjs_action&behavior=loadupcoming&args=site=...`, where `args` is parsed and the attacker-controlled `site` value is passed into `my_calendar_upcoming_events()` and then `switch_to_blog()`.",
+      "`/Users/lumi/ziyue/EvoHunt-Run/advisory_32bf8eb6/personal_event_vcal_disclosure/vulnerability_report.json` instead traces `anonymous GET /?vcal=<occur_id> -> mc_export_vcal -> my_calendar_send_vcal -> mc_generate_vcal -> mc_get_event -> mc_generate_ical -> broken mc_private_event()`.",
+      "The session manifest and orchestrator final response both show only one materialized qualifying finding, and its reproduced effect is ICS disclosure of a seeded personal event rather than cross-blog event disclosure via `site` or a single-site `switch_to_blog()` crash."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_32bf8eb6/personal_event_vcal_disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_32bf8eb6/personal_event_vcal_disclosure/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_32bf8eb6/personal_event_vcal_disclosure/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

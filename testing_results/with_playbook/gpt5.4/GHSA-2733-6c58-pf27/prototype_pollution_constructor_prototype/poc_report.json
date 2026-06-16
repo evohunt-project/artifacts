@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution_and_object_shape",
+  "summary": "The Docker-based reproduction clones the vulnerable deepHas revision, mounts it read-only into a Node.js container, invokes deepHas.set() with a constructor.prototype payload, and verifies that Object.prototype receives the attacker-controlled property.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should emit the proof string EVOHUNT_PROOF: prototype pollution reached Object.prototype and show that a fresh object inherits the attacker-controlled evohuntAdmin property.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned https://github.com/sharpred/deepHas.git at commit 6e5accb, built the reproduction image, and printed EVOHUNT_PROOF: prototype pollution reached Object.prototype together with {\"polluted\":true,\"inherited_value\":true,\"object_prototype_value\":true,\"target_has_own_constructor\":true,\"vulnerable_module\":\"deepHas.set\"}.",
+  "verification_method": "The host run script launches /app/verify.sh inside the container. verify.sh runs exploit.js against the mounted checkout and requires the exact proof string before reporting success, which distinguishes real Object.prototype mutation from a generic runtime failure or unrelated write on the target object.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output contained EVOHUNT_PROOF: prototype pollution reached Object.prototype.",
+    "The exploit helper printed JSON confirming polluted=true, inherited_value=true, and object_prototype_value=true.",
+    "The run completed from the final folder command ./reproduction/run.sh against pinned commit 6e5accb."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out pinned commit 6e5accb, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6e5accb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

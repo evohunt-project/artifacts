@@ -1,0 +1,29 @@
+{
+  "status": "failed",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction bundle clones the vulnerable upstream commit, runs the public chunk endpoint under a tiny tmpfs, and posts repeated unauthenticated chunk bodies until orphaned YTPChunk_* files fill temporary storage. The bundle was generated and ./reproduction/run.sh was executed, but it failed immediately on this host because docker is not installed.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should fill the container tmpfs with orphaned YTPChunk_* files created by repeated unauthenticated POSTs to /objects/aVideoEncoderChunk.json.php, then emit EVOHUNT_CHUNK_TMPFS_FILLED once later requests fail under the exhausted tmp directory.",
+  "actual_observed_result": "Executing ./reproduction/run.sh on this host exited with status 127 and stderr `docker is required to run this reproduction`, so the expected tmpfs-exhaustion proof signal could not be observed in-session.",
+  "verification_method": "The helper starts PHP with sys_temp_dir pointed at a 10 MiB tmpfs, posts repeated 3 MiB bodies to the public chunk endpoint, records the orphaned YTPChunk_* files under /work/tmp, and treats tmpfs exhaustion plus a later failed request as the proof oracle.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "./reproduction/run.sh was executed on the host and exited with status 127.",
+    "The host-side stderr was: docker is required to run this reproduction."
+  ],
+  "limitations_or_blockers": [
+    "The current host environment does not provide the docker command required by the mandatory Docker-based reproduction flow."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the public WWBN/AVideo repository on the host, fetches the pinned vulnerable commit, checks it out detached, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "e3c63ffcd1f2869da1bbf77913b2603cbe8b67fb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/repro.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

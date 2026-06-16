@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The reproduction starts a minimal Salvo app that serves a static root with `include_dot_files(false)` and verifies that `GET /.git/config` still succeeds.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The hidden-directory guard should block access to `/.git/config`, but the vulnerable build returns `200 OK` and discloses the file contents.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned `v0.89.3` source tree, built the helper image, launched the probe app, and returned `200 OK` plus the expected fixture contents for `GET /.git/config` while `include_dot_files(false)` was enabled.",
+  "verification_method": "The helper app serves a known `public/.git/config` fixture. The exploit script confirms a visible baseline request and then checks that `GET /.git/config` returns `200 OK` with the expected fixture content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit printed `GET /index.html => 200 b'visible\\n'`, confirming the probe app served the intended static root.",
+    "The exploit printed `GET /.git/config => 200 ... repositoryformatversion = 0 ...`, confirming hidden-directory content disclosure.",
+    "The container reported `[evohunt] static hidden-directory verification passed` and `SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "f8fb007c4c765dd0a4961f81846e6f27629dcd28",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py",
+      "reproduction/probe_Cargo.toml",
+      "reproduction/probe_main.rs",
+      "reproduction/index.html",
+      "reproduction/git_config"
+    ]
+  }
+}

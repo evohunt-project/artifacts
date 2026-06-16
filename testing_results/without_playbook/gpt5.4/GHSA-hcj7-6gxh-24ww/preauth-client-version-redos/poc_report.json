@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "regex_dos",
+  "summary": "The Docker-based reproduction confirms that a long dash-only _ClientVersion payload stalls Parse Server before authentication and delays a concurrent benign request on the same worker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the malicious _ClientVersion request take multiple seconds and force a concurrent benign request to wait behind it, demonstrating pre-authentication worker-level denial of service.",
+  "actual_observed_result": "Running ./reproduction/run.sh against Parse Server commit 20abb1cf36214d05b4be7a081a41c6df5becf42b produced baseline_ms=7.5, attack_ms=5797.0, and probe_ms=5698.5, followed by the success signal that the benign concurrent request was delayed by the malicious _ClientVersion payload.",
+  "verification_method": "The helper starts the vulnerable server, measures a baseline POST to /parse/functions/notDefined, then sends a POST with a 100000-character dash-only _ClientVersion body and a concurrent benign POST. The run only succeeds if the baseline stays fast while both the attack request and the concurrent benign request exceed the multi-second and relative slowdown thresholds.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] baseline_ms=7.5 attack_ms=5797.0 probe_ms=5698.5",
+    "[evohunt] SUCCESS: benign concurrent request was delayed by the malicious _ClientVersion payload",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "20abb1cf36214d05b4be7a081a41c6df5becf42b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.mjs"
+    ]
+  }
+}

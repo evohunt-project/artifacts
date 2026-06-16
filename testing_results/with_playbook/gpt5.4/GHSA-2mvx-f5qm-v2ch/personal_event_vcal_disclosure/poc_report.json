@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction clones My Calendar 3.7.7, installs a disposable WordPress target, seeds a personal event through the plugin's own save path, and verifies that an anonymous `?vcal=` export returns that event in ICS format.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a personal event (`event_approved=5`) and then show that an anonymous request to `/?vcal=<occur_id>` returns an ICS response containing the unique event title.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `9b58483dccb75a596014213ffe3376eb2d330f1a`, seeded `{\"title\":\"EVOHUNT-PERSONAL-advisory_32bf8eb6-438\",\"event_id\":2,\"occur_id\":2,\"event_approved\":5,\"category_private\":0}`, and the anonymous verification step received `Content-Type: text/calendar;charset=UTF-8` plus `SUMMARY:EVOHUNT-PERSONAL-advisory_32bf8eb6-438` from the target.",
+  "verification_method": "The run script activates the vulnerable plugin, uses a product-native WP-CLI helper to create a personal event in a public category, and then runs a separate verification container that performs an anonymous HTTP GET to `/?vcal=<occur_id>` inside the target Docker network. Verification passes only if the response is an ICS document and contains the exact unique `SUMMARY:` marker for the seeded personal event.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Seed step output: `{\"title\":\"EVOHUNT-PERSONAL-advisory_32bf8eb6-438\",\"event_id\":2,\"occur_id\":2,\"event_approved\":5,\"category_private\":0}`.",
+    "Verification response header: `Content-Type: text/calendar;charset=UTF-8`.",
+    "Verification response body contained: `SUMMARY:EVOHUNT-PERSONAL-advisory_32bf8eb6-438`.",
+    "The verifier printed `SUCCESS: EVOHUNT_VCAL_LEAK_CONFIRMED` and `SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, starts a disposable WordPress stack with Docker, and mounts that checkout into the verification container.",
+    "pinned_commit_or_ref": "9b58483dccb75a596014213ffe3376eb2d330f1a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/docker-compose.target.yml",
+      "reproduction/seed_personal_event.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

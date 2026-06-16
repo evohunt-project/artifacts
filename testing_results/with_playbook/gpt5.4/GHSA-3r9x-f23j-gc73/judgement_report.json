@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:52:46.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_254408aa",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-3r9x-f23j-gc73/GHSA-3r9x-f23j-gc73.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "external_data_symlink_escape",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_254408aa/external_data_symlink_escape",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_254408aa/external_data_symlink_escape/vulnerability_report.json",
+      "title": "External tensor data loading follows symlinked parent directories and reads files outside the model directory",
+      "vulnerability_type": "path_traversal_arbitrary_file_read",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding reaches the same external-data load path, but its root cause is a symlinked parent-directory containment bypass (`linkdir/secret.bin`) and it explicitly states direct symlink files are rejected, while the advisory describes accepting a direct external-data symlink file.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "local_function_shape_inference_recursion",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_254408aa/local_function_shape_inference_recursion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_254408aa/local_function_shape_inference_recursion/vulnerability_report.json",
+      "title": "Model-local function cycles trigger unbounded native recursion in shape inference",
+      "vulnerability_type": "unbounded_recursion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a shape-inference recursion crash and does not involve the advisory's external-data path validation, symlink handling, or arbitrary file-read root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described direct symlink-based external-data read. One finding is a different parent-directory symlink escape in the same component, and the other is an unrelated shape-inference denial of service.",
+    "evidence": [
+      "The advisory summary, details, and PoC describe replacing the external data file itself with a symlink such as `model.data -> /etc/passwd`, then loading the model successfully.",
+      "`external_data_symlink_escape` instead proves `linkdir/secret.bin` where `linkdir` is a symlinked parent directory; its report explicitly says direct symlink files are rejected and attributes the bug to missing canonicalization of parent directories before containment.",
+      "`local_function_shape_inference_recursion` affects `onnx.shape_inference.infer_shapes(...)` and `check_model(..., full_check=True)`, not external-data path validation in `onnx/checker.cc`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_254408aa/external_data_symlink_escape",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_254408aa/external_data_symlink_escape/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_254408aa/external_data_symlink_escape/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_254408aa/local_function_shape_inference_recursion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_254408aa/local_function_shape_inference_recursion/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_254408aa/local_function_shape_inference_recursion/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

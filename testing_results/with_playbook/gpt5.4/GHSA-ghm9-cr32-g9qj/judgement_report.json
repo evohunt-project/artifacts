@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:48:39.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d1b85c9e",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-ghm9-cr32-g9qj/GHSA-ghm9-cr32-g9qj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "pkcs12_parse2_nul_password_panic",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d1b85c9e/pkcs12_parse2_nul_password_panic",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d1b85c9e/pkcs12_parse2_nul_password_panic/vulnerability_report.json",
+      "title": "Pkcs12Ref::parse2 panics on interior-NUL passwords",
+      "vulnerability_type": "availability_panics_and_validation_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an interior-NUL panic in `openssl/src/pkcs12.rs` caused by `CString::new(pass.as_bytes()).unwrap()`, not the advisory's missing output-length check in `openssl/src/md_ctx.rs::digest_final()` before `EVP_DigestFinal`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause. The advisory is the missing size check in `MdCtxRef::digest_final()` that allows `EVP_DigestFinal()` to write past an undersized caller buffer, while the session's only qualifying finding is a separate PKCS#12 password-to-`CString` panic.",
+    "evidence": [
+      "The advisory summary and patch reference localize the vulnerability to `openssl/src/md_ctx.rs::digest_final()`, where commit `826c3888b77add418b394770e2b2e3a72d9f92fe` added `if self.size() > len as usize { return Err(ErrorStack::get()); }` before `EVP_DigestFinal`.",
+      "The session manifest lists exactly one real final qualifying finding: `/Users/lumi/ziyue/EvoHunt-Run/advisory_d1b85c9e/pkcs12_parse2_nul_password_panic`.",
+      "That finding's report and reproduced PoC target `openssl/src/pkcs12.rs:52`, where `Pkcs12Ref::parse2` unwraps `CString::new(pass.as_bytes())` and panics on interior-NUL passwords.",
+      "The PKCS#12 panic does not share the advisory's vulnerable function, file, sink, or root-cause mechanism, so it remains an open-world finding rather than an advisory match."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d1b85c9e/pkcs12_parse2_nul_password_panic",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d1b85c9e/pkcs12_parse2_nul_password_panic/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d1b85c9e/pkcs12_parse2_nul_password_panic/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

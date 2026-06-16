@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_dynamic_evaluation",
+  "summary": "The reproduction compiles the pinned Jervis revision, feeds a crafted matrix exclusion rule into the normal `PipelineGenerator.buildableMatrixAxes` path, and confirms that attacker-controlled Groovy executes during matrix planning.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should cause the crafted `.jervis.yml` matrix payload to reach `GroovyShell.evaluate(...)` and create the proof file while printing the `EVOHUNT_PROOF` marker.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `ff0d9b0b726c32e29fa3b9b44deae2bc9356736c`, built the reproduction image, compiled Jervis, executed the crafted matrix payload, and printed `EVOHUNT_PROOF: crafted matrix.exclude platform value executed Groovy during buildableMatrixAxes evaluation.`",
+  "verification_method": "The helper script constructs a malicious matrix exclude entry, invokes the normal `PipelineGenerator.buildableMatrixAxes` path, and asserts that a proof file was created by the injected Groovy code. The run only succeeds if that proof file exists and the proof marker is printed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included `EVOHUNT_PROOF: crafted matrix.exclude platform value executed Groovy during buildableMatrixAxes evaluation.`",
+    "The helper asserted that the injected Groovy created the proof file before the process returned success.",
+    "The run used the repository's normal matrix planning code path and completed without relying on mocks."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "ff0d9b0b726c32e29fa3b9b44deae2bc9356736c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/classpath.init.gradle",
+      "reproduction/verify.sh",
+      "reproduction/verify.groovy"
+    ]
+  }
+}

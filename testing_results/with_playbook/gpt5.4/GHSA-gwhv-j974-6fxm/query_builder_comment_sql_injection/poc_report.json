@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The reproduction confirms that attacker-controlled query comments can break out of `/* ... */` and replace the ORM-generated query with attacker-selected SQL.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print `PROOF_QUERY_COMMENT_SQLI`, show a formatted SQL string beginning with `/* x */ select 1337 as id, 42 as name --`, and demonstrate both direct execution and `orm.em.find()` returning attacker-selected row values.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 4b63e041404208d20cf60e5300e3700f8f3c7cb5, installed dependencies in a clean Node 22 container, and printed `PROOF_QUERY_COMMENT_SQLI` together with a formatted query `/* x */ select 1337 as id, 42 as name --  */ select `a`.`id`, `a`.`name` from `author` as `a`` and result rows where both raw execution and `orm.em.find()` returned `id=1337` and `name=42`.",
+  "verification_method": "The container-side validation script builds a minimal SQLite-backed entity, executes a query with attacker-controlled `comments`, and exits non-zero unless the formatted SQL shows comment breakout and both the raw execution path and the ORM `find()` path return the attacker-selected row instead of the real table contents.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed the exact proof marker `PROOF_QUERY_COMMENT_SQLI`.",
+    "The formatted query text showed the injected `select 1337 as id, 42 as name --` before the ORM-generated `select`.",
+    "Both raw execution and `orm.em.find()` returned the attacker-selected row values `1337` and `42`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh fetches the upstream repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "4b63e041404208d20cf60e5300e3700f8f3c7cb5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/validate-comment-sqli.ts"
+    ]
+  }
+}

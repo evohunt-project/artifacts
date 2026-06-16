@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "A local loopback attacker sent two crafted yamux WINDOW_UPDATE headers to a server-mode yamux Connection and triggered the send_window overflow panic.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The victim should panic with \"send window not to exceed u32\" while processing the second WINDOW_UPDATE frame.",
+  "actual_observed_result": "The reproduction printed a panic from repo/yamux/src/connection/stream/flow_control.rs:183:14 with the message \"send window not to exceed u32\", then reported SUCCESS after detecting the victim thread panic.",
+  "verification_method": "The PoC opens a real loopback TCP connection to a yamux server instance, sends the crafted frame pair, and treats the reproduction as successful only if the victim thread panics and join() returns an error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/poc_output.txt"
+  ],
+  "limitations_or_blockers": [
+    "The PoC demonstrates the library panic in-process on a victim thread rather than packaging a standalone network service binary."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+    "reproduction/Cargo.toml",
+    "reproduction/src/main.rs",
+    "reproduction/poc_output.txt"
+  ]
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:51:54.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fc4c6f5",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-3ppc-4f35-3m26/GHSA-3ppc-4f35-3m26.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "nested_brace_expansion_stack_overflow",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fc4c6f5/nested_brace_expansion_stack_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fc4c6f5/nested_brace_expansion_stack_overflow/vulnerability_report.json",
+      "title": "Deeply nested brace expressions crash minimatch's shipped brace-expansion path",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a stack-exhaustion path in braceExpand() and the shipped brace-expansion dependency, not the advisory's repeated-* pattern compilation flaw that generates too many [^/]*? regex groups and backtracks exponentially on a missing literal.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "nested_extglob_stack_overflow",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fc4c6f5/nested_extglob_stack_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fc4c6f5/nested_extglob_stack_overflow/vulnerability_report.json",
+      "title": "Deeply nested extglobs crash minimatch during pattern compilation",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding reaches recursive extglob parsing in AST.fromGlob() and overflows the call stack, whereas the advisory concerns adjacent non-globstar * characters in AST.#parseGlob() compiling into a regex that backtracks exponentially when a later literal is absent.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause. GHSA-3ppc-4f35-3m26 is the repeated-wildcard ReDoS fixed by coalescing adjacent non-globstar * characters in src/ast.ts, while the manifest-backed qualifying findings concern brace-expansion recursion and extglob recursion.",
+    "evidence": [
+      "The advisory patch 2e111f3 modifies src/ast.ts so consecutive non-globstar '*' characters collapse into one regex fragment instead of emitting one '[^/]*?' group per star.",
+      "nested_brace_expansion_stack_overflow reports and reproduces RangeError from braceExpand() delegating into brace-expansion recursion; it does not involve the advisory's missing-literal backtracking condition or the patched consecutive-* logic.",
+      "nested_extglob_stack_overflow reports and reproduces RangeError from deeply nested @(...) parsing in AST.fromGlob(); that is a recursion-depth bug, not the advisory's regex backtracking path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fc4c6f5/nested_brace_expansion_stack_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fc4c6f5/nested_brace_expansion_stack_overflow/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fc4c6f5/nested_brace_expansion_stack_overflow/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fc4c6f5/nested_extglob_stack_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fc4c6f5/nested_extglob_stack_overflow/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5fc4c6f5/nested_extglob_stack_overflow/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

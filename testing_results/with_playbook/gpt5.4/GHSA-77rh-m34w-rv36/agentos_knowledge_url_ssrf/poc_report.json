@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The reproduction bundle starts a localhost canary HTTP service, submits that localhost URL to the shipped knowledge upload route, and verifies that the AgentOS knowledge worker fetches the canary path from the server side.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The knowledge upload request should cause the server to send an HTTP GET to a localhost-only canary endpoint and create the proof file `/tmp/evohunt-knowledge-ssrf-proof.txt` inside the container.",
+  "actual_observed_result": "Executed `./reproduction/run.sh` successfully. The container printed `upload status=202`, then `EVOHUNT_PROOF: knowledge upload reached the localhost canary`, followed by `SUCCESS: reproduction completed and verified` after the canary proof file was written.",
+  "verification_method": "The verification script runs a real FastAPI knowledge route, starts a localhost canary HTTP server, posts the canary URL to `/knowledge/content`, and fails unless the canary receives the request and writes the expected proof file.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verification script prints an EVOHUNT proof line only after the localhost canary request is observed.",
+    "The localhost canary writes `/tmp/evohunt-knowledge-ssrf-proof.txt` with the exact requested path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "d667f085b3392f9c66719caca364ef3cc73a3f7b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

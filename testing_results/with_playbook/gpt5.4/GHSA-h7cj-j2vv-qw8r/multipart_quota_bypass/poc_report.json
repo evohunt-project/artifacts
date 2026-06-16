@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction starts a Mist-backed Wisp upload endpoint with a 16-byte multipart file limit and shows that a crafted multi-read 140-byte upload is accepted, while a 40-byte single-read control request is correctly rejected with 413.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A multi-read multipart upload larger than the configured max_files_size should still be accepted and echoed back as 140, proving that the repository-owned file-size guard was bypassed; a same-endpoint single-read control upload above the limit should still fail with 413.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned gleam-wisp/wisp at ba26ff7968deec7304410e11ba7872ff8c87d944, built the reproduction image, launched the helper server, observed 200/140 for the crafted multi-read upload under a 16-byte cap, and observed 413 Content too large for the 40-byte single-read control request.",
+  "verification_method": "The helper exploit waits for the local Wisp server, sends a hand-built multipart body that forces the vulnerable continuation path, and requires two signals: the oversized multi-read upload must return HTTP 200 with body 140, and the oversized single-read control upload must return HTTP 413 with body Content too large.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] multi-read upload response: 200 140",
+    "[evohunt] control upload response: 413 Content too large",
+    "[evohunt] proof: 140-byte upload accepted under a 16-byte limit because multipart continuation chunks were not charged"
+  ],
+  "limitations_or_blockers": [
+    "The reproduction lowers read_chunk_size to 256 only to make the proof compact and deterministic. The same root cause is reachable with Wisp's default 1,000,000-byte read_chunk_size by sending a multipart part larger than one default read window."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "ba26ff7968deec7304410e11ba7872ff8c87d944",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py",
+      "reproduction/poc_multipart_quota_bypass.gleam"
+    ]
+  }
+}

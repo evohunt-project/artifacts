@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "improper_authorization",
+  "summary": "The packaged reproduction confirms that one low-privilege MCP user can enumerate and read another user's flow-backed file through the global MCP server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should authenticate as a low-privilege MCP user, discover another user's uploaded file through resources/list, and then read that victim file through resources/read.",
+  "actual_observed_result": "Running ./reproduction/run.sh completed successfully and printed EVOHUNT_SUCCESS with the victim flow id and the victim MCP resource URI after the attacker session listed and read the victim file.",
+  "verification_method": "The helper starts Langflow 1.7.1, creates victim and attacker users, uploads a secret file to the victim flow through the normal file upload route, then opens an MCP streamable session as the attacker, verifies that resources/list returns the victim URI, reads that URI through resources/read, and double-decodes the returned blob to confirm the exact victim secret.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The attacker MCP session listed the victim file URI.",
+    "The attacker MCP session read the victim file bytes and recovered the exact victim secret string.",
+    "The run printed EVOHUNT_SUCCESS: mcp_cross_user_resource_read."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "47ce5bf27e688e4cfbc48a745c24a72bac6b62d7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

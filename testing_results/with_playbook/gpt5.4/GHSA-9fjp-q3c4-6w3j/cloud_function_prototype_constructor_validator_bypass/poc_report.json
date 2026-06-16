@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction starts Parse Server from tag 8.6.54 with a classic `requireMaster` cloud function and shows that `POST /functions/adminTask.prototype.constructor` executes successfully without the master key while the canonical route is still blocked.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The canonical unauthenticated cloud-function call should fail validator enforcement, but the `prototype.constructor` alias should execute the same protected handler without the master key and emit the proof string `EVOHUNT_PROOF_CLOUD_VALIDATOR_BYPASS`.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned tag 8.6.54, built the reproduction image, started Parse Server with a protected cloud function, and emitted `EVOHUNT_PROOF_CLOUD_VALIDATOR_BYPASS`. The run showed `POST /functions/adminTask` returning the expected validation error, the canonical master-key call succeeding, and the unauthenticated `adminTask.prototype.constructor` alias returning the protected secret.",
+  "verification_method": "The container helper calls the canonical route without the master key, the canonical route with the master key, the `prototype.constructor` alias without the master key, and two sibling inherited-property probes. Verification passes only if the canonical unauthenticated call is rejected, the alias succeeds, and the sibling probes remain blocked.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted the proof string `EVOHUNT_PROOF_CLOUD_VALIDATOR_BYPASS`.",
+    "Canonical unauthenticated call result: HTTP 400 with `Validation failed. Master key is required to complete this request.`.",
+    "Alias call result: HTTP 200 with `{\"result\":{\"secret\":\"evohunt-proof\",\"master\":false,\"user\":null}}`.",
+    "Sibling inherited-property probes `adminTask.constructor` and `adminTask.__proto__.constructor` remained blocked with `Invalid function`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8.6.54",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/cloud_main.js",
+      "reproduction/verify_cloud_bypass.js"
+    ]
+  }
+}

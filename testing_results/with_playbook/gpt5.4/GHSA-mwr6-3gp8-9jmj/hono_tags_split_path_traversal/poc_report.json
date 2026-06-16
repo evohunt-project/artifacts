@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The final Docker-based rerun cloned Orval at the pinned vulnerable commit, built the workspace from source, generated Hono tags-split output from a malicious OpenAPI tag, and verified that side files were written outside the configured output tree.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The malicious tag should escape the configured output directory and create files such as `owned.handlers.ts` and `owned.context.ts` in the parent directory rather than under `safe/`.",
+  "actual_observed_result": "Running ./reproduction/run.sh created `/tmp/.../owned.handlers.ts` and `/tmp/.../owned.context.ts` while the configured output directory only received `safe/endpoints.schemas.ts` and `safe/endpoints.validator.ts`, and the verifier emitted `__EVOHUNT_TRAVERSAL_SUCCESS__`.",
+  "verification_method": "The containerized verifier runs the Hono tags-split generation flow and then checks that `owned.handlers.ts` and `owned.context.ts` exist outside the configured output directory while no corresponding `safe/owned.handlers.ts` file exists.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final run listed `owned.handlers.ts` and `owned.context.ts` in the parent directory of the configured output tree.",
+    "The configured output directory only contained `endpoints.schemas.ts` and `endpoints.validator.ts`.",
+    "The verifier printed the exact success marker `__EVOHUNT_TRAVERSAL_SUCCESS__` during the final ./reproduction/run.sh execution."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b8189efe3858a8d6e4bae1e41d3fb6b14c1bd55d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious-openapi.yaml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

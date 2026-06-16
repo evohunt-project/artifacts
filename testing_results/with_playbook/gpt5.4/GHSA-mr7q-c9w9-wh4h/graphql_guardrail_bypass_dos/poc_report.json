@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that the pinned vulnerable geth revision exposes `/graphql` as a path that bypasses the sibling JSON-RPC availability guardrails. The run verifies both that GraphQL accepts a 6 MiB+ request body that JSON-RPC rejects and that GraphQL accepts an oversized `logs` filter that JSON-RPC `eth_getLogs` rejects under the same configured limit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that `/graphql` processes oversized request bodies and oversized log-filter arrays that the sibling JSON-RPC path rejects, proving that the GraphQL entrypoint defeats repository-owned availability guardrails intended to bound attacker-controlled resource consumption.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned geth commit, built the reproduction image, and produced both proof signals: the body-limit probe reported `large_graphql_status=200` while the sibling RPC request returned `413 content length too large`, and the log-query-limit probe reported a JSON-RPC `eth_getLogs` error of `exceed max addresses or topics per search position` while the equivalent GraphQL `logs` query returned `200` with an empty data result.",
+  "verification_method": "The reproduction runs two helper probes inside the container. Each helper starts a fresh node instance from the pinned target source and performs paired GraphQL-versus-JSON-RPC requests. `verify.sh` checks for the exact differential proof strings so the run only succeeds when GraphQL reaches the vulnerable path and the sibling RPC guardrails still hold.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Body-limit probe output includes `large_graphql_status=200` and `large_rpc_status=413`.",
+    "Body-limit probe output includes `large_rpc_body=\"content length too large (6291524>5242880)\\n\"`.",
+    "Log-query-limit probe output includes a JSON-RPC error message `exceed max addresses or topics per search position`.",
+    "Log-query-limit probe output includes `graphql_status=200` and `graphql_body=\"{\\\"data\\\":{\\\"logs\\\":[]}}\"`.",
+    "The verification script printed `EVOHUNT_SUCCESS: GraphQL guardrail bypass reproduced`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b9f3a3d964ed3d31e710ec7dd66da9181477ecb2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/body_limit_probe.go",
+      "reproduction/log_query_limit_probe.go",
+      "reproduction/go.mod",
+      "reproduction/verify.sh"
+    ]
+  }
+}

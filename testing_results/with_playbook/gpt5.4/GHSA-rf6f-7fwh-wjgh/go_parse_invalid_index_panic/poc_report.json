@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The reproduction bundle clones the upstream repository at the pinned vulnerable v3.4.1 commit and verifies that a one-line malformed flatted payload crashes the Go unflatten path with an out-of-range panic.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the Go parser to panic with `index out of range [1] with length 1` while processing the malformed flatted payload `[[\"1\"]]`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the upstream repository at commit `2a02dce7c641dec31194c67663f9b0b12e62da20`, built the Go verifier image, and triggered a deterministic panic: `panic: runtime error: index out of range [1] with length 1`. The stack trace included `/target-repo/golang/pkg/flatted/flatted.go:230`, and the verifier then printed `[evohunt] verified: malformed flatted index causes Go parser panic`.",
+  "verification_method": "The containerized verifier runs the pinned Go CLI against the malicious payload, requires a non-zero exit, and matches the panic text and `golang/pkg/flatted/flatted.go:230` stack-frame signal to distinguish the bug from an unrelated build or runtime failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "panic: runtime error: index out of range [1] with length 1",
+    "/target-repo/golang/pkg/flatted/flatted.go:230 +0x2a8",
+    "/target-repo/golang/main.go:41 +0x48",
+    "[evohunt] verified: malformed flatted index causes Go parser panic"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2a02dce7c641dec31194c67663f9b0b12e62da20",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/poc.json"
+    ]
+  }
+}

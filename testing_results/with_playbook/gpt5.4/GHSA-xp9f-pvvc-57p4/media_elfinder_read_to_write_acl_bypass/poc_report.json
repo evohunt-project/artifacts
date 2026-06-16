@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction provisions a low-privilege user with only Media.elfinderConnection.read, authenticates through the bundled development gate and normal login flow, uploads a proof file through the elFinder connector, and confirms unauthorized file creation under public/media.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should prove that a user with only the read-scoped media connector permission can still create attacker-controlled file content in the public media filesystem.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the vulnerable repository at commit 418f0bf2b04ee9b046ea296c55d31466ecd0c919, built the reproduction image, bootstrapped CI4MS, logged in as mediareader@ci4ms.test, called /backend/media/elfinderConnection, uploaded evohunt-proof.txt, and printed the proof signal EVOHUNT_MEDIA_WRITE_PROOF before exiting successfully.",
+  "verification_method": "The exploit helper logs in as the low-privilege user, opens the elFinder root, uploads a text/plain proof file, and then verifies the exact proof string. Verification first checks the returned media URL and, if that URL shape is not reliable, falls back to recursive on-disk confirmation under public/media so the oracle distinguishes a real unauthorized write from a generic login, startup, or parser success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The successful run printed [evohunt] SUCCESS EVOHUNT_MEDIA_WRITE_PROOF from the exploit helper.",
+    "The successful run printed [evohunt] verification succeeded: EVOHUNT_MEDIA_WRITE_PROOF and then [evohunt] SUCCESS: reproduction completed and verified.",
+    "The exploit helper confirmed that the uploaded proof file contents existed under public/media after the low-privilege connector upload.",
+    "Application logs generated during the run showed the low-privilege account issuing GET and POST requests to /backend/media/elfinderConnection."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "418f0bf2b04ee9b046ea296c55d31466ecd0c919",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

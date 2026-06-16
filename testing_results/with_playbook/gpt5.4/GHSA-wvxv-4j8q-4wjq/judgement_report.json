@@ -1,0 +1,101 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:43:11.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-wvxv-4j8q-4wjq/GHSA-wvxv-4j8q-4wjq.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "rest_api_args_secret_exposure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/rest_api_args_secret_exposure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/rest_api_args_secret_exposure/vulnerability_report.json",
+      "title": "Unauthenticated /api/4/args leaks secret-bearing CLI parameters",
+      "vulnerability_type": "sensitive_data_exposure",
+      "advisory_match": true,
+      "advisory_match_reason": "Same missing authentication guard in glances/outputs/glances_restful_api.py: the REST router is created without Depends(self.authentication) when no password is configured. The finding uses /api/4/args instead of the advisory's processlist example, but it proves the same unauthenticated REST exposure and equivalent unauthorized read condition.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "xmlrpc_single_connection_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/xmlrpc_single_connection_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/xmlrpc_single_connection_dos/vulnerability_report.json",
+      "title": "Single partial /RPC2 request causes XML-RPC listener denial of service",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "Different component and root cause. This finding depends on the single-threaded XML-RPC server in glances/server.py, while the advisory is about the unauthenticated REST API router in glances/outputs/glances_restful_api.py.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "rest_api_args_secret_exposure",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/rest_api_args_secret_exposure",
+      "status": "qualifying_vuln",
+      "title": "Unauthenticated /api/4/args leaks secret-bearing CLI parameters",
+      "vulnerability_type": "sensitive_data_exposure"
+    },
+    "reason": "The selected finding identifies the advisory's missing-authentication REST router root cause, and the copied PoC showed that an unauthenticated network client could read planted secret-bearing CLI values from the exposed API.",
+    "evidence": [
+      "The advisory-described root cause is present in glances/outputs/glances_restful_api.py where the router is created without authentication dependencies when args.password is unset.",
+      "The matched finding follows that same unauthenticated router path and reaches _api_args, which returns vars(self.args) directly to the client.",
+      "The judge PoC run log records POC_SUCCESS after unauthenticated GET /api/4/args returned snmp_community=EVOHUNT_SNMP_COMMUNITY_56a2cf29 and snmp_auth=EVOHUNT_SNMP_AUTH_56a2cf29 from the vulnerable Glances instance."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "rest_api_args_secret_exposure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/rest_api_args_secret_exposure",
+      "executed": true,
+      "command": "EVOHUNT_PYTHON=/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/artifacts/runtime-venv/bin/python bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/.judge/poc_runs/rest_api_args_secret_exposure/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/.judge/poc_runs/rest_api_args_secret_exposure/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/.judge/poc_runs/rest_api_args_secret_exposure/poc_execution.json",
+      "observed_effect": "The copied PoC launched the vulnerable Glances web API without --password and then read the planted snmp_community and snmp_auth values over unauthenticated GET /api/4/args, printing POC_SUCCESS.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/xmlrpc_single_connection_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/xmlrpc_single_connection_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_56a2cf29/xmlrpc_single_connection_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

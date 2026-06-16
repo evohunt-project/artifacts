@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "default_credentials",
+  "summary": "The reproduction bundle clones the vulnerable PraisonAI revision, launches the shipped Chainlit chat UI, submits the default admin/admin credentials, and verifies that Chainlit issues an authenticated admin session.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print EVOHUNT_DEFAULT_ADMIN_LOGIN_SUCCESS after the helper authenticates with admin/admin and confirms that /user returns the admin identity from the vulnerable Chainlit app.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit f00763937bf7f4d091e84533692fc0576fca9b99, built the Docker image, launched the vulnerable Chainlit app, printed EVOHUNT_DEFAULT_ADMIN_LOGIN_SUCCESS, and showed /login succeeding with admin/admin before /user returned identifier=admin and metadata.role=admin.",
+  "verification_method": "The helper starts the vulnerable Chainlit UI from the pinned repository revision, polls /auth/config until the service is ready, submits admin/admin to /login, then confirms that /user returns identifier=admin with credential-backed admin metadata. The run script fails closed if the success signal is absent.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container printed EVOHUNT_DEFAULT_ADMIN_LOGIN_SUCCESS after submitting admin/admin to /login.",
+    "The helper recorded /auth/config returning requireLogin=true and passwordAuth=true.",
+    "The helper recorded /user returning identifier=admin with metadata.provider=credentials and metadata.role=admin after receiving an access_token cookie.",
+    "The Chainlit app log tail included the built-in default-admin warning and a successful login message for user admin."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction exercises the shipped ui/chat.py surface because it carries the same default admin/admin Chainlit auth pattern as the first-class realtime UI with a smaller dependency closure."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "f00763937bf7f4d091e84533692fc0576fca9b99",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

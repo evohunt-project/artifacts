@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "input_validation_panic_dos",
+  "summary": "The Docker-based reproduction clones the pinned repository revision, builds the library, compiles a minimal harness, and confirms that malformed sparse CSR metadata aborts the process with the expected out-of-range panic.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should cause invalid sparse CSR metadata to reach `SparseMatrixData::to_csmat`, trigger the `CsMat::new` panic path, and make the wrapper print `EVOHUNT_REPRO_SUCCESS` only after observing the exact panic signature.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `82a8687bad55302feac27ca1bdffbfbf12745c78`, built the release library inside the container, compiled the helper harness, and then aborted with `called Result::unwrap() on an Err value: OutOfRange(\"Indice is larger than inner dimension\")`. The host wrapper recognized the panic signature and printed `EVOHUNT_REPRO_SUCCESS`.",
+  "verification_method": "The host-side `run.sh` first verifies that the pinned checkout is mounted at `/target-repo`, then executes `run_inside.sh`. The wrapper only reports success when the container exits non-zero and the captured output contains the exact panic substring `Indice is larger than inner dimension`, which distinguishes the intended proof from clone, build, or unrelated runtime failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The release build for the pinned target repository completed successfully inside the container.",
+    "The harness panicked at the `sprs-rssn` CSR reconstruction path with `OutOfRange(\"Indice is larger than inner dimension\")`.",
+    "The wrapper emitted `EVOHUNT_REPRO_SUCCESS` after matching the expected panic signature."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction exercises the public library API directly. The same sink is source-reachable from sparse JSON and bincode FFI wrappers, but the aggregate `ffi_api` feature surface at `v0.2.9` does not build cleanly on stable because of unrelated feature-gating issues."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "82a8687bad55302feac27ca1bdffbfbf12745c78",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.rs",
+      "reproduction/run_inside.sh"
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "blind_ssrf",
+  "summary": "The reproduction bundle builds the upstream Crawl4AI Docker API image, starts an internal helper HTTP service on the same Docker network, submits an unauthenticated `/crawl/job` request with a malicious `webhook_url`, and verifies that the target server sends a server-side POST to the helper service.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The target container should issue an outbound HTTP POST to an attacker-chosen internal URL after the job completes, proving blind SSRF from the server network context.",
+  "actual_observed_result": "Not executed in this orchestration run.",
+  "verification_method": "The helper service logs a distinct `EVOHUNT_WEBHOOK_RECEIVED` marker when it receives the webhook POST. The run script polls the helper container logs for that marker and fails if no webhook arrives.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "The reproduction bundle was generated but not executed during this orchestration run.",
+    "Running the bundle requires Docker with enough resources to build and start the upstream Crawl4AI image."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/listener.py"
+    ]
+  }
+}

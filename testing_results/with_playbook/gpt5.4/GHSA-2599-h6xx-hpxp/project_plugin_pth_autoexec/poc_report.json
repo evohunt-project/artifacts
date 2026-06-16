@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_dynamic_evaluation",
+  "summary": "Running `./reproduction/run.sh` cloned Poetry 2.3.2, built the verifier image, and confirmed that a checked-in `.poetry/plugins/trigger.pth` file executed during a plain `poetry --version` run inside the malicious project.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The verifier should create a marker file from code embedded in `.poetry/plugins/trigger.pth` during Poetry startup, without requiring an explicit plugin install step.",
+  "actual_observed_result": "The container printed `Poetry (version 2.3.2)`, created `/tmp/evohunt-poetry-plugin-poc.txt`, and recorded the expected marker text `plugin pth executed` before reporting success.",
+  "verification_method": "The verifier installs the cloned Poetry checkout, creates a temporary project with a checked-in `.poetry/plugins/trigger.pth`, runs `poetry --version` in that project, and asserts that the marker file was created with the expected contents.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] stdout: Poetry (version 2.3.2)",
+    "[evohunt] marker exists: True",
+    "[evohunt] marker content: plugin pth executed",
+    "[evohunt] SUCCESS: checked-in .pth code executed during Poetry startup"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "a84cd0f1bedb5769ef6ef7389d8ee99b93b9ba4c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.py"
+    ]
+  }
+}

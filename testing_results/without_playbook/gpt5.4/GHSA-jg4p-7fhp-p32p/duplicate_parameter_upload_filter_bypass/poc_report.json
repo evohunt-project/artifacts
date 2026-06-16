@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "parameter_smuggling_upload_filter_bypass",
+  "summary": "The Docker-based reproduction demonstrates that a multipart upload with duplicate filename parameters passes a .txt allowlist check while the vulnerable parser stores the file as shell.php.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should let a crafted multipart upload with filename=\"safe.txt\"; filename=\"shell.php\" pass a first-occurrence .txt upload filter while the vulnerable parser resolves the last filename and stores shell.php.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the vulnerable upstream repository at e4233cee05535716991d02d55f82205514b10ae8, built the reproduction image, and printed {\"accepted\":true,\"filterFilename\":\"safe.txt\",\"storedFilename\":\"shell.php\"} followed by EVOHUNT_POC_SUCCESS filterFilename=safe.txt storedFilename=shell.php.",
+  "verification_method": "The container starts a minimal upload service that uses a first-occurrence filename allowlist check before calling the vulnerable Content.disposition() parser. Verification passes only if the response reports filterFilename=safe.txt and storedFilename=shell.php, the uploads directory contains shell.php, and no safe.txt file is created.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed {\"accepted\":true,\"filterFilename\":\"safe.txt\",\"storedFilename\":\"shell.php\"}.",
+    "The run printed EVOHUNT_POC_SUCCESS filterFilename=safe.txt storedFilename=shell.php.",
+    "The verification helper required uploads/shell.php to exist and rejected the run if uploads/safe.txt existed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "e4233cee05535716991d02d55f82205514b10ae8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-entrypoint.sh",
+      "reproduction/server.js",
+      "reproduction/send-exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

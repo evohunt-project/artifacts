@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction compiles a minimal Java harness against Apache Thrift `v0.23.0`, sets `maxMessageSize=64`, and confirms that a valid 100-byte `TBinaryProtocol` message still parses successfully through `TIOStreamTransport`, proving the total-message budget bypass.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a message whose total serialized size exceeds the configured `maxMessageSize` is still accepted on the vulnerable Java stream transport path. The success signal is `BYPASS_CONFIRMED` together with a payload length above the configured 64-byte budget.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Apache Thrift at `e4b684f5ff4f9c3a42cd7ec0a667c3d9bd7f6ac1`, built the JDK-based reproduction image, compiled the harness against the mounted source tree, and printed `MAX_MESSAGE_SIZE=64`, `PAYLOAD_LEN=100`, `PARSED_NAME_LEN=40`, `PARSED_FIELD_TYPE=11`, `PARSED_VALUE_LEN=40`, and `BYPASS_CONFIRMED`.",
+  "verification_method": "The run script launches `verify.sh`, which compiles `Harness.java` against the mounted repository and fails unless the harness output contains `BYPASS_CONFIRMED`. The harness itself aborts if the generated payload does not exceed 64 bytes or if parsing fails before the oversized message is fully consumed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The harness reported `MAX_MESSAGE_SIZE=64` and `PAYLOAD_LEN=100`, proving the test payload exceeded the configured message budget.",
+    "The harness reported `PARSED_VALUE_LEN=40`, showing the oversized message was parsed successfully rather than rejected at the transport boundary.",
+    "The run emitted `BYPASS_CONFIRMED`, which `verify.sh` treats as the pass/fail oracle."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction demonstrates the message-budget bypass directly with a reduced 64-byte configured limit rather than attempting a full-memory exhaustion run against the shipped 100 MB default."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "e4b684f5ff4f9c3a42cd7ec0a667c3d9bd7f6ac1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Harness.java",
+      "reproduction/verify.sh",
+      "reproduction/org/slf4j/Logger.java",
+      "reproduction/org/slf4j/LoggerFactory.java"
+    ]
+  }
+}

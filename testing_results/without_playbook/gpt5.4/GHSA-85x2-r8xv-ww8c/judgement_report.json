@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:13:17.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_60b393e4",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-85x2-r8xv-ww8c/GHSA-85x2-r8xv-ww8c.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "api_users_search_privilege_escalation",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_60b393e4/api_users_search_privilege_escalation",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_60b393e4/api_users_search_privilege_escalation/vulnerability_report.json",
+      "title": "Arbitrary method call in users search API enables low-privilege session takeover",
+      "vulnerability_type": "arbitrary_method_call_privilege_escalation",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an authenticated session-takeover bug in `POST /api/users/search` caused by arbitrary zero-argument method invocation via `Collection::query()` and `User::loginPasswordless()`. The advisory instead describes missing or incorrect `isListable()` authorization checks for page and file collections or related models governed by `pages.access/list` and `files.access/list`. The finding also reproduces on Kirby 4.9.0, which the advisory identifies as a patched 4.x release.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause. The only final qualifying finding is a `users/search` arbitrary-method-call privilege escalation that rewrites the session with `loginPasswordless()`, whereas the advisory is an authenticated authorization flaw caused by missing or incorrect listability checks for page and file resources in Panel and REST API responses.",
+    "evidence": [
+      "The advisory summary and details describe inconsistent enforcement of `pages.access`, `pages.list`, `files.access`, and `files.list`, with the patch adding `$model->isListable()` checks to page/file collection and related-model responses.",
+      "The only qualifying finding report traces exploitation through `POST /api/users/search` -> `Collection::query()` -> arbitrary zero-argument method invocation on `User` objects -> `User::loginPasswordless()`, ending in session takeover and admin-only user creation.",
+      "The finding's reproduction bundle targets Kirby tag `4.9.0` at commit `d952dfc0a890979c863ec5fa11660e37400f0f4c`, while the advisory states the 4.x issue is fixed in `4.9.0`, which rules out the finding being the same vulnerable code path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_60b393e4/api_users_search_privilege_escalation",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_60b393e4/api_users_search_privilege_escalation/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_60b393e4/api_users_search_privilege_escalation/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

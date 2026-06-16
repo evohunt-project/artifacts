@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction confirms that Range(NaN, 0) reaches the broken Range materialization path and aborts the child Node process with a fatal invalid-size error.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should build the pinned vulnerable revision and then show that Range(NaN, 0).toArray() aborts the child Node process with the fatal `Fatal JavaScript invalid size error` signal.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 78d32a46a832f814393bb0d76c1b83246beb64dd, built Immutable inside the container, triggered Range(NaN, 0).toArray(), and the verifier reported RANGE_NAN_CRASH_CONFIRMED with child signal SIGTRAP after observing the fatal invalid-size error.",
+  "verification_method": "The verifier script builds the pinned target revision, spawns a child Node process that executes Range(NaN, 0).toArray(), and checks for both a non-successful child exit and the exact `Fatal JavaScript invalid size error` text emitted by the vulnerable runtime.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verifier emitted `RANGE_NAN_CRASH_CONFIRMED`.",
+    "The child process ended with signal `SIGTRAP` during the exploit trigger.",
+    "The child output included the fatal `Fatal JavaScript invalid size error` message."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "78d32a46a832f814393bb0d76c1b83246beb64dd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js",
+      "reproduction/trigger_range_nan.js"
+    ]
+  }
+}

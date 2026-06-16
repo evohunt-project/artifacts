@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The Docker-based reproduction builds CoreDNS 1.14.3, runs the file plugin as a higher-privilege process, proves that the low-privilege attacker account cannot read the secret file directly, and then shows that injecting `$INCLUDE` into a reload-enabled zone leaks the secret token into CoreDNS logs.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a low-privilege local writer can trigger CoreDNS to read an otherwise unreadable file and expose its contents in operator-visible reload logs.",
+  "actual_observed_result": "Running ./reproduction/run.sh started CoreDNS with a reload-enabled zone, verified normal DNS service, confirmed that the attacker account could not directly read the root-owned secret file, then modified the zone to add `$INCLUDE /tmp/file-include-poc/secret.txt`; the subsequent reload logged `SUPERSECRET_TOKEN` from the included file.",
+  "verification_method": "The verification helper creates separate root-owned and attacker-owned files inside the container, builds CoreDNS from the mounted repository, waits for the initial DNS answer to succeed, performs the attacker-side zone modification under a non-root account, and then checks the CoreDNS log for the exact secret token. The helper fails if the attacker can read the secret file directly or if the reload never emits the token.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "A baseline DNS query returned `rcode=0 answers=1.2.3.4`, confirming the server started with the initial zone.",
+    "A direct `cat` of the secret file by the attacker account failed before the exploit step.",
+    "After the attacker injected `$INCLUDE`, the CoreDNS reload log contained the exact token `SUPERSECRET_TOKEN` from the protected file.",
+    "The verification helper emitted `EVOHUNT_FILE_INCLUDE_SECRET_LEAK_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "17fceec6d93fd1dde5ba6888c363f131ff6d647f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/probe.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

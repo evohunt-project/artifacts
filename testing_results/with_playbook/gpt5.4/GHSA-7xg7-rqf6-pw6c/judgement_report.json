@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:55:17.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b86e10a7",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-7xg7-rqf6-pw6c/GHSA-7xg7-rqf6-pw6c.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "expired_session_cache_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b86e10a7/expired_session_cache_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b86e10a7/expired_session_cache_bypass/vulnerability_report.json",
+      "title": "Expired session tokens remain usable on the auth cache path",
+      "vulnerability_type": "token_lifecycle_and_predictable_identifiers",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets cached session-auth reuse after expiry in `src/Auth.js` and `src/middlewares.js`; the advisory is a different authorization flaw where generic `/classes/` routes failed to treat `_GraphQLConfig` and `_Audience` as master-key-only internal classes.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described root cause: missing master-key enforcement for `_GraphQLConfig` and `_Audience` when they are accessed through the generic `/classes/` REST routes.",
+    "evidence": [
+      "The advisory and the 8.6.24 -> 8.6.25 source change in `src/SharedRest.js` show that the vulnerable control is the `classesWithMasterOnlyAccess` list, which lacked `_GraphQLConfig` and `_Audience` in 8.6.24 and gained both entries in 8.6.25.",
+      "Parse Server already enforced master key access on the dedicated `/graphql-config` and `/push_audiences` routes, so the advisory root cause is specifically the generic `/classes/_GraphQLConfig` and `/classes/_Audience` path bypass.",
+      "The only final qualifying finding in this run, `expired_session_cache_bypass`, instead concerns expiry checks skipped on auth-cache hits in `getAuthForSessionToken`, with code locations in `src/Auth.js` and `src/middlewares.js`, not class-route authorization."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b86e10a7/expired_session_cache_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b86e10a7/expired_session_cache_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b86e10a7/expired_session_cache_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

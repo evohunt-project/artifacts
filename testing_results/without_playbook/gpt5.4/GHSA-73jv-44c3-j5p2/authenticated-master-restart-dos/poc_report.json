@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authorization",
+  "summary": "The Docker-based reproduction confirms that a low-privileged authenticated Ajenti user can invoke `/api/core/restart-master` and force the privileged master process to restart.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should authenticate as a non-root OS user and still trigger a privileged Ajenti master restart, which is verified by an additional `Ajenti Core 2.2.14` startup marker in `/var/log/ajenti/ajenti.log`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `6c871e8f47a8bab241166eba72d70bf6daf439ae`, built the helper image, authenticated as user `attacker` with effective UID `1000`, POSTed `/api/core/restart-master`, received HTTP `200`, and observed the startup marker count in `/var/log/ajenti/ajenti.log` increase from `1` to `2`.",
+  "verification_method": "The helper starts Ajenti from the pinned repository checkout, logs in as a low-privilege OS user, confirms the resulting session effective UID is non-root, invokes `/api/core/restart-master`, and waits for the HTTP listener to come back while `/var/log/ajenti/ajenti.log` gains an additional `Ajenti Core 2.2.14` startup marker. This distinguishes a real privileged restart from a failed request or unrelated crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit helper printed `RESTART_CONFIRMED` after the startup marker count increased from `1` to `2`.",
+    "The identity check before exploitation showed login user `attacker` with effective UID `1000`, confirming the request came from a non-root session.",
+    "The restart request completed with HTTP `200` before the service came back online."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6c871e8f47a8bab241166eba72d70bf6daf439ae",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/ajenti-config.yml",
+      "reproduction/requirements.txt"
+    ]
+  }
+}

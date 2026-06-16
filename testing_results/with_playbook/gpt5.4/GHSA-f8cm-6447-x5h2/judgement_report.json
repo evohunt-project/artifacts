@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:32:38.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0142f6d0",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-f8cm-6447-x5h2/GHSA-f8cm-6447-x5h2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "gif_addimage_dimension_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0142f6d0/gif_addimage_dimension_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0142f6d0/gif_addimage_dimension_dos/vulnerability_report.json",
+      "title": "GIF addImage parsing permits crafted dimensions to crash the Node process",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is a node-build local file inclusion/path traversal in the loadFile-based file-reading path, while this finding is an availability failure in GIF decoding after image bytes are already supplied to addImage.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only final qualifying finding is a reproduced GIF parser allocation-failure DoS. The advisory instead describes unrestricted local file reads in the node-only loadFile path and in APIs that route attacker-controlled path strings into that file-reading helper.",
+    "evidence": [
+      "The advisory summary and upstream fix target node-build file access in src/modules/fileloading.js, where v3.0.4 resolves a caller-controlled path and reads it with fs.readFileSync(path.resolve(url)); commit a688c8f479929b24a6543b1fa2d6364abb03066d adds allowFsRead and Node permission checks to that path.",
+      "In src/modules/addimage.js, addImage reaches the advisory-relevant file-reading branch only when string input is not recognized as inline image data and the code falls back to jsPDFAPI.loadFile(imageData, true).",
+      "The accepted finding uses crafted GIF bytes and reaches src/modules/gif_support.js processGIF89A and src/libs/omggif.js decodeAndBlitFrameRGBA, where frame.width * frame.height drives new Uint8Array(num_pixels) and causes an allocation failure. That is a different source-to-sink path and a different root cause from unrestricted local file reads."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0142f6d0/gif_addimage_dimension_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0142f6d0/gif_addimage_dimension_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0142f6d0/gif_addimage_dimension_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:30:09.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d7ffcc3d",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-28g4-38q8-3cwc/GHSA-28g4-38q8-3cwc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "custom_function_authz_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d7ffcc3d/custom_function_authz_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d7ffcc3d/custom_function_authz_bypass/vulnerability_report.json",
+      "title": "Low-privileged API keys can execute custom JavaScript and read workspace secrets via /api/v1/node-custom-function",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is Cypher injection in `packages/components/nodes/chains/GraphCypherQAChain/GraphCypherQAChain.ts` reached through `/api/v1/prediction/{flowId}` when user input is forwarded into Neo4j query execution. This finding instead concerns a missing RBAC guard on `POST /api/v1/node-custom-function` that lets a low-privileged authenticated caller run custom JavaScript and read `$vars` secrets, so it does not identify the same vulnerable file, function, endpoint, or root-cause mechanism.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying session finding identifies the advisory's `GraphCypherQAChain` Cypher-injection root cause. The only materialized qualifying finding is a separate broken-access-control issue on `/api/v1/node-custom-function` that exposes workspace secrets through the custom-function executor.",
+    "evidence": [
+      "The advisory JSON names `packages/components/nodes/chains/GraphCypherQAChain/GraphCypherQAChain.ts` lines 193-219 as the vulnerable code and describes `query: input` being passed into `chain.invoke(...)` without sanitization, enabling arbitrary Cypher execution through `/api/v1/prediction/{flowId}`.",
+      "The session's `.judge/input_manifest.json` and `logs/orchestrator_final_response.md` materialize only `custom_function_authz_bypass` as the accepted qualifying finding for this run.",
+      "`custom_function_authz_bypass/vulnerability_report.json` identifies a different source-to-sink path: low-privileged API key -> `POST /api/v1/node-custom-function` -> `nodesController.executeCustomFunction` -> custom-function executor -> `$vars` secret disclosure.",
+      "`artifacts/custom_function_controller_validation.log` shows the observed effect was disclosure of `staticSecret` and `runtimeSecret` under low privileges, which is a different endpoint, sink, and vulnerability class than the advisory's Cypher injection into Neo4j.",
+      "The `example/` directory was excluded from the final finding set because it is the bundled sample scaffold, not a materialized session finding: its reproduction references `https://github.com/example/vulnerable-repo.git` and a placeholder `deadbeefdeadbeefdeadbeefdeadbeefdeadbeef` ref."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d7ffcc3d/custom_function_authz_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d7ffcc3d/custom_function_authz_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_d7ffcc3d/custom_function_authz_bypass/poc_report.json",
+      "poc_report_status": "failed"
+    }
+  ]
+}

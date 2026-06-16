@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that a low-privilege platform user with no network roles can read another network's audit activity by reaching the vulnerable authorization path for `/api/v1/network/activity`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should observe `EVOHUNT_PROOF=platform-user-read-foreign-network-activity`, proving that a platform user with no network roles can retrieve an event stored under a foreign `network_id`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `9b4f9a4a50634a1602204ab3d309bddda39e9d6b`, built the reproduction image, executed the helper test inside the container, and observed `EVOHUNT_PROOF=platform-user-read-foreign-network-activity` before the script printed `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The helper test seeds a `secret-net` audit event, creates a `platform-user` with no network roles, executes the vulnerable route classification and `GlobalPermissionsCheck`, then invokes the real `listNetworkActivity` handler and asserts that the HTTP 200 response contains `secret-net`, `private audit record`, and `admin@example.com`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run output contains `EVOHUNT_PROOF=platform-user-read-foreign-network-activity`.",
+    "The helper test completed with `--- PASS: TestPlatformUserCanReadForeignNetworkActivity`.",
+    "The host-side script completed with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [
+    "The harness focuses on the authorization boundary after authentication by injecting an already-authenticated platform-user identity into the request path, rather than depending on the product's unrelated login and license gating behavior."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "9b4f9a4a50634a1602204ab3d309bddda39e9d6b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/network_activity_authz_poc_test.go"
+    ]
+  }
+}

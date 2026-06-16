@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated localhost client can call `POST /pty` and execute an attacker-controlled shell command as the OpenCode process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start the vulnerable OpenCode server, submit an unauthenticated `POST /pty` request, and create `/tmp/evohunt-pty-proof` containing an attacker-chosen nonce.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned upstream `v1.1.8`, built the reproduction image, started the vulnerable server, and printed `[evohunt] SUCCESS: unauthenticated POST /pty executed an attacker-controlled shell command and wrote nonce EVOHUNT_1780392280`, followed by `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The helper script waits for `/global/health`, sends an unauthenticated `POST /pty` request with a shell command that writes a nonce to `/tmp/evohunt-pty-proof`, and then verifies that the proof file exists and contains the exact nonce. This distinguishes real command execution from a startup failure or unrelated response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Health probe returned `{\"healthy\":true,\"version\":\"local\"}` from the vulnerable server.",
+    "The unauthenticated PTY creation response included the attacker-selected `/bin/sh -c` command and proof-file path.",
+    "The verification script observed `/tmp/evohunt-pty-proof` containing the exact nonce `EVOHUNT_1780392280` and emitted the success banner."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag and commit, and mounts that checkout read-only into the container.",
+    "pinned_commit_or_ref": "bd9c13bb27e6a375f0232ed383213bc86c77387d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

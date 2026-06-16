@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control_secret_exposure",
+  "summary": "The reproduction clones the vulnerable Budibase commit, starts isolated CouchDB and MinIO support services, and runs a targeted Jest proof showing that a builder from workspace B can read a tenant-global API key written from workspace A.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print the exact proof line `EVOHUNT_PROOF api_keys_cross_workspace_read EVOHUNT_SECRET=leaked-cross-workspace-secret`, demonstrating that a workspace-scoped builder can read a tenant-global API key created from another workspace.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `https://github.com/Budibase/budibase.git` at `c6bfe17485fd59e1b30cec6ba2d2a483515d0ae5`, started temporary CouchDB and MinIO containers, installed the repo dependencies inside the reproduction container, and executed the targeted Jest proof. The run emitted `EVOHUNT_PROOF api_keys_cross_workspace_read EVOHUNT_SECRET=leaked-cross-workspace-secret` and ended with `PASS packages/server/src/api/routes/tests/evohunt_apikeys.spec.ts`.",
+  "verification_method": "The verification helper runs one focused Jest spec and captures its stdout. It succeeds only if both the exact `EVOHUNT_PROOF` disclosure line and the Jest `PASS` line are present, which distinguishes real cross-workspace secret disclosure from startup failures or unrelated test behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_PROOF api_keys_cross_workspace_read EVOHUNT_SECRET=leaked-cross-workspace-secret",
+    "PASS packages/server/src/api/routes/tests/evohunt_apikeys.spec.ts"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out commit `c6bfe17485fd59e1b30cec6ba2d2a483515d0ae5`, copies the proof spec into the checkout, and mounts that checkout into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "c6bfe17485fd59e1b30cec6ba2d2a483515d0ae5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/evohunt.jestEnv.cjs",
+      "reproduction/evohunt.jest.config.cjs",
+      "reproduction/evohunt_apikeys.spec.ts"
+    ]
+  }
+}

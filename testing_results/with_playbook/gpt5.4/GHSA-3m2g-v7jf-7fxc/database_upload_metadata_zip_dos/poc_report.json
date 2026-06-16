@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction logs in as a user with only database upload permission, uploads a small ZIP that expands into a very large Parquet payload, and kills the vulnerable Superset container with an out-of-memory condition while processing upload metadata.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the vulnerable upload-metadata path to inflate attacker-controlled ZIP content into memory and terminate the target process or container with an OOM signal.",
+  "actual_observed_result": "Running `./reproduction/run.sh` authenticated successfully, generated a `740077542` byte Parquet payload inside a `1492093` byte ZIP, triggered `POST /api/v1/database/upload_metadata/`, observed the connection abort mid-request, and Docker reported `TARGET_STATE=exited true 137` before the script emitted `EVOHUNT_POC_SUCCESS: upload_metadata OOM confirmed`.",
+  "verification_method": "The host run script requires both the attacker-side trigger signal (`TRIGGERING_UPLOAD`) and a target-side OOM signal from Docker (`OOMKilled=true` or exit code `137`). This distinguishes the vulnerability from login failures, CSRF rejections, schema validation errors, and unrelated startup crashes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`LOGIN_STATUS=302` and `LOGIN_LOCATION=/` confirmed authenticated access for the low-privilege upload user.",
+    "`PARQUET_SIZE=740077542` and `ZIP_SIZE=1492093` showed a small compressed upload expanding into a much larger payload.",
+    "The attacker container observed `RemoteDisconnected('Remote end closed connection without response')` immediately after `TRIGGERING_UPLOAD`, consistent with the server dying mid-request.",
+    "Docker reported `TARGET_STATE=exited true 137` for the target container.",
+    "The run script printed `EVOHUNT_POC_SUCCESS: upload_metadata OOM confirmed`."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction constrains the target container to `768m` RAM to make the availability failure deterministic; real-world blast radius depends on the deployment's available memory and process model."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "6a1c30e5e7c3e28d0549c9c2ac0ff61607f26a2f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/attack.py",
+      "reproduction/ensure_users.py",
+      "reproduction/start_target.sh",
+      "reproduction/wait_for_health.py"
+    ]
+  }
+}

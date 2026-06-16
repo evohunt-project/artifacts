@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stored_file_write_rce",
+  "summary": "The reproduction bundle clones the pinned vulnerable YesWiki revision, seeds an attacker-controlled syndication page, forces the authenticated admin render path, and verifies execution of the downloaded PHP payload from files/.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the syndication mapping flow to write an attacker-controlled .php file into files/ and return the proof string EVOHUNT_PWNED when that file is requested.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the bundled YesWiki snapshot at 5d1c9076ddfab692573782fd5409062cc1b0b986, built the reproduction image, created the malicious syndication page, triggered the administrator-only mapping render, wrote 848bfb67469274bdec9442d5895a171b0f2476c9_shell.php under files/, and printed PROOF_RESPONSE=EVOHUNT_PWNED followed by RCE_PROOF_OK.",
+  "verification_method": "The host wrapper runs the container-side validation helper, which fails closed unless the exact dropped filename is created and an HTTP request to /files/<sha1>_shell.php?proof=1 returns the exact proof string EVOHUNT_PWNED.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed EXPECTED_FILE=848bfb67469274bdec9442d5895a171b0f2476c9_shell.php.",
+    "The run printed PROOF_RESPONSE=EVOHUNT_PWNED.",
+    "The run finished with RCE_PROOF_OK."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the bundled local Git snapshot yeswiki.bundle on the host, checks out the pinned vulnerable commit, builds the reproduction image, and mounts the checkout read-only at /target-repo.",
+    "pinned_commit_or_ref": "5d1c9076ddfab692573782fd5409062cc1b0b986",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_validation.sh",
+      "reproduction/feed.xml",
+      "reproduction/shell.php",
+      "reproduction/router.php",
+      "reproduction/yeswiki.bundle"
+    ]
+  }
+}

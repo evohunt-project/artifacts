@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The reproduction bootstraps Craft from the pinned 4.16.17 snapshot, invokes the shipped GraphQL asset-upload resolver with `_file.url=http://localhost:9001/secret.txt`, and verifies that the resolver fetched loopback content into Craft’s temp asset file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the real `craft\\gql\\resolvers\\mutations\\Asset::handleUpload()` path to accept `localhost` as a valid hostname, issue an outbound GET to the loopback HTTP server, and write the response body into Craft’s temp asset file.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Craft CMS tag `4.16.17`, checked out commit `b5f17cd3246cf10034a914464964757b0b84bcd3`, built the reproduction image, installed the target dependencies, bootstrapped Craft, and fetched `http://localhost:9001/secret.txt` through the real resolver. The run printed the created temp file path, confirmed that the downloaded body matched the proof string, and verified a `GET /secret.txt` hit in the loopback server log.",
+  "verification_method": "The verification helper succeeds only if both signals are present: the created temp file contains the exact proof string served from the loopback HTTP server, and the local server log records `GET /secret.txt`. This distinguishes the SSRF from a bootstrap-only success, a generic file write, or an unrelated network error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `SSRF proof: handleUpload fetched http://localhost:9001/secret.txt` after executing the real Craft resolver.",
+    "The run printed the concrete Craft temp file path under `/target-repo/tests/_craft/storage/runtime/temp/` and confirmed that its contents matched `evohunt-ssrf-proof`.",
+    "The verification script checked the loopback server log for `GET /secret.txt` before reporting success."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction exercises the shipped resolver path directly after bootstrapping Craft rather than standing up a full site, schema, and GraphQL token. Repository code review establishes that `graphql/api` exposes this resolver to low-privilege GraphQL tokens with volume `create` or `save` scope."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b5f17cd3246cf10034a914464964757b0b84bcd3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.php",
+      "reproduction/fixture/secret.txt"
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:26:23.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ef404d28",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-3q34-rx83-r6mq/GHSA-3q34-rx83-r6mq.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "remote_authorizer_cache_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ef404d28/remote_authorizer_cache_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ef404d28/remote_authorizer_cache_bypass/vulnerability_report.json",
+      "title": "Cached remote authorizer reuses allow decisions across output-derived resources",
+      "vulnerability_type": "authorization_cache_confusion",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a cache-key omission in `internal/rules/mechanisms/authorizers/remote_authorizer.go` when `Outputs` influence a cached remote-authorizer request. The advisory instead describes Heimdall matching authorization rules on a raw request path that downstream components normalize, creating a dot-segment path mismatch.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause. The only qualifying finding is a separate authorization-cache confusion issue, not the advisory's raw-path-versus-normalized-path authorization bypass.",
+    "evidence": [
+      "The advisory JSON describes rule matching on the raw request path, with downstream normalization of dot-segments such as `/public/../user/whatever` to a protected path.",
+      "The qualifying finding's vulnerable operation is that `remote_authorizer.go` hashes a cache key without binding it to output-derived endpoint state, with supporting code locations in `internal/rules/mechanisms/authorizers/remote_authorizer.go` and `internal/rules/mechanisms/contextualizers/map_contextualizer.go`.",
+      "The finding's reproduction proves cache reuse by requesting `/resource/public` and then `/resource/secret`; it does not exercise path normalization, dot-segment traversal, or rule matching on differently interpreted paths."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ef404d28/remote_authorizer_cache_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ef404d28/remote_authorizer_cache_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ef404d28/remote_authorizer_cache_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

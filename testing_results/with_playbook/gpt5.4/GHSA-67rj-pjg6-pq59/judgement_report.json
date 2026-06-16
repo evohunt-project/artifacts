@@ -1,0 +1,88 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:28:20.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b8cf58b",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-67rj-pjg6-pq59/GHSA-67rj-pjg6-pq59.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "matrix_exclude_groovyshell_injection",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b8cf58b/matrix_exclude_groovyshell_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b8cf58b/matrix_exclude_groovyshell_injection/vulnerability_report.json",
+      "title": "Matrix exclude expression building allows attacker-controlled Groovy evaluation",
+      "vulnerability_type": "unsafe_dynamic_evaluation",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is about unescaped matrix values reaching `GroovyShell.evaluate(...)` through `MultiPlatformGenerator` and `LifecycleGenerator`, while the advisory is the `SecurityIO.sha256Sum(byte[] input)` SHA-256 hex padding bug in `src/main/groovy/net/gleske/jervis/tools/SecurityIO.groovy`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "trusted_fork_pr_build_execution",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b8cf58b/trusted_fork_pr_build_execution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b8cf58b/trusted_fork_pr_build_execution/vulnerability_report.json",
+      "title": "Generated multibranch jobs trust fork pull requests and run attacker-controlled builds",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is about `ForkPullRequestDiscoveryTrait$TrustEveryone` in the shipped Jenkins Job DSL and the subsequent trusted CI execution path, while the advisory is a hash-formatting defect in `SecurityIO.sha256Sum(byte[] input)`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or root cause. The advisory is the `SecurityIO.sha256Sum(byte[] input)` SHA-256 hex padding bug where `padLeft(32, '0')` should be `padLeft(64, '0')`, but the session's accepted findings are a matrix-expression Groovy evaluation bug and a fork-PR trust/CI-execution bug.",
+    "evidence": [
+      "The advisory details and referenced vulnerable source identify `src/main/groovy/net/gleske/jervis/tools/SecurityIO.groovy` `sha256Sum(byte[] input)` with `new BigInteger(1,digest.digest()).toString(16).padLeft(32, '0')`.",
+      "The advisory patch `c3981ff71de7b0f767dfe7b37a2372cb2a51974a` changes that exact line to `padLeft(64, '0')`, confirming the root cause is incorrect SHA-256 hex-string padding rather than code execution or authorization logic.",
+      "`matrix_exclude_groovyshell_injection/vulnerability_report.json` places its root cause in `src/main/groovy/net/gleske/jervis/lang/MultiPlatformGenerator.groovy` and `LifecycleGenerator.groovy`, where attacker-controlled matrix values are interpolated into a Groovy expression that is later evaluated.",
+      "`trusted_fork_pr_build_execution/vulnerability_report.json` places its root cause in `jobs/jenkins_job_multibranch_pipeline.groovy` and related Jenkins shared-library entrypoints that trust fork pull requests and execute attacker-controlled build logic.",
+      "The judge input manifest and orchestrator final response list only those two accepted qualifying findings, and neither finding references `SecurityIO`, `sha256Sum`, hash padding, or hash comparison failure."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b8cf58b/matrix_exclude_groovyshell_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b8cf58b/matrix_exclude_groovyshell_injection/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b8cf58b/matrix_exclude_groovyshell_injection/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b8cf58b/trusted_fork_pr_build_execution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b8cf58b/trusted_fork_pr_build_execution/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b8cf58b/trusted_fork_pr_build_execution/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The reproduction confirms that a 1 KB tar with `size=-512` crashes the default async list surface via an uncaught exception instead of a normal rejection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make a child Node process handling `tar.t({ file })` exit through an uncaught exception with the message `writing more to entry than is appropriate`.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned node-tar at commit 2b72abc1d47c3570e1ad95c9ab557fc4c2e6e4b1, installed dependencies, built a 1024-byte tar with `size=-512`, and printed both `EVOHUNT_PROOF: uncaughtException writing more to entry than is appropriate` and `EVOHUNT_PROOF: negative size tar entry crashed async list surface`.",
+  "verification_method": "The helper script spawns a child Node process that invokes the async file-based `tar.t()` surface and asserts that the child exits with status 86 from the uncaught-exception handler, rather than resolving or rejecting normally.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted `EVOHUNT_PROOF: uncaughtException writing more to entry than is appropriate`.",
+    "The run emitted `EVOHUNT_PROOF: negative size tar entry crashed async list surface`.",
+    "The runtime JSON emitted by exploit.js records `childStatus\":86`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2b72abc1d47c3570e1ad95c9ab557fc4c2e6e4b1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "redos_dos",
+  "summary": "The Docker-based reproduction confirms that a crafted body-based _ClientVersion value triggers multi-second regex backtracking before authorization and delays an unrelated health check handled by the same worker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the malicious request take several seconds and should delay a concurrent /parse/health request, demonstrating worker blocking and availability impact.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Parse Server 8.6.57, built the reproduction image, and observed a baseline request in 7 ms, an attack request with a 100000-character _ClientVersion in 5235 ms, and a concurrent /parse/health request delayed to 5131 ms.",
+  "verification_method": "The helper starts the vulnerable server, measures a short baseline request, then launches the malicious request and a concurrent health check. Reproduction succeeds only if the baseline stays below 500 ms while both the malicious request and the concurrent health check exceed 3000 ms.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline POST /parse/classes/TestObject returned in 7 ms.",
+    "The crafted POST /parse/classes/TestObject with a 100000-character _ClientVersion took 5235 ms.",
+    "A concurrent GET /parse/health request took 5131 ms while the malicious parse was in progress."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "e397b83c515c612844935ac7aa7028bb142f442b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

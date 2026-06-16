@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:08:45.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e688c6db",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-584p-rpvq-35vf/GHSA-584p-rpvq-35vf.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "public_encoder_chunk_tempfile_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e688c6db/public_encoder_chunk_tempfile_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e688c6db/public_encoder_chunk_tempfile_dos/vulnerability_report.json",
+      "title": "Public encoder chunk endpoint exhausts temporary storage with orphaned uploads",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns unauthenticated temp-file writes in objects/aVideoEncoderChunk.json.php, while the advisory is SQL injection in objects/category.php::fixCleanTitle().",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause. The only final qualifying finding is an unauthenticated temporary-storage exhaustion issue in the encoder chunk upload endpoint, not the advisory's SQL query construction flaw in Category::fixCleanTitle().",
+    "evidence": [
+      "The advisory describes SQL injection in objects/category.php::fixCleanTitle(); the vulnerable pre-fix code interpolates $clean_title and $id directly into SELECT * FROM categories WHERE clean_name = '{$clean_title}' ... AND id != {$id} ... LIMIT 1 (objects/category.php lines 229-234 in commit 33ea2beec7c21bb20699a376098d62cedda25151).",
+      "The advisory fix changes that exact function to prepared statements with placeholders and an int-cast id (objects/category.php lines 229-235 in commit 994cc2b3d802b819e07e6088338e8bf4e484aae4).",
+      "The accepted EvoHunt finding targets objects/aVideoEncoderChunk.json.php lines 2-72, where unauthenticated request bodies are written to YTPChunk_* files in sys_get_temp_dir(); it does not involve category creation/renaming, SQL construction, or database reads from fixCleanTitle().",
+      "Session artifacts identify public_encoder_chunk_tempfile_dos as the only final accepted qualifying finding; example/ and schema/ are fixture templates rather than session findings."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e688c6db/public_encoder_chunk_tempfile_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e688c6db/public_encoder_chunk_tempfile_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e688c6db/public_encoder_chunk_tempfile_dos/poc_report.json",
+      "poc_report_status": "failed"
+    }
+  ]
+}

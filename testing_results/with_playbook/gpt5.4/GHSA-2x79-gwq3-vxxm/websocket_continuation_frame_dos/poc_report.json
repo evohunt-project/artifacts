@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_dos",
+  "summary": "The reproduction clones facil.io `0.7.6`, builds a minimal WebSocket-upgrade server against the shipped library, completes a handshake, and sends a lone masked continuation frame that crashes the server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After the client completes a valid WebSocket upgrade and sends a continuation frame as the first WebSocket message, the server should crash instead of rejecting the frame cleanly.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `512a354dbd31e1895647df852d1565f9d408ed91`, built the container, completed the WebSocket upgrade, and then crashed the server with `fiobj_str_write: Assertion 'FIOBJ_TYPE_IS(dest, FIOBJ_T_STRING)' failed`, yielding `SERVER_EXIT=134`.",
+  "verification_method": "The host `run.sh` verifies that the client received `HTTP/1.1 101 Switching Protocols` before the crafted frame and that the server exited with a crashing status (`SERVER_EXIT=134` or `SERVER_EXIT=139`) immediately afterward, distinguishing the bug from a failed upgrade or a clean protocol rejection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container stdout contained the `HTTP/1.1 101 Switching Protocols` handshake response.",
+    "Server stderr logged `fiobj_str_write: Assertion 'FIOBJ_TYPE_IS(dest, FIOBJ_T_STRING)' failed.`",
+    "The host verifier printed `VERIFICATION: upgrade completed and crafted continuation frame crashed the server` after observing `SERVER_EXIT=134`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "512a354dbd31e1895647df852d1565f9d408ed91",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/ws_continuation_server.c",
+      "reproduction/ws_continuation_client.py",
+      "reproduction/run_inside_container.sh"
+    ]
+  }
+}

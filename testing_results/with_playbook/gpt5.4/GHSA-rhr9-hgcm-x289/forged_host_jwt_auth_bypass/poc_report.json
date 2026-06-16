@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction registers a lab host through the normal API flow and then deletes that host by sending a forged host JWT signed with the wrong secret to a host-managed route.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a forged host bearer token with an invalid signature is still accepted on DELETE /api/hosts/{hostid}, allowing an unauthenticated attacker to remove a registered host.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Netmaker at commit 18c41f18098ca0cd81e334404ad7104c116d560c, built the reproduction image, registered host 11111111-1111-1111-1111-111111111111, sent a forged host JWT signed with the wrong secret to DELETE /api/hosts/11111111-1111-1111-1111-111111111111, received HTTP 200, and then observed that the authenticated host listing was empty.",
+  "verification_method": "The run script provisions a fresh lab instance, creates an enrollment key, registers one host through the intended workflow, performs the forged-token delete, and then verifies both the HTTP 200 response and that an authenticated admin query to /api/hosts returns zero remaining hosts. The helper also checks the server log for the expected registration event so the deletion proof is tied to a real registered host rather than an unrelated empty-state response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] registered host id: 11111111-1111-1111-1111-111111111111",
+    "[evohunt] forged delete HTTP status: 200",
+    "[evohunt] host count after forged delete: 0",
+    "[evohunt] proof: a host registered normally, then DELETE /api/hosts/{hostid} succeeded with a forged host JWT signed using the wrong secret",
+    "[evohunt] SUCCESS: forged host JWT reproduced and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "18c41f18098ca0cd81e334404ad7104c116d560c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

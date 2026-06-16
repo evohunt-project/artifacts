@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:04:48.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e17a9356",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-h4rm-mm56-xf63/GHSA-h4rm-mm56-xf63.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "runtime_hook_pickle_loads_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e17a9356/runtime_hook_pickle_loads_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e17a9356/runtime_hook_pickle_loads_bypass/vulnerability_report.json",
+      "title": "Runtime safety hook leaves pickle.loads() unprotected, enabling arbitrary code execution",
+      "vulnerability_type": "deserialization_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets incomplete monkey-patching in `fickling.hook.run_hook()` and `fickling.context.check_safety()`, while the advisory targets `fickling.fickle` omitting `builtins` import AST nodes and thereby blinding `UnsafeImportsML`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The session's only accepted qualifying finding is a runtime-hook bypass in `hook.py` and `context.py`; the advisory describes a separate analysis bug in `fickle.py` where `builtins` imports are omitted from the AST before `UnsafeImportsML` evaluates imports.",
+    "evidence": [
+      "The accepted finding and its PoC rely on `runtime_hook_pickle_loads_bypass/reproduction/fickling/hook.py` patching `pickle.load` and `pickle.Unpickler` but not `pickle.loads()` or `_pickle.loads()`.",
+      "`runtime_hook_pickle_loads_bypass/reproduction/fickling/fickle.py` contains the advisory root cause instead: `Global.run`, `StackGlobal.run`, and `Inst.run` skip emitting `ast.ImportFrom` nodes when the module is `__builtin__`, `__builtins__`, or `builtins`.",
+      "`runtime_hook_pickle_loads_bypass/reproduction/fickling/analysis.py` shows `UnsafeImportsML` only evaluates recorded import nodes, so omitted `builtins` imports evade the advisory's unsafe-import detection logic."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e17a9356/runtime_hook_pickle_loads_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e17a9356/runtime_hook_pickle_loads_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_e17a9356/runtime_hook_pickle_loads_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

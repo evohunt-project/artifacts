@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that a large brace-bearing comma list reaches `parseCommaParts()` and terminates the exploit child with a stack-overflow `RangeError`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make recursive option parsing exhaust the JavaScript call stack and abort the exploit child with `RangeError: Maximum call stack size exceeded` instead of returning from `expand()`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `isaacs/brace-expansion` at `dc20357ee74ab18df00d596573764428ede66b3d`, built the Docker image, installed dependencies, and emitted `EVOHUNT_PROOF: parse_comma_parts_stack_dos` followed by `EVOHUNT_DETAIL: exploit child exited after recursive option parsing exhausted the JavaScript call stack`.",
+  "verification_method": "The helper first performs a control expansion to prove the build is functional, then spawns a separate Node child that only executes `expand()` on a 10,000-member brace-bearing option list. The run passes only if that child exits nonzero and its stderr contains the expected stack-overflow `RangeError` tied to the parser path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction emitted `EVOHUNT_PROOF: parse_comma_parts_stack_dos`.",
+    "The reproduction emitted `EVOHUNT_DETAIL: exploit child exited after recursive option parsing exhausted the JavaScript call stack`.",
+    "The control expansion succeeded before the exploit child was launched."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "dc20357ee74ab18df00d596573764428ede66b3d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/parse_comma_parts_proof.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

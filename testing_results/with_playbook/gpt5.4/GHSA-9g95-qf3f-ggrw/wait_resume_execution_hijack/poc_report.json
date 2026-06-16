@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction starts a fresh n8n 2.4.0 instance, creates two waiting executions on a workflow that uses the default Wait-node resume URL, and then resumes the second execution with an unauthenticated POST to the guessed public wait endpoint while leaving the first execution untouched.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should prove that an unauthenticated request to a guessed `/webhook-waiting/:executionId` endpoint can resume another user's waiting execution and inject attacker-controlled input into downstream workflow nodes.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `n8n@2.4.0`, built the reproduction image, created waiting executions `1` and `2`, accepted an unauthenticated POST at `/webhook-waiting/2`, stored the attacker marker `evohunt-marker-1780451920225` inside execution `2`, kept execution `1` in the waiting state, and printed `SUCCESS: unauthenticated POST to /webhook-waiting/2 resumed execution 2`.",
+  "verification_method": "The verification helper launches a clean n8n instance, creates a workflow whose post-wait node records both the attacker marker and the resumed execution ID, starts two waiting executions, sends unauthenticated POSTs across the adjacent execution-ID window, then confirms that the target execution finished successfully with the attacker marker while the warmup execution remained waiting.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] warmup waiting execution id 1",
+    "[evohunt] target waiting execution id 2",
+    "[evohunt] unauthenticated request accepted at /webhook-waiting/2",
+    "[evohunt] captured marker inside target execution: evohunt-marker-1780451920225",
+    "[evohunt] warmup execution remained waiting: 1",
+    "[evohunt] SUCCESS: unauthenticated POST to /webhook-waiting/2 resumed execution 2"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "n8n@2.4.0 (d222a6a7ce721eec15bb81205d55fa0c02dbf416)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/validate-exploit.mjs"
+    ]
+  }
+}

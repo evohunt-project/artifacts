@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "improper_authorization_rce",
+  "summary": "Running ./reproduction/run.sh against MCPHub commit 216cca7b9c1bd812235dedfc1693ad5de4b553a9 authenticated to dashboard APIs with only a group-scoped bearer key, leaked full settings from /api/settings, created a stdio server through /api/servers, and observed attacker-controlled command execution through the proof file signal.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privileged scoped bearer key should not be able to access dashboard management APIs or trigger host command execution. Successful reproduction is demonstrated by a 200 response from GET /api/settings, a 200 success response from POST /api/servers, and creation of a proof file containing scoped-bearer-key-rce.",
+  "actual_observed_result": "The executed bundle printed SETTINGS_LEAK_CONFIRMED, SERVER_CREATE_CONFIRMED status=200, RCE_PROOF_CONFIRMED file=proof.txt content=scoped-bearer-key-rce, SUCCESS_SIGNAL scoped bearer-key API bypass and stdio command execution verified, and SUCCESS: reproduction completed and verified.",
+  "verification_method": "The reproduction starts the pinned vulnerable MCPHub checkout inside Docker, performs authenticated HTTP requests with the scoped bearer key, checks for successful management API responses, and verifies command execution only when the spawned stdio payload creates proof.txt with the expected content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] SETTINGS_LEAK_CONFIRMED keys=bearerKeys,groups,mcpServers,systemConfig,users",
+    "[evohunt] SERVER_CREATE_CONFIRMED status=200",
+    "[evohunt] RCE_PROOF_CONFIRMED file=proof.txt content=scoped-bearer-key-rce",
+    "[evohunt] SUCCESS_SIGNAL scoped bearer-key API bypass and stdio command execution verified",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "216cca7b9c1bd812235dedfc1693ad5de4b553a9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh",
+      "reproduction/mcp_settings.json"
+    ]
+  }
+}

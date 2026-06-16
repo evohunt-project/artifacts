@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "signature_validation_bypass",
+  "summary": "The reproduction clones jsrsasign 11.1.0 and demonstrates that both PKCS#1 v1.5 and RSA-PSS verification helpers accept repository-derived signature strings after non-hex characters are injected into them.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Repository-owned RSA verification helpers should return true for the canonical signatures and also, incorrectly, return true for the malformed non-hex variants.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the Docker image, cloned commit `58bb24192f501927014b67911bbde8ef27532319`, and printed `pkcs1_orig=true`, `pkcs1_mutated=true`, `pss_orig=true`, and `pss_mutated=true`, followed by the success marker.",
+  "verification_method": "The verification helper loads the shipped library from the pinned checkout and checks both canonical and deliberately malformed repository-derived signature strings across PKCS#1 v1.5 and PSS verification APIs. The run only passes if every canonical and malformed case returns true.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "pkcs1_orig=true",
+    "pkcs1_mutated=true",
+    "pss_orig=true",
+    "pss_mutated=true",
+    "EVOHUNT_SUCCESS: malformed non-hex RSA signature strings still verify in PKCS#1 v1.5 and PSS APIs"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "58bb24192f501927014b67911bbde8ef27532319",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

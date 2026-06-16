@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_arbitrary_file_read_write",
+  "summary": "The reproduction bundle clones the vulnerable Rails v7.2.3 source, mounts it read-only into the container, starts a minimal network wrapper around Active Storage DiskService, and verifies out-of-root file read and write through crafted keys.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make a crafted key escape the Active Storage disk root, read /secret.txt, write /owned.txt, and print the success signal EVOHUNT_SUCCESS: network path traversal and arbitrary write reproduced.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned rails/rails at the pinned v7.2.3 commit, built the reproduction image, installed the required Ruby dependencies inside the container, and produced READ_BODY=\"TOP-SECRET\\n\", WRITE_BODY=\"WRITE_OK\\n\", OWNED_BODY=\"PWNED\\n\", followed by EVOHUNT_SUCCESS: network path traversal and arbitrary write reproduced.",
+  "verification_method": "The exploit harness issues real HTTP requests to a localhost server that forwards a key parameter into DiskService. Verification passes only if the response body contains TOP-SECRET, the out-of-root file /owned.txt contains PWNED, and the script emits the exact EVOHUNT_SUCCESS signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The harness returned READ_BODY=\"TOP-SECRET\\n\" after requesting /read?key=../../secret.txt through the localhost HTTP wrapper.",
+    "The harness returned WRITE_BODY=\"WRITE_OK\\n\" after requesting /write?key=../../owned.txt&content=PWNED through the localhost HTTP wrapper.",
+    "The container verified OWNED_BODY=\"PWNED\\n\" from /owned.txt outside the configured storage root.",
+    "The run emitted the exact success signal EVOHUNT_SUCCESS: network path traversal and arbitrary write reproduced."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "bb2bdef2925433a0c5db31b873f9faddf2e2e65d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/exploit_network_poc.rb"
+    ]
+  }
+}

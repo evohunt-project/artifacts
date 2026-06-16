@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that Parse Server's LiveQuery path delivers an unauthorized update event to an unauthenticated subscriber even though a normal REST `get` for the same object is blocked by class-level permissions.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated LiveQuery subscriber should receive an `update` event containing object data for a public-ACL object whose normal REST `get` is denied by class-level `get`/`find` permissions.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Parse Server 8.6.2, started MongoDB plus a containerized reproduction harness, and observed both `{\"code\":119,\"error\":\"Permission denied\"}` from the unauthenticated REST control request and a subsequent LiveQuery `update` event containing `secret: leaked-via-livequery` for the same object. The host script also observed the proof signal `EVOHUNT_LIVEQUERY_CLP_BYPASS_CONFIRMED`.",
+  "verification_method": "The reproduction creates a class whose CLP denies public `get`/`find`, creates a public-read object, verifies that unauthenticated REST `get` is denied, then opens an unauthenticated LiveQuery subscription for the object's `objectId` and updates the object with the master key. The run passes only if the update event arrives with the protected field value and the proof string is emitted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated REST control request returned HTTP 400 with `{\"code\":119,\"error\":\"Permission denied\"}`.",
+    "The LiveQuery subscription received an `update` event whose `object.secret` value was `leaked-via-livequery`.",
+    "The host-side `run.sh` verification observed `EVOHUNT_LIVEQUERY_CLP_BYPASS_CONFIRMED` and exited successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "035b9b549ebaac78e6e1a8d7727c216447b3c51e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/reproduce_livequery_clp_bypass.js"
+    ]
+  }
+}

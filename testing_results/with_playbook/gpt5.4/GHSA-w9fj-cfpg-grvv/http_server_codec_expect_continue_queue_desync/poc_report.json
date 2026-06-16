@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "http_response_desync",
+  "summary": "The reproduction bundle clones the vulnerable Netty revision, builds `codec-http`, and runs an in-process `EmbeddedChannel` proof that shows the final response body for request A disappearing after a pipelined `HEAD` request B.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should emit an automatic `100 Continue` and then a final `200 OK` response whose headers claim `content-length: 2` while the body bytes `OK` are missing because request B's `HEAD` semantics were applied to request A's final response.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `netty-4.2.11.Final`, built the reproduction image, built Netty's `codec-http` module inside the container, and printed `INTERIM_RESPONSE=HTTP/1.1 100 Continue\\r\\n\\r\\n`, `FINAL_RESPONSE=HTTP/1.1 200 OK\\r\\ncontent-length: 2\\r\\n\\r\\n`, and `PROOF=final response body for request A was stripped after pipelined HEAD request B`.",
+  "verification_method": "The Java proof uses `EmbeddedChannel(new HttpServerCodec(), new HttpObjectAggregator(1024))`, drives the exact request sequence, and fails unless the final encoded response omits the trailing `OK` body bytes. The helper script also checks for the exact `PROOF=` line in runtime output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction emitted `INTERIM_RESPONSE=HTTP/1.1 100 Continue\\r\\n\\r\\n`, confirming the automatic aggregator-generated interim response.",
+    "The reproduction emitted `FINAL_RESPONSE=HTTP/1.1 200 OK\\r\\ncontent-length: 2\\r\\n\\r\\n`, proving the final response headers were produced without the trailing `OK` body.",
+    "The helper script observed `PROOF=final response body for request A was stripped after pipelined HEAD request B` and completed successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "netty-4.2.11.Final (c94a8180e749f694fb76963dd494bae17c31aff6)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/pom.xml",
+      "reproduction/src/main/java/Http1ExpectContinuePoC.java"
+    ]
+  }
+}

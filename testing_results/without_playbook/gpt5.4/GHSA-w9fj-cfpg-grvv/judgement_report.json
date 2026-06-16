@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:02:25.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9f612283",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-w9fj-cfpg-grvv/GHSA-w9fj-cfpg-grvv.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "lz4_frame_decoder_resource_exhaustion",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9f612283/lz4_frame_decoder_resource_exhaustion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9f612283/lz4_frame_decoder_resource_exhaustion/vulnerability_report.json",
+      "title": "Lz4FrameDecoder allows 22-byte frames to trigger 32 MiB buffer allocations",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets Netty's LZ4 compression decoder allocation path in `Lz4FrameDecoder`, while the advisory describes an HTTP/2 `DefaultHttp2FrameReader.verifyContinuationFrame()` bug caused by unlimited zero-byte `CONTINUATION` frames.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's HTTP/2 `CONTINUATION`-frame flood root cause in `DefaultHttp2FrameReader`; the only accepted finding is a separate LZ4 decoder allocation issue.",
+    "evidence": [
+      "The advisory describes a CPU DoS in `codec-http2/src/main/java/io/netty/handler/codec/http2/DefaultHttp2FrameReader.java`, specifically a missing `CONTINUATION` frame count limit and a zero-byte bypass of header-size enforcement.",
+      "The only final `qualifying_vuln` finding is `lz4_frame_decoder_resource_exhaustion`, which cites `codec-compression/.../Lz4FrameDecoder.java` and proves a 22-byte LZ4 frame can trigger a 32 MiB allocation request before rejection.",
+      "The finding's PoC and verification logic check the LZ4 allocator call, not the advisory's HTTP/2 `verifyContinuationFrame()` path or zero-byte `CONTINUATION` flood condition."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9f612283/lz4_frame_decoder_resource_exhaustion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9f612283/lz4_frame_decoder_resource_exhaustion/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9f612283/lz4_frame_decoder_resource_exhaustion/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

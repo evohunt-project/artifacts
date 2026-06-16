@@ -1,0 +1,23 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_module_execution",
+  "summary": "The reproduction mirrors the docs API config merge, points output.override.transformer at a local proof module, and verifies that the module's import-time side effect runs during Orval generation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause Orval to import an attacker-chosen local module during generation and execute its top-level code.",
+  "actual_observed_result": "The reproduction invoked Orval with a malicious override.transformer path, and the proof module wrote a marker file before generation completed. The marker content confirmed code execution through the import path.",
+  "verification_method": "The run script prepares a benign transformer module with an import-time filesystem side effect, invokes Orval, and checks that the proof file exists and contains the expected marker string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/output/driver.log",
+    "reproduction/output/module-executed.txt"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/driver.cjs"
+    ]
+  }
+}

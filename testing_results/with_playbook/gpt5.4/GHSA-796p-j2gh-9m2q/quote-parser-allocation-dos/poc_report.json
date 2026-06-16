@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction clones dcap-qvl v0.3.3, compiles a harness against the cloned src/quote.rs parser, confirms that the unmodified sample quote still parses under a 128 MiB address-space cap, and then reproduces an abort when a 4.6 KiB mutated quote claims a 256 MiB auth-data length.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a tiny malformed quote can force the shipped parser to attempt a 268435456-byte allocation and abort under the same constrained environment where the unmodified sample still parses.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit dc6cd03f039821103035b4a457930d46cd462b87, built the Docker image, parsed the unmodified sample successfully under the control limit, then aborted on the mutated quote with 'memory allocation of 268435456 bytes failed' and emitted the proof marker 'EVOHUNT_SUCCESS: allocation failure reproduced'.",
+  "verification_method": "The container first performs a control run on the unmodified sample under a 128 MiB virtual-memory limit and requires a successful 'parsed' result. It then reruns the same parser on a quote whose outer auth-data length was patched to 268435456 and requires a non-zero exit plus the exact allocation-failure string. This distinguishes the vulnerability from a generic environment or build failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The control run printed 'parsed' for /target-repo/sample/sgx_quote under the same 128 MiB limit.",
+    "The mutated quote run terminated non-zero and printed 'memory allocation of 268435456 bytes failed'.",
+    "The bundled verifier printed 'EVOHUNT_SUCCESS: allocation failure reproduced' after confirming both the control run and the failing mutated run behaved as expected."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "dc6cd03f039821103035b4a457930d46cd462b87",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/build_and_verify.sh",
+      "reproduction/make_mutant.py",
+      "reproduction/Cargo.toml",
+      "reproduction/Cargo.lock",
+      "reproduction/main.rs"
+    ]
+  }
+}

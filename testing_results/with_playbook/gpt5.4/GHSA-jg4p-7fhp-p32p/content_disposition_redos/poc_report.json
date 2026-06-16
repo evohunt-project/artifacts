@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Dockerized reproduction clones the exact upstream commit that matches the provided snapshot and confirms that a malformed multipart `Content-Disposition` value causes a multi-second superlinear parse in `disposition()` while a same-size valid header remains effectively constant-time.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The malicious malformed `Content-Disposition` header should consume far more CPU than a same-size benign header and produce the `EVOHUNT_REDOS_CONFIRMED` verification signal, demonstrating attacker-triggerable availability impact.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `ac9a2de79a50d5f84ba223d8dff28419838f379c`, built the Docker image, and produced `control_ms=0.043`, `malicious_ms=1443.705`, `slowdown_ratio=14437.1`, and `EVOHUNT_REDOS_CONFIRMED`.",
+  "verification_method": "The containerized verifier loads the mounted target repo, measures a same-size valid header parse and the malformed semicolon payload parse, and succeeds only if the malformed header takes at least 500 ms and at least 100x longer than the control input.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output: `control_ms=0.043`.",
+    "Container output: `malicious_ms=1443.705`.",
+    "Container output: `slowdown_ratio=14437.1`.",
+    "Container output: `EVOHUNT_REDOS_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "ac9a2de79a50d5f84ba223d8dff28419838f379c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

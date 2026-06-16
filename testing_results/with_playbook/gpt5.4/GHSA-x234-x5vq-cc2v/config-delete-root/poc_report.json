@@ -1,0 +1,30 @@
+{
+  "status": "failed",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction bundle is wired to build the pinned vulnerable commit, install a normal user, send the crafted `config_delete` request, and verify config-root deletion, but the final rerun in this host environment failed before container startup during Docker image build.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should obtain a standard bearer token, issue the crafted `POST /api/config_delete` request, and prove that the configured Nginx root directory no longer exists afterward.",
+  "actual_observed_result": "Running `./reproduction/run.sh` successfully cloned `https://github.com/0xJacky/nginx-ui.git`, checked out pinned commit `5741b9f9ffcb43228606ea64489837493b67d404`, detected that `docker buildx` was unavailable, fell back to legacy `docker build`, printed Docker's legacy-builder deprecation banner, and then made no further progress while trying to build the `golang:1.26.1-bookworm`-based image. The exploit container never started, so the proof string `EVOHUNT_CONFIG_DELETE_ROOT_DELETED` was not observed from the final bundle rerun.",
+  "verification_method": "If the container image builds successfully, the container-side harness polls the live API, performs the authenticated delete request, checks for HTTP 200 with `deleted successfully`, and then verifies with `os.Stat` that the configured Nginx root directory no longer exists. The proof string is emitted only when both the API response and the filesystem deletion check succeed.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The final bundle rerun cloned the upstream repository and checked out pinned commit `5741b9f9ffcb43228606ea64489837493b67d404` successfully.",
+    "The rerun printed `docker buildx is unavailable; falling back to legacy docker build` before invoking image build.",
+    "The rerun printed Docker's legacy-builder deprecation message and then stalled before producing an image or starting the exploit container."
+  ],
+  "limitations_or_blockers": [
+    "This host Docker installation does not have a working `buildx` component, so BuildKit could not be used for the reproduction image build.",
+    "Under legacy `docker build`, the image build stalled while resolving the external `golang:1.26.1-bookworm` base image, so the containerized exploit never executed in the final rerun."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5741b9f9ffcb43228606ea64489837493b67d404",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go"
+    ]
+  }
+}

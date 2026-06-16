@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that a 140-byte multipart request with sparse-array-style field names stalls unrelated requests on a live `multer().none()` route while the upload request itself still completes normally.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should send a tiny multipart request whose field names force Multer's text-field shaping path into attacker-controlled linear CPU work, causing an unrelated `/ping` request to be delayed by at least one second while the upload still returns `200 ok`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `expressjs/multer` at `v2.0.2` (`e5db9caf5da30b61e90ad56db5f6821d36ce2de9`), built the reproduction image, installed the pinned dependency set, and printed `EVOHUNT_RESULT {\"body_bytes\":140,\"sparse_index\":100000000,\"baseline_ping_ms\":4,\"delayed_ping_ms\":1332,\"ping_delay_delta_ms\":1328,\"upload_status\":200,\"upload_body\":\"ok\"}` followed by `EVOHUNT_PROOF sparse_array_fieldname_dos confirmed`.",
+  "verification_method": "The verification script measures a baseline `/ping` latency, sends the exploit multipart request to a live `multer().none()` route, and then measures a second `/ping` during exploit processing. The run passes only if the upload still returns `200 ok` and the delayed ping exceeds the baseline by at least 1000 ms, distinguishing the vulnerability from startup failures or generic request errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `EVOHUNT_RESULT {\"body_bytes\":140,\"sparse_index\":100000000,\"baseline_ping_ms\":4,\"delayed_ping_ms\":1332,\"ping_delay_delta_ms\":1328,\"upload_status\":200,\"upload_body\":\"ok\"}`.",
+    "The reproduction printed `EVOHUNT_PROOF sparse_array_fieldname_dos confirmed` after the delay threshold check passed.",
+    "The upload route still returned `200 ok`, showing the proof comes from CPU-bound request parsing rather than a crash or startup failure."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag and commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "e5db9caf5da30b61e90ad56db5f6821d36ce2de9 (v2.0.2)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js",
+      "reproduction/package-lock.json"
+    ]
+  }
+}

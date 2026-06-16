@@ -1,0 +1,24 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_local_admin_control",
+  "summary": "The reproduction starts Caddy with an isolated local admin listener, confirms the HTTP server is reachable, sends an unauthenticated POST /stop to the admin API, and verifies that the service is no longer reachable afterward.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated local client should be able to stop the running Caddy instance through the admin API, causing immediate availability loss.",
+  "actual_observed_result": "The reproduced run returned HTTP 200 from POST /stop and subsequent requests to the served HTTP endpoint failed because the Caddy process had exited.",
+  "verification_method": "The run script waits for the HTTP server to become ready, confirms a baseline 200 OK response, invokes POST /stop on the admin listener, then verifies that the process exits and the prior HTTP endpoint no longer accepts connections.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The served endpoint returned the expected baseline body before the admin request.",
+    "The admin API accepted an unauthenticated POST /stop request with HTTP 200.",
+    "After the admin request, the Caddy process exited and curl could no longer connect to the previously reachable HTTP listener."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction demonstrates the availability impact through POST /stop. It does not automate a secondary POST /load integrity-impact variant, although the same unauthenticated admin surface exposes that capability in code."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": []
+  }
+}

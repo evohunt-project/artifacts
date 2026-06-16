@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "code_injection",
+  "summary": "The reproduction clones the pinned vulnerable Vite+ revision, uses the migration crate to merge a malicious `.oxfmtrc.jsonc` payload into `vite.config.mjs`, evaluates the migrated config with Node.js, and observes attacker-controlled JavaScript execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that attacker-controlled bytes from a JSON or JSONC migration input are upgraded into executable `vite.config` code and emit the proof string `EVOHUNT_MIGRATION_CODE_EXEC` when the migrated config is evaluated.",
+  "actual_observed_result": "Running `./reproduction/run.sh` printed `EVOHUNT_MIGRATION_CODE_EXEC` followed by `EVOHUNT_SUCCESS: migrated config executed attacker-controlled JavaScript`.",
+  "verification_method": "The harness writes a benign `vite.config.mjs`, merges an attacker-controlled `.oxfmtrc.jsonc` expression through `vite_migration::merge_json_config`, evaluates the resulting file with Node.js, and requires the exact proof string to appear. This distinguishes code execution from a generic parse error or migration failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction log contains the exact proof string `EVOHUNT_MIGRATION_CODE_EXEC`.",
+    "The reproduction log contains `EVOHUNT_SUCCESS: migrated config executed attacker-controlled JavaScript`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the reproduction image, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "e833657deff6259cef9a032ccf7235104d5b9bd8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_in_container.sh",
+      "reproduction/harness/Cargo.toml",
+      "reproduction/harness/Cargo.lock",
+      "reproduction/harness/src/main.rs"
+    ]
+  }
+}

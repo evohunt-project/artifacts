@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:51:16.294Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_f78397a8",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-v52c-386h-88mc/GHSA-v52c-386h-88mc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "async_filefilter_orphan_file_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_f78397a8/async_filefilter_orphan_file_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_f78397a8/async_filefilter_orphan_file_dos/vulnerability_report.json",
+      "title": "Async fileFilter race leaves attacker-uploaded orphan files on disk",
+      "vulnerability_type": "incomplete_cleanup_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a separate async fileFilter cleanup race on MISSING_FIELD_NAME, while the advisory fixes missing request-disconnect handling for dropped uploads.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's dropped-connection handling bug. The only final qualifying finding describes a different Multer flaw: an async fileFilter callback continuing after a multipart parsing error and leaving orphaned files on disk.",
+    "evidence": [
+      "The advisory summary and upstream patch cccf0fe0e64150c4f42ccf6654165c0d66b9adab address dropped-upload disconnect handling by adding request error, aborted, and close handlers that destroy Busboy and abort the middleware cleanly.",
+      "The qualifying finding report instead identifies fileFilter(req, file, cb) continuing after errorOccured during a later MISSING_FIELD_NAME parse failure, and it cites a different fix commit, 739919097dde3921ec31b930e4b9025036fa74ee, which adds an errorOccured guard inside the fileFilter callback.",
+      "The finding PoC reproduces a malformed multipart body with an asynchronous fileFilter callback and confirms an orphaned file after a 400 MISSING_FIELD_NAME response; it does not require or demonstrate a client dropping the upload connection.",
+      "The judge input manifest enumerates only async_filefilter_orphan_file_dos as a final qualifying finding for this session."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_f78397a8/async_filefilter_orphan_file_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_f78397a8/async_filefilter_orphan_file_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_f78397a8/async_filefilter_orphan_file_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that an influence-data subscription can direct UDR to send an outbound callback POST to an attacker-controlled URL.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should register an attacker-controlled callback URL and then produce an outbound POST to `/ssrf-proof` carrying the attacker-selected influence-data payload.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `free5gc/udr` at `5d0dc65f9c0dfd51d21a409aae720a42fc273662`, built the reproduction image, and emitted `EVOHUNT_PROOF arbitrary callback reached attacker server: POST /ssrf-proof` with a notification body containing the expected `resUri` and `{\"dnn\":\"internet\"}` fields.",
+  "verification_method": "The container copies the pinned source tree into a writable temp directory, injects a focused Go test, exercises the real subscription handler, and waits for an h2c callback server to receive the outbound POST. The run only succeeds if the proof string is present in the `go test` output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The `go test` output includes `EVOHUNT_PROOF arbitrary callback reached attacker server: POST /ssrf-proof`.",
+    "The captured callback body is `[{\"resUri\":\"http://udr.example/nudr-dr/v2/application-data/influenceData/demo\",\"trafficInfluData\":{\"dnn\":\"internet\"}}]`.",
+    "The host-side runner completed with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "5d0dc65f9c0dfd51d21a409aae720a42fc273662",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/evohunt_callback_ssrf_test.go"
+    ]
+  }
+}

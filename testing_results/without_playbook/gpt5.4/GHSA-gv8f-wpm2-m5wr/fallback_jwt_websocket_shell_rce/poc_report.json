@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass_rce",
+  "summary": "The Docker-based reproduction starts the vulnerable CloudCLI UI server from upstream v1.24.0 with its default fallback JWT behavior, forges a JWT with the known secret, connects to the /shell WebSocket, and verifies arbitrary shell command execution by observing a proof string emitted from the spawned PTY session.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow an unauthenticated attacker to authenticate to /shell with a forged JWT and execute a chosen shell command, producing the proof string EVOHUNT_FORGED_JWT_WS_RCE in terminal output.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit bc164140e031f8010a4e672ac8bc20b61e84701a, built the reproduction image, installed the application dependencies, started the server, connected to /shell with a forged JWT, and observed the proof string EVOHUNT_FORGED_JWT_WS_RCE. The server log also recorded [OK] WebSocket authenticated for user: attacker and Executing shell command: cd \"/tmp\" && printf 'EVOHUNT_FORGED_JWT_WS_RCE\\n'; exit.",
+  "verification_method": "The helper script signs an HS256 JWT with the hard-coded fallback secret, opens a WebSocket connection to /shell using that token, sends a plain-shell init message with a benign proof command, and waits for the exact proof string in terminal output. The run also checks the server log for successful forged-token authentication and the matching shell execution command, distinguishing real exploitation from generic startup noise or an unrelated shell session.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit helper printed [evohunt] observed proof string: EVOHUNT_FORGED_JWT_WS_RCE.",
+    "Collected WebSocket output contained Starting terminal in: /tmp followed by EVOHUNT_FORGED_JWT_WS_RCE.",
+    "The server log recorded [OK] WebSocket authenticated for user: attacker for the forged token.",
+    "The server log recorded Executing shell command: cd \"/tmp\" && printf 'EVOHUNT_FORGED_JWT_WS_RCE\\n'; exit.",
+    "The reproduction run ended with [evohunt] verification succeeded and [evohunt] SUCCESS: reproduction completed and verified."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable v1.24.0 commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "bc164140e031f8010a4e672ac8bc20b61e84701a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

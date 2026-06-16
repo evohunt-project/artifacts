@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:58:47.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_61528b0f",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-4jpm-cgx2-8h37/GHSA-4jpm-cgx2-8h37.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated_private_chatflow_attachment_access",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_61528b0f/unauthenticated_private_chatflow_attachment_access",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_61528b0f/unauthenticated_private_chatflow_attachment_access/vulnerability_report.json",
+      "title": "Public attachment APIs allow unauthenticated write and retrieval in private chatflow storage",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause and endpoints: this finding targets the public attachment upload and download routes, while the advisory targets unauthenticated disclosure from `GET /api/v1/public-chatbotConfig/:id` via `getSinglePublicChatbotConfig` returning unsanitized `flowData`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unauthenticated_private_chatflow_execution",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_61528b0f/unauthenticated_private_chatflow_execution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_61528b0f/unauthenticated_private_chatflow_execution/vulnerability_report.json",
+      "title": "Unauthenticated prediction endpoint executes non-public chatflows",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause and vulnerable code path: this finding is about `POST /api/v1/prediction/:id` executing private chatflows without an `isPublic` check, while the advisory is about `GET /api/v1/public-chatbotConfig/:id` leaking unsanitized `flowData` from `getSinglePublicChatbotConfig`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause. The advisory is specifically the unauthenticated `public-chatbotConfig` disclosure of unsanitized `flowData`, while the session's qualifying findings cover separate authorization flaws in prediction execution and attachment storage routes.",
+    "evidence": [
+      "The advisory describes `GET /api/v1/public-chatbotConfig/:id` and names `getSinglePublicChatbotConfig` in `packages/server/src/services/chatflows/index.ts` as the vulnerable function that returns full `flowData` without authorization or sanitization.",
+      "The `unauthenticated_private_chatflow_execution` finding instead targets `POST /api/v1/prediction/:id` loading a private chatflow by UUID and executing it without checking `chatflow.isPublic`.",
+      "The `unauthenticated_private_chatflow_attachment_access` finding instead targets `POST /api/v1/attachments/:chatflowId/:chatId` and `GET /api/v1/get-upload-file`, where storage helpers fall back to the target chatflow's workspace and organization when `req.user` is absent.",
+      "Neither qualifying finding shows the advisory's vulnerable endpoint, the `public-chatbotConfig` response shape, or the root cause of leaking unsanitized `flowData` fields such as password entries or HTTP authorization headers."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_61528b0f/unauthenticated_private_chatflow_attachment_access",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_61528b0f/unauthenticated_private_chatflow_attachment_access/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_61528b0f/unauthenticated_private_chatflow_attachment_access/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_61528b0f/unauthenticated_private_chatflow_execution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_61528b0f/unauthenticated_private_chatflow_execution/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_61528b0f/unauthenticated_private_chatflow_execution/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

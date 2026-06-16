@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:54:24.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c4d9f07",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-gwch-7m8v-7544/GHSA-gwch-7m8v-7544.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "ssh_stream_upload_command_injection",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c4d9f07/ssh_stream_upload_command_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c4d9f07/ssh_stream_upload_command_injection/vulnerability_report.json",
+      "title": "Unquoted SSH stream-upload path allows command injection via file_name",
+      "vulnerability_type": "command_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory fixes an insecure sudoers documentation example in docs/index.md, while this finding targets runtime shell interpolation in proxmox/ssh/client.go uploadFile.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "P",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "L",
+          "SA": "L"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:L"
+      }
+    },
+    {
+      "finding_folder_name": "ssh_unknown_host_auto_trust",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c4d9f07/ssh_unknown_host_auto_trust",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c4d9f07/ssh_unknown_host_auto_trust/vulnerability_report.json",
+      "title": "SSH client auto-trusts unknown host keys and authenticates to attacker-controlled nodes",
+      "vulnerability_type": "improper_ssh_host_key_verification",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is a documentation-level wildcard tee path traversal in sudoers guidance; this finding instead concerns SSH trust-on-first-use behavior in proxmox/ssh/client.go openNodeShell.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:H/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's documented sudoers root cause: a wildcard tee path in docs/index.md that permits ../ traversal to unintended files.",
+    "evidence": [
+      "The advisory JSON describes an insecure documentation recommendation: terraform ALL=(root) NOPASSWD: /usr/bin/tee /var/lib/vz/*, with ../../../ traversal to files like /etc/sudoers.d/sudo.",
+      "The referenced fix commit bd604c41a31e2a55dd6acc01b0608be3ea49c023 patches docs/index.md by replacing wildcard tee rules with snippets-only filename patterns and adding a security warning; it does not patch proxmox/ssh/client.go or other runtime SSH code.",
+      "ssh_stream_upload_command_injection targets unquoted remoteFilePath interpolation in proxmox/ssh/client.go uploadFile, which is a different sink and root cause than the advisory's sudoers documentation bug.",
+      "ssh_unknown_host_auto_trust targets permissive unknown-host acceptance in proxmox/ssh/client.go openNodeShell, which is unrelated to the advisory's documented tee wildcard path traversal."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c4d9f07/ssh_stream_upload_command_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c4d9f07/ssh_stream_upload_command_injection/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c4d9f07/ssh_stream_upload_command_injection/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c4d9f07/ssh_unknown_host_auto_trust",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c4d9f07/ssh_unknown_host_auto_trust/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c4d9f07/ssh_unknown_host_auto_trust/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

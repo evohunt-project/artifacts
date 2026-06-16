@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The packaged reproduction starts CoreDNS in DoH3 mode, confirms a baseline DNS-over-HTTP/3 request succeeds, opens 256 partial POST bodies that never finish, and then observes a legitimate follow-up DoH3 request time out.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should print baseline_result=success and then show that a post-attack legitimate DoH3 request fails with context deadline exceeded while many partial bodies remain open.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned CoreDNS at the pinned vulnerable commit, built the helper image, started the DoH3 listener, printed baseline_result=success, and then printed RESULT: blocking behavior observed while many partial bodies remained open after the follow-up DoH3 request hit context deadline exceeded.",
+  "verification_method": "The verification script first confirms a normal DoH3 DNS request succeeds, then launches 256 partial HTTP/3 POST bodies and checks that a later legitimate DoH3 request times out within 3 seconds instead of receiving a DNS response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "baseline_result=success",
+    "post_attack_legit_request_error=Post \"https://127.0.0.1:8443/dns-query\": context deadline exceeded",
+    "RESULT: blocking behavior observed while many partial bodies remained open"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "17fceec6d93fd1dde5ba6888c363f131ff6d647f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Corefile",
+      "reproduction/exploit.go",
+      "reproduction/go.mod",
+      "reproduction/go.sum",
+      "reproduction/verify.sh"
+    ]
+  }
+}

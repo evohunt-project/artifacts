@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction opens a large-selector subscription, publishes many distinct large topics, and verifies that the default cache-enabled hub is OOM-killed under a 128 MiB memory limit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause attacker-controlled selector and topic cache keys to accumulate until the Mercure hub process is OOM-killed, with progress logs showing sustained cache growth before termination.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit df983490f7352f7fda8c35393bbc9175544a043a, built the reproduction image, logged cache growth through after_publish_1200 alloc_mib=102 sys_mib=134, observed the underlying docker run die with status 137 under the 128 MiB memory cap, and then exited successfully after verifying that signal.",
+  "verification_method": "run.sh captures the container output and exit code. The reproduction is accepted only if docker run exits with code 137 and the log contains an after_publish_1000 progress line, which distinguishes real sustained cache growth from a startup, clone, or build failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "after_publish_1000 alloc_mib=66 sys_mib=122 objects=24951",
+    "after_publish_1100 alloc_mib=108 sys_mib=122 objects=49032",
+    "after_publish_1200 alloc_mib=102 sys_mib=134 objects=42101",
+    "run.sh printed REPRODUCED after verifying the underlying docker run exit status 137"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, copies that checkout into a temporary Docker build context, builds the reproduction image, and also mounts the checked-out repository read-only into the container at /target-repo during execution.",
+    "pinned_commit_or_ref": "df983490f7352f7fda8c35393bbc9175544a043a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/go.mod",
+      "reproduction/go.sum",
+      "reproduction/main.go"
+    ]
+  }
+}

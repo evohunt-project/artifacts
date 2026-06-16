@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_read",
+  "summary": "The Docker-based reproduction installs the vulnerable AVideo commit, logs in as a low-privilege uploader, points `chunkFile` at an app-root `.env` file, and verifies that the file is moved into public `videos/` storage and served back over HTTP.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privilege uploader should be able to supply an attacker-chosen local file path through `chunkFile` and cause that file to appear under public `videos/` storage where it can be fetched over HTTP.",
+  "actual_observed_result": "Running `./reproduction/run.sh` on commit `206d38e97b8c854771bb2907b13f9f36e8bcf874` installed the target, created a low-privilege uploader, submitted `chunkFile=/tmp/target-repo-copy/.env`, received `video_id=1`, and verified that the seeded marker was moved into `videos/.mp4/.mp4` and retrievable over HTTP.",
+  "verification_method": "The verifier writes a unique marker into an app-root `.env` file, triggers `/objects/aVideoEncoder.json.php` with uploader credentials and the chosen `chunkFile`, locates the resulting published `.mp4` file under `videos/`, and confirms that an HTTP GET of that path returns the exact marker. This distinguishes the real file-move/file-read condition from generic upload errors or unrelated startup issues.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The vulnerable endpoint returned JSON with `error=false` and `video_id=1` after the low-privilege uploader submitted the crafted `chunkFile` request.",
+    "The verifier found the resulting published file at `videos/.mp4/.mp4` inside the vulnerable checkout.",
+    "An HTTP GET for `http://127.0.0.1:8000/videos/.mp4/.mp4` returned the unique `.env` marker, proving attacker-controlled local file exposure through the application."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, fetches the pinned vulnerable commit, checks it out, and mounts that checkout into the helper container at `/target-repo`.",
+    "pinned_commit_or_ref": "206d38e97b8c854771bb2907b13f9f36e8bcf874",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/install_target.php",
+      "reproduction/run-verify.sh"
+    ]
+  }
+}

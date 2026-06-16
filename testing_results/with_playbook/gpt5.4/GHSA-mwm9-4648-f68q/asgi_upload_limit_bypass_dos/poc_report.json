@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The packaged reproduction clones the vulnerable Django commit, builds a clean helper image, and demonstrates that a 100-byte multipart upload remains an InMemoryUploadedFile even though FILE_UPLOAD_MAX_MEMORY_SIZE is set to 10 and the declared Content-Length is 9.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should prove that an oversized ASGI multipart upload stays in memory despite the configured file upload memory limit, evidenced by upload_class=InMemoryUploadedFile and is_in_memory=True.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Django commit d75d57c2c06934a65feabd206129b9d1a230a1da, built the helper image, and printed declared_content_length=9, configured_file_upload_max_memory_size=10, actual_file_size=100, upload_class=InMemoryUploadedFile, upload_size=100, payload_matches=True, is_in_memory=True, is_temp_file=False, EVOHUNT_PROOF: oversized ASGI upload stayed in memory despite the 10-byte limit., followed by [evohunt] verification passed.",
+  "verification_method": "reproduction/verify.sh runs reproduction/reproduce.py inside a clean container against the mounted vulnerable checkout and requires exact proof lines showing the uploaded file class, size, and payload integrity. The oracle distinguishes the vulnerable in-memory path from the fixed TemporaryUploadedFile path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "declared_content_length=9",
+    "configured_file_upload_max_memory_size=10",
+    "actual_file_size=100",
+    "upload_class=InMemoryUploadedFile",
+    "upload_size=100",
+    "payload_matches=True",
+    "is_in_memory=True",
+    "is_temp_file=False",
+    "EVOHUNT_PROOF: oversized ASGI upload stayed in memory despite the 10-byte limit."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "d75d57c2c06934a65feabd206129b9d1a230a1da",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

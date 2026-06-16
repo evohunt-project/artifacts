@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:04:13.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a8ecdbad",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-5448-v74m-7mv7/GHSA-5448-v74m-7mv7.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "api_view_only_file_upload_broken_access_control",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a8ecdbad/api_view_only_file_upload_broken_access_control",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a8ecdbad/api_view_only_file_upload_broken_access_control/vulnerability_report.json",
+      "title": "API uploaded-file endpoint allows view-only users to create files",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is a mass-assignment flaw in user-account updates that lets a low-privileged user modify restricted fields such as another user's email or privilege-related attributes in `app/Http/Controllers/Api/UsersController.php`. This finding instead concerns missing edit authorization on file creation in `app/Http/Controllers/Api/UploadedFilesController.php`, so the vulnerable code and root cause differ.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "import_process_ownership_takeover",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a8ecdbad/import_process_ownership_takeover",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a8ecdbad/import_process_ownership_takeover/vulnerability_report.json",
+      "title": "Import process endpoint lets one importer seize another user's staged import",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes privilege-sensitive fields on user accounts being mass-assigned through the user-update path, enabling takeover of another account such as the Super Admin. This finding instead targets the import workflow, where `app/Http/Controllers/Api/ImportController.php` and `app/Http/Requests/ItemImportRequest.php` let an importer rewrite `imports.created_by`, so it does not identify the advisory's user-account root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "Neither qualifying finding identifies the advisory's vulnerable code or root cause. GHSA-5448-v74m-7mv7 is a mass-assignment issue in the API user update flow that allowed restricted account fields to be changed on another user, while the session findings cover unrelated authorization flaws in uploaded-file creation and import ownership transfer.",
+    "evidence": [
+      "The advisory JSON says an authenticated low-privileged user can modify restricted fields of another user account, including the Super Admin email address, and then take over that account through password reset.",
+      "The v8.3.6 to v8.3.7 fix in `app/Http/Controllers/Api/UsersController.php` replaces broad `$user->fill($request->all())` behavior with `$request->except(...)` that removes sensitive fields such as `email`, `activated`, and `permissions`, and only writes them after `canEditAuthFields` checks.",
+      "`api_view_only_file_upload_broken_access_control` instead concerns `app/Http/Controllers/Api/UploadedFilesController.php` authorizing `view` before accepting file uploads, which is a separate upload-authorization regression rather than user-account mass assignment.",
+      "`import_process_ownership_takeover` instead concerns `app/Http/Controllers/Api/ImportController.php` loading an attacker-chosen import ID and `app/Http/Requests/ItemImportRequest.php` rewriting `imports.created_by`, which is a separate import-ownership flaw rather than modification of privilege-sensitive user fields."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a8ecdbad/api_view_only_file_upload_broken_access_control",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a8ecdbad/api_view_only_file_upload_broken_access_control/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a8ecdbad/api_view_only_file_upload_broken_access_control/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a8ecdbad/import_process_ownership_takeover",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a8ecdbad/import_process_ownership_takeover/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a8ecdbad/import_process_ownership_takeover/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

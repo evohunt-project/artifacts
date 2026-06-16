@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The packaged reproduction confirms that a normal low-privilege account can persist `skipAuth=true` through `PUT /api/system-config`, after which an unauthenticated caller can create a new administrator account through the formerly admin-only user-management API.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that an unauthenticated request to `GET /api/users` is initially denied, a low-privilege user can still update global system config to set `skipAuth=true`, and a subsequent unauthenticated `POST /api/users` succeeds in creating a new admin account.",
+  "actual_observed_result": "Running `./reproduction/run.sh` on commit `c0050d8ec0ea8f951ebbbe5dbedab5f1dfbfe748` built the Docker image, cloned the target repo into a session-local workspace, started MCPHub with a seeded low-privilege account, observed `401` for unauthenticated `GET /api/users`, observed `403` for the low-privilege user on the same route before exploitation, observed `200` with `skipAuth:true` from `PUT /api/system-config`, then observed unauthenticated `POST /api/users` create `eviladmin` and a successful `eviladmin` login with admin permissions. The proof string `EVOHUNT_PROOF: low-privileged user disabled auth and unauthenticated admin creation succeeded` was present in the run output.",
+  "verification_method": "The helper script waits for the target to start, asserts the pre-exploit denial states, performs the low-privilege config update, asserts that the persisted response contains `skipAuth:true`, then verifies unauthenticated admin creation and admin login. `run.sh` treats the run as successful only if the helper exits cleanly and the exact proof string appears in the combined output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Unauthenticated `GET /api/users` returned `401` before the exploit.",
+    "Authenticated lowuser login returned `200` and `isAdmin:false`.",
+    "Lowuser `GET /api/users` returned `403` before the exploit, confirming the intended admin boundary.",
+    "`PUT /api/system-config` returned `200` and echoed `routing.skipAuth:true`.",
+    "Unauthenticated `POST /api/users` returned `201` and created `eviladmin` with `isAdmin:true`.",
+    "A subsequent `eviladmin` login returned `200` with admin permissions.",
+    "The run output contained `EVOHUNT_PROOF: low-privileged user disabled auth and unauthenticated admin creation succeeded`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "c0050d8ec0ea8f951ebbbe5dbedab5f1dfbfe748",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.mjs",
+      "reproduction/run-in-container.sh",
+      "reproduction/mcp_settings.json"
+    ]
+  }
+}

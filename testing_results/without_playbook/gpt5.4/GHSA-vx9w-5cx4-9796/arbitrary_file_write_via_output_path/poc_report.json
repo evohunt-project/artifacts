@@ -1,0 +1,24 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_write",
+  "summary": "The reproduction launches the published Crawl4AI Docker image, sends an unauthenticated /pdf request with output_path=/tmp/evohunt-proof.pdf, and verifies that the file is created inside the target container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The target server should create or overwrite a file at the attacker-chosen path /tmp/evohunt-proof.pdf inside the vulnerable container.",
+  "actual_observed_result": "The API returned {\"success\":true,\"path\":\"/tmp/evohunt-proof.pdf\"}. A follow-up docker exec confirmed that /tmp/evohunt-proof.pdf existed inside the target container, was owned by appuser, had non-zero size, and started with the expected PDF magic bytes.",
+  "verification_method": "The run script waits for the server health endpoint, triggers the /pdf write primitive, then checks both the API response and the target container filesystem. Verification requires the exact path to exist and the first four bytes to match %PDF.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "API response contains success=true and path=/tmp/evohunt-proof.pdf.",
+    "docker exec confirms the file exists inside the container and is non-empty.",
+    "docker exec confirms the first four bytes are 25 50 44 46 (%PDF)."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction requires Docker and network access to pull unclecode/crawl4ai:0.8.0 if it is not already present locally."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": []
+  }
+}

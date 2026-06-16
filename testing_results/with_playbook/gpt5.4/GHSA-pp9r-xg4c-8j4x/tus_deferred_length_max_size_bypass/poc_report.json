@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction launches a minimal TUS app with `max_size(1024)` and verifies that a deferred-length chunked upload still stores 1536 bytes and reports `Upload-Offset: 1536`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The vulnerable TUS handler should advertise `Tus-Max-Size: 1024` yet still accept and store a deferred-length chunked upload larger than 1024 bytes.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned `v0.89.3` source tree, built the helper image, launched the probe TUS app, observed `Tus-Max-Size: 1024`, and still stored a 1536-byte deferred-length chunked upload with `Upload-Offset: 1536`.",
+  "verification_method": "The exploit first checks `OPTIONS /files` for `Tus-Max-Size: 1024`, then creates a deferred-length upload, streams a 1536-byte chunked PATCH without `Content-Length`, and confirms both `Upload-Offset: 1536` and an on-disk file size of 1536 bytes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit printed `OPTIONS Tus-Max-Size: 1024`, confirming the configured guard value exposed by the vulnerable handler.",
+    "The exploit printed `PATCH status: 204`, `PATCH Upload-Offset: 1536`, and `HEAD Upload-Offset: 1536`, confirming the oversized upload was accepted.",
+    "The exploit printed `Stored file size: 1536`, confirming data was persisted beyond the configured 1024-byte cap.",
+    "The container reported `[evohunt] tus max-size verification passed` and `SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "f8fb007c4c765dd0a4961f81846e6f27629dcd28",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py",
+      "reproduction/probe_Cargo.toml",
+      "reproduction/probe_main.rs"
+    ]
+  }
+}

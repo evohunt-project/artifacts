@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The reproduction starts FUXA from current vulnerable commit `ef43eabbf039364dc54f374f1ed755c15d10f910` in its shipped default auth-off posture, sends an unauthenticated `POST /api/resources/removeWidget` request for `main.js`, then verifies the file is gone and that a restart attempt fails with `MODULE_NOT_FOUND`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated HTTP request should delete `server/main.js` through `/api/resources/removeWidget`, and a subsequent `node main.js` execution should fail because the server entrypoint has been removed.",
+  "actual_observed_result": "Running `./reproduction/run.sh` printed `DELETE verification passed: server/main.js removed`, `RESTART verification passed: MODULE_NOT_FOUND observed`, and `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The helper checks that the HTTP response returns `success=true`, verifies that `/work/FUXA/server/main.js` no longer exists, and then attempts a fresh `node main.js` execution that must fail with `MODULE_NOT_FOUND`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final bundle command `./reproduction/run.sh` completed successfully.",
+    "The helper printed `DELETE verification passed: server/main.js removed`.",
+    "The helper printed `RESTART verification passed: MODULE_NOT_FOUND observed`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "ef43eabbf039364dc54f374f1ed755c15d10f910",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_entry.sh"
+    ]
+  }
+}

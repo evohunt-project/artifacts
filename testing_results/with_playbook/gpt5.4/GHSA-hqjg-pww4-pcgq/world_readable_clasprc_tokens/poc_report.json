@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction confirms that the shipped FileCredentialStore helper creates ~/.clasprc.json with inherited world-readable POSIX permissions in a standard multi-user environment, and that a second low-privilege user can read the victim's OAuth token file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a victim .clasprc.json file with mode 0644 and allow a second low-privilege local user to read the stored OAuth tokens, proving cross-user secret disclosure.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned google/clasp at fd7c582b31385db675861d81e0ac4d2611cb369e, installed dependencies, created a victim token file through FileCredentialStore.save, observed mode 644, and then read that file successfully as a separate low-privilege attacker user. The run emitted the proof signal EVOHUNT_PROOF: attacker read victim OAuth token file created by FileCredentialStore.save.",
+  "verification_method": "The verification helper imports the vulnerable FileCredentialStore from the pinned source tree, writes a token file as the victim user, checks the resulting mode with stat, and then reads the same file as a separate low-privilege user. The run only passes if both the 0644 mode and the attacker readback of the refresh/access token fields are observed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed modeOctal 644 for /home/victim/.clasprc.json.",
+    "The attacker user read back JSON containing the victim refresh_token and access_token fields.",
+    "The run emitted the exact proof string EVOHUNT_PROOF: attacker read victim OAuth token file created by FileCredentialStore.save."
+  ],
+  "limitations_or_blockers": [
+    "The impact is strongest on multi-user POSIX environments where another low-privilege account can traverse the victim home directory. The reproduction uses the standard useradd defaults from node:20-bookworm, which created /home/victim with mode 755."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "fd7c582b31385db675861d81e0ac4d2611cb369e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce_store.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

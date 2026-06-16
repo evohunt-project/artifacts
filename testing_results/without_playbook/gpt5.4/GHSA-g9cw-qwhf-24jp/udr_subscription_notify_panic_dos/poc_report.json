@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "notification_panic_dos",
+  "summary": "The reproduction clones a vulnerable UDR commit, starts a minimal MongoDB-backed UDR harness, creates a subscription-data notification subscription, patches the matching AMF 3GPP context, and observes the fatal nil-pointer panic in SendOnDataChangeNotify.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After the trigger PATCH, the UDR process should panic in SendOnDataChangeNotify and exit, demonstrating a remotely reachable denial of service.",
+  "actual_observed_result": "Running ./reproduction/run.sh returned a 204 response for the trigger PATCH and then observed the UDR server exit with status 1 after logging a nil-pointer panic whose stack trace includes SendOnDataChangeNotify.",
+  "verification_method": "verify.sh requires successful setup requests, waits for the post-trigger server process to terminate, and then checks the captured server log for the exact nil-pointer panic signature and a SendOnDataChangeNotify stack frame to distinguish this bug from a generic startup or transport failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The trigger PATCH completed with transport result 204 before the asynchronous notification panic fired.",
+    "The verifier observed server exit code 1 from the vulnerable UDR process.",
+    "The captured log contains \"panic: runtime error: invalid memory address or nil pointer dereference\".",
+    "The captured stack trace includes github.com/free5gc/udr/internal/sbi/processor.SendOnDataChangeNotify."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5eb316c12c2a2eff9cbcc595611bf33c13be773f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc_server.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

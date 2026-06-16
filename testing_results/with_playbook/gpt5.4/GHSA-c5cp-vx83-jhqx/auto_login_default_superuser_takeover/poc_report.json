@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_authentication",
+  "summary": "The reproduction bundle cloned Langflow v1.7.0, started the real app in-process, invoked the unauthenticated auto_login route, and verified that the returned token authenticated as the default superuser.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The helper should obtain a bearer token from GET /api/v1/auto_login, resolve /api/v1/users/whoami to the default langflow superuser, access the superuser-only GET /api/v1/users/ route, and emit EVOHUNT_AUTH_POC_SUCCESS.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Langflow v1.7.0 at commit b6ed2bc4d9d6a00e4bd8363495edfec6f091ccfc, built the reproduction image, obtained a bearer token from GET /api/v1/auto_login, resolved /api/v1/users/whoami to username langflow with is_superuser=true, accessed GET /api/v1/users/ with HTTP 200, and printed EVOHUNT_AUTH_POC_SUCCESS.",
+  "verification_method": "The container helper fails unless GET /api/v1/auto_login returns 200, the returned token resolves to username langflow with is_superuser=true, and the same token receives 200 from GET /api/v1/users/. On success it prints the exact proof string EVOHUNT_AUTH_POC_SUCCESS.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output contained auto_login_status=200.",
+    "Container output contained whoami_username=langflow whoami_is_superuser=True.",
+    "Container output contained users_status=200 total_count=1.",
+    "run.sh observed the expected proof signal EVOHUNT_AUTH_POC_SUCCESS."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, stages the required source tree into the Docker build context, and mounts the checked-out repository into the container at /target-repo.",
+    "pinned_commit_or_ref": "b6ed2bc4d9d6a00e4bd8363495edfec6f091ccfc",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/auth_poc.py"
+    ]
+  }
+}

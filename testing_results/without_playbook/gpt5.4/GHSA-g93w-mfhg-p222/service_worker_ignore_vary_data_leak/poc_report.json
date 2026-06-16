@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "service_worker_cache_data_leak",
+  "summary": "The Docker-based reproduction confirms that Angular v21.2.2 can replay a cached authenticated data-group response to a later unauthenticated request when the origin relies on `Vary: Authorization` for cache isolation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause a privileged `/api/profile` response cached by Angular's service worker to be returned to a later unauthenticated request for the same URL, proving cross-authorization data leakage.",
+  "actual_observed_result": "Running `./reproduction/run.sh` against Angular tag `v21.2.2` built the service worker from source, registered it in headless Chromium, primed the cache with one authenticated `/api/profile` request, and then observed a second unauthenticated `/api/profile` request return `200 ADMIN:top-secret-profile` from cache while the origin log recorded only the first authenticated request.",
+  "verification_method": "The verification harness checks both HTTP responses and the origin request log. It requires the first request to return the privileged body, the second unauthenticated request to return the same privileged body, and the origin to observe only one authenticated network request. It also inspects Cache Storage to confirm that `strictGuestMatch` fails while guest and anonymous `ignoreVary` lookups return the cached privileged response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The first fetch returned `200 ADMIN:top-secret-profile`.",
+    "The second unauthenticated fetch also returned `200 ADMIN:top-secret-profile`.",
+    "The origin request log contained only one `/api/profile` request and it carried `Authorization: Bearer admin-session-token`.",
+    "The data-group cache contained a single entry for `/api/profile`, and direct guest or anonymous `Cache.match(..., {ignoreVary: true})` calls returned the cached privileged response while a strict guest match returned `null`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned Angular v21.2.2 release commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b2b903957a5bafc343f8970e0562d3d812a121af",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/package.json",
+      "reproduction/verify.sh",
+      "reproduction/verify.mjs"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_cryptographic_usage",
+  "summary": "The Docker-based reproduction clones upstream tag 11.1.0, mounts the checkout into the container, and confirms that the shipped bundle accepts forged DSA signatures on certificate, CSR, and direct Signature verification entrypoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print that certAccepted, directAccepted, and csrAccepted are all true, followed by the exact proof string 'EVOHUNT_PROOF: forged DSA signatures accepted in certificate, CSR, and direct Signature verification'.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned https://github.com/kjur/jsrsasign.git at tag 11.1.0 (resolved commit 58bb24192f501927014b67911bbde8ef27532319), built the reproduction container, and printed a JSON object with certAccepted=true, directAccepted=true, and csrAccepted=true, followed by the expected EVOHUNT proof string.",
+  "verification_method": "The host run script builds the container and runs /app/verify.sh. verify.sh invokes verify.js against the mounted /target-repo checkout, prints the observed booleans, and then grep-checks the exact proof string so the run fails closed if the forged artifacts are not accepted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "{ \"certAccepted\": true, \"directAccepted\": true, \"csrAccepted\": true }",
+    "EVOHUNT_PROOF: forged DSA signatures accepted in certificate, CSR, and direct Signature verification",
+    "The reproduction verified that tag 11.1.0 resolved to commit 58bb24192f501927014b67911bbde8ef27532319 before running the proof."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at tag 11.1.0, verifies the resolved commit is 58bb24192f501927014b67911bbde8ef27532319, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "11.1.0 (58bb24192f501927014b67911bbde8ef27532319)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

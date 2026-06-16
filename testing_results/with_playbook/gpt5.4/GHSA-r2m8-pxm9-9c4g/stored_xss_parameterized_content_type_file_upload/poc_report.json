@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "output_injection_xss",
+  "summary": "The Docker-based reproduction confirms that an authenticated low-privilege user can upload an extensionless file with `_ContentType: application/xhtml+xml;charset=utf-8`, have Parse save it as `.xhtml`, and retrieve it back as active XHTML under the Parse origin.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should yield a stored file name ending in `.xhtml` and a retrievable file response with `Content-Type: application/xhtml+xml`, demonstrating storage and inline serving of attacker-controlled active content under the application origin.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the target repository at pinned commit `44d6ff4d4f0562f3845cf0a5b5434be1afa5aadd`, built the reproduction image, started Parse Server with MongoDB, uploaded the crafted payload, and printed `PROOF_RETURNED_NAME=9e018d4f24be3f6803d8dcf43ef0af70_payload.xhtml`, `PROOF_CONTENT_TYPE=application/xhtml+xml`, and `PROOF_STATUS=SUCCESS` before exiting with code 0.",
+  "verification_method": "The exploit helper signs up a user, performs the crafted upload, and then verifies that the returned stored filename ends in `.xhtml`, the fetched file response is served as `application/xhtml+xml`, and the served body still contains the attacker-controlled proof marker. This distinguishes the vulnerability from a generic upload success or forced-download response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `PROOF_RETURNED_NAME=9e018d4f24be3f6803d8dcf43ef0af70_payload.xhtml`.",
+    "The run printed `PROOF_RETURNED_URL=http://127.0.0.1:1337/parse/files/app/9e018d4f24be3f6803d8dcf43ef0af70_payload.xhtml`.",
+    "The run printed `PROOF_CONTENT_TYPE=application/xhtml+xml`.",
+    "The run printed `PROOF_STATUS=SUCCESS` and exited with status 0."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "44d6ff4d4f0562f3845cf0a5b5434be1afa5aadd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/exploit.js"
+    ]
+  }
+}

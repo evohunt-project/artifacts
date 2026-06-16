@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:09:34.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_8cd3143b",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-wvhv-qcqf-f3cx/GHSA-wvhv-qcqf-f3cx.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "webdav_read_only_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_8cd3143b/webdav_read_only_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_8cd3143b/webdav_read_only_bypass/vulnerability_report.json",
+      "title": "WebDAV listener ignores read-only mode and permits unauthenticated file writes",
+      "vulnerability_type": "webdav_read_only_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets the separate WebDAV mount path that ignores `fs.ReadOnly`, while the advisory fixes missing `.goshs` ACL enforcement and `.goshs` file protection in the normal `PUT`, multipart upload, delete, and mkdir handlers.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only final qualifying finding is a WebDAV `-ro` bypass. The target advisory is a different root cause: `.goshs` file-based ACL checks are enforced for reads but were missing on non-WebDAV state-changing routes, allowing unauthorized mutation and deletion of the `.goshs` policy file itself.",
+    "evidence": [
+      "The advisory summary and details describe a file-based ACL authorization bypass in `.goshs`-protected directories affecting `PUT`, `POST /upload`, `?mkdir`, and `?delete`, with impact escalation by deleting `.goshs` and then reading protected files.",
+      "The advisory fix commit `f212c4f4a126556bab008f79758e21a839ef2c0f` adds recursive effective-ACL lookup in `httpserver/filebased.go`, enforces `.goshs` auth in `httpserver/updown.go` and `httpserver/handler.go`, and blocks deleting or overwriting `.goshs`.",
+      "The final qualifying finding instead points to `httpserver/server.go` mounting `webdav.Handler{FileSystem: webdav.Dir(fs.Webroot)}` without enforcing `fs.ReadOnly`; its reproduced effect is `HTTP PUT status: 403`, `WebDAV PUT status: 201`, and creation of `webdav-write.txt`, which is a separate WebDAV read-only bypass rather than the advisory's `.goshs` ACL flaw."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_8cd3143b/webdav_read_only_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_8cd3143b/webdav_read_only_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_8cd3143b/webdav_read_only_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

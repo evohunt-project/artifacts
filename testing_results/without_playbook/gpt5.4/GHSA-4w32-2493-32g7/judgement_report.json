@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:34:12.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7e0ea0c4",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-4w32-2493-32g7/GHSA-4w32-2493-32g7.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "window_update_credit_overflow_panic",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7e0ea0c4/window_update_credit_overflow_panic",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7e0ea0c4/window_update_credit_overflow_panic/vulnerability_report.json",
+      "title": "Remote WINDOW_UPDATE credit overflow panics yamux connection handling",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": true,
+      "advisory_match_reason": "Same `WindowUpdate` credit-overflow root cause: inbound credit is added to the per-stream send window and overflows in `increase_send_window_by`, which is exactly what the advisory and fix commit describe.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "window_update_credit_overflow_panic",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7e0ea0c4/window_update_credit_overflow_panic",
+      "status": "qualifying_vuln",
+      "title": "Remote WINDOW_UPDATE credit overflow panics yamux connection handling",
+      "vulnerability_type": "denial_of_service"
+    },
+    "reason": "The only final qualifying finding matches the advisory's vulnerable `WindowUpdate` handling path, and the fresh PoC rerun under `.judge` shows the crafted two-frame sequence triggering the same send-window overflow panic described by the advisory.",
+    "evidence": [
+      "The advisory describes opening a stream and then sending a large `WindowUpdate` credit followed by another credit update to overflow per-stream send-window accounting and panic the connection state machine.",
+      "The finding report identifies the same path: new inbound stream credit initialization in `connection.rs`, later `WindowUpdate` credit application, and `checked_add(...).expect(\"send window not to exceed u32\")` in flow-control.",
+      "The advisory's patch commit `b1aae09d60c0bd6a5915a5448f4e8cbc5174db53` replaces the panic-on-overflow behavior with `InvalidWindowUpdate` error handling in `yamux/src/connection.rs` and `yamux/src/connection/stream/flow_control.rs`.",
+      "The fresh judge rerun log at `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7e0ea0c4/.judge/poc_runs/window_update_credit_overflow_panic/run.log` shows a panic at `flow_control.rs:183:14`, a backtrace through `yamux::connection::stream::Shared::increase_send_window_by` and `yamux::connection::Connection<T>::poll_next_inbound`, and the PoC's success signal after the victim thread panics."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "window_update_credit_overflow_panic",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7e0ea0c4/window_update_credit_overflow_panic",
+      "executed": true,
+      "command": "RUST_BACKTRACE=1 bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7e0ea0c4/.judge/poc_runs/window_update_credit_overflow_panic/workspace/window_update_credit_overflow_panic",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7e0ea0c4/.judge/poc_runs/window_update_credit_overflow_panic/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7e0ea0c4/.judge/poc_runs/window_update_credit_overflow_panic/poc_execution.json",
+      "observed_effect": "The copied PoC sent crafted `WindowUpdate` frames over loopback, triggered the `send window not to exceed u32` panic in `Shared::increase_send_window_by`, and detected the victim thread panic as its success condition.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

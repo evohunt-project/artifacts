@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The reproduction bundle clones vulnerable goshs commit `ee0488a8617b38d29d03135366d2a03f19116ca5`, starts the server with a `.goshs` block list, confirms direct access is denied, then verifies blocked-file disclosure through `?share` and blocked-file deletion through `?delete`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a blocked file still becomes readable through a minted share token and that a second blocked file can be deleted directly through the delete action endpoint.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned goshs commit `ee0488a8617b38d29d03135366d2a03f19116ca5`, built the reproduction image, confirmed that direct requests to the blocked files returned `404`, disclosed `topsecret` through a minted share token, deleted a second blocked file through `?delete`, and emitted `EVOHUNT_PROOF: share/delete endpoints bypass .goshs block rules`.",
+  "verification_method": "The helper verifies that direct access to the blocked files initially returns `404`, then checks for the exact secret string returned by the shared-file request and confirms that the second blocked file no longer exists after the delete request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run output recorded `[evohunt] direct blocked-file requests returned 404` before exploitation.",
+    "The run output recorded `[evohunt] blocked file disclosed through share token: topsecret`.",
+    "The run output recorded `[evohunt] blocked file deleted through delete endpoint`.",
+    "The run output recorded `EVOHUNT_PROOF: share/delete endpoints bypass .goshs block rules`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "ee0488a8617b38d29d03135366d2a03f19116ca5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

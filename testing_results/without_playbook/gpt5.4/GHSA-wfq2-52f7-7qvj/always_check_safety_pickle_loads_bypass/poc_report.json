@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The reproduction enables `fickling.always_check_safety()`, feeds a malicious pickle to `pickle.loads(...)`, and verifies that attacker-controlled command execution still occurs. It also verifies that the same payload is blocked when routed through `pickle.load(...)`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit should create a proof file via attacker-controlled command execution even though the generic Fickling safety hook is enabled, demonstrating that the `pickle.loads(...)` path bypasses the protection.",
+  "actual_observed_result": "Running the reproduction created `reproduction/proof.txt` with the expected marker from the malicious reducer gadget and printed a JSON success record. The same script confirmed that `pickle.load(...)` under the same hook raised `UnsafeFileError` and did not create the blocked-path proof file.",
+  "verification_method": "The helper script checks for the presence and contents of `reproduction/proof.txt` after `pickle.loads(...)`, and separately checks that `pickle.load(...)` raises `UnsafeFileError` without producing `reproduction/proof_blocked.txt`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction emitted a JSON record showing `bypass.triggered=true` and `bypass.proof_content=\"bypassed\"`.",
+    "The reproduction emitted a JSON record showing `load_path_blocked.blocked=true` and `load_path_blocked.proof_exists=false`."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction expects the original target repository checkout to be present as the session-root `repo/` sibling directory.",
+    "The reproduction creates a throwaway virtual environment and downloads the small Python dependencies `stdlib_list` and `typing_extensions` from PyPI if they are not already installed."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc.py"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction clones `n8n@1.123.21`, verifies the mounted checkout, starts a vulnerable n8n instance plus a loopback-only HTTP target, creates a low-privilege member account, and confirms that the member can read the loopback target through `/rest/dynamic-node-parameters/options`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A `global:member` user should be able to force the server to request `http://127.0.0.1:9000/secret` from inside the container and receive the loopback-only JSON response `[ {\"name\":\"ssrf-ok\",\"value\":\"secret-from-loopback\"} ]` through the API response.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `n8n@1.123.21` at commit `7762bef712ee7da86b5d84f23212463e7a745064`, built the reproduction image, started n8n, created an owner, invited a `global:member`, accepted the invite, and the member's `POST /rest/dynamic-node-parameters/options` request returned `[ {\"name\":\"ssrf-ok\",\"value\":\"secret-from-loopback\"} ]`. The run emitted the success marker `EVOHUNT_SSRF_OK` and wrote the same output to `reproduction/last-run.log`.",
+  "verification_method": "The reproduction container verifies that `/target-repo` is the pinned vulnerable commit, confirms that the exploit runs as a `global:member` account, issues the SSRF trigger, and checks that the exact returned option value is `secret-from-loopback`. The run only succeeds if that exact value is observed and the success marker is printed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`reproduction/last-run.log` contains the success marker `EVOHUNT_SSRF_OK`.",
+    "The returned API body in the run log includes `[ {\"name\":\"ssrf-ok\",\"value\":\"secret-from-loopback\"} ]`.",
+    "The run log records that the exploit was executed from a `global:member` account and that the mounted checkout matched commit `7762bef712ee7da86b5d84f23212463e7a745064`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned `n8n@1.123.21` tag, verifies the resulting commit, and mounts that checkout read-only into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "n8n@1.123.21 (7762bef712ee7da86b5d84f23212463e7a745064)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-entrypoint.sh",
+      "reproduction/loopback-target.mjs",
+      "reproduction/ssrf-payload.json"
+    ]
+  }
+}

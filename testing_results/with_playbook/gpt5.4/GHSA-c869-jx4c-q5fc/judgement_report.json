@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:25:29.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_57cd40a9",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-c869-jx4c-q5fc/GHSA-c869-jx4c-q5fc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "api-upload-runtime-dir-write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_57cd40a9/api-upload-runtime-dir-write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_57cd40a9/api-upload-runtime-dir-write/vulnerability_report.json",
+      "title": "Upload destination parameter allows writes into runtime directories",
+      "vulnerability_type": "unsafe_file_upload_and_write",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is about `/api/upload` path rewriting and arbitrary runtime file writes in `server/api/projects/index.js`; the advisory is a missing guest authorization check on `POST/DELETE /api/scheduler` while `secureEnabled=true`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "default-unauthenticated-admin-access",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_57cd40a9/default-unauthenticated-admin-access",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_57cd40a9/default-unauthenticated-admin-access/vulnerability_report.json",
+      "title": "Default unauthenticated mode grants admin API and socket access",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding relies on `secureEnabled=false` causing a global auth bypass and admin group `-1`; the advisory instead fixes guest-token access to scheduler mutations even when `secureEnabled=true`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable scheduler guest-auth bypass or the associated heartbeat-to-guest-token path. The qualifying findings instead cover an `/api/upload` arbitrary write, a separate `secureEnabled=false` global admin bypass, and an unrelated import deserialization issue.",
+    "evidence": [
+      "The upstream advisory patch adds `isGuestUser()` in `server/api/jwt-helper.js` and blocks guest users only in `server/api/scheduler/index.js` for `POST /api/scheduler` and `DELETE /api/scheduler`, showing the root cause is missing guest authorization on scheduler mutations.",
+      "The same patch also adjusts `POST /api/heartbeat` in `server/api/index.js`, which is where guest-token behavior relevant to the advisory lives; none of the session findings references that heartbeat flow.",
+      "The `default-unauthenticated-admin-access` finding depends on `secureEnabled=false` and `verifyGroups()` returning admin `-1`, while the advisory explicitly impacts deployments with `secureEnabled=true` and does not rely on the global auth-disabled mode.",
+      "The `api-upload-runtime-dir-write` finding targets `/api/upload` writes in `server/api/projects/index.js`, and the `example` finding targets a non-scheduler import deserialization path, so neither matches the advisory-described vulnerable code."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_57cd40a9/api-upload-runtime-dir-write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_57cd40a9/api-upload-runtime-dir-write/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_57cd40a9/api-upload-runtime-dir-write/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_57cd40a9/default-unauthenticated-admin-access",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_57cd40a9/default-unauthenticated-admin-access/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_57cd40a9/default-unauthenticated-admin-access/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

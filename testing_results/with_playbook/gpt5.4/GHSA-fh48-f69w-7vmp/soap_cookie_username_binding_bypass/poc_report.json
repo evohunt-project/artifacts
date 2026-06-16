@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_authentication",
+  "summary": "The reproduction logs in as a low-privilege user, reuses that user's legitimate session cookie as the SOAP password field, claims the administrator username, and verifies that an administrator-only SOAP method creates a project in the database.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The attacker should be able to invoke an administrator-only SOAP method as administrator while presenting only their own low-privilege cookie, and the run should create a real project side effect in the target database.",
+  "actual_observed_result": "Running ./reproduction/run.sh created a low-privilege attacker account, confirmed BASELINE_DENIED=1 when mc_project_add() was called as attacker with the attacker's own cookie, then succeeded with the same cookie when the SOAP username was switched to administrator. The run produced PROJECT_ID=1, PROJECT_NAME=evohunt-poc-5fc402c3, and EVOHUNT_POC_SUCCESS project_id=1 project_name=evohunt-poc-5fc402c3 after verifying the new project row in mantis_project_table.",
+  "verification_method": "The verification helper distinguishes real impersonation from generic login success by first asserting that the attacker's own identity is denied for mc_project_add(), then checking that the same cookie succeeds only when paired with the administrator username, and finally querying the database to confirm the administrator-only project was actually created.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "BASELINE_DENIED=1",
+    "PROJECT_ID=1",
+    "PROJECT_NAME=evohunt-poc-5fc402c3",
+    "EVOHUNT_POC_SUCCESS project_id=1 project_name=evohunt-poc-5fc402c3"
+  ],
+  "limitations_or_blockers": [
+    "The unattended installer emits a transient curl connection warning before the PHP server is started, but installation still completes and the exploit verification succeeds."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "7ae58efac10ce8bf76bdfd7cdd257cd39dcbcde8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/install_mantis.php",
+      "reproduction/create_low_user.php",
+      "reproduction/soap_project_add_poc.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

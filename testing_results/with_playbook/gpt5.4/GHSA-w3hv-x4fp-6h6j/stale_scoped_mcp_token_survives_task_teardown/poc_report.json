@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "token_lifecycle_auth_bypass",
+  "summary": "The Docker-based reproduction confirms that a task-scoped MCP bearer token captured from a started task session remains authorized after the source task has been deleted, allowing the stale token to create a new workspace finding.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a deleted task's scoped MCP token can still call workspace-scoped MCP tools and create a new finding after the source task no longer exists.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Grackle v0.70.2, started the target server, registered the fake local environment, captured a real scoped MCP token from a started task, deleted the source task, verified that the workspace task list was empty, and then used the stale token to create and list a new finding titled STALE_TOKEN_SUCCESS. The final run printed the finding table and the success line 'SUCCESS: STALE_TOKEN_SUCCESS was posted after the source task had been deleted.'",
+  "verification_method": "The reproduction script verifies three conditions in sequence: the source task is deleted and `grackle task list attack-ws` returns `No tasks.`, the captured stale token successfully invokes `finding_post` and `finding_list` over `/mcp`, and the target CLI `grackle finding list attack-ws --limit 20` contains the exact title `STALE_TOKEN_SUCCESS`. This distinguishes the access-control failure from a generic startup, transport, or parsing issue.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final `./reproduction/run.sh` execution printed `SUCCESS: STALE_TOKEN_SUCCESS was posted after the source task had been deleted.`",
+    "The final run printed a `grackle finding list` table containing a new `bug` finding titled `STALE_TOKEN_SUCCESS` with tags `stale-token,evohunt`.",
+    "The reproduction logic only reaches the success print after verifying that the source workspace had `No tasks.` following deletion and that the stale token still succeeded against `finding_post` and `finding_list`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, builds the target image from that checkout, and mounts the checkout read-only into the helper container at /target-repo.",
+    "pinned_commit_or_ref": "v0.70.2 (commit 0e0f87f352a403be4fa3a966d8e3cc70e330f204)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/fake-powerline.mjs",
+      "reproduction/mcp-call.mjs",
+      "reproduction/run-repro.mjs",
+      "reproduction/package.json"
+    ]
+  }
+}

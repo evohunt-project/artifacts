@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:59:11.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfbcabbe",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-vx9w-5cx4-9796/GHSA-vx9w-5cx4-9796.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "arbitrary_file_write_via_output_path",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfbcabbe/arbitrary_file_write_via_output_path",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfbcabbe/arbitrary_file_write_via_output_path/vulnerability_report.json",
+      "title": "Unauthenticated output_path parameter enables arbitrary server-side file write",
+      "vulnerability_type": "arbitrary_file_write",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is an unauthenticated `output_path`-based file write on `/pdf` and `/screenshot`; the advisory is a `url=file://` local file read on Docker API endpoints. The attacker-controlled parameter, vulnerable logic, sink, and impact are different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The sole final qualifying finding is a server-side file write through `output_path` on `/pdf` and `/screenshot`, while the advisory describes local file inclusion through `file://` URLs in the `url` parameter on Docker API endpoints. Shared endpoint names are not enough because the source-to-sink path and security consequence differ.",
+    "evidence": [
+      "The advisory JSON describes unauthenticated local file read by sending `url: file:///etc/passwd` to `/execute_js`, `/screenshot`, `/pdf`, or `/html`.",
+      "The finding report identifies `output_path` as the attacker-controlled input and `os.path.abspath(output_path) -> open(path, \"wb\")` as the vulnerable operation on `/pdf` and `/screenshot`.",
+      "The Crawl4AI v0.8.0 release notes state that `/execute_js`, `/screenshot`, `/pdf`, and `/html` now block `file://` URLs as the LFI fix, which ties the advisory to URL-scheme validation rather than output-path handling.",
+      "The finding reproduction runs against `unclecode/crawl4ai:0.8.0`, while the advisory marks `0.8.0` as the fixed version for the `file://` LFI."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfbcabbe/arbitrary_file_write_via_output_path",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfbcabbe/arbitrary_file_write_via_output_path/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfbcabbe/arbitrary_file_write_via_output_path/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

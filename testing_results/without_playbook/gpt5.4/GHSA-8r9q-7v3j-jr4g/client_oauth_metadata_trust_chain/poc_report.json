@@ -1,0 +1,35 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "oauth_metadata_trust_ssrf_credential_exfiltration",
+  "summary": "The reproduction forces the SDK's OAuth retry logic to fetch attacker-supplied protected-resource metadata and then POST dynamic registration and token requests to attacker-controlled endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that a malicious `resource_metadata` URL is fetched and that attacker-controlled registration and token endpoints receive OAuth client material derived from the SDK's authentication flow.",
+  "actual_observed_result": "Running `./reproduction/run.sh` produced `POC_SUCCESS`, logged the fetch to `/prm`, and captured both the dynamic-registration request and the token request containing the attacker-issued `client_id` and `client_secret`.",
+  "verification_method": "The PoC spins up a malicious resource server and attacker metadata server, invokes the SDK's `withOAuth()` middleware, and asserts that the SDK fetched the attacker-chosen metadata URL and sent a token POST carrying `client_id=attacker-issued-client` and `client_secret=attacker-issued-secret`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console output contains `POC_SUCCESS`.",
+    "The attacker server records at least one request to `/prm`, proving the untrusted metadata URL was fetched.",
+    "The attacker server records a registration POST.",
+    "The attacker server records a token POST with `grant_type=client_credentials`, `client_id=attacker-issued-client`, and `client_secret=attacker-issued-secret`."
+  ],
+  "limitations_or_blockers": [
+    "The included PoC demonstrates the non-interactive client-credentials path because it is deterministic and requires no browser redirect. The same trust chain also affects other OAuth exchange paths that reuse the discovered metadata."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc.ts",
+      "reproduction/package.json",
+      "reproduction/sdk/client/auth.ts",
+      "reproduction/sdk/client/middleware.ts",
+      "reproduction/sdk/shared/auth.ts",
+      "reproduction/sdk/shared/auth-utils.ts",
+      "reproduction/sdk/shared/transport.ts",
+      "reproduction/sdk/server/auth/errors.ts",
+      "reproduction/sdk/types.ts"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction clones the vulnerable Clatter revision, builds a small harness against the mounted checkout, and confirms that malformed inbound message lengths hit panic-based parser paths instead of structured rejection.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the direct buffer transport API returns `Err(TooShort)` for an empty ciphertext while sibling inbound parser paths still panic on malformed lengths, proving a peer-triggerable denial-of-service condition.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `1e991cf72ee1396c66e62746e6d10700aa1a5270`, built the reproduction image, and printed `direct_receive_result=Err(TooShort)`, `receive_vec_panicked=true`, `oversized_receive_panicked=true`, and `oversized_handshake_panicked=true`, followed by `[evohunt] verification passed` and `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The verifier compiles and runs a harness against the mounted vulnerable checkout, then checks for the exact output markers that distinguish the safe short-input sibling (`Err(TooShort)`) from the panic-triggering inbound parser paths.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The harness established a normal Noise transport session before testing malformed inputs, ruling out startup or handshake-setup failure.",
+    "The output included `direct_receive_result=Err(TooShort)`, showing the direct buffer receive path handles the empty ciphertext as a structured error.",
+    "The output included `receive_vec_panicked=true`, confirming that the convenience receive path panics on the same empty ciphertext.",
+    "The output included `oversized_receive_panicked=true` and `oversized_handshake_panicked=true`, confirming panic-based oversized-input rejection in both transport and handshake inbound parsers."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "1e991cf72ee1396c66e62746e6d10700aa1a5270",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/recv-vec-poc/Cargo.toml",
+      "reproduction/recv-vec-poc/src/main.rs"
+    ]
+  }
+}

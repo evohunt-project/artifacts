@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The packaged reproduction bundle cloned upstream commit `5eb316c12c2a2eff9cbcc595611bf33c13be773f`, started the UDR SBI server, and confirmed that an unauthenticated `POST /nudr-dr/v2/subscription-data/subs-to-notify` request succeeds with `201 Created`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated caller can perform a state-changing `/nudr-dr` operation and receive `201 Created`, demonstrating fail-open authorization on the SBI surface.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the Docker bundle, cloned the pinned upstream commit, issued the unauthenticated subscription create request, observed a `201` response in the server log, and emitted `EVOHUNT_FAIL_OPEN_AUTH_CONFIRMED`.",
+  "verification_method": "The reproduction helper starts the vulnerable server locally, sends the unauthenticated request over HTTP, asserts that the response status is `201 Created`, checks that one subscription was stored, and prints a success marker only if all checks pass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "UDR server log line for `POST /nudr-dr/v2/subscription-data/subs-to-notify` with status `201`.",
+    "Bundle success marker `EVOHUNT_FAIL_OPEN_AUTH_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5eb316c12c2a2eff9cbcc595611bf33c13be773f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/evohunt_fail_open_auth.go"
+    ]
+  }
+}

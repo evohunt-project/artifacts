@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:16:10.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b594c8b",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-5j4h-4f72-qpm6/GHSA-5j4h-4f72-qpm6.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "downloadable_purchased_link_ssrf",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b594c8b/downloadable_purchased_link_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b594c8b/downloadable_purchased_link_ssrf/vulnerability_report.json",
+      "title": "Purchased downloadable URLs are fetched server-side without private-address validation",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "Distinct root cause and code path: this finding is an admin-seeded purchased-download SSRF in `DownloadableProductController::download()`, not server-side template evaluation of customer order or address fields.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "H",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "theme_static_content_stored_xss",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b594c8b/theme_static_content_stored_xss",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b594c8b/theme_static_content_stored_xss/vulnerability_report.json",
+      "title": "Theme static content strips only script tags and renders surviving HTML event handlers raw",
+      "vulnerability_type": "stored_xss",
+      "advisory_match": false,
+      "advisory_match_reason": "This is stored HTML/event-handler injection in theme static content rendered on the storefront home page; it does not involve checkout or customer-address data being evaluated as server-side templates.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "H",
+          "UI": "P",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's checkout or address SSTI root cause. The advisory is about customer-controlled order/address fields being evaluated as templates in admin or customer views, while the session's qualifying finals are a purchased-download SSRF and a theme static-content stored XSS.",
+    "evidence": [
+      "The advisory JSON describes `{{7*7}}` injected by a normal customer during checkout or address creation becoming `49` in `/admin/sales/orders` and customer address views, which is server-side template evaluation of stored customer-controlled fields.",
+      "`downloadable_purchased_link_ssrf` instead centers on `DownloadableProductController::download()` calling `copy()` on an admin-supplied downloadable URL and relaying loopback or internal HTTP responses.",
+      "`theme_static_content_stored_xss` instead centers on `ThemeCustomizationRepository::update()` only stripping `<script>` tags and `shop::home.index` rendering surviving HTML event handlers from theme static content.",
+      "`artifacts/component_family_checklist.md` explicitly states that SSTI-specific render paths were inspected and pruned, while the surviving accepted render-family issue was stored XSS rather than server-side template injection."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b594c8b/downloadable_purchased_link_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b594c8b/downloadable_purchased_link_ssrf/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b594c8b/downloadable_purchased_link_ssrf/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b594c8b/theme_static_content_stored_xss",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b594c8b/theme_static_content_stored_xss/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1b594c8b/theme_static_content_stored_xss/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

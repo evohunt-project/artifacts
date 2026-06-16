@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:04:43.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3725da04",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-78mf-482w-62qj/GHSA-78mf-482w-62qj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "cluster_proxy_ssrf_internal_service_access",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3725da04/cluster_proxy_ssrf_internal_service_access",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3725da04/cluster_proxy_ssrf_internal_service_access/vulnerability_report.json",
+      "title": "Cluster proxy SSRF lets authenticated users reach loopback and private HTTP services",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an authenticated SSRF in cluster node registration and reverse-proxy routing (`POST /api/nodes`, `X-Node-ID`, and `internal/middleware/proxy.go`), while the advisory is Cross-Site WebSocket Hijacking caused by `websocket.Upgrader.CheckOrigin` always returning true on WebSocket endpoints plus cookie-based browser authentication.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The session produced one accepted qualifying finding, but it targets a different root cause. The reported issue is an authenticated SSRF through attacker-controlled cluster node URLs and proxy middleware, whereas the advisory describes CSWSH on WebSocket endpoints caused by unconditional `CheckOrigin` acceptance and cookie-based ambient authentication.",
+    "evidence": [
+      "The advisory describes `websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}` across WebSocket handlers such as `api/terminal/pty.go`, `api/event/websocket.go`, `api/nginx/websocket.go`, and related files, and it relies on browser cookies being accepted for authentication.",
+      "The accepted finding report instead identifies `POST /api/nodes`, attacker-controlled `X-Node-ID`, `api/cluster/node.go:51`, and `internal/middleware/proxy.go:33`, where `httputil.NewSingleHostReverseProxy(baseUrl)` forwards requests to an attacker-chosen `node.URL`.",
+      "The finding's demonstrated exploit is a low-privilege authenticated user retrieving `INTERNAL-ONLY-SECRET` from a loopback-only HTTP service; it does not involve a browser victim, cross-origin WebSocket upgrade, `Origin` validation, or cookie-driven CSWSH.",
+      "Repository overlap alone is insufficient: the finding and the advisory do not share the same vulnerable function, sink, guard failure, or source-to-sink path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3725da04/cluster_proxy_ssrf_internal_service_access",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3725da04/cluster_proxy_ssrf_internal_service_access/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3725da04/cluster_proxy_ssrf_internal_service_access/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction bundle clones the vulnerable public Craft Commerce ref, verifies that `FormulasController` still bypasses the Commerce CP permission base class, and then triggers fatal memory exhaustion in `Formulas::evaluateCondition()` with `1 in range(1,50000000)`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should prove that attacker-controlled formula validation input can force the real Twig-based formula service to allocate enough memory to fatally exhaust the PHP process.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the reproduction image, cloned `craftcms/commerce` at `64017c085b89cf386d19ad0cc324c44229e91ed8`, confirmed the vulnerable controller inheritance and route-to-sink wiring from source, and emitted `EVOHUNT_FORMULA_DOS_CONFIRMED` after the probe forced `Allowed memory size of 67108864 bytes exhausted` from Twig template evaluation.",
+  "verification_method": "The container copies the pinned vulnerable checkout into a writable workspace, installs locked dependencies, asserts that `FormulasController` extends bare `Controller` instead of `BaseCpController`, confirms that the validator route reaches `validateConditionSyntax()` and then `evaluateCondition()`, and checks that `range` is allowed in the formula service. It then runs a helper that exercises the exact `evaluateCondition()` sink with a malicious `range()` expression and requires the fatal memory-exhaustion message plus the Twig evaluation frame before printing the success token.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `EVOHUNT_FORMULA_DOS_CONFIRMED`.",
+    "Captured stderr contained `Allowed memory size of 67108864 bytes exhausted`.",
+    "The fatal output identified Twig evaluation at `vendor/twig/twig/src/Environment.php` while the source assertions confirmed the vulnerable validator-to-sink path and `range` availability."
+  ],
+  "limitations_or_blockers": [
+    "The dynamic proof exercises the decisive formula-service sink directly rather than dispatching a full HTTP request. The bundle separately verifies the vulnerable route-to-sink and missing Commerce permission guard from source before running the sink."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "64017c085b89cf386d19ad0cc324c44229e91ed8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/probe_condition.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

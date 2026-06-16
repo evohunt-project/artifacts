@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "slowloris_dos",
+  "summary": "The reproduction starts a minimal HttpListener server in Docker, opens many partial HTTP requests, and verifies that a legitimate follow-up request fails while the listener process exits with a crash signal.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The listener should become unavailable to legitimate clients after many partial requests are held open, demonstrating a remote availability failure caused by the timeout bug.",
+  "actual_observed_result": "Running ./reproduction/run.sh caused the follow-up request to fail with connection refusal after the slow sockets were opened, and the containerized listener exited with status 139 and a 'Segmentation fault (core dumped)' log line.",
+  "verification_method": "The run script opens many incomplete requests, then issues a legitimate HTTP request with a short timeout and verifies both the request failure and that the listener container exited abnormally after the exploit traffic.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "run.log contains an EXPECTED_FAILURE oracle for the legitimate follow-up request.",
+    "container_status.log records the listener container exiting with code 139.",
+    "container.log includes the listener startup line followed by 'Segmentation fault (core dumped)'."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction constrains the container file-descriptor limit to accelerate resource exhaustion and make the failure deterministic."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/SlowlorisHarness.csproj",
+      "reproduction/Program.cs",
+      "reproduction/exploit.py"
+    ]
+  }
+}

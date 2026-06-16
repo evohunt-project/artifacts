@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:35:35.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c5885cb5",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-c87c-78rc-vmv2/GHSA-c87c-78rc-vmv2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "qualifying_outlier_filter_query_injection",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c5885cb5/qualifying_outlier_filter_query_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c5885cb5/qualifying_outlier_filter_query_injection/vulnerability_report.json",
+      "title": "Outlier filter query injection reaches pandas query execution without the custom-filter safety gate",
+      "vulnerability_type": "query_injection_rce",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding targets the same /save-column-filter persistence path and the same downstream pandas DataFrame.query execution sink that the advisory fix hardened with outlier-query validation and a final query-safety check.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "qualifying_outlier_filter_query_injection",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c5885cb5/qualifying_outlier_filter_query_injection",
+      "status": "qualifying_vuln",
+      "title": "Outlier filter query injection reaches pandas query execution without the custom-filter safety gate",
+      "vulnerability_type": "query_injection_rce"
+    },
+    "reason": "The selected finding matches the advisory root cause because it stores attacker-controlled outlier-filter query text through /dtale/save-column-filter/<data_id> and later replays that text into pandas DataFrame.query with the Python engine. The copied PoC reproduced end-to-end server-side command execution against the vulnerable parent of the fixing commit.",
+    "evidence": [
+      "In vulnerable commit 83fce4380848d9ae026b34f5dfd7bd56c52e7b02, dtale/views.py save_column_filter() passes the untrusted cfg parameter directly into ColumnFilter(...).save_filter() for /save-column-filter/<data_id>.",
+      "In the same vulnerable commit, dtale/column_filters.py OutlierFilter.build_filter() returns the supplied query unchanged, and dtale/query.py inner_build_query() plus run_query() concatenate outlierFilters and execute them with DataFrame.query().",
+      "The advisory fix commit 431c6148d3c799de20e1dec86c4432f48e3d0746 adds validate_outlier_query() in OutlierFilter.build_filter() and validate_query_safety() immediately before DataFrame.query(), which is the same source-to-sink path described by the finding.",
+      "The copied PoC execution under .judge/poc_runs/qualifying_outlier_filter_query_injection exited 0, logged the data_export -> run_query -> pandas.DataFrame.query stack, and retained proof.txt with the attacker-controlled string evohunt_rce."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "qualifying_outlier_filter_query_injection",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c5885cb5/qualifying_outlier_filter_query_injection",
+      "executed": true,
+      "command": "bash finding_copy/reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c5885cb5/.judge/poc_runs/qualifying_outlier_filter_query_injection",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c5885cb5/.judge/poc_runs/qualifying_outlier_filter_query_injection/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c5885cb5/.judge/poc_runs/qualifying_outlier_filter_query_injection/poc_execution.json",
+      "observed_effect": "The copied PoC enumerated dataset id 1, saved the malicious outlier filter through /dtale/save-column-filter/1, triggered /dtale/data-export/1, logged the vulnerable data_export -> run_query -> pandas.DataFrame.query path, and produced /Users/lumi/ziyue/EvoHunt-DryRun/advisory_c5885cb5/.judge/poc_runs/qualifying_outlier_filter_query_injection/proof.txt containing evohunt_rce.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

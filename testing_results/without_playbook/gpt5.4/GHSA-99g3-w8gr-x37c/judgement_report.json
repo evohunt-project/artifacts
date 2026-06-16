@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:27:18Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_67a9e49f",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-99g3-w8gr-x37c/GHSA-99g3-w8gr-x37c.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "recipe_unpack_symlink_overwrite",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_67a9e49f/recipe_unpack_symlink_overwrite",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_67a9e49f/recipe_unpack_symlink_overwrite/vulnerability_report.json",
+      "title": "Recipe bundle extraction accepts symlink members and permits arbitrary file overwrite",
+      "vulnerability_type": "archive_extraction_arbitrary_file_overwrite",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding identifies a distinct symlink-target overwrite in `_safe_extractall()` that affects `unpack` and `pull`, while the advisory describes `cmd_unpack`'s separate raw `tar.extract()` loop that fails to validate archive member paths and explicitly says `_safe_extractall` already protected the pull/publish flows.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "A",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or root cause. The session's only qualifying finding is a separate symlink-member overwrite bug in `_safe_extractall()`, not the advisory's raw `tar.extract()` path traversal in `cmd_unpack`.",
+    "evidence": [
+      "The advisory describes `src/praisonai/praisonai/cli/features/recipe.py:1170-1172`, where `cmd_unpack` iterates archive members and calls `tar.extract(member, recipe_dir)` without validating `member.name`.",
+      "The qualifying finding report instead describes `src/praisonai/praisonai/recipe/registry.py:131-178`, where `_safe_extractall()` checks only member names and then calls `tar.extractall(dest_dir)`, allowing a symlink-member plus same-name file overwrite outside the extraction root.",
+      "The advisory says `_safe_extractall` already protected `pull` and `publish`, while the qualifying finding explicitly claims both `pull` paths and `unpack` are affected; that mismatch points to a different vulnerable mechanism and code path.",
+      "The finding's PoC uses a symlink member whose link target is `../../proof_target.txt` and then writes through that symlink, which is a different primitive from the advisory's `../../` archive-member-name traversal."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_67a9e49f/recipe_unpack_symlink_overwrite",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_67a9e49f/recipe_unpack_symlink_overwrite/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_67a9e49f/recipe_unpack_symlink_overwrite/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

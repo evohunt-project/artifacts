@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:48:41.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_02024d9b",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-g9cw-qwhf-24jp/GHSA-g9cw-qwhf-24jp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "udr_subscription_notify_panic_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_02024d9b/udr_subscription_notify_panic_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_02024d9b/udr_subscription_notify_panic_dos/vulnerability_report.json",
+      "title": "Notification callback panic lets a low-privilege caller crash UDR",
+      "vulnerability_type": "notification_panic_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a nil-pointer denial of service in `internal/sbi/processor/callback.go` reached from subscription-data notification and AMF context patch handlers, while the advisory is an unauthorized delete in `HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdDelete` caused by a missing `return` after a 404 on invalid `influenceId`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only accepted qualifying finding is a separate notification callback nil-pointer panic that crashes UDR; it does not identify the advisory's invalid-path influence-data delete handler or its missing-return authorization flaw.",
+    "evidence": [
+      "The advisory describes DELETE `/nudr-dr/v2/application-data/influenceData/{influenceId}/{subscriptionId}` and a root cause in `HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdDelete`, where `influenceId != \"subs-to-notify\"` sends `404 page not found` but execution continues into `ApplicationDataInfluenceDataSubsToNotifySubscriptionIdDeleteProcedure`.",
+      "The session input manifest lists only one qualifying finding, `udr_subscription_notify_panic_dos`, so there is no other accepted finding to match against the advisory.",
+      "That finding report targets `POST /nudr-dr/v2/subscription-data/subs-to-notify` plus `PATCH /nudr-dr/v2/subscription-data/{ueId}/{servingPlmnId}/amf-3gpp-access` and attributes the bug to `SendOnDataChangeNotify` dereferencing an uninitialized `DataChangeNotify` pointer before `Fatalf` terminates the process.",
+      "The reported impact is denial of service from a notification callback panic, not unauthorized deletion of Traffic Influence Subscriptions through the advisory's invalid influence-data path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_02024d9b/udr_subscription_notify_panic_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_02024d9b/udr_subscription_notify_panic_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_02024d9b/udr_subscription_notify_panic_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

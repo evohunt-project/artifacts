@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The reproduction starts the vulnerable localhost HTTP server as a victim user, proves the attacker user cannot read the victim's graph files directly, then shows that the attacker can still query and poison the victim-owned graph over 127.0.0.1.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an attacker user with no direct read access to the victim-owned graph can still read project graph data through GET /query and persist a new mistake node through POST /learn.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned upstream tag v2.0.1, built the reproduction image, started the vulnerable localhost service as a victim user, confirmed that the attacker user could not read the victim-owned .engram/graph.db on disk, then showed that the attacker could still query the victim graph and inject a new mistake node through POST /learn. The run ended with the success signal: \"[evohunt] SUCCESS: attacker could query and poison the victim-owned graph over localhost without direct file access\".",
+  "verification_method": "The container creates separate victim and attacker users, restricts the victim repo copy so the attacker cannot read .engram/graph.db directly, then verifies that attacker-owned localhost requests still succeed and that the injected mistake node appears in a follow-up query.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction log shows \"[evohunt] verifying attacker cannot read victim graph on disk\" followed by successful continuation, proving the filesystem check failed closed for the attacker account.",
+    "The reproduction log shows \"[evohunt] querying victim graph over localhost as attacker\", confirming that unauthenticated GET /query succeeded after the direct-file-access check failed.",
+    "The reproduction log shows \"[evohunt] poisoning victim graph over localhost as attacker\" and \"[evohunt] verifying injected node is visible through follow-up query\", confirming that POST /learn persisted attacker-controlled graph content.",
+    "The run ended with \"[evohunt] SUCCESS: reproduction completed and verified\"."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "d9a655a651af9c61590264713abda921bd461a35",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

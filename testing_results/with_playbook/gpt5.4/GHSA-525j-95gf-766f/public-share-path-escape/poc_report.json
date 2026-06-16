@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The reproduction bundle creates a share rooted at /shared and proves that a public PATCH request can copy ../../secret.txt into the shared subtree.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The bundled helper should emit PUBLIC_SHARE_CONTAINMENT_BYPASS_CONFIRMED after the public share API returns the secret copied from outside the shared subtree.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned vulnerable commit, built the reproduction image, created a write-enabled share rooted at /shared, copied ../../secret.txt into loot.txt through the public PATCH path, and fetched the copied secret before emitting PUBLIC_SHARE_CONTAINMENT_BYPASS_CONFIRMED.",
+  "verification_method": "Inside the container, validate.sh creates a write-enabled share rooted at /shared, sends a PATCH copy request with ../../secret.txt as the source, fetches loot.txt back through the public share API, and exits successfully only if the fetched content matches the proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction run created a write-enabled share rooted at /shared and returned a concrete share hash.",
+    "The reproduction run observed a successful PATCH copy response for ../../secret.txt -> loot.txt.",
+    "The reproduction run fetched loot.txt through the public share API and received the proof content EVOHUNT_PUBLIC_SHARE_ESCAPE_CONFIRMED before emitting PUBLIC_SHARE_CONTAINMENT_BYPASS_CONFIRMED."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the upstream repository on the host from the v1.2.2-stable ref, checks out commit 09713b32a5f6e369a5197319749a12b8e7fd5f2b, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "09713b32a5f6e369a5197319749a12b8e7fd5f2b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/config.yaml",
+      "reproduction/validate.sh"
+    ]
+  }
+}

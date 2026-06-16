@@ -1,0 +1,101 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:16:46.698Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-v52c-386h-88mc/GHSA-v52c-386h-88mc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "orphaned-files-dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/orphaned-files-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/orphaned-files-dos/vulnerability_report.json",
+      "title": "Malformed multipart requests can leave orphaned disk files and exhaust storage",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "Same package and release line, but this finding depends on an asynchronous fileFilter and disk-storage cleanup race that leaves orphaned files after a malformed multipart error, not the advisory's dropped-upload missing request-abort cleanup in lib/make-middleware.js.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "request-abort-dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/request-abort-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/request-abort-dos/vulnerability_report.json",
+      "title": "Dropped multipart uploads leave Multer request handlers hanging and enable resource-exhaustion DoS",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": true,
+      "advisory_match_reason": "It identifies the same Multer lib/make-middleware.js root cause fixed for GHSA-v52c-386h-88mc: client-aborted uploads are not treated as a terminal cleanup path, so the request handler can remain hung after the connection drops.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "request-abort-dos",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/request-abort-dos",
+      "status": "qualifying_vuln",
+      "title": "Dropped multipart uploads leave Multer request handlers hanging and enable resource-exhaustion DoS",
+      "vulnerability_type": "resource_exhaustion_dos"
+    },
+    "reason": "The selected finding matches the advisory-described dropped-upload bug in Multer's shared multipart middleware, and a fresh PoC run from a copied .judge workspace reproduced the hung-request condition on the pinned vulnerable v2.0.2 checkout.",
+    "evidence": [
+      "The advisory summary says dropping the connection during file upload can trigger DoS; the selected finding describes the same client-abort condition and the same missing request-abort handling in repo/lib/make-middleware.js.",
+      "The upstream 2.1.0 make-middleware.js adds explicit req 'aborted' and 'close' failure handling that is absent in v2.0.2, matching the selected finding's root-cause claim.",
+      "Fresh runtime evidence in /Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/.judge/poc_runs/request-abort-dos/run.log shows the copied PoC cloned the pinned vulnerable ref e5db9caf5da30b61e90ad56db5f6821d36ce2de9 and printed '[evohunt] HANG_CONFIRMED' after an aborted multipart upload."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "request-abort-dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/request-abort-dos",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/.judge/poc_runs/request-abort-dos/finding_copy",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/.judge/poc_runs/request-abort-dos/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/.judge/poc_runs/request-abort-dos/poc_execution.json",
+      "observed_effect": "The copied PoC cloned Multer v2.0.2 at e5db9caf5da30b61e90ad56db5f6821d36ce2de9, ran the aborted-upload harness, and printed '[evohunt] HANG_CONFIRMED', showing the middleware callback never reached a terminal state after the client dropped the multipart upload.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/orphaned-files-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/orphaned-files-dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f78397a8/orphaned-files-dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

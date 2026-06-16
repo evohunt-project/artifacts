@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the authenticated site-navigation health-check path sends an outbound request to an attacker-selected internal target with attacker-controlled method, path, headers, and body.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the health-check worker send a POST request to the internal test target at /internal-only with the X-Evohunt header and the blind-ssrf-body payload, proving server-side request forgery and request steering.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit e43f137c92e2907859dc02eb2c021ea4568b1c7c, built the reproduction image, and executed the harness. The harness printed SITECHECK_HOST_RETARGETED, SITECHECK_TEST_TRIGGERED_REQUEST, and SSRF_REQUEST POST /internal-only blind-ssrf-body after the internal target observed the forged request.",
+  "verification_method": "The verification helper runs the Go harness against the mounted target checkout and requires the exact proof markers for host retargeting, trigger execution, and the observed forged request tuple. This distinguishes the SSRF from a generic route hit, parser error, or unrelated outbound failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container run printed SITECHECK_HOST_RETARGETED.",
+    "The container run printed SITECHECK_TEST_TRIGGERED_REQUEST.",
+    "The container run printed SSRF_REQUEST POST /internal-only blind-ssrf-body."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "e43f137c92e2907859dc02eb2c021ea4568b1c7c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/go.mod",
+      "reproduction/main.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

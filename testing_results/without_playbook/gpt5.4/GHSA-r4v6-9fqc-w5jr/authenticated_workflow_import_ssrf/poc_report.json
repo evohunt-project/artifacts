@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authenticated_ssrf",
+  "summary": "The delivered Docker-based reproduction shows that a low-privileged invited n8n member can call the workflow import-from-URL endpoint and force the server to fetch a loopback-only workflow JSON resource.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should let a non-owner member with workflow creation rights import a workflow from `http://127.0.0.1:18080/...`, proving that the target server performs an attacker-directed loopback fetch and returns the fetched workflow data through the API.",
+  "actual_observed_result": "Running `./authenticated_workflow_import_ssrf/reproduction/run.sh` cloned `n8n@2.17.4`, built the helper image, started the vulnerable target, created an invited member account, called `GET /rest/workflows/from-url`, printed `{\"proofToken\":\"ssrf-proof-advisory_f79125d6\",\"projectId\":\"UasJZ5DdFhPvigrQ\"}`, and then `verify.sh` confirmed that the target-side loopback helper saw the same proof token.",
+  "verification_method": "The exploit script first verifies application behavior by asserting that the imported workflow response contains a node named `Proof <token>`, which can only happen if the server fetched the attacker-chosen URL. The verification helper then checks `/tmp/ssrf-proof.log` inside the target container for the exact token, proving the request reached the loopback-only HTTP server rather than a generic external endpoint.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The attacker container printed `{\"proofToken\":\"ssrf-proof-advisory_f79125d6\",\"projectId\":\"UasJZ5DdFhPvigrQ\"}` after successfully importing the workflow via the vulnerable endpoint.",
+    "The target-side verifier printed `[evohunt] verification passed: internal workflow server saw token ssrf-proof-advisory_f79125d6`.",
+    "The run completed with `[evohunt] SUCCESS: low-privileged workflow import reached loopback-only resource`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref `n8n@2.17.4`, and mounts that checkout into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "n8n@2.17.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/start-target.sh",
+      "reproduction/internal-workflow-server.mjs",
+      "reproduction/exploit.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

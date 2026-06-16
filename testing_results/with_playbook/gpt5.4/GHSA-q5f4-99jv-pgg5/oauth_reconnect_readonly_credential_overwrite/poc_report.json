@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction clones the vulnerable n8n tag, injects an integration proof, and demonstrates that a read-only sharee can overwrite stored OAuth token data for a shared credential through the reconnect callback.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A user who can only read a shared credential should still be able to drive the OAuth reconnect flow and replace the stored oauthTokenData and accountIdentifier with attacker-controlled values.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned n8n@2.18.0 at commit 6336f0a447eab3600b1fe13216f1abd5b6e25dff, built the reproduction image, executed the injected Jest proof, and produced `EVOHUNT_POC_SUCCESS credential=9R8BNzSP2Mzy2c0d member=adb2e22d-2c64-48d2-bd82-f5145db190cd overwritten_access_token=attacker-access-token` after verifying that the stored credential had been rewritten.",
+  "verification_method": "The containerized verifier installs the repository, injects a single integration test, runs the real OAuth2 auth and callback controllers against a local token server, then decrypts the stored credential and checks for the attacker-controlled access token and account identifier. The run succeeds only if the exact EVOHUNT_POC_SUCCESS proof string appears in the test output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Jest reported PASS for test/integration/controllers/oauth/readonly-shared-oauth-reconnect.poc.test.ts inside the containerized checkout.",
+    "The test emitted `EVOHUNT_POC_SUCCESS credential=9R8BNzSP2Mzy2c0d member=adb2e22d-2c64-48d2-bd82-f5145db190cd overwritten_access_token=attacker-access-token`.",
+    "reproduction/verify.sh confirmed the proof string with `[evohunt] verified proof string in test output`, and the host run completed with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the public n8n repository on the host, checks out tag n8n@2.18.0, verifies commit 6336f0a447eab3600b1fe13216f1abd5b6e25dff, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.18.0 (6336f0a447eab3600b1fe13216f1abd5b6e25dff)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/readonly-shared-oauth-reconnect.poc.test.ts"
+    ]
+  }
+}

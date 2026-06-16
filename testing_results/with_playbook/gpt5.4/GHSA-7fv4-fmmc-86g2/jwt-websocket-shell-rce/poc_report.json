@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a forged JWT signed with the default secret can authenticate to the `/shell` WebSocket and execute attacker-controlled shell commands without any real account credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should clone the vulnerable release, start the server, connect to `/shell` with a forged JWT, and return the output of `id` from attacker-controlled command execution.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the reproduction image, started the vulnerable server from commit `d299ab88a0a2ef84f792706e0c1d26d24f45ac3e`, forged a JWT with the default secret, connected to `/shell`, and printed `EVOHUNT_PROOF uid=0(root) gid=0(root) groups=0(root)`.",
+  "verification_method": "The verification helper waits for the server health endpoint, opens a WebSocket to `/shell` with a forged HS256 JWT, sends a plain-shell `init` message with `initialCommand: id`, and only reports success if the returned output contains the expected `uid=` proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction run completed successfully with `[evohunt] verification succeeded` and `[evohunt] SUCCESS: reproduction completed and verified`.",
+    "The exploit path emitted `EVOHUNT_PROOF uid=0(root) gid=0(root) groups=0(root)` from the vulnerable shell session.",
+    "The proof was produced only after the forged JWT was accepted on the `/shell` WebSocket and the attacker-controlled `initialCommand` was executed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "d299ab88a0a2ef84f792706e0c1d26d24f45ac3e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

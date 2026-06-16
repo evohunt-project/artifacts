@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle clones Netmaker v1.5.0, copies an EvoHunt helper test into the controllers package, and verifies that an attacker-signed host JWT can delete a foreign host through the fallback host-update route.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should show that VerifyHostToken accepts a forged host JWT and that PUT /api/v1/fallback/host/{hostid} with Action=DELETE_HOST removes the target host, printing the EVOHUNT_SUCCESS proof string.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Netmaker commit 6b7d33fa7749c87e6b3c59b1a544d80c727c478b, built the Docker image, mounted the pinned checkout into the container, and the helper test printed EVOHUNT_SUCCESS after a forged host JWT deleted the target host through the fallback update route.",
+  "verification_method": "The container copies the helper test into the cloned repository, runs go test ./controllers -run TestEvohuntForgedHostJWTDeletesForeignHost -v, and requires the exact EVOHUNT_SUCCESS proof string before reporting success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The containerized helper test printed: EVOHUNT_SUCCESS: forged host JWT deleted foreign host <uuid>.",
+    "go test ./controllers -run TestEvohuntForgedHostJWTDeletesForeignHost -v exited successfully inside the container.",
+    "The host-side run script printed: [evohunt] SUCCESS: reproduction completed and verified."
+  ],
+  "limitations_or_blockers": [
+    "The destructive proof path still needs the target host ID so the request can name the victim host route."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6b7d33fa7749c87e6b3c59b1a544d80c727c478b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/evohunt_host_auth_bypass_test.go"
+    ]
+  }
+}

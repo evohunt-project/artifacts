@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:39:27.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_778e82eb",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-6xvm-j4wr-6v98/GHSA-6xvm-j4wr-6v98.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "default_datagram_buffer_memory_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_778e82eb/default_datagram_buffer_memory_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_778e82eb/default_datagram_buffer_memory_dos/vulnerability_report.json",
+      "title": "Default DATAGRAM receive buffering allows count-based memory amplification DoS",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is in the same `quinn-proto` package but it targets DATAGRAM queue accounting in `DatagramState::received` within `quinn-proto/src/connection/datagrams.rs`, not the advisory's `TransportParameters::read` varint `unwrap()` panic in `quinn-proto/src/transport_parameters.rs`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's malformed `quic_transport_parameters` parsing bug in `TransportParameters::read()` where attacker-controlled varints were decoded with `unwrap()` and could panic on truncated input.",
+    "evidence": [
+      "The advisory summary and PR #2559 isolate the root cause to `quinn-proto/src/transport_parameters.rs`, where `MaxDatagramFrameSize` and `MinAckDelayDraft07` used `r.get().unwrap()` on attacker-controlled transport-parameter varints; the fix replaces those calls with `r.get()?`.",
+      "At the vulnerable commit used by the session finding, `quinn-proto/src/transport_parameters.rs` still contains `params.max_datagram_frame_size = Some(r.get().unwrap());`, which matches the advisory's panic-on-truncated-varint parser path.",
+      "The only session-materialized qualifying finding instead targets `quinn-proto/src/connection/datagrams.rs:132-139`, where `DatagramState::received` enforces a byte window but still queues one `Datagram` object per frame, leading to count-based memory amplification after a successful QUIC handshake.",
+      "That finding requires many 1-byte DATAGRAM frames on an established connection and does not identify malformed transport-parameter parsing, `UnexpectedEnd`, the `TransportParameters::read` parser state, or the advisory's single-packet panic behavior."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_778e82eb/default_datagram_buffer_memory_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_778e82eb/default_datagram_buffer_memory_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_778e82eb/default_datagram_buffer_memory_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

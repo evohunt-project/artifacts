@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction clones orjson 3.11.5, builds the extension in-container, and verifies that both plain enum serialization and the OPT_NON_STR_KEYS enum-key path terminate Python with a segmentation fault.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should crash the Python interpreter while serializing a crafted enum object, producing Fatal Python error: Segmentation fault for both the plain dumps() path and the OPT_NON_STR_KEYS enum-key path.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned upstream ref, built the extension, and produced Fatal Python error: Segmentation fault twice from reproduce_enum_crash.py, followed by the proof line EVOHUNT_PROOF: enum value access crash reproduced on plain and OPT_NON_STR_KEYS paths.",
+  "verification_method": "The container-side verifier runs each trigger in a separate Python process with PYTHONFAULTHANDLER=1, requires exit code 139, and requires the log to contain Fatal Python error: Segmentation fault before declaring success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Fatal Python error: Segmentation fault was observed when reproduce_enum_crash.py executed the plain enum serialization path.",
+    "Fatal Python error: Segmentation fault was observed when reproduce_enum_crash.py executed the OPT_NON_STR_KEYS enum-key path.",
+    "The verifier emitted EVOHUNT_PROOF: enum value access crash reproduced on plain and OPT_NON_STR_KEYS paths."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "fb3eb1f729c7e7b019f780af5695722c99c7c695",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce_enum_crash.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

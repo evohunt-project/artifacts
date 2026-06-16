@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:43:37.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_02024d9b",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-g9cw-qwhf-24jp/GHSA-g9cw-qwhf-24jp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "policy-data-subs-to-notify-concurrent-map-write-dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_02024d9b/policy-data-subs-to-notify-concurrent-map-write-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_02024d9b/policy-data-subs-to-notify-concurrent-map-write-dos/vulnerability_report.json",
+      "title": "Concurrent policy-data subscription writes crash UDR",
+      "vulnerability_type": "availability_panics_and_validation_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "Different endpoint, handler, and root cause. This finding is a concurrent-map-write crash in `POST /nudr-dr/v2/policy-data/subs-to-notify` via `HandlePolicyDataSubsToNotifyPost` and `PolicyDataSubsToNotifyPostProcedure`, while the advisory is an invalid-path unauthorized delete in `DELETE /nudr-dr/v2/application-data/influenceData/{influenceId}/{subscriptionId}` caused by a missing `return` in `HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdDelete`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's missing-return path-validation bug on the influence-data delete handler. The only final qualifying finding is a separate policy-data concurrency denial-of-service issue.",
+    "evidence": [
+      "The advisory describes `DELETE /nudr-dr/v2/application-data/influenceData/{influenceId}/{subscriptionId}` and a missing `return` after `c.String(http.StatusNotFound, \"404 page not found\")` in `HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdDelete`, which allows deletion to continue on an invalid `influenceId`.",
+      "The session manifest at `/Users/lumi/ziyue/EvoHunt-Run/advisory_02024d9b/.judge/input_manifest.json` lists exactly one final `qualifying_vuln` finding: `policy-data-subs-to-notify-concurrent-map-write-dos`.",
+      "That finding's report and PoC artifacts target `POST /nudr-dr/v2/policy-data/subs-to-notify`, `HandlePolicyDataSubsToNotifyPost`, and `PolicyDataSubsToNotifyPostProcedure`, with runtime evidence of `fatal error: concurrent map writes`, not the advisory's influence-data delete path.",
+      "The session checklist in `/Users/lumi/ziyue/EvoHunt-Run/advisory_02024d9b/artifacts/component_family_checklist.md` says the influence-data sibling path was pruned and the accepted final root cause was the policy-data concurrent-map-write crash."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_02024d9b/policy-data-subs-to-notify-concurrent-map-write-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_02024d9b/policy-data-subs-to-notify-concurrent-map-write-dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_02024d9b/policy-data-subs-to-notify-concurrent-map-write-dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

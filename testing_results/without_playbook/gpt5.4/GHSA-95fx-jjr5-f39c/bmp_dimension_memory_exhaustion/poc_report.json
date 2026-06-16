@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "image_parser_dos",
+  "summary": "The reproduction feeds a tiny crafted BMP into `doc.addImage(..., 'BMP', ...)` and confirms that the parser trusts forged dimensions strongly enough to request a 40,000,000,000-byte pixel buffer before failing.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the BMP parser to derive an oversized allocation from attacker-controlled width and height fields and fail inside the image-processing path.",
+  "actual_observed_result": "The run emitted `RangeError: Invalid typed array length: 40000000000` from the BMP decode path and then failed the PDF image pipeline with `TypeError: Cannot read properties of undefined (reading '0')`, proving that a tiny attacker-controlled BMP can break processing through the public API.",
+  "verification_method": "The helper script executes the real `doc.addImage(..., 'BMP', ...)` path from `repo/dist/jspdf.node.js` and asserts that stdout/stderr contains both the oversized typed-array failure signal and the follow-on pipeline failure, distinguishing the bug from a generic startup or dependency error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The BMP decoder logged `RangeError: Invalid typed array length: 40000000000`.",
+    "The jsPDF image pipeline then raised `TypeError: Cannot read properties of undefined (reading '0')` after the decoder left image data unset.",
+    "The payload file was only a minimal BMP header, demonstrating that the failure is driven by trusted dimensions rather than by a large source image."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction is local (`AV:L`) because this repository is a library rather than a network service; in a downstream PDF-generation service that accepts user BMPs, the same primitive can become remotely reachable."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc.js"
+    ]
+  }
+}

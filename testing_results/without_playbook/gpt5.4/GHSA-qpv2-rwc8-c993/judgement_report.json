@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:44:48.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b3f90743",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-qpv2-rwc8-c993/GHSA-qpv2-rwc8-c993.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "forged-host-jwt-arbitrary-host-deletion",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b3f90743/forged-host-jwt-arbitrary-host-deletion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b3f90743/forged-host-jwt-arbitrary-host-deletion/vulnerability_report.json",
+      "title": "Forged host JWTs bypass authentication and allow arbitrary host deletion",
+      "vulnerability_type": "forged_jwt_auth_bypass",
+      "advisory_match": true,
+      "advisory_match_reason": "Same root cause as the advisory: `logic.VerifyHostToken` in `logic/jwts.go` accepts forged host JWTs without requiring `token.Valid`, and host-authorized routes trust that false success.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "forged-host-jwt-arbitrary-host-deletion",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b3f90743/forged-host-jwt-arbitrary-host-deletion",
+      "status": "qualifying_vuln",
+      "title": "Forged host JWTs bypass authentication and allow arbitrary host deletion",
+      "vulnerability_type": "forged_jwt_auth_bypass"
+    },
+    "reason": "The selected finding identifies the same `VerifyHostToken` signature-validation bypass as the advisory, and the copied PoC demonstrated advisory-impact unauthorized data disclosure by retrieving a victim host's `HostPull` configuration with a bogus-signature JWT.",
+    "evidence": [
+      "At vulnerable commit `6b7d33fa7749c87e6b3c59b1a544d80c727c478b`, `logic/jwts.go` returns success from `VerifyHostToken` whenever `jwt.ParseWithClaims` returns a non-nil token object, without requiring `token.Valid` or checking the parse error.",
+      "Advisory reference commit `5309aa70d464ef565911369714d661a61481a79b` patches the same function by changing the condition to `if token != nil && token.Valid`.",
+      "The copied PoC log `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b3f90743/.judge/poc_runs/forged-host-jwt-arbitrary-host-deletion/run.log` shows a forged `GET /api/v1/host` request followed by `EVOHUNT_SUCCESS: forged host JWT pulled victim host config 11111111-1111-4111-8111-111111111111`.",
+      "The retained response artifact `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b3f90743/.judge/poc_runs/forged-host-jwt-arbitrary-host-deletion/evidence/host-pull-response.json` contains the victim host ID, a bcrypt `hostpass` hash, and the `server_config` object, demonstrating unauthorized retrieval of another host's configuration."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "forged-host-jwt-arbitrary-host-deletion",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b3f90743/forged-host-jwt-arbitrary-host-deletion",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b3f90743/.judge/poc_runs/forged-host-jwt-arbitrary-host-deletion/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b3f90743/.judge/poc_runs/forged-host-jwt-arbitrary-host-deletion/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b3f90743/.judge/poc_runs/forged-host-jwt-arbitrary-host-deletion/poc_execution.json",
+      "observed_effect": "A forged JWT with a bogus signature and the victim host UUID in the `ID` claim received HTTP 200 from `GET /api/v1/host`; the retained response JSON shows the victim host record, a bcrypt `hostpass` hash, and the `server_config` object.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

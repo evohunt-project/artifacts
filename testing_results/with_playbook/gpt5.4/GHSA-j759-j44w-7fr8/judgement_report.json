@@ -1,0 +1,133 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:14:49.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-j759-j44w-7fr8/GHSA-j759-j44w-7fr8.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "domparser_recursive_normalize_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/domparser_recursive_normalize_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/domparser_recursive_normalize_dos/vulnerability_report.json",
+      "title": "DOMParser deep nesting triggers stack overflow during unconditional document normalization",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause: this finding is about unbounded recursive `Node.normalize()` after parsing, not `createComment()` data being serialized unsafely by `XMLSerializer`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "object_shape_hasownproperty_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/object_shape_hasownproperty_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/object_shape_hasownproperty_dos/vulnerability_report.json",
+      "title": "hasOwnProperty token collisions break internal lookup maps and cause DOM API denial of service",
+      "vulnerability_type": "prototype_pollution_and_object_shape",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause: this finding concerns attacker-controlled keys corrupting plain-object lookup maps in `dom.js` and `sax.js`, not comment serialization in `XMLSerializer`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "xmlserializer_comment_pi_injection",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/xmlserializer_comment_pi_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/xmlserializer_comment_pi_injection/vulnerability_report.json",
+      "title": "XMLSerializer comment and processing-instruction serialization permits XML injection",
+      "vulnerability_type": "output_injection_xss",
+      "advisory_match": true,
+      "advisory_match_reason": "The comment subpath matches the GHSA exactly: attacker-controlled data enters `createComment()`, is stored unchanged, and the `COMMENT_NODE` serializer emits it verbatim so `-->` breaks out into live XML. The report is broader because it also includes PI cases, but its comment path independently identifies the advisory root cause and patched sink.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "xmlserializer_comment_pi_injection",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/xmlserializer_comment_pi_injection",
+      "status": "qualifying_vuln",
+      "title": "XMLSerializer comment and processing-instruction serialization permits XML injection",
+      "vulnerability_type": "output_injection_xss"
+    },
+    "reason": "The selected finding reaches the same `createComment()` to `COMMENT_NODE` serialization path fixed by GHSA-j759-j44w-7fr8, and the copied PoC on xmldom 0.8.12 showed attacker-controlled comment data becoming a real injected XML element after serialization and reparsing.",
+    "evidence": [
+      "The advisory and fix commits b397540889086da868c30c366ad5c220d1a750c7 and fda7cc313de30243fea35cada64e0bb12099c2a1 both patch unsafe comment serialization in `lib/dom.js`, not a different parser or lookup-map bug.",
+      "In vulnerable 0.8.12, `createComment()` stores attacker-controlled data unchanged and the `COMMENT_NODE` branch serializes it as `<!--` + `node.data` + `-->` with no well-formedness guard.",
+      "The copied PoC run log contains `COMMENT_XML=<root><!----><injected from=\"comment\"/><!----></root>`.",
+      "The copied PoC run log contains `COMMENT_INJECTED_COUNT=1` and `COMMENT_INJECTION_CONFIRMED`, proving the advisory-described comment breakout produced a live injected XML node."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "xmlserializer_comment_pi_injection",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/xmlserializer_comment_pi_injection",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/.judge/poc_runs/xmlserializer_comment_pi_injection/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/.judge/poc_runs/xmlserializer_comment_pi_injection/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/.judge/poc_runs/xmlserializer_comment_pi_injection/poc_execution.json",
+      "observed_effect": "The copied PoC cloned xmldom tag 0.8.12, serialized attacker-controlled comment data containing `-->`, and reparsed output containing a live `<injected from=\"comment\"/>` element (`COMMENT_INJECTED_COUNT=1`).",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/domparser_recursive_normalize_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/domparser_recursive_normalize_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/domparser_recursive_normalize_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/object_shape_hasownproperty_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/object_shape_hasownproperty_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7e744b6/object_shape_hasownproperty_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

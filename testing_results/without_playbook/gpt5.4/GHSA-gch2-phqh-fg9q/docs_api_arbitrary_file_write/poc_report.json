@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_arbitrary_file_write",
+  "summary": "The reproduction starts a minimal HTTP endpoint with the docs API merge logic, posts a malicious config containing `output.schemas`, and verifies that Orval writes schema files to an attacker-selected directory instead of limiting writes to `/tmp/endpoints.ts`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A POST request to the vulnerable generation endpoint should create generated TypeScript files under an attacker-controlled path such as `/tmp/evohunt-http-schemas/`.",
+  "actual_observed_result": "Posting the malicious request returned a successful JSON response and created `/tmp/evohunt-http-schemas/index.ts` and `/tmp/evohunt-http-schemas/pet.ts` in addition to `/tmp/endpoints.ts`.",
+  "verification_method": "The run script builds the local Orval packages if needed, starts the vulnerable HTTP flow, sends the malicious request, and then checks that attacker-chosen files exist and contain the expected generated export.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP POST to `/api/generate` returned a generated `endpoints.ts` payload.",
+    "`/tmp/evohunt-http-schemas/index.ts` was created after the request.",
+    "`/tmp/evohunt-http-schemas/pet.ts` was created after the request.",
+    "`/tmp/evohunt-http-schemas/index.ts` contains `export * from './pet';`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/server.js"
+    ]
+  }
+}

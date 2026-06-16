@@ -1,0 +1,32 @@
+{
+  "status": "failed",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction bundle reaches the pinned vulnerable commit and the NetTest endpoint, but the final harness run cannot mint a servlet session over HTTP. Every candidate web-UI bootstrap route returned `404`, and direct upload without a session was rejected with `403`, so the oversized-body condition was not exercised end-to-end in this standalone harness.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should obtain a valid web session and then demonstrate that `POST /openmeetings/services/networktest/?size=1` accepts a body larger than the configured 2.5 MiB ceiling by returning an `accepted_bytes` proof value above 2621440.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `41677b22f9ba4236ac890332da823821065a5ca8`, built the reproduction image, started the application, and executed the targeted integration test. The test observed `404` for all candidate Wicket and mounted UI routes used to mint `JSESSIONID`, then confirmed that direct upload to `/openmeetings/services/networktest/?size=1` without a session returns `403`. No proof file was produced, so the oversized-upload acceptance was not verified in the standalone harness.",
+  "verification_method": "The bundle copies `TestNetTestService.java` into the pinned checkout and runs `verify.sh`, which executes a targeted Maven integration test. Success requires the test to create `openmeetings-web/target/evohunt-nettest-proof.txt` with an `accepted_bytes` value above 2621440; failure is distinguished from generic startup issues by checking the exact bootstrap-route statuses and the direct upload status when no session exists.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The final run reached the application and exercised the NetTest route under the pinned commit `41677b22f9ba4236ac890332da823821065a5ca8`.",
+    "The targeted test reported: `/wicket/bookmarkable/org.apache.openmeetings.web.pages.auth.SignInPage=404, /wicket/bookmarkable/org.apache.openmeetings.web.pages.AccessDeniedPage=404, /wicket/bookmarkable/org.apache.openmeetings.web.pages.MainPage=404, /wicket/bookmarkable/org.apache.openmeetings.web.pages.PrivacyPage=404, /=404, =404, /signin=404, /denied=404, /error=404`.",
+    "The same failing assertion recorded that direct upload without a session returned `403`, matching the `request.getSession(false)` gate in `RateLimitRequestFilter`.",
+    "The Maven reactor completed through `openmeetings-webservice` and failed only in the final targeted test step, ruling out a generic clone, Docker, or startup failure."
+  ],
+  "limitations_or_blockers": [
+    "The standalone test harness used by the reproduction bundle did not expose any reachable HTTP route that created a servlet `HttpSession`/`JSESSIONID`, even though Wicket initialized successfully.",
+    "Because `/openmeetings/services/networktest/` rejects requests without an existing session (`403`), the final run could not drive the vulnerable oversized-upload path far enough to produce the `accepted_bytes` proof artifact."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "41677b22f9ba4236ac890332da823821065a5ca8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/TestNetTestService.java"
+    ]
+  }
+}

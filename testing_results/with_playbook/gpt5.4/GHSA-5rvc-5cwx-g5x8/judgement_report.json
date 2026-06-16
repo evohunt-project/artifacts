@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:23:51.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_20845c54",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-5rvc-5cwx-g5x8/GHSA-5rvc-5cwx-g5x8.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "uecm_deregcallback_ssrf",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_20845c54/uecm_deregcallback_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_20845c54/uecm_deregcallback_ssrf/vulnerability_report.json",
+      "title": "Unvalidated DeregCallbackUri in UECM registration allows SSRF",
+      "vulnerability_type": "server_side_request_forgery",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is in the UECM registration and deregistration-callback flow, while the advisory is an SDM PATCH handler bug caused by missing UE ID/SUPI validation and incorrect 400-to-500 propagation on `/:ueId/sdm-subscriptions/:subscriptionId`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding reaches the advisory's vulnerable SDM PATCH path or its missing UE ID validation and downstream 400-to-500 error translation behavior.",
+    "evidence": [
+      "GHSA-5rvc-5cwx-g5x8 and free5gc issue #784 describe `PATCH /nudm-sdm/v2//sdm-subscriptions/1`, where an empty SUPI/UE ID causes UDM to return 500 after UDR returns 400.",
+      "PR free5gc/udm#79 fixes `internal/sbi/api_subscriberdatamanagement.go` by validating the UE ID/SUPI before `HandleModify` and `HandleUnsubscribe`, returning 400 locally instead of forwarding malformed identifiers.",
+      "In the vulnerable snapshot, `ThreeLayerPathHandlerFunc` routes `PATCH /:ueId/sdm-subscriptions/:subscriptionId` to `HandleModify`, which passes the unvalidated `ueId` into `Processor().ModifyProcedure` and then into `SDMSubscriptionDocumentApi.Updatesdmsubscriptions`.",
+      "The only final qualifying finding is an SSRF in `internal/sbi/api_uecontextmanagement.go`, `internal/sbi/processor/ue_context_management.go`, and `internal/sbi/processor/notifier.go`, where attacker-controlled `DeregCallbackUri` is stored and later reused for outbound deregistration notifications. That is a different component, endpoint family, and root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_20845c54/uecm_deregcallback_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_20845c54/uecm_deregcallback_ssrf/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_20845c54/uecm_deregcallback_ssrf/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

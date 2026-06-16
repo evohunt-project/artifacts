@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction clones the pinned protobuf revision, loads the shipped text_format.py from that checkout, parses a shallow nested payload successfully, and then confirms that a deeper nested payload raises raw RecursionError.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that the parser handles a modest nested text payload, then fails with raw RecursionError on a deeper nested payload instead of returning the documented ParseError.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit b1fac91b8448596517a7e57394cdf5a1cf29033b, built the reproduction container, and printed EVOHUNT_PROOF: SHALLOW_PARSE_OK followed by EVOHUNT_PROOF: RECURSIONERROR_CONFIRMED.",
+  "verification_method": "The helper script loads /target-repo/python/google/protobuf/text_format.py, parses a 200-level nested DescriptorProto text payload successfully, then verifies that a 600-level nested payload raises RecursionError under the default Python recursion budget. This distinguishes the bug from malformed-input ParseError handling or an unrelated startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_PROOF: SHALLOW_PARSE_OK",
+    "EVOHUNT_PROOF: RECURSIONERROR_CONFIRMED",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b1fac91b8448596517a7e57394cdf5a1cf29033b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

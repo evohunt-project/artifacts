@@ -1,0 +1,24 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "parser_constraint_bypass_dos",
+  "summary": "The reproduction bundle builds Jackson core from source inside a JDK container and runs a proof program that feeds a deeply nested payload through the DataInput parser entrypoint with a much lower configured maxNestingDepth.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proof program should parse a payload whose nesting depth exceeds the configured limit and print a bypass proof string instead of throwing StreamConstraintsException.",
+  "actual_observed_result": "The reproduction was not executed on this host because no Java runtime was installed locally during triage. The Docker-based reproduction bundle was still generated for end-to-end execution from the final finding directory.",
+  "verification_method": "The helper program configures maxNestingDepth=100, submits a payload nested 5000 levels deep through JsonFactory.createParser(ObjectReadContext, DataInput), and exits successfully only if the parser accepts the payload and observes nesting beyond the configured limit.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "Expected proof string on successful reproduction: EVOHUNT_DATainput_NESTING_BYPASS_CONFIRMED"
+  ],
+  "limitations_or_blockers": [
+    "A Java runtime was not available on the host during triage, so the reproduction bundle was generated but not executed here."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/DataInputNestingBypassPoC.java"
+    ]
+  }
+}

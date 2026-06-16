@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panic_validation_mismatch",
+  "summary": "The reproduction bundle clones the vulnerable upstream revision, builds a minimal probe against `capnp-futures::ReadStream`, feeds it a malformed one-byte frame, and verifies that the next normal stream poll panics with `async fn resumed after completion`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the probe should first surface a parser error item and then confirm that the next poll of `ReadStream` triggers the `async fn resumed after completion` panic, demonstrating attacker-triggerable availability loss.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `a83f9a3152b47b475e62f03cfa17da2258dbca4f`, built the Docker image, executed the probe, and produced `FIRST_ERROR=Premature end of file: unexpected end of file`, the Rust panic text `async fn resumed after completion`, and `READ_STREAM_REPOLL_PANIC_CONFIRMED`.",
+  "verification_method": "The verification helper runs the probe and requires three signals in its output: the initial parser error item, the exact Rust panic text showing that a completed async future was resumed, and the final `READ_STREAM_REPOLL_PANIC_CONFIRMED` proof string emitted only after the panic was caught.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Probe output contains `FIRST_ERROR=Premature end of file: unexpected end of file`.",
+    "Probe output contains `async fn resumed after completion` from the second stream poll.",
+    "Probe output contains `READ_STREAM_REPOLL_PANIC_CONFIRMED` after the panic is caught."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "a83f9a3152b47b475e62f03cfa17da2258dbca4f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/Cargo.toml",
+      "reproduction/main.rs"
+    ]
+  }
+}

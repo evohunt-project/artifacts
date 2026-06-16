@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The reproduction confirms that indexed queries work on well-formed data, but a malformed attacker-written __oxia/idx row causes the server to panic during indexed-list key parsing.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The helper should print a successful baseline indexed list, then crash the target with 'panic: Failed to parse secondary index key' after a malformed reserved index key is injected and queried through UseIndex(...).",
+  "actual_observed_result": "Running ./reproduction/run.sh against commit 20ee8d1fbe9e95a4e8960906b800e8aa53ff0ef4 built the containerized helper, showed a baseline indexed list of [safe-record], injected __oxia/idx/evil/notvalid, then triggered a panic trace rooted at secondary_indexes.go:231 and exited with status 2. The wrapper verified the panic string and reported success.",
+  "verification_method": "The host run script clones the pinned repository commit, runs the helper in Docker, requires the containerized run to exit non-zero, and checks for the exact 'panic: Failed to parse secondary index key' signal. The helper includes a baseline indexed list before the malicious internal-key injection so the failure is tied to the malformed reserved key path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The helper printed 'BASELINE indexed list keys=[safe-record]'.",
+    "The helper printed 'INJECTED malformed internal key __oxia/idx/evil/notvalid'.",
+    "The container emitted 'panic: Failed to parse secondary index key'.",
+    "The panic stack referenced secondary_indexes.go:231 on the pinned target checkout.",
+    "run.sh printed '[*] Verification succeeded'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /workspace/target-repo.",
+    "pinned_commit_or_ref": "20ee8d1fbe9e95a4e8960906b800e8aa53ff0ef4",
+    "target_repo_mount_path": "/workspace/target-repo",
+    "helper_files": [
+      "reproduction/main.go",
+      "reproduction/container-run.sh",
+      "reproduction/go.mod"
+    ]
+  }
+}

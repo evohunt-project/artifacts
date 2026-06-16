@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:12:32.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9eed4ccd",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-x5r2-r74c-3w28/GHSA-x5r2-r74c-3w28.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "subscription_notification_panic_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9eed4ccd/subscription_notification_panic_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9eed4ccd/subscription_notification_panic_dos/vulnerability_report.json",
+      "title": "Unauthenticated subscription notification panic crashes UDR",
+      "vulnerability_type": "nil_pointer_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a separate nil-pointer denial-of-service in internal/sbi/processor/callback.go's notification path, not the advisory's missing return in HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdGet that leaks subscription data on an invalid influenceId path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's root cause: the missing return after c.String(http.StatusNotFound, \"404 page not found\") in HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdGet, which allows an invalid influenceId request to continue into the Traffic Influence Subscription read path.",
+    "evidence": [
+      "The advisory describes an unauthenticated information disclosure in GET /nudr-dr/v2/application-data/influenceData/{influenceId}/{subscriptionId}, specifically when influenceId is not \"subs-to-notify\" but execution still reaches ApplicationDataInfluenceDataSubsToNotifySubscriptionIdGetProcedure.",
+      "The only qualifying finding instead targets POST/PUT/PATCH subscription-data endpoints and reports a nil-pointer dereference in internal/sbi/processor/callback.go during notification handling, causing process termination.",
+      "The finding's code locations and exploit path do not mention api_datarepository.go, HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdGet, invalid influenceId path validation, or unauthorized reads of Traffic Influence Subscription objects.",
+      "The impacts differ materially: the advisory is confidentiality disclosure of subscription objects, while the finding is availability loss from a crash."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9eed4ccd/subscription_notification_panic_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9eed4ccd/subscription_notification_panic_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9eed4ccd/subscription_notification_panic_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:41:05.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_90f22980",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-2x79-gwq3-vxxm/GHSA-2x79-gwq3-vxxm.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "mustache_partial_path_traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_90f22980/mustache_partial_path_traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_90f22980/mustache_partial_path_traversal/vulnerability_report.json",
+      "title": "Mustache partial resolution path traversal reads files outside the template root",
+      "vulnerability_type": "path_traversal_arbitrary_file_read",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets Mustache partial path concatenation and out-of-root file reads in `mustache_parser.h`, not the advisory's zero-progress numeral parsing loop in `fio_json_parse` / `fio_json_parser.h`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "websocket_continuation_frame_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_90f22980/websocket_continuation_frame_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_90f22980/websocket_continuation_frame_dos/vulnerability_report.json",
+      "title": "A first-frame WebSocket continuation opcode crashes the server",
+      "vulnerability_type": "availability_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets the WebSocket continuation-frame state machine in `websocket_parser.h` / `websockets.c`, not the advisory's nested-JSON bare-`i`/`I` infinite loop in `fio_json_parse`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "None of the final qualifying findings identify the advisory-described JSON parser root cause. The advisory is about a zero-progress numeral parsing path in nested JSON values starting with bare `i` or `I`, while the qualifying findings concern Mustache partial path traversal and a WebSocket continuation-frame crash.",
+    "evidence": [
+      "The advisory describes an infinite loop in `fio_json_parse` / `lib/facil/fiobj/fio_json_parser.h` when nested JSON parsing reaches the numeral path for bare `i` or `I` and the cursor does not advance.",
+      "The session manifest lists exactly two final `qualifying_vuln` findings: `mustache_partial_path_traversal` and `websocket_continuation_frame_dos`.",
+      "`mustache_partial_path_traversal` cites `repo/lib/facil/fiobj/mustache_parser.h` and proves out-of-root partial loading, which is a different component, sink, and root cause from the advisory JSON parser bug.",
+      "`websocket_continuation_frame_dos` cites `repo/lib/facil/http/parsers/websocket_parser.h`, `repo/lib/facil/http/websockets.c`, and `fiobj_str_write`, proving a first-frame continuation crash rather than the advisory's JSON parsing loop.",
+      "No qualifying finding report references `fio_json_parse`, `fiobj_json2obj`, `fiobj_hash_update_json`, `iodine_json_convert`, or the zero-consumption `fio_atol` / `fio_atof` behavior described by the advisory."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_90f22980/mustache_partial_path_traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_90f22980/mustache_partial_path_traversal/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_90f22980/mustache_partial_path_traversal/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_90f22980/websocket_continuation_frame_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_90f22980/websocket_continuation_frame_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_90f22980/websocket_continuation_frame_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "multipart_quota_bypass",
+  "summary": "The reproduction clones Wisp v2.2.1, runs a minimal Mist-backed upload handler against the unmodified vulnerable library code, and shows that a 35,651,584 byte multipart upload succeeds even though Wisp's default max_files_size is 32,000,000 bytes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A multipart upload larger than the default 32,000,000 byte file limit should be rejected with HTTP 413, but the vulnerable code path accepts it and returns a normal success response, demonstrating the limit bypass.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 987d3641fa038f749f68621a87b5e9a42ee9ef83, built the reproduction image, started the harnessed Wisp application, uploaded a 35,651,584 byte file, and observed SIZE=35651584, STATUS=200, BODY_PREFIX=<p>uploaded `big.bin`</p>, followed by EVOHUNT_UPLOAD_LIMIT_BYPASS_CONFIRMED.",
+  "verification_method": "The verification script runs a real Wisp+Mist harness using the cloned vulnerable library, creates a 35,651,584 byte multipart upload, and asserts that the upload is accepted with HTTP 200 and the expected success body. The proof signal distinguishes a real limit bypass from startup failures, parser errors, or a correct 413 rejection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verification output printed SIZE=35651584 for the uploaded file, which is larger than the default 32,000,000 byte max_files_size.",
+    "The upload returned STATUS=200 instead of the expected 413 response.",
+    "The response body started with <p>uploaded `big.bin`</p>.",
+    "The script printed EVOHUNT_UPLOAD_LIMIT_BYPASS_CONFIRMED after validating the response."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction uses a minimal standalone harness application instead of the repository's bundled examples because the current upstream example lockfiles no longer resolve reproducibly with today's package versions. The cloned vulnerable Wisp library code itself is used unmodified."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "987d3641fa038f749f68621a87b5e9a42ee9ef83",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.py",
+      "reproduction/harness/gleam.toml",
+      "reproduction/harness/src/app.gleam"
+    ]
+  }
+}

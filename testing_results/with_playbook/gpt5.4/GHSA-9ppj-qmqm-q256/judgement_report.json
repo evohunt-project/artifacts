@@ -1,0 +1,101 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:22:30.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-9ppj-qmqm-q256/GHSA-9ppj-qmqm-q256.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "drive_prefixed_symlink_escape",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/drive_prefixed_symlink_escape",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/drive_prefixed_symlink_escape/vulnerability_report.json",
+      "title": "Drive-prefixed absolute symlink targets escape the extraction root",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": true,
+      "advisory_match_reason": "Same src/unpack.ts linkpath-sanitization flaw as the advisory: escape validation resolves the original drive-prefixed linkpath, then entry.linkpath is rewritten to the stripped relative traversal before symlink creation uses it.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "negative_size_parser_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/negative_size_parser_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/negative_size_parser_dos/vulnerability_report.json",
+      "title": "Negative tar entry sizes crash default async parse surfaces",
+      "vulnerability_type": "availability_panics_and_validation_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a parser size-validation crash in header/read-entry handling and does not involve the advisory's symlink linkpath stripping and escape-check mismatch in Unpack.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "drive_prefixed_symlink_escape",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/drive_prefixed_symlink_escape",
+      "status": "qualifying_vuln",
+      "title": "Drive-prefixed absolute symlink targets escape the extraction root",
+      "vulnerability_type": "path_traversal"
+    },
+    "reason": "The selected finding identifies the same validation-after-rewrite bug the advisory fixes in src/unpack.ts, and the advisory-specific PoC on v7.5.10 showed that a drive-relative linkpath C:../../../target.txt is accepted, rewritten to ../../../target.txt, and then used to overwrite a file outside the extraction cwd.",
+    "evidence": [
+      "The finding report and the advisory both describe Unpack[STRIPABSOLUTEPATH] checking escape against the original drive-prefixed linkpath and only afterwards storing the stripped relative traversal that symlink creation uses.",
+      "Upstream fix f48b5fa3b7985ddab96dc0f2125a4ffc9911b6ad changes the escape-resolution input from p to parts.join('/'), which directly matches the reported root cause.",
+      "Run log /Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/.judge/poc_runs/drive_prefixed_symlink_escape/run.log records EVOHUNT_PROOF, linkTarget ../../../target.txt, and outsideContents PWNED after writing through the extracted symlink."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "drive_prefixed_symlink_escape",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/drive_prefixed_symlink_escape",
+      "executed": true,
+      "command": "cd workspace/target-repo && npm_config_fund=false npm_config_audit=false npm ci && npm run prepare && cd .. && node reproduction/exploit.js \"$PWD/target-repo\"",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/.judge/poc_runs/drive_prefixed_symlink_escape",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/.judge/poc_runs/drive_prefixed_symlink_escape/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/.judge/poc_runs/drive_prefixed_symlink_escape/poc_execution.json",
+      "observed_effect": "The adapted PoC extracted a symlink from drive-relative linkpath C:../../../target.txt, produced readlink target ../../../target.txt, and writing through cwd/a/b/l changed the outside target file contents to PWNED.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/negative_size_parser_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/negative_size_parser_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b21655f7/negative_size_parser_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

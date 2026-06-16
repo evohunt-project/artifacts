@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "output_injection_xml",
+  "summary": "The Docker-based reproduction confirms that a crafted element name injects a second XML element into the serialized output, and the injection persists even when requireWellFormed=true is requested.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create an element with the crafted tag name 'foo/><evil attr=\"1\"', serialize the document in default and requireWellFormed modes, and show that both outputs contain an injected <evil/> sibling element that survives reparsing.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 08a22d78e4bc50f12ce9f5090b8d96ee6031ac7b, built the reproduction image, and then printed '[evohunt] default=<root><foo/><evil attr=\"1\"/></root>', '[evohunt] requireWellFormed=<root><foo/><evil attr=\"1\"/></root>', 'default_evil_count=1', and 'strict_evil_count=1'. The verifier ended with '[evohunt] verification confirmed injected XML nodes via unchecked element names' and run.sh exited successfully.",
+  "verification_method": "The exploit constructs a document with createElement('foo/><evil attr=\"1\"'), serializes it in both default and requireWellFormed modes, reparses both outputs, and asserts that each contains exactly one injected <evil/> element. Matching outputs across both modes proves the serializer emits the unchecked tag name verbatim instead of enforcing well-formed element-name checks.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The cloned target at commit 08a22d78e4bc50f12ce9f5090b8d96ee6031ac7b serialized the crafted element name to '<root><foo/><evil attr=\"1\"/></root>'.",
+    "Reparsing the emitted XML showed one real injected <evil/> element in both default and requireWellFormed serializer outputs.",
+    "The verifier printed the expected success marker after confirming the injected element counts."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "08a22d78e4bc50f12ce9f5090b8d96ee6031ac7b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

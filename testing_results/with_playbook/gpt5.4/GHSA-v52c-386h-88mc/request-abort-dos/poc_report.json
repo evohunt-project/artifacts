@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that aborting a multipart upload against Multer v2.0.2 leaves the upload middleware hung instead of reaching a terminal callback.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should emit HANG_CONFIRMED after a partial multipart upload is aborted, showing that the middleware callback never completed on the vulnerable request path.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned expressjs/multer at e5db9caf5da30b61e90ad56db5f6821d36ce2de9, built the reproduction image, and printed HANG_CONFIRMED followed by the run-script success message.",
+  "verification_method": "The helper starts an HTTP server that uses the vulnerable Multer middleware, sends a partial multipart upload over a raw TCP socket, destroys the socket, and waits for the middleware callback. The run only succeeds if the callback remains unresolved long enough to print HANG_CONFIRMED.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output contained the exact proof string: [evohunt] HANG_CONFIRMED.",
+    "The run script completed only after the helper observed the hung middleware state and exited successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag and verifies the exact commit, then mounts that checkout into the container.",
+    "pinned_commit_or_ref": "e5db9caf5da30b61e90ad56db5f6821d36ce2de9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/package-lock.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

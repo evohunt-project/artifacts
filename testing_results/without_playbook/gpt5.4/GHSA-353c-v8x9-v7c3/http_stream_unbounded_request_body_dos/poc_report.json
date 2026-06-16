@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "memory_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that HttpStreamTransport ignores its configured maxMessageSize and buffers a multi-megabyte attacker-controlled POST body in memory before returning a normal protocol error.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a transport configured with maxMessageSize=1024 does not reject an 8,388,683-byte POST with HTTP 413 and instead incurs measurable server-side RSS growth while reading the full body.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 81b8a8568439046560db54664ad2d7f75d35aca1, built the reproduction image, started the vulnerable transport, sent an 8,388,683-byte POST request, received a normal 400 JSON-RPC error instead of 413, and observed server RSS increase from 84,140,032 bytes to 110,759,936 bytes (delta 26,619,904 bytes).",
+  "verification_method": "The helper starts HttpStreamTransport with maxMessageSize=1024, sends an oversized POST to /mcp, polls the server process RSS via ps during the request, and requires both a non-413 response and measurable RSS growth before emitting the VULNERABILITY_REPRODUCED success signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The response status for the 8,388,683-byte POST was 400 with a JSON-RPC body, proving the request passed through normal protocol handling instead of being rejected as payload too large.",
+    "The server RSS increased from 84,140,032 bytes to 110,759,936 bytes while processing the request, showing attacker-controlled memory growth despite maxMessageSize=1024.",
+    "The reproduction helper emitted the VULNERABILITY_REPRODUCED sentinel after checking both conditions."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "81b8a8568439046560db54664ad2d7f75d35aca1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/server.mjs",
+      "reproduction/verify_oversize.mjs"
+    ]
+  }
+}

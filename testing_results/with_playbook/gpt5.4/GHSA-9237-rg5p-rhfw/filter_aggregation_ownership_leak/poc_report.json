@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that Saltcorn v1.6.0-beta.1 returns unrestricted aggregate results to a low-privileged user when the ownership formula cannot be translated into SQL.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the same low-privileged user can read only one owned row but still receives an aggregate count of two rows, proving unauthorized disclosure across the ownership boundary.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned tag v1.6.0-beta.1, built the reproduction image, compiled the required packages, and the focused regression passed with OWNERSHIP_WHERE=translator_threw, OWNED_ROWS=1, and AGG_COUNT=2.",
+  "verification_method": "The run script injects a focused Jest regression into the pinned vulnerable tag, executes it inside the container, and checks the log for the unauthorized ownership mismatch. The verification requires both OWNED_ROWS=1 and AGG_COUNT=2, plus a passing regression test, to distinguish the leak from an unrelated build or runtime failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The regression log printed OWNERSHIP_WHERE=translator_threw before the aggregate call.",
+    "The regression log printed OWNED_ROWS=1 and AGG_COUNT=2 for the same low-privileged user.",
+    "Jest reported PASS tests/agg_query_ownership_leak.test.ts after the pinned vulnerable tag compiled inside the container."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag v1.6.0-beta.1, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.6.0-beta.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/agg_query_ownership_leak.test.ts",
+      "reproduction/verify.sh"
+    ]
+  }
+}

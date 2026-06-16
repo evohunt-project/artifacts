@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction bundle clones expressjs/multer at the vulnerable v2.1.0 commit, installs pinned dependencies, and proves that `multer().any()` crashes with `RangeError: Maximum call stack size exceeded` after many tiny file parts and one final nameless file part while the disk-backed control path returns the normal `MISSING_FIELD_NAME` error.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should show that the default memory-backed `multer().any()` path crashes with `RangeError: Maximum call stack size exceeded` after a late `MISSING_FIELD_NAME` error, while the disk-backed control path returns a normal Multer error instead of crashing.",
+  "actual_observed_result": "Running ./reproduction/run.sh in this session cloned expressjs/multer at commit 809f9ddac298a5aff4686e14cfac8d003b93e9c9, built the Docker image, installed the pinned dependencies inside the container, and emitted `EVOHUNT_SUCCESS: RangeError: Maximum call stack size exceeded` after reproducing the vulnerable memory-backed path and the safe disk-backed control path.",
+  "verification_method": "Inside the container, `verify.sh` copies the checked-out target repo to a writable workspace, injects the pinned package-lock, runs `npm ci`, and executes `reproduce.js`. The helper succeeds only if the memory-backed upload path emits `EVOHUNT_SUCCESS: RangeError: Maximum call stack size exceeded` and the disk-backed control path stays in the normal Multer error path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The containerized helper printed JSON showing `memoryProof.fileCount` 3000 with an uncaught `RangeError: Maximum call stack size exceeded` on the `multer().any()` path.",
+    "The same helper run printed `diskControl.result.callback.code` as `MISSING_FIELD_NAME` with `remainingFiles` equal to 0 for the disk-backed control path.",
+    "The host-side wrapper printed `[evohunt] SUCCESS: reproduction completed and verified` after the helper emitted the expected success signal."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "809f9ddac298a5aff4686e14cfac8d003b93e9c9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/package-lock.json",
+      "reproduction/reproduce.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor_arbitrary_attachment_read",
+  "summary": "The Docker-based reproduction confirms that a low-privileged authenticated user can download an attachment from an unauthorized module by calling `view.php` with a guessed `file_id`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the low-privileged user is denied access to the victim module through its normal controller route but can still retrieve the victim attachment bytes through `view.php?file_id=<id>&download=1`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned vulnerable ref, built the reproduction image, installed the application, seeded a low-privileged user and a victim attachment in module 60, confirmed `/controller.php?id_module=60` returned `Accesso negato`, and then printed `EVOHUNT_SUCCESS file_id=1 proof=TOP_SECRET_ATTACHMENT` after requesting `view.php?file_id=1&download=1` as the low-privileged user.",
+  "verification_method": "The verification helper logs in as the low-privileged `evohunt` user, asserts that the normal module route `/controller.php?id_module=60` returns `Accesso negato`, then requests `view.php?file_id=<seeded attachment id>&download=1` and checks for the exact proof string `TOP_SECRET_ATTACHMENT`. This distinguishes an authorization bypass from a generic login issue, startup failure, or unrelated file read.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The low-privileged session successfully authenticated and was redirected to `/controller.php?id_module=7`.",
+    "The verification step confirmed that `/controller.php?id_module=60` returned `Accesso negato` for the same low-privileged user.",
+    "The final exploit request returned the seeded secret and emitted `EVOHUNT_SUCCESS file_id=1 proof=TOP_SECRET_ATTACHMENT`."
+  ],
+  "limitations_or_blockers": [
+    "The pinned upstream ref does not include a `composer.lock`, so Composer resolves dependencies at run time during reproduction; future reruns depend on those packages remaining available."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "5ff39df9be26ee52f5a1f100754884072bbf82df",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/update_once.php",
+      "reproduction/create_attachment.php"
+    ]
+  }
+}

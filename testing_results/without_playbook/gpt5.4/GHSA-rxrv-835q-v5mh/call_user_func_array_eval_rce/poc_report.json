@@ -1,0 +1,23 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "runtime_code_execution",
+  "summary": "A crafted array callback method name breaks out of the `eval()` expression in `call_user_func_array()` and executes arbitrary JavaScript.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Injected JavaScript executes before callback validation completes and writes a marker file.",
+  "actual_observed_result": "The reproduction invoked `call_user_func_array()` with a malicious `cb[1]`, observed the expected thrown error, and still created `/tmp/locutus_call_user_func_array_rce` with attacker-controlled contents.",
+  "verification_method": "The container checks that the marker file exists and prints both the thrown error and marker contents.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "/tmp/locutus_call_user_func_array_rce"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/src/php/funchand/call_user_func_array.js"
+    ]
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:58:50.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-qpv2-rwc8-c993/GHSA-qpv2-rwc8-c993.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "forged_host_jwt_arbitrary_host_actions",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743/forged_host_jwt_arbitrary_host_actions",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743/forged_host_jwt_arbitrary_host_actions/vulnerability_report.json",
+      "title": "Improper host JWT validation permits unauthenticated arbitrary host actions",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": true,
+      "advisory_match_reason": "Same VerifyHostToken signature-validation flaw as the advisory: attacker-signed host JWTs are accepted because token validity and parser errors are ignored, and the fixing commit touches the same host-only routes including /api/v1/fallback/host/{hostid}.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "forged_host_jwt_arbitrary_host_actions",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743/forged_host_jwt_arbitrary_host_actions",
+      "status": "qualifying_vuln",
+      "title": "Improper host JWT validation permits unauthenticated arbitrary host actions",
+      "vulnerability_type": "broken_access_control"
+    },
+    "reason": "The finding identifies the advisory's exact root cause in VerifyHostToken and the copied PoC achieved end-to-end unauthorized host action with a forged host JWT.",
+    "evidence": [
+      "The advisory states that logic/jwts.go:VerifyHostToken does not validate host JWT signatures because it only checks whether jwt.ParseWithClaims returned a non-nil token.",
+      "The finding report and reproduction helper exercise that same path by forging an HS256 host JWT, observing that logic.VerifyHostToken accepts it, and then using the forged token on a host-only route.",
+      "The upstream fix at commit 5309aa70d464ef565911369714d661a61481a79b changes VerifyHostToken from `if token != nil` to `if token != nil && token.Valid` and replaces Authorize(..., \"host\", ...) with AuthorizeHost(...) on `/api/v1/host`, `/api/v1/fallback/host/{hostid}`, and `/api/v1/host/{hostid}/peer_info`.",
+      "The copied PoC run at /Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743/.judge/poc_runs/forged_host_jwt_arbitrary_host_actions/run.log printed `EVOHUNT_SUCCESS: forged host JWT deleted foreign host d96495a2-d822-4ec5-8201-7a9c5b127604` and `go test ./controllers -run TestEvohuntForgedHostJWTDeletesForeignHost -v` passed."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "forged_host_jwt_arbitrary_host_actions",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743/forged_host_jwt_arbitrary_host_actions",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743/.judge/poc_runs/forged_host_jwt_arbitrary_host_actions/workspace",
+      "exit_code": 1,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743/.judge/poc_runs/forged_host_jwt_arbitrary_host_actions/run_docker.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743/.judge/poc_runs/forged_host_jwt_arbitrary_host_actions/poc_execution_docker.json",
+      "observed_effect": "The copied Docker-based PoC failed during image build with `no space left on device` before verify.sh or the helper test executed, so no advisory-specific runtime signal was observed.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    },
+    {
+      "finding_folder_name": "forged_host_jwt_arbitrary_host_actions",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743/forged_host_jwt_arbitrary_host_actions",
+      "executed": true,
+      "command": "git clone https://github.com/gravitl/netmaker.git host_workdir/repo && git -C host_workdir/repo checkout 6b7d33fa7749c87e6b3c59b1a544d80c727c478b && cp workspace/reproduction/evohunt_host_auth_bypass_test.go host_workdir/repo/controllers/evohunt_host_auth_bypass_test.go && go test ./controllers -run TestEvohuntForgedHostJWTDeletesForeignHost -v",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743/.judge/poc_runs/forged_host_jwt_arbitrary_host_actions/host_workdir",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743/.judge/poc_runs/forged_host_jwt_arbitrary_host_actions/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b3f90743/.judge/poc_runs/forged_host_jwt_arbitrary_host_actions/poc_execution.json",
+      "observed_effect": "The adjusted host-side PoC cloned the pinned upstream commit, injected the EvoHunt helper, reached the host update handler, and printed `EVOHUNT_SUCCESS: forged host JWT deleted foreign host d96495a2-d822-4ec5-8201-7a9c5b127604`; the go test target then passed.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

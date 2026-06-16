@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:38:09.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0bd7a41a",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-6v9c-7cg6-27q7/GHSA-6v9c-7cg6-27q7.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "inline_emphasis_redos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0bd7a41a/inline_emphasis_redos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0bd7a41a/inline_emphasis_redos/vulnerability_report.json",
+      "title": "Unclosed emphasis runs trigger quadratic-time parsing on the default GFM path",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes a block-tokenizer infinite-recursion OOM on the `\\x09\\x0b\\n` path through `blockTokens()` and block `text()`, while this finding is a separate inline GFM emphasis rescanning path in `Tokenizer.emStrong()` and `Lexer.inlineText()` on long unclosed `*` runs.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described `marked` block-tokenizer infinite-recursion root cause that turns the `\\x09\\x0b\\n` input into unbounded memory growth and OOM.",
+    "evidence": [
+      "The advisory ties exploitation to unexpected whitespace handling where `space()` consumes `\\x09`, the remaining `\\x0b\\n` bypasses newline handling, and `blockTokens()` falls through to block `text()` before recursive `inlineTokens()` calls exhaust memory.",
+      "The only final qualifying finding in the session is `inline_emphasis_redos`, which cites `src/rules.ts`, `src/Tokenizer.ts:emStrong()`, and `src/Lexer.ts:inlineText()` for a quadratic inline emphasis rescanning path on long unclosed `*` runs.",
+      "That finding demonstrates parser CPU slowdown, not the advisory's vulnerable block-tokenizer control flow, `\\x09\\x0b\\n` trigger, or infinite-recursion OOM behavior."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0bd7a41a/inline_emphasis_redos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0bd7a41a/inline_emphasis_redos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0bd7a41a/inline_emphasis_redos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

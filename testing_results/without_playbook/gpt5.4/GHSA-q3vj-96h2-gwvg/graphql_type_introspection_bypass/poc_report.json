@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "graphql_schema_disclosure",
+  "summary": "The reproduction starts Parse Server on the pinned vulnerable commit, confirms that unauthenticated __schema introspection is blocked, and then demonstrates that unauthenticated __type introspection still leaks fields from an application class.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that public GraphQL introspection appears disabled for __schema, but an unauthenticated __type query can still recover application schema fields such as SecretSchemaClass.internalFlag.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit c92022f1ff12b119d7a6a807426925ce7d52e5ab, built and started Parse Server with PostgreSQL, created SecretSchemaClass, received HTTP 403 with Introspection is not allowed for __schema, and then received HTTP 200 for __type(name: \"SecretSchemaClass\") with leaked fields ACL, createdAt, id, internalFlag, objectId, ownerOnlyNote, and updatedAt.",
+  "verification_method": "The verification script first creates an application class, then checks that unauthenticated __schema fails with the expected 403 error, and finally checks that an unauthenticated __type query succeeds and includes the attacker-chosen field internalFlag in the leaked schema field list. The run prints a unique EVOHUNT_SUCCESS__GRAPHQL_TYPE_LEAK__ marker only if all checks pass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted EVOHUNT_SUCCESS__GRAPHQL_TYPE_LEAK__{\"blockedStatus\":403,\"blockedMessage\":\"Introspection is not allowed\",\"leakedStatus\":200,\"leakedFields\":[\"ACL\",\"createdAt\",\"id\",\"internalFlag\",\"objectId\",\"ownerOnlyNote\",\"updatedAt\"]}.",
+    "The unauthenticated __schema request returned HTTP 403 with the expected Introspection is not allowed message.",
+    "The unauthenticated __type request returned HTTP 200 and exposed the application-specific field internalFlag from SecretSchemaClass."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "c92022f1ff12b119d7a6a807426925ce7d52e5ab",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

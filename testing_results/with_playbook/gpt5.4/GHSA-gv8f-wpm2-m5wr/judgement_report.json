@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:59:45.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7676c922",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-gv8f-wpm2-m5wr/GHSA-gv8f-wpm2-m5wr.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "jwt_fallback_secret_shell_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7676c922/jwt_fallback_secret_shell_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7676c922/jwt_fallback_secret_shell_rce/vulnerability_report.json",
+      "title": "Default JWT secret enables unauthenticated shell access and host command execution",
+      "vulnerability_type": "jwt_auth_bypass_rce",
+      "advisory_match": true,
+      "advisory_match_reason": "Same hardcoded fallback JWT secret in `server/middleware/auth.js`, same missing DB-backed user validation in `authenticateWebSocket()`, and same `/shell` shell-command construction in `server/index.js` as the advisory and fix commit.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "jwt_fallback_secret_shell_rce",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7676c922/jwt_fallback_secret_shell_rce",
+      "status": "qualifying_vuln",
+      "title": "Default JWT secret enables unauthenticated shell access and host command execution",
+      "vulnerability_type": "jwt_auth_bypass_rce"
+    },
+    "reason": "The selected finding matches the advisory root-cause chain and the judge-executed copied PoC demonstrated the advisory impact: a forged JWT for a nonexistent user was rejected by HTTP auth but still accepted on `/shell`, where attacker-controlled `initialCommand` executed and produced the proof string.",
+    "evidence": [
+      "The advisory patch `12e7f074d9563b3264caf9cec6e1b701c301af26` changes the same vulnerable surfaces: `server/middleware/auth.js` removes the static fallback JWT secret and adds `userDb.getUserById()` to `authenticateWebSocket()`, while `server/index.js` stops interpolating shell inputs into `bash -c` command strings.",
+      "On vulnerable commit `bc164140e031f8010a4e672ac8bc20b61e84701a`, `server/middleware/auth.js` uses `process.env.JWT_SECRET || 'claude-ui-dev-secret-change-in-production'`, and `authenticateWebSocket()` returns decoded JWT claims without checking whether `decoded.userId` exists in the database. In the same snapshot, `server/index.js` builds plain-shell commands as `cd \"${projectPath}\" && ${initialCommand}`.",
+      "The judge-executed copied PoC at `/Users/lumi/ziyue/EvoHunt-Run/advisory_7676c922/.judge/poc_runs/jwt_fallback_secret_shell_rce/run.log` forged a token for nonexistent userId `1337` and recorded HTTP rejection `Invalid token. User not found.`; `/Users/lumi/ziyue/EvoHunt-Run/advisory_7676c922/.judge/poc_runs/jwt_fallback_secret_shell_rce/server.log` shows the same token was accepted on `/shell`, the attacker-controlled `initialCommand` was executed, and the run produced proof text `EVOHUNT_JWT_RCE_SUCCESS`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "jwt_fallback_secret_shell_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7676c922/jwt_fallback_secret_shell_rce",
+      "executed": true,
+      "command": "bash reproduction/run-host.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7676c922/.judge/poc_runs/jwt_fallback_secret_shell_rce/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7676c922/.judge/poc_runs/jwt_fallback_secret_shell_rce/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7676c922/.judge/poc_runs/jwt_fallback_secret_shell_rce/poc_execution.json",
+      "observed_effect": "The copied PoC forged a JWT for nonexistent userId `1337`, observed `/api/auth/user` reject it with `Invalid token. User not found.`, then reached `/shell` and executed attacker-controlled shell input that produced proof text `EVOHUNT_JWT_RCE_SUCCESS`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:04:54.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_f904b07e",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-h3q6-jfrg-3x6q/GHSA-h3q6-jfrg-3x6q.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "node_ssrf_image_fetch",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_f904b07e/node_ssrf_image_fetch",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_f904b07e/node_ssrf_image_fetch/vulnerability_report.json",
+      "title": "Node-side PDF generation fetches survey-controlled image URLs and enables SSRF",
+      "vulnerability_type": "ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a survey-pdf node-fetch SSRF in image and logo rendering, while the advisory is the inherited jsPDF node loadFile/addImage local-file-read path traversal fixed by upgrading jspdf from ^3.0.1 to ^4.0.0.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause. The session's only qualifying finding is an SSRF in survey-pdf's Node image-fetch path, not jsPDF's node-side local file inclusion or path traversal behavior.",
+    "evidence": [
+      "GHSA-h3q6-jfrg-3x6q states that survey-pdf is affected because versions <= 1.12.58 and <= 2.5.4 depend on vulnerable jsPDF releases and are fixed in survey-pdf 1.12.59 and 2.5.5.",
+      "The vulnerable-to-fixed survey-pdf package.json change is jspdf ^3.0.1 in v1.12.58 and v2.5.4 to jspdf ^4.0.0 in v1.12.59 and v2.5.5.",
+      "The underlying jsPDF advisory GHSA-f8cm-6447-x5h2 says attacker control of loadFile and related methods such as addImage, html, and addFont in the Node build enables local file inclusion or path traversal via filesystem reads.",
+      "The qualifying finding instead traces survey-controlled imageLink and logo URLs to survey-pdf's src/utils/image/node.ts fetch(url) helper and its PoC demonstrates an outbound HTTP request to http://127.0.0.1:18080/poc.png, which is a different sink and different root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_f904b07e/node_ssrf_image_fetch",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_f904b07e/node_ssrf_image_fetch/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_f904b07e/node_ssrf_image_fetch/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

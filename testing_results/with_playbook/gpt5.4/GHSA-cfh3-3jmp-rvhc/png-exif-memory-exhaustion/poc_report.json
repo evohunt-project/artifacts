@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction generates a 1x1 PNG with a 128 MiB sparse eXIf chunk and confirms that opening it retains the full metadata blob while pushing max RSS above the verification threshold.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Opening the crafted PNG should report exif_len=134217734 and max RSS above 250000 KB, showing that Pillow reads and duplicates attacker-sized eXIf metadata before any pixel-count guard can limit memory use.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Pillow at 4777a0b31820f184c01d550fa526400dc9b53eaf, built the Docker image, and printed RESULT exif_len=134217734 rss_kb=277548 elapsed=0.112 size=(1, 1) followed by VERIFIED png eXIf metadata amplification.",
+  "verification_method": "The helper script creates a sparse PNG with a 128 MiB eXIf chunk, opens it with the pinned Pillow checkout, and verifies three conditions: decoded image size stays (1, 1), im.info['exif'] retains the full 134217734-byte payload, and ru_maxrss reaches at least 250000 KB.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "RESULT exif_len=134217734 rss_kb=277548 elapsed=0.112 size=(1, 1)",
+    "VERIFIED png eXIf metadata amplification",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "4777a0b31820f184c01d550fa526400dc9b53eaf",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_in_container.sh",
+      "reproduction/verify_png_exif.py"
+    ]
+  }
+}

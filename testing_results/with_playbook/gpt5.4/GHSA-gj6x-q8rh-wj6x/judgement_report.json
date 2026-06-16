@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:49:49.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b5848b3",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-gj6x-q8rh-wj6x/GHSA-gj6x-q8rh-wj6x.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "public_pdp_notify_ssrf",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b5848b3/public_pdp_notify_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b5848b3/public_pdp_notify_ssrf/vulnerability_report.json",
+      "title": "Public PDP notify callback permits unauthenticated loopback and internal SSRF",
+      "vulnerability_type": "server_side_request_forgery",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a PDP notify SSRF through attacker-controlled notify URLs and a later http.Post sink, while the advisory is a database-error credential leak from raw err.Error() responses and DSN construction/redaction paths.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or root cause. The only final qualifying finding is an outbound PDP notify SSRF, whereas the advisory is about raw database errors and connection-string secrets being returned to HTTP clients and logs.",
+    "evidence": [
+      "The advisory JSON and PR #919 patch remediate credential exposure by replacing client-facing err.Error() responses in market/mk12/mk12_utils.go, market/mk20/http/http.go, and pdp/handlers.go, and by redacting DB errors in harmony/harmonydb.",
+      "public_pdp_notify_ssrf/vulnerability_report.json traces a different path: public PDP routing plus handlePiecePost storing attacker-controlled notify data and tasks/pdp/notify_task.go later calling http.Post(upload.NotifyURL, ...) without destination validation.",
+      "artifacts/component_family_checklist.md marks the PDP notify outbound-request family as the only accepted finding and explicitly leaves the mk20 family pruned, so the session did not produce a qualifying sensitive-data-exposure finding for the advisory paths."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b5848b3/public_pdp_notify_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b5848b3/public_pdp_notify_ssrf/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b5848b3/public_pdp_notify_ssrf/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

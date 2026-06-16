@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirmed that spoofed forwarding headers bypass the trusted-proxy IP whitelist in the v1.1.4 release.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A non-whitelisted client should receive 403, but the PoC should reach the protected HTTP service by spoofing a whitelisted address in X-Forwarded-For.",
+  "actual_observed_result": "Running ./reproduction/run.sh printed `EVOHUNT_SUCCESS: spoofed forwarding headers bypassed the configured IP whitelist` after the container verified a 403 response for a direct request and 200 responses for spoofed single-hop and multi-hop X-Forwarded-For requests.",
+  "verification_method": "The container starts goshs with a whitelist that only allows 192.0.2.10 and trusts 127.0.0.1 as a proxy. It first verifies that a direct request from 127.0.0.1 is blocked, then repeats the request with spoofed forwarding headers and requires 200 responses before emitting the success marker.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final run emitted `EVOHUNT_SUCCESS: spoofed forwarding headers bypassed the configured IP whitelist`.",
+    "The reproduction observed a 403 response without spoofed forwarding headers.",
+    "The reproduction observed 200 responses with `X-Forwarded-For: 192.0.2.10` and `X-Forwarded-For: 192.0.2.10, 198.51.100.5`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5b5228ff042f284bc432e706699cf7252caf96fa",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh"
+    ]
+  }
+}

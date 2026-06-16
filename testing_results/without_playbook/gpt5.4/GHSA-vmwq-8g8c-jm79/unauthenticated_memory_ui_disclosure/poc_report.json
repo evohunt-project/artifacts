@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_memory_disclosure",
+  "summary": "The reproduction seeds a victim memory record, starts the sample memory viewer, requests `/memory/`, and confirms that the returned HTML exposes the victim secret in `window.gradio_config` without authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Requesting the unauthenticated `/memory/` page should disclose the seeded victim memory content, including the proof string `EVOHUNT_SECRET_MEMORY`, in the HTTP response.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned OpenChatBI at commit `b28da615a0b0a2c9eb5f79cc244bad842dbe2e8b`, built the reproduction image, seeded `memory.db`, started `sample_ui.memory_ui`, and printed a response excerpt showing `EVOHUNT_SECRET_MEMORY` inside the page's embedded `window.gradio_config` data.",
+  "verification_method": "The container seeds a known victim secret, fetches `http://127.0.0.1:8001/memory/`, and uses `grep` to verify that the proof string appears in the returned HTML rather than relying on a startup error or unrelated UI artifact.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `[evohunt] proof string exposed in unauthenticated /memory/ response`.",
+    "The response excerpt included `\"text\": \"EVOHUNT_SECRET_MEMORY\"` within the serialized Markdown for the memory viewer.",
+    "The host-side wrapper printed `[evohunt] SUCCESS: reproduction completed and verified` after the container verification finished."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b28da615a0b0a2c9eb5f79cc244bad842dbe2e8b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/config.yaml",
+      "reproduction/fake_embeddings.py",
+      "reproduction/seed_memory.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

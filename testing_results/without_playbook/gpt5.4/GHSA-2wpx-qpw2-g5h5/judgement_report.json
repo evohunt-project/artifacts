@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:17:58.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2c93f437",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-2wpx-qpw2-g5h5/GHSA-2wpx-qpw2-g5h5.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "proxyproto_acl_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2c93f437/proxyproto_acl_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2c93f437/proxyproto_acl_bypass/vulnerability_report.json",
+      "title": "Unrestricted PROXY protocol trust enables source-IP spoofing and ACL bypass",
+      "vulnerability_type": "proxyproto_ip_spoofing_acl_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets DNS-over-TCP PROXY protocol trust and downstream acl source-IP checks, while the advisory targets DNS-over-QUIC stream handling in core/dnsserver/server_quic.go; the vulnerable code and root cause are different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only final qualifying finding is a separate PROXY protocol source-IP spoofing and acl bypass issue, not the advisory's DoQ worker-pool backlog and missing per-stream deadline denial-of-service bug.",
+    "evidence": [
+      "The advisory describes a DNS-over-QUIC denial of service in core/dnsserver/server_quic.go caused by unbounded accepted-stream backlog plus blocking io.ReadFull() without a per-stream read deadline.",
+      "The only final qualifying finding cites plugin/proxyproto/setup.go, core/dnsserver/server.go, and plugin/acl/acl.go, and its exploit path is forged PROXY metadata causing source-IP-based authorization bypass on a TCP listener.",
+      "The finding's reproduction bundle configures a TCP Corefile with proxyproto and acl and verifies disclosure of the protected TXT record \"evohunt-secret\"; it does not exercise QUIC streams, stream worker tokens, or partial DoQ frame reads.",
+      "The finding's PoC report and run.sh pin CoreDNS to tag v1.14.3 / commit 17fceec6d93fd1dde5ba6888c363f131ff6d647f, while the advisory states 1.14.3 is the fixing release for GHSA-2wpx-qpw2-g5h5, supporting that this is an unrelated open-world issue."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2c93f437/proxyproto_acl_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2c93f437/proxyproto_acl_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2c93f437/proxyproto_acl_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

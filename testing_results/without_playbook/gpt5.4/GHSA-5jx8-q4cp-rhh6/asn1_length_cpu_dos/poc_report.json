@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "asn1_parser_dos",
+  "summary": "The reproduction feeds a 5-byte malformed ASN.1 blob with an oversized declared length into the bundled parser and verifies that it performs millions of child-walk iterations, causing a measurable synchronous stall.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the proof should cause the parser to spend noticeable CPU time processing a tiny malformed ASN.1 input and emit a proof record showing the large child-count and stall duration.",
+  "actual_observed_result": "The reproduction measured a large synchronous stall while parsing `3083ffffff`, produced a child-count of 16,777,215 from the malformed input, and confirmed higher-level reachability through `X509.readCertHex`.",
+  "verification_method": "The proof checks that the malformed ASN.1 blob expands into exactly 16,777,215 computed child offsets and that parsing takes a non-trivial amount of time, which distinguishes the issue from an immediate bounds-check failure or generic parse rejection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof emits `EVOHUNT_PROOF child_count=16777215` for the malformed 5-byte input.",
+    "The proof reports measurable parsing latency for both `ASN1HEX.getChildIdx` and `X509.readCertHex`.",
+    "The verification step enforces both the child-count oracle and minimum latency threshold."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/reproduce.js",
+      "reproduction/jsrsasign.js"
+    ]
+  }
+}

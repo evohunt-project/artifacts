@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The reproduction bundle builds the real `druid-pac4j` code and confirms that a malformed session cookie can trigger an uncaught `OutOfMemoryError` before any passphrase validation occurs.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The helper should emit the malicious cookie marker, attempt cookie decryption through `Pac4jSessionStore.get`, and terminate with `java.lang.OutOfMemoryError: Java heap space` from `CryptoService$EncryptedData.fromByteArray`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Apache Druid branch `36.0.0` at commit `6a88a829460664ec85cbc1425f148c1eb0849935`, built the `druid-pac4j` module set, printed `MALICIOUS_COOKIE_NAME pac4j.session.pac4jUserProfiles`, `MALICIOUS_COOKIE_VALUE CAAAAAAAAAAAAAAA`, `DECLARED_SALT_SIZE 134217728`, and `ATTEMPTING_COOKIE_DECRYPTION`, then crashed the helper JVM with `java.lang.OutOfMemoryError: Java heap space` at `CryptoService$EncryptedData.fromByteArray`, after which the verification script reported success.",
+  "verification_method": "The verification script expects the helper JVM to exit non-zero and greps the combined output for the exact malicious-cookie marker, the decryption-attempt marker, and the `OutOfMemoryError` stack trace to distinguish the intended pre-auth heap exhaustion from a generic build or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "MALICIOUS_COOKIE_NAME pac4j.session.pac4jUserProfiles",
+    "ATTEMPTING_COOKIE_DECRYPTION",
+    "Exception in thread \"main\" java.lang.OutOfMemoryError: Java heap space"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones Apache Druid branch `36.0.0` on the host, checks out commit `6a88a829460664ec85cbc1425f148c1eb0849935`, and mounts that checkout into the container at `/target-repo` for a writable in-container copy used during the build.",
+    "pinned_commit_or_ref": "6a88a829460664ec85cbc1425f148c1eb0849935",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/poc-pom.xml",
+      "reproduction/src/main/java/evohunt/Pac4jCookieOomCheck.java"
+    ]
+  }
+}

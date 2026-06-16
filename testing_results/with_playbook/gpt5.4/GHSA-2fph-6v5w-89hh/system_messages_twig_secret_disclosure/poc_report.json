@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_template_injection",
+  "summary": "The Dockerized reproduction confirms that a low-privileged user with System Messages utility access can save a Twig payload into the `forgot_password` message and exfiltrate an environment-backed secret through the password-reset email body.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should save `{{ parseEnv('$EVOHUNT_PROOF') }}` into the `forgot_password` system message under a low-privileged identity, trigger a password-reset email, and surface `evohunt-system-messages-proof` in the rendered email output.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Craft CMS 5.9.12 at commit `b38439ac3815a0a56c9f4cca34db5ddb1ce15dca`, installed dependencies, executed the custom Codeception unit test, and printed `EVOHUNT_PROOF_SUCCESS:evohunt-system-messages-proof` after the password-reset email contained the injected secret.",
+  "verification_method": "The custom test saves the payload via `SystemMessagesController::actionSaveMessage()` while authenticated as a low-privileged user, triggers `sendPasswordResetEmail()`, asserts that the last sent email contains the proof string, and the host verifier requires the exact `EVOHUNT_PROOF_SUCCESS:evohunt-system-messages-proof` marker in the run output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Codeception reported `OK (1 test, 13 assertions)` for `EvoHuntSystemMessagesDisclosureTest`.",
+    "The run output contained `EVOHUNT_PROOF_SUCCESS:evohunt-system-messages-proof`.",
+    "The test only emitted the proof marker after confirming that the rendered password-reset email included the injected secret."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, verifies the exact commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b38439ac3815a0a56c9f4cca34db5ddb1ce15dca",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/verify.sh",
+      "reproduction/EvoHuntSystemMessagesDisclosureTest.php"
+    ]
+  }
+}

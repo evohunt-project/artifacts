@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:58:38.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7a67fba",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-4q3h-vp4r-prv2/GHSA-4q3h-vp4r-prv2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "livequery_clp_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7a67fba/livequery_clp_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7a67fba/livequery_clp_bypass/vulnerability_report.json",
+      "title": "LiveQuery event delivery bypasses class-level read permissions",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a LiveQuery authorization flaw in `repo/src/LiveQuery/ParseLiveQueryServer.ts` where save/delete fanout ignores the boolean result of `_matchesCLP()`. GHSA-4q3h-vp4r-prv2 is a Google auth adapter JWT verification flaw in `src/Adapters/Auth/google.js` that trusted the token header algorithm and used a custom key fetch path, enabling forged `alg:none` Google login tokens. Same package family, different component, sink, and root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described JWT algorithm-confusion bug in the Google authentication adapter. The only accepted session finding is an unrelated LiveQuery class-level-permission bypass.",
+    "evidence": [
+      "The advisory summary and fix diff describe forged Google authentication via `alg:\"none\"`, with the fix hardcoding `RS256` and replacing the Google adapter's custom key retrieval in `src/Adapters/Auth/google.js`.",
+      "The accepted finding report points to `repo/src/LiveQuery/ParseLiveQueryServer.ts` and `repo/src/Controllers/SchemaController.js`, with an exploit path of unauthenticated LiveQuery subscribe -> ignored `_matchesCLP()` result -> public ACL passes -> unauthorized `pushUpdate` / `pushDelete` delivery.",
+      "The finding impacts LiveQuery event delivery for protected classes, not Google auth token validation, JWT signature verification, key-id handling, or account login flows."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7a67fba/livequery_clp_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7a67fba/livequery_clp_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_a7a67fba/livequery_clp_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

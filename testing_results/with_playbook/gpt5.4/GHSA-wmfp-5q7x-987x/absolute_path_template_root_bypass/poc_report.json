@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_read",
+  "summary": "The Docker-based reproduction confirms that the shipped CLI can render a file outside the configured template root via `{% render %}` and the default Node fallback resolver.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should render `/target-repo/package.json` even though LiquidJS is configured with an empty template root, and it should emit the proof marker `ABSOLUTE_PATH_TEMPLATE_ROOT_BYPASS`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `906707833e196733e592ca52fbe5eda48b71a8a6`, built the target, and the containerized verification rendered `/target-repo/package.json` through `node bin/liquid.js --root <empty-dir> --no-relative-reference --template '{% render \"/target-repo/package.json\" %}'`. The run emitted `[evohunt] cli root bypass confirmed` and `[evohunt] proof: ABSOLUTE_PATH_TEMPLATE_ROOT_BYPASS`.",
+  "verification_method": "The verification helper builds the checked-out target inside the container, runs the shipped CLI with an attacker-controlled template, and requires the rendered output to contain both `\"name\": \"liquidjs\"` and `\"version\": \"10.24.0\"` from `/target-repo/package.json` before printing the proof marker.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction run printed `[evohunt] cli root bypass confirmed`.",
+    "The reproduction run printed `[evohunt] proof: ABSOLUTE_PATH_TEMPLATE_ROOT_BYPASS`.",
+    "The verification helper only reaches that proof marker after matching `\"name\": \"liquidjs\"` and `\"version\": \"10.24.0\"` in the rendered out-of-root file contents."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "906707833e196733e592ca52fbe5eda48b71a8a6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

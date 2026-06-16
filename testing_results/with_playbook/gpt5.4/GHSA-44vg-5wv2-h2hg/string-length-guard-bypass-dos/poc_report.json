@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The final reproduction cloned the vulnerable 1.0.4 revision and proved that a short default expression can produce a 5,000,000-byte result despite the documented `MAX_STRING_LENGTH = 100000` safety bound.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that evaluating `\"x\".ljust(5000000)` returns a 5,000,000-byte string while `MAX_STRING_LENGTH` remains 100000, proving that the default length guard is bypassed and that the attacker can scale the same pattern into memory-exhaustion DoS.",
+  "actual_observed_result": "Running `./reproduction/run.sh` from the final finding folder cloned commit `0425898b23abb3f1a9ed56dbb0bb4244d6350f2f`, built the Docker image, evaluated the expression, and printed `actual_length: 5000000` together with `MAX_STRING_LENGTH: 100000` before completing verification successfully.",
+  "verification_method": "The helper script loads `simpleeval.py` from the mounted vulnerable checkout, evaluates `\"x\".ljust(5000000)`, and verifies both the configured `MAX_STRING_LENGTH` and the much larger observed output length to distinguish a real guard bypass from an unrelated crash or parser rejection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included `expression: \"x\".ljust(5000000)`.",
+    "Container output included `MAX_STRING_LENGTH: 100000`.",
+    "Container output included `actual_length: 5000000`.",
+    "The host-side run completed with `[evohunt] verification succeeded` and `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the upstream repository on the host, checks out the pinned vulnerable commit, and mounts that checkout read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "0425898b23abb3f1a9ed56dbb0bb4244d6350f2f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

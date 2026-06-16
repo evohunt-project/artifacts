@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction starts the standalone chunk endpoint from the pinned upstream revision, stores an unauthenticated 3 MiB chunk in the temp directory, and then triggers repeated 'No space left on device' write failures with a second identical request.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Two unauthenticated POST requests to the chunk endpoint should persist attacker-controlled temp files and drive the endpoint into 'No space left on device' failures on a bounded temp volume, proving the missing auth and resource boundary.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 33d1bae6c731ef1682fcdc47b428313be073a5d1, built the reproduction image, stored a 3145728-byte unauthenticated temp chunk on the first request, and the second request emitted 'fwrite(): Write of 8192 bytes failed with errno=28 No space left on device' from objects/aVideoEncoderChunk.json.php.",
+  "verification_method": "The container harness starts PHP's built-in server against the target repo, sends two unauthenticated binary POST requests, verifies that the first response reports a 3145728-byte temp file, and then requires the second response to contain the exact 'No space left on device' failure from the vulnerable sink.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "First response: {\"file\":\"/evo-tmp/YTPChunk_Fxln4a\",\"filesize\":3145728}",
+    "Second response contained: fwrite(): Write of 8192 bytes failed with errno=28 No space left on device",
+    "The temp directory contained the retained 3.0M YTPChunk_* file after the first request."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction mounts a 6 MiB tmpfs at /evo-tmp to accelerate a real temp-disk exhaustion path; larger deployments require more requests to reach the same failure."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "33d1bae6c731ef1682fcdc47b428313be073a5d1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

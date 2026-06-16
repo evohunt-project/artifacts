@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The packaged reproduction creates a mirror repository, rewrites its upstream to a loopback URL through repository settings, triggers a mirror sync, and records the resulting Git HTTP request to the loopback proof server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make Gogs issue a Git HTTP request to the attacker-selected loopback target `/internal.git/info/refs?service=git-upload-pack` after the mirror address is updated and sync is triggered.",
+  "actual_observed_result": "Running `./reproduction/run.sh` completed successfully and produced a proof JSON showing `GET /internal.git/info/refs?service=git-upload-pack` with `Host: 127.0.0.1:18080` and `Git-Protocol: version=2` on the loopback proof server.",
+  "verification_method": "The helper starts a dedicated loopback HTTP server at `127.0.0.1:18080`, triggers the vulnerable mirror settings and sync flow, and records the first inbound request. Verification passes only if the recorded request path matches the Git smart-HTTP probe for the attacker-selected mirror URL.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Observed proof request method `GET`.",
+    "Observed proof request path `/internal.git/info/refs?service=git-upload-pack`.",
+    "Observed proof request header `Host: 127.0.0.1:18080`.",
+    "Observed proof request header `Git-Protocol: version=2`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "f5c8030c1fd936f3e0e9f774e3c7c39fd102f56f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/validate_mirror_ssrf.py"
+    ]
+  }
+}

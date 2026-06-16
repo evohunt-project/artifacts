@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction clones Flowise 3.1.0, seeds a non-public chatflow whose custom-function ending node returns a workspace variable, confirms the sibling public read route denies access, and then shows that unauthenticated `/api/v1/prediction/:id` still executes the private flow and returns the secret.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should prove that a non-public chatflow remains private to the public read helper but is still executable through the whitelisted prediction endpoint, returning `PRIVATE_FLOW_SECRET_61528b0f` to an unauthenticated caller.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Flowise at commit `378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97`, built the required `packages/components` and `packages/server` workspaces in the container, seeded a private flow and workspace variable, completed the guard check that requires `GET /api/v1/public-chatflows/:id` to return `401`, and then printed a prediction response containing `PRIVATE_FLOW_SECRET_61528b0f` for unauthenticated `POST /api/v1/prediction/:id`.",
+  "verification_method": "The verifier seeds a private flow, checks that the public read helper rejects unauthenticated access with `401`, then performs the unauthenticated prediction request and asserts that the response contains the seeded secret string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verifier completed its sibling public chatflow read gate check and would have aborted unless `GET /api/v1/public-chatflows/:id` returned `401` for the seeded private flow.",
+    "The unauthenticated prediction response printed by the run contained the exact proof string `PRIVATE_FLOW_SECRET_61528b0f`.",
+    "The run finished with `[evohunt] verified unauthenticated private-flow execution: PRIVATE_FLOW_SECRET_61528b0f`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/seed.sql"
+    ]
+  }
+}

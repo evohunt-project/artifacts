@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "memory_corruption",
+  "summary": "The Docker-based reproduction clones OpenEXR 3.2.7, builds the shipped Python binding from source, confirms a control preview write succeeds, and then verifies that a one-byte preview buffer causes the Python process to crash with exit code 139 during `OpenEXR.OutputFile(...)` construction.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit run should terminate the Python interpreter with exit code 139 after constructing an `Imath.PreviewImage` with attacker-controlled dimensions and a one-byte pixel buffer, while the control preview write should succeed.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the upstream OpenEXR repository at the pinned vulnerable commit, built the reproduction image, installed the Python binding from `/target-repo`, printed `control-ok` after the non-NUL control preview write succeeded, and then observed the exploit subprocess exit with code 139. The container printed the success signal `EVOHUNT_SUCCESS: python exited with status 139 after preview header construction`.",
+  "verification_method": "The container first runs a control script with a correctly sized non-NUL preview buffer and requires exit code 0. It then launches the exploit script in a separate Python subprocess and treats exit code 139 as the proof signal. Any other result fails the reproduction.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction run printed `control-ok` after the control preview write completed successfully.",
+    "The exploit subprocess exited with status 139.",
+    "The container emitted `EVOHUNT_SUCCESS: python exited with status 139 after preview header construction`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "f6f9cee0da36e8e806f7c9186f737db487782b69",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_entrypoint.sh",
+      "reproduction/control_preview_ok.py",
+      "reproduction/trigger_preview_oob.py"
+    ]
+  }
+}

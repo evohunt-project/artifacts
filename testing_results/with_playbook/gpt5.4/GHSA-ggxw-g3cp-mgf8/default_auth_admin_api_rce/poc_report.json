@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle clones FUXA `v1.2.10`, starts the server with stock settings, confirms unauthenticated access to `/api/users`, uploads a malicious module into `server/_pkg/evil/index.js`, and triggers unauthenticated plugin loading to prove server-side code execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should show that the default configuration exposes the admin API without credentials and should produce the exact proof string `plugin-rce` by executing the uploaded module inside the server process.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned FUXA `v1.2.10`, copied the checkout into the container, started the minimal harness around the repository's real vulnerable routes, returned the unauthenticated admin user record through `/api/users`, accepted the unauthenticated upload, and printed `EVOHUNT_RCE_PROOF=plugin-rce` after the unauthenticated plugin load executed the uploaded module.",
+  "verification_method": "The containerized helper starts a minimal Express harness using the repository's real `users`, `upload`, and `plugins` route modules plus the real plugin loader, checks that unauthenticated `GET /api/users` returns the admin record, uploads the malicious module, triggers `POST /api/plugins`, and verifies that the server process created `/tmp/evohunt-plugin-rce-proof` containing `plugin-rce`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `EVOHUNT_UNAUTH_USERS_OK=[{\"username\":\"admin\",...}]`, confirming unauthenticated access to the admin-only users route.",
+    "The run printed `EVOHUNT_UPLOAD_RESPONSE={\"location\":\"/resources/index.js\"}`, confirming unauthenticated upload handling.",
+    "The run printed `EVOHUNT_RCE_PROOF=plugin-rce`, confirming that the uploaded module was executed by the plugin load path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, copies that checkout into the container at runtime, and the helper then exercises the repository's vulnerable route and loader code inside the container.",
+    "pinned_commit_or_ref": "b873cdf32a63bcfaa6de8b724781f63c6f977c69",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/malicious_index.js",
+      "reproduction/harness.js"
+    ]
+  }
+}

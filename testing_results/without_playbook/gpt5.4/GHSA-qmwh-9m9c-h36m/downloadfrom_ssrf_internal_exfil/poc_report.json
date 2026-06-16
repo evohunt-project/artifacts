@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction confirms that Gotenberg's default-enabled downloadFrom flow can fetch an internal-only HTTP resource and return its contents to the attacker through the HTML-to-PDF conversion route.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the vulnerable Gotenberg instance fetch an internal-only HTML page that the attacker network cannot reach directly, render it as index.html, and return a PDF whose extracted text contains SSRF_SECRET_5da36541.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned gotenberg/gotenberg, checked out commit 190cad0ee254974f8b14b32b29b712146d29ccfb, built the target and verifier images, confirmed the attacker network could not directly reach the internal service IP, and then extracted SSRF_SECRET_5da36541 from the PDF returned by POST /forms/chromium/convert/html.",
+  "verification_method": "The verifier first checks that the attacker-side container cannot directly fetch the internal service, then submits a single multipart request with the attacker-controlled downloadFrom value, converts the returned PDF to text with pdftotext, and requires the exact proof string SSRF_SECRET_5da36541 to appear in the extracted output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The attacker-side verifier could not directly reach the internal-only service IP from the edge network.",
+    "The vulnerable endpoint returned HTTP 200 and a PDF document after receiving only the attacker-controlled downloadFrom form field.",
+    "pdftotext output from the returned PDF contained SSRF_SECRET_5da36541 and the internal-only HTML body text."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the verifier container at /target-repo.",
+    "pinned_commit_or_ref": "190cad0ee254974f8b14b32b29b712146d29ccfb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/internal_secret_server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

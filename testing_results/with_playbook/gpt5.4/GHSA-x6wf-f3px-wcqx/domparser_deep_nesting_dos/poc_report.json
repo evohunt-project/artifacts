@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction clones the pinned vulnerable commit, parses a shallow baseline document successfully, then confirms that a 30000-level nested document triggers uncaught stack exhaustion on the default DOMParser path in both XML and HTML modes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should trigger RangeError: Maximum call stack size exceeded during normalize on the default parse path and emit the proof strings EVOHUNT_PARSER_DOS_CONFIRMED mime=application/xml depth=30000 and EVOHUNT_PARSER_DOS_CONFIRMED mime=text/html depth=30000.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit fda7cc313de30243fea35cada64e0bb12099c2a1, built the Docker image, mounted the checkout at /target-repo, and emitted both expected proof strings before exiting successfully.",
+  "verification_method": "The helper requires /target-repo/lib/index.js directly, confirms a shallow baseline parse succeeds, then verifies that a deep payload throws RangeError with the expected message and normalize frames in the stack. The host run.sh greps for both proof strings and fails closed if either one is missing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_PARSER_DOS_CONFIRMED mime=application/xml depth=30000",
+    "EVOHUNT_PARSER_DOS_CONFIRMED mime=text/html depth=30000"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "fda7cc313de30243fea35cada64e0bb12099c2a1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js"
+    ]
+  }
+}

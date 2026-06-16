@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:14:58.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8b8042f2",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-97f8-7cmv-76j2/GHSA-97f8-7cmv-76j2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "npy_directory_scan_false_negative",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8b8042f2/npy_directory_scan_false_negative",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8b8042f2/npy_directory_scan_false_negative/vulnerability_report.json",
+      "title": "Directory scan skips malicious NumPy object-array files and returns a clean result",
+      "vulnerability_type": "detection_bypass_false_negative",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is the legacy PyTorch `scan_pytorch()` magic-number bypass caused by `get_magic_number()` missing dynamically evaluated `MAGIC_NUMBER` values. This finding is a separate `.npy` allowlist omission in `scan_directory_path()` and `scan_huggingface_model()` that skips NumPy files before they ever reach the PyTorch parsing path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "H",
+          "SI": "H",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:H/SI:H/SA:H"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only final qualifying finding is a NumPy directory-scan false negative. GHSA-97f8-7cmv-76j2 is instead the legacy PyTorch magic-number bypass in `scan_pytorch()`, where `get_magic_number()` fails to recognize dynamically produced `MAGIC_NUMBER` values and the scanner used to reject the file instead of scanning the malicious pickle content.",
+    "evidence": [
+      "The advisory JSON describes a `scan_pytorch` bypass in old PyTorch files where the magic number is produced via dynamic `eval`/`__reduce__`, so `pickletools.genops()` does not surface an `INT` or `LONG` opcode for `get_magic_number()`.",
+      "Fix commit `b9997634683a4f4bd0c7e3701e7ce7e90fe70e8c` changes the `scan_pytorch()` invalid-magic branch to scan the first pickle for dangerous globals and adds the `tests/data/pytorch_magic_bypass.pt` regression fixture and tests.",
+      "The session's qualifying finding cites `scan_directory_path()` and `scan_huggingface_model()` omitting `_numpy_file_extensions`, which is a different `.npy` file-filtering bug and does not share the advisory's vulnerable function, parser state, or root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8b8042f2/npy_directory_scan_false_negative",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8b8042f2/npy_directory_scan_false_negative/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8b8042f2/npy_directory_scan_false_negative/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

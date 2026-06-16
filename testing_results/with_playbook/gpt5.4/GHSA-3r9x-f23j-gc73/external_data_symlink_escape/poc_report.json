@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_arbitrary_file_read",
+  "summary": "The reproduction installs the pinned ONNX 1.22.0 source snapshot, loads a crafted model whose external tensor location traverses through a symlinked parent directory, and verifies that the loader reads bytes from outside the model directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print `CHECKER_PASSED`, show that `RAW_PREFIX` equals `b'SECRET-DATA-1234'`, and end with `POC_SUCCESS external_data_symlink_escape`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the bundled source snapshot, built the Docker image, installed ONNX 1.22.0 from the pinned commit, printed `CHECKER_PASSED`, `RAW_LEN 16`, `RAW_PREFIX b'SECRET-DATA-1234'`, showed that `modeldir/linkdir` resolved to an outside directory, and ended with `POC_SUCCESS external_data_symlink_escape`.",
+  "verification_method": "The helper script constructs a model whose external tensor location is `linkdir/secret.bin`, where `linkdir` is a symlink inside the model directory that points to an outside directory. The run only passes if `onnx.checker.check_model` accepts the model and `onnx.load_model` loads the exact outside-file proof bytes into tensor `raw_data`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`CHECKER_PASSED` confirmed that the crafted model passed ONNX path validation before the file read occurred.",
+    "`RAW_PREFIX b'SECRET-DATA-1234'` matched the bytes stored only in the outside file reached through the symlinked parent directory.",
+    "`SYMLINK_REAL` and `OUTSIDE_FILE_REAL` showed that the loaded data came from a filesystem location outside the model directory.",
+    "`POC_SUCCESS external_data_symlink_escape` was emitted only after the outside-file bytes matched exactly."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the bundled target repository snapshot on the host, checks out the pinned synthetic commit for the analyzed source tree, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b04fc166f2b61479e123327181287dd80b7f91a9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_in_container.sh",
+      "reproduction/poc_external_data.py",
+      "reproduction/target.bundle"
+    ]
+  }
+}

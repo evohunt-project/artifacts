@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirmed that both non-blocking parser variants accept an oversized document when the final feedInput() chunk crosses the configured maxDocumentLength, while the fixed-buffer parser and 1 KB chunked async feeds reject the same input.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show a document larger than maxDocumentLength rejected on the fixed-buffer parser and on 1 KB-chunk async feeds, but accepted on both non-blocking parser variants when delivered in a single final chunk.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 22815c439ec1769a60f43c2b971d0cc31f382536, built the reproduction image, and confirmed that the fixed-buffer parser rejected the oversized document while both non-blocking parser variants accepted it in one chunk and rejected it again when the same document was fed in 1 KB chunks.",
+  "verification_method": "reproduction/verify.sh compiles the target source tree directly, runs AsyncDocumentLengthHarness, and verifies the exact accepted/rejected status lines with grep.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "fixed=rejected",
+    "async-byte-array-onechunk=accepted",
+    "async-byte-buffer-onechunk=accepted",
+    "async-byte-array-1k=rejected",
+    "async-byte-buffer-1k=rejected"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "22815c439ec1769a60f43c2b971d0cc31f382536",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/AsyncDocumentLengthHarness.java"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "failed",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle creates a victim `internal_user` and an attacker `internal_user_viewer`, confirms that `/user/info` enforces self-scope, and then attempts to prove that `/spend/users` and `/spend/keys` disclose the victim's records to the viewer. The host-side vulnerability validation succeeded, but the final Docker-based rerun did not complete successfully on this host.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a low-privilege `internal_user_viewer` token receives `403` from `/user/info?user_id=<victim>` while still receiving the victim's user row from `/spend/users?user_id=<victim>` and the victim's key record from `/spend/keys`, then emit the `EVOHUNT_SUCCESS` proof string.",
+  "actual_observed_result": "Multiple `./reproduction/run.sh` attempts were executed. Earlier Docker runs built and launched the container, completed LiteLLM migrations, and then failed during LiteLLM startup because the generated Prisma query-engine cache path was under `/root/.cache`, causing Prisma startup failure before the health check. The Dockerfile was then updated to grant runtime access to the generated cache, but the final rerun on this host failed during base-image resolution with Docker Hub `429 Too Many Requests`, so no successful end-to-end `./reproduction/run.sh` completion was observed in this session.",
+  "verification_method": "The exploit helper creates a victim account and a viewer account, asserts that `/user/info?user_id=<victim>` returns `403`, requires `/spend/users?user_id=<victim>` to return the victim row, requires `/spend/keys` to expose the victim key row, and rejects false positives by checking that the leaked token value is a stored 64-hex hash rather than the plaintext victim key.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "A containerized run reached LiteLLM startup, applied Prisma migrations, and failed before the health check with a Prisma query-engine startup error.",
+    "The final rerun attempt after the Dockerfile cache-permission fix was blocked by Docker Hub anonymous pull rate limiting while resolving `python:3.10-slim-bookworm`."
+  ],
+  "limitations_or_blockers": [
+    "The patched Docker bundle could not be rerun to completion on this host because Docker Hub returned `429 Too Many Requests` during base-image resolution.",
+    "Pre-patch container runs failed because Prisma's generated query-engine cache was not accessible to the non-root runtime user; the current Dockerfile includes a fix for that cache-permission issue, but that exact revision was not observed to complete end to end in this session."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "e0d5c28db02b3219dbd944666a55f49732197922",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/config.yaml",
+      "reproduction/entrypoint.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

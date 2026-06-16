@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:50:57.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9a08e6bb",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-gqpp-xgvh-9h7h/GHSA-gqpp-xgvh-9h7h.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "graphql_introspection_type_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9a08e6bb/graphql_introspection_type_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9a08e6bb/graphql_introspection_type_bypass/vulnerability_report.json",
+      "title": "GraphQL public introspection guard bypass exposes schema types and Cloud Code function names",
+      "vulnerability_type": "sensitive_data_exposure",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is a Postgres-only SQL injection in `src/Adapters/Storage/Postgres/PostgresStorageAdapter.js` during dot-notation `Increment` handling. This finding is a GraphQL introspection disclosure in `src/GraphQL/ParseGraphQLServer.js` and does not reach the PostgreSQL adapter or any SQL-construction sink.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "verification_email_request_account_enumeration",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9a08e6bb/verification_email_request_account_enumeration",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9a08e6bb/verification_email_request_account_enumeration/vulnerability_report.json",
+      "title": "Verification email request endpoint discloses account existence and verification state",
+      "vulnerability_type": "sensitive_data_exposure",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory root cause is unsafe interpolation of dot-notation `Increment` sub-key names into PostgreSQL update SQL in `PostgresStorageAdapter`. This finding is a response-differentiation bug in `src/Routers/UsersRouter.js` for `POST /verificationEmailRequest` and does not involve nested-object updates, `Increment`, or Postgres SQL generation.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described root cause: attacker-controlled dot-notation sub-key names breaking out of PostgreSQL string literals during `Increment` handling in `src/Adapters/Storage/Postgres/PostgresStorageAdapter.js`.",
+    "evidence": [
+      "The advisory fix commit `aa0de68d` between `8.6.30` and `8.6.31` changes only `src/Adapters/Storage/Postgres/PostgresStorageAdapter.js`, escaping single quotes before interpolating nested `Increment` sub-key names into the `CONCAT('{\"...\":', COALESCE($...->>'...','0')::int + ...)::jsonb` SQL fragment.",
+      "The `graphql_introspection_type_bypass` finding targets `POST /graphql` and `src/GraphQL/ParseGraphQLServer.js`, where a raw `__schema` substring check fails to block `__type` introspection. It is a schema-metadata disclosure bug and does not touch Postgres storage code or SQL update construction.",
+      "The `verification_email_request_account_enumeration` finding targets `POST /verificationEmailRequest` and `src/Routers/UsersRouter.js`, where branch-specific responses after a `_User` lookup disclose account state. It does not involve the Postgres adapter, dot-notation field updates, or SQL injection mechanics."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9a08e6bb/graphql_introspection_type_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9a08e6bb/graphql_introspection_type_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9a08e6bb/graphql_introspection_type_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9a08e6bb/verification_email_request_account_enumeration",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9a08e6bb/verification_email_request_account_enumeration/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9a08e6bb/verification_email_request_account_enumeration/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

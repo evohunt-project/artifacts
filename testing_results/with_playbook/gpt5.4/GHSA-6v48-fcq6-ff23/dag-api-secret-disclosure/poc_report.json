@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The reproduction creates a secret-bearing DAG and shows that a viewer account can read those secrets back through the DAG detail API on the pinned vulnerable commit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should allow a viewer-level user to retrieve `API_TOKEN=topsecretvalue` and `password=supersecret` from a DAG definition through the authenticated read API.",
+  "actual_observed_result": "Running `./reproduction/run.sh` printed `EVOHUNT_PROOF: viewer-readable DAG API disclosed secret-bearing configuration`, `EVOHUNT_SECRET_ENV: API_TOKEN=topsecretvalue`, and `EVOHUNT_SECRET_PARAM: password=supersecret`.",
+  "verification_method": "The helper starts the pinned vulnerable server, seeds a DAG containing inline secrets via a developer account, logs in as a viewer, requests the DAG details API, and verifies that the response contains the secret env and param values.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_PROOF: viewer-readable DAG API disclosed secret-bearing configuration",
+    "EVOHUNT_SECRET_ENV: API_TOKEN=topsecretvalue",
+    "EVOHUNT_SECRET_PARAM: password=supersecret"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh fetches the exact vulnerable Dagu commit on the host, checks it out into a temporary repository, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6c53bfdaa6beec62a3936b8c5b233efb8bd22c7b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.py"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction seeds a public issue with a private bugnote attachment, confirms that the attachment remains hidden in normal SOAP issue retrieval for a low-privilege viewer, and then downloads the hidden attachment directly by id through mc_issue_attachment_get().",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privilege user who cannot see a private bugnote should still be able to retrieve that bugnote's attachment bytes directly through the SOAP attachment getter when given the attachment identifier.",
+  "actual_observed_result": "Running ./reproduction/run.sh created a fixture issue and a hidden private-note attachment, then showed BASELINE_HIDDEN=1, ATTACHMENT_ID=1, SECRET=EVOHUNT_PRIVATE_NOTE_SECRET_20D5E08A, ATTACHMENT_BYPASS_SUCCESS=1, and EVOHUNT_POC_SUCCESS attachment_id=1 filename=secret-20d5e08a.txt. This demonstrated that normal SOAP issue retrieval kept the attachment hidden while direct SOAP attachment download still disclosed the secret content.",
+  "verification_method": "The verification helper first checks mc_issue_get() for the attacker and fails if the hidden attachment filename appears in the normal issue view. It then calls mc_issue_attachment_get() with the hidden attachment id and requires the returned bytes to match the seeded secret exactly before emitting the success signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "BASELINE_HIDDEN=1",
+    "ATTACHMENT_ID=1",
+    "SECRET=EVOHUNT_PRIVATE_NOTE_SECRET_20D5E08A",
+    "ATTACHMENT_BYPASS_SUCCESS=1",
+    "EVOHUNT_POC_SUCCESS attachment_id=1 filename=secret-20d5e08a.txt"
+  ],
+  "limitations_or_blockers": [
+    "The unattended installer emits a transient curl connection warning before the PHP server is started, but installation still completes and the exploit verification succeeds."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "7ae58efac10ce8bf76bdfd7cdd257cd39dcbcde8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/install_mantis.php",
+      "reproduction/seed_private_attachment.php",
+      "reproduction/soap_private_attachment_poc.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that fromJS() overflows the call stack on deeply nested JSON-like input and terminates the child Node process with RangeError.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should build the pinned vulnerable revision and then show that fromJS() on a deeply nested JSON-like object terminates the child Node process with `RangeError: Maximum call stack size exceeded`.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 78d32a46a832f814393bb0d76c1b83246beb64dd, built Immutable inside the container, triggered fromJS() on 1000 nested object levels, and the verifier reported FROMJS_STACK_OVERFLOW_CONFIRMED with child exit status 1 after observing `RangeError: Maximum call stack size exceeded`.",
+  "verification_method": "The verifier script builds the pinned target revision, spawns a child Node process that parses and converts deeply nested JSON-like input through fromJS(), and checks for a non-zero child exit plus the exact `RangeError: Maximum call stack size exceeded` text.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verifier emitted `FROMJS_STACK_OVERFLOW_CONFIRMED`.",
+    "The child process exited with status `1` during the exploit trigger.",
+    "The child output included `RangeError: Maximum call stack size exceeded`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "78d32a46a832f814393bb0d76c1b83246beb64dd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js",
+      "reproduction/trigger_fromjs.js"
+    ]
+  }
+}

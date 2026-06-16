@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "business_logic_bypass",
+  "summary": "The reproduction bundle clones the pinned vulnerable TSPortal commit, starts the Laravel application in a container, creates an authenticated low-privilege session, submits the same under-13 DPA twice for a third-party account, and verifies that two open `dpas` rows are created.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow the same authenticated attacker session to submit two under-13 DPA requests for the same third-party username and leave two matching open rows in the `dpas` table.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `https://github.com/miraheze/TSPortal.git` at `78e6da2aec92ac99aecbcde92ddeb8c9471ccf12`, built the reproduction image, created an authenticated attacker session, submitted the same under-13 DPA twice for `Miraheze`, received two `302` responses, and left two matching open rows in `dpas`: `b947ccf259e4995ad3d5abeb82fea042|2|evohunt duplicate dpa test` and `83f190d19784882a74b899a8b51ac611|2|evohunt duplicate dpa test`.",
+  "verification_method": "The verifier creates an authenticated Laravel session cookie, submits `POST /dpa/new` twice with the same third-party username, and then queries the SQLite database to confirm that two rows with the same proof text exist in `dpas`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The first `POST /dpa/new` returned HTTP `302` for the authenticated attacker session.",
+    "The second `POST /dpa/new` returned HTTP `302` for the same target username and proof text.",
+    "SQLite verification observed two open rows with the same proof text: `b947ccf259e4995ad3d5abeb82fea042|2|evohunt duplicate dpa test` and `83f190d19784882a74b899a8b51ac611|2|evohunt duplicate dpa test`.",
+    "The verifier printed `verification passed: duplicate open DPA requests were created for the same third-party account`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "78e6da2aec92ac99aecbcde92ddeb8c9471ccf12",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/create_session.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction cloned the pinned vulnerable Auto-GPT commit, mounted it into the reproduction container, and confirmed that a crafted `.py` filename caused `execute_python_file` to leak the container's `OPENAI_API_KEY` through injected shell execution while `EXECUTE_LOCAL_COMMANDS` remained false.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should keep `EXECUTE_LOCAL_COMMANDS=False` while a crafted filename causes `execute_python_file` to execute injected shell syntax and print the proof token `EVOHUNT_SECRET_TOKEN` from the runtime environment.",
+  "actual_observed_result": "Running `./reproduction/run.sh` fetched commit `74aa4add1b066bcab5d1749a6f50898a576c9499`, built the reproduction image, executed the helper against `/target-repo`, printed `execute_local_commands=False`, and then printed `EVOHUNT_SECRET_TOKEN` from the injected `printf \"$OPENAI_API_KEY\"` shell fragment before the verification helper declared success.",
+  "verification_method": "The verification helper captures exploit output, checks that `execute_local_commands=False` was observed, checks that the exact proof token `EVOHUNT_SECRET_TOKEN` appeared in command output, and fails the run if either signal is missing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit output contained `execute_local_commands=False`, confirming the documented local-command flag stayed disabled.",
+    "The exploit output contained the exact proof token `EVOHUNT_SECRET_TOKEN`, demonstrating shell execution and environment disclosure through the crafted filename.",
+    "The verification helper printed `verification helper confirmed the proof token and disabled command flag` before `run.sh` reported overall success."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh initializes a temporary git checkout, fetches the single pinned vulnerable commit on the host, checks it out, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "74aa4add1b066bcab5d1749a6f50898a576c9499",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

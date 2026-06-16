@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:25:57.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_491ec345",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-m5wg-cjgh-223j/GHSA-m5wg-cjgh-223j.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated_payment_control_panel_php_hook_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_491ec345/unauthenticated_payment_control_panel_php_hook_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_491ec345/unauthenticated_payment_control_panel_php_hook_rce/vulnerability_report.json",
+      "title": "Unauthenticated /payment control panel permits secret disclosure and PHP hook overwrite leading to code execution",
+      "vulnerability_type": "unauthenticated_php_hook_overwrite",
+      "advisory_match": true,
+      "advisory_match_reason": "Matches the advisory's exact unauthenticated `/payment/api/editable/update` route, the default `['web']` middleware exposure, the `file_put_contents()` overwrite of published PHP hook files, and the later `require()` execution path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "unauthenticated_payment_control_panel_php_hook_rce",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_491ec345/unauthenticated_payment_control_panel_php_hook_rce",
+      "status": "qualifying_vuln",
+      "title": "Unauthenticated /payment control panel permits secret disclosure and PHP hook overwrite leading to code execution",
+      "vulnerability_type": "unauthenticated_php_hook_overwrite"
+    },
+    "reason": "The finding identifies the advisory's exact route, missing-auth exposure, file overwrite sink, and later executable-hook load, and the copied PoC showed the overwritten hook executing during the documented Click callback flow.",
+    "evidence": [
+      "`src/routes/web.php` falls back to `['web']`, leaving the `/payment` control-panel routes remotely reachable without authentication by default.",
+      "`ApiController::file_put()` writes attacker-controlled `content` into `app/Http/Controllers/Payments/<file_name>.php`, and `PaymentService::beforeResponse()` later `require`s `before_response.php` from that same published hook directory.",
+      "`PayUzServiceProvider` publishes the editable PHP hook files into `app/Http/Controllers/Payments`, which is the exact overwrite target described by the advisory.",
+      "Fresh execution from `.judge/poc_runs/unauthenticated_payment_control_panel_php_hook_rce` exited 0, and `run.log` shows the documented `/handle/click` callback returning success JSON while the overwritten hook produced the `EVOHUNT_POC_OK` proof marker."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "unauthenticated_payment_control_panel_php_hook_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_491ec345/unauthenticated_payment_control_panel_php_hook_rce",
+      "executed": true,
+      "command": "bash workspace/reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_491ec345/.judge/poc_runs/unauthenticated_payment_control_panel_php_hook_rce",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_491ec345/.judge/poc_runs/unauthenticated_payment_control_panel_php_hook_rce/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_491ec345/.judge/poc_runs/unauthenticated_payment_control_panel_php_hook_rce/poc_execution.json",
+      "observed_effect": "The copied PoC recreated the unauthenticated overwrite chain, and `run.log` shows the Click callback returning success JSON while the overwritten `before_response.php` hook wrote the `EVOHUNT_POC_OK` proof marker.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

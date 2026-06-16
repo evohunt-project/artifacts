@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that JWT-protected routes remain inaccessible on their direct paths but become unauthenticated when reached through a whitelisted /api/v1/health/../ path traversal sequence.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show direct protected routes returning 401 while bypassed /api/v1/health/../ paths return 200, allow unauthenticated flag creation, and expose export data.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 2dc5d1495e73737b6273a10514c83f34907a7294, started Flagr with JWT auth enabled, observed direct /api/v1/flags status 401, bypassed /api/v1/health/../flags status 200, bypassed flag creation status 200, direct export status 401, bypassed export status 200, and printed EVOHUNT_JWT_BYPASS_CONFIRMED before exiting successfully.",
+  "verification_method": "The containerized helper starts the vulnerable server, compares direct versus bypassed routes with curl --path-as-is, validates the unauthorized create response, and parses the unauthorized export JSON to confirm the created flag is present.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] direct /api/v1/flags status: 401",
+    "[evohunt] bypassed /api/v1/health/../flags status: 200",
+    "[evohunt] bypassed flag creation status: 200",
+    "[evohunt] direct export status: 401",
+    "[evohunt] bypassed export status: 200",
+    "EVOHUNT_JWT_BYPASS_CONFIRMED"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh initializes a temporary host checkout under the session directory, fetches the pinned vulnerable commit from the target repository, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2dc5d1495e73737b6273a10514c83f34907a7294",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

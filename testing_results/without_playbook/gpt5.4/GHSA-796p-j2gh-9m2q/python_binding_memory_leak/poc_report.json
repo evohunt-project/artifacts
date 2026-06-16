@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "memory_exhaustion_dos",
+  "summary": "The reproduction built the Python bindings, repeatedly called the vulnerable async helper with oversized CA strings, and observed sustained process RSS growth despite each network request failing immediately.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Repeated calls should permanently retain attacker-controlled memory and measurably increase process RSS until the host process is destabilized or exhausted.",
+  "actual_observed_result": "The run recorded ru_maxrss growth from 16187392 to 161316864 after 12 failing calls that each supplied an approximately 8 MiB CA string, confirming permanent memory retention in the vulnerable process.",
+  "verification_method": "The helper script measures process ru_maxrss before and after repeated failed calls to get_collateral_for_fmspc(). Because the target endpoint is an immediately refusing localhost port, the observed growth is attributable to leaked argument storage rather than downloaded collateral.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "before_rss=16187392",
+    "after_rss=161316864",
+    "delta_rss=145129472",
+    "all API calls failed on a refusing localhost endpoint while RSS still increased"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc.py"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction clones SiYuan v3.6.4, starts the published service, confirms that the private note is blocked on the normal published document path, and then leaks that same private note's markdown through the published /api/search/searchEmbedBlock response metadata.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should prove that an unauthenticated published user can recover the private markdown marker TOP_SECRET_MARKER_91791600 from a note whose direct published access path returns Access denied.",
+  "actual_observed_result": "Running ./reproduction/run.sh successfully cloned v3.6.4, built the reproduction image, verified that the private document request returned Access denied, and then extracted '# Private Doc\\n\\nTOP_SECRET_MARKER_91791600' from blocks[0].block.ial.leak in the published searchEmbedBlock response.",
+  "verification_method": "The reproduction first checks that /api/filetree/getDoc on the private published document contains the Access denied placeholder. It then issues the crafted /api/search/searchEmbedBlock request, extracts data.blocks[0].block.ial.leak, decodes the hex-encoded value, and requires the decoded markdown to contain TOP_SECRET_MARKER_91791600.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/last-run/forbidden_private_doc.json shows that the normal published document request returned Access denied for the private note.",
+    "reproduction/last-run/exploit_response.json contains the crafted published searchEmbedBlock response with data.blocks[0].block.ial.leak.",
+    "reproduction/last-run/leaked_private_markdown.txt contains the decoded private markdown '# Private Doc\\n\\nTOP_SECRET_MARKER_91791600'.",
+    "reproduction/last-run/exploit_statement.sql records the exact attacker-controlled SQL statement used for the leak.",
+    "reproduction/last-run/summary.txt records the generated notebook and document identifiers together with the leaked hex payload."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref v3.6.4, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v3.6.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh"
+    ]
+  }
+}

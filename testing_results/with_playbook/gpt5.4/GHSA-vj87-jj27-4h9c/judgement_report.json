@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:21:14.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8eb0b340",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-vj87-jj27-4h9c/GHSA-vj87-jj27-4h9c.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "default_client_tls_auth_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8eb0b340/default_client_tls_auth_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8eb0b340/default_client_tls_auth_bypass/vulnerability_report.json",
+      "title": "Default client TLS APIs disable certificate verification and allow server impersonation",
+      "vulnerability_type": "improper_certificate_validation",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a client-side insecure-default issue: default wrappers initialize client connections with CERT_NONE and hostname checks disabled, so an attacker-controlled server certificate is accepted. The advisory is a different server-side mTLS flaw where CERT_REQUIRED omits WOLFSSL_VERIFY_FAIL_IF_NO_PEER_CERT and therefore accepts clients that send no certificate.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described root cause. The accepted EvoHunt finding targets client-side server-certificate validation defaults, while the advisory is a server-side client-certificate enforcement bug in CERT_REQUIRED handling.",
+    "evidence": [
+      "The advisory states that verify_mode=CERT_REQUIRED did not include WOLFSSL_VERIFY_FAIL_IF_NO_PEER_CERT, so behavior effectively matched CERT_OPTIONAL and a TLS server could authenticate a peer that sent no client certificate.",
+      "The upstream fix for PR 62 changes wolfssl/__init__.py so CERT_REQUIRED becomes _SSL_VERIFY_PEER | _SSL_VERIFY_FAIL_IF_NO_PEER_CERT, adds CERT_OPTIONAL explicitly, and adds a regression test that a CERT_REQUIRED server rejects a client that omits its certificate.",
+      "The qualifying finding instead points to SSLContext initialization with verify_mode=CERT_NONE, _check_hostname=False, and client-facing SSLSocket/wrap_socket defaults that accept self-signed server certificates, which is a different code path, trust direction, and authentication failure mode."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8eb0b340/default_client_tls_auth_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8eb0b340/default_client_tls_auth_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8eb0b340/default_client_tls_auth_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

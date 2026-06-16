@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction clones SentencePiece v0.2.1, builds spm_normalize, confirms that a benign control model decompiles successfully, and then triggers a SIGSEGV by decompiling a malicious model whose precompiled charsmap contains malformed trie data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make spm_normalize crash with SIGSEGV while processing the malicious model under --decompile, after a control model proves the build and normal decompile path are otherwise functional.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned https://github.com/google/sentencepiece.git at v0.2.1, built spm_normalize inside the container, successfully decompiled the bundled control model, and then printed the proof line \"[evohunt] PROOF: malicious precompiled_charsmap caused SIGSEGV during --decompile\" before exiting successfully.",
+  "verification_method": "The verification helper first runs spm_normalize --decompile on a benign bundled model and requires exit code 0. It then reruns the same binary on the malicious bundled model and requires the child process to terminate with SIGSEGV, distinguishing the vulnerability from a generic build, environment, or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The control decompile step completed successfully, showing the built target and decompile workflow were otherwise functional.",
+    "The malicious model caused the child spm_normalize process to terminate with SIGSEGV.",
+    "The run emitted the proof string \"[evohunt] PROOF: malicious precompiled_charsmap caused SIGSEGV during --decompile\"."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.2.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/check_crash.py",
+      "reproduction/control.model",
+      "reproduction/malicious.model"
+    ]
+  }
+}

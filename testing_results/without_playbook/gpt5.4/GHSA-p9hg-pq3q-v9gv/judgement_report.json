@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:26:07.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0aca393b",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-p9hg-pq3q-v9gv/GHSA-p9hg-pq3q-v9gv.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "udm_callback_nil_deref_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0aca393b/udm_callback_nil_deref_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0aca393b/udm_callback_nil_deref_dos/vulnerability_report.json",
+      "title": "Unauthenticated callback request triggers nil dereference in data-change notification handler",
+      "vulnerability_type": "nil_dereference_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a separate callback-handler nil dereference on POST /sdm-subscriptions. The advisory covers missing SUPI or UE ID validation in Nudm_SDM path-parameter handlers such as /nudm-sdm/v2/{supi}/am-data, where a null byte reaches UDR URL construction and triggers Go net/url parsing failure.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described root cause. The only qualifying finding is an unauthenticated callback panic caused by reading a non-existent supi route parameter on /sdm-subscriptions and dereferencing a nil UE context, while the advisory is a null-byte path-parameter validation failure in Nudm Subscriber Data Management handlers that returns 500 after invalid control characters reach URL handling for UDR requests.",
+    "evidence": [
+      "The advisory summary and patch describe null-byte injection in the Nudm_SDM path parameter, especially /nudm-sdm/v2/{supi}/am-data, and the fix adds validator.IsValidSupi or validator.IsValidGpsi checks in internal/sbi/api_subscriberdatamanagement.go before processing those handlers.",
+      "The qualifying finding targets a different route family: server.go registers callback routes on the root group, api_httpcallback.go exposes POST /sdm-subscriptions, and the handler reads c.Params.ByName(\"supi\") even though that route has no :supi segment.",
+      "The finding's sink is processor/notifier.go, where DataChangeNotificationProcedure dereferences ue.UdmSubsToNotify after UdmUeFindBySupi returns nil; this is a nil-pointer panic path, not the advisory's malformed URL path construction and net/url rejection path.",
+      "Because the root cause and vulnerable code differ, the reproduced callback 500 does not satisfy the advisory's vulnerable-code match requirement even though both issues have denial-of-service flavor."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0aca393b/udm_callback_nil_deref_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0aca393b/udm_callback_nil_deref_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0aca393b/udm_callback_nil_deref_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

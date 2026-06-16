@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The packaged reproduction confirms that the default auto-login route returns a superuser bearer token to an unauthenticated caller.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should obtain an access token from GET /api/v1/auto_login without prior authentication and then use that token successfully on a superuser-only API route.",
+  "actual_observed_result": "Running ./reproduction/run.sh completed successfully and printed EVOHUNT_SUCCESS with superuser_count=1 after the helper fetched /api/v1/auto_login and reused the returned bearer token against GET /api/v1/users/.",
+  "verification_method": "The helper starts Langflow 1.7.1, waits for /health, requests /api/v1/auto_login without credentials, then calls GET /api/v1/users/ with the returned token and asserts that the response contains a superuser account.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The helper received an access token from the unauthenticated /api/v1/auto_login response.",
+    "The admin user listing succeeded with that token and reported superuser_count=1.",
+    "The run printed EVOHUNT_SUCCESS: auto_login_superuser_token_bypass."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "47ce5bf27e688e4cfbc48a745c24a72bac6b62d7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

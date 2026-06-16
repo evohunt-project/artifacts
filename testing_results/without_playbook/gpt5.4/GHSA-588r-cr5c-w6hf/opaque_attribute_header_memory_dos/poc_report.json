@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unbounded_memory_allocation_dos",
+  "summary": "The reproduction clones OpenEXR v3.2.7, builds exrheader, generates a sparse EXR with a 256 MiB unknown header attribute, and confirms that exrheader materializes that opaque metadata in memory while parsing the file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause exrheader to open the crafted EXR successfully, recognize the injected evilmeta opaque attribute, and consume at least hundreds of megabytes of resident memory even though the malicious file stores the oversized attribute as a sparse hole on disk.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned OpenEXR v3.2.7, built exrheader, generated a sparse payload with logical size 271616409 bytes and allocated disk usage 3186688 bytes, and then opened it successfully. The verification helper observed evilmeta in exrheader output and /usr/bin/time -v reported Maximum resident set size: 528956 kB.",
+  "verification_method": "The container-side helper builds exrheader from the pinned source, creates the crafted EXR, runs exrheader under /usr/bin/time -v, checks that stdout contains the injected evilmeta opaque attribute, and requires Maximum resident set size to be at least 204800 kB.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Payload generation reported logical_size=271616409, allocated_bytes=3186688, and opaque_attribute_bytes=268435456.",
+    "The verification helper reported observed_max_rss_kb=528956.",
+    "The verification helper reported injected_attribute_visible=yes."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "f6f9cee0da36e8e806f7c9186f737db487782b69",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/make_payload.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

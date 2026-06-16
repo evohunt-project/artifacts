@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "generated_code_injection",
+  "summary": "The reproduction bundle clones the pinned vulnerable Orval revision, builds it inside the container, generates a Zod client from a malicious OpenAPI spec, and verifies that importing the generated module executes the attacker-controlled proof payload.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should generate a file that contains a top-level attacker-controlled template-literal export and should print `EVOHUNT_ZOD_STRING_DEFAULT_PROOF` when the generated module is imported.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Orval at commit `65cc8a05482bd5070a1a05f34a2e459168644cdd`, built the pinned workspace inside the container, generated the malicious Zod client, printed the injected top-level export from `generated/evil.ts`, and then emitted `EVOHUNT_ZOD_STRING_DEFAULT_PROOF` when the generated module was imported.",
+  "verification_method": "The helper script first greps the generated file for the injected top-level export and then imports that generated module with `node --experimental-strip-types`. Verification only passes if the exact proof string is observed during module import.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The generated file contained `export const postEvilBodyDefault = `${(() => { console.log(\"EVOHUNT_ZOD_STRING_DEFAULT_PROOF\"); return \"owned\"; })()}`;` as a top-level runtime export.",
+    "The container printed `EVOHUNT_ZOD_STRING_DEFAULT_PROOF` during `node --experimental-strip-types ./import-generated.mjs`.",
+    "The run completed with `[evohunt] verification passed` and `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "65cc8a05482bd5070a1a05f34a2e459168644cdd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/orval.config.ts",
+      "reproduction/malicious.yaml",
+      "reproduction/import-generated.mjs"
+    ]
+  }
+}

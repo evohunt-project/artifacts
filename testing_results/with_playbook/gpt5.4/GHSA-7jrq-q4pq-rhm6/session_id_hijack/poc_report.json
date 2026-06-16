@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker reproduction confirms that a public client can discover another client's session id and close that victim session without any additional privilege or identity binding.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should recover a victim session id from the public surface, invoke CloseSession with that recovered id, and prove that the victim's ephemeral key disappears after the unauthorized close.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Oxia at 599f30a2f68dccb099b0edd5b7c85dfc64eed638, built the reproduction image, and passed TestPublicSessionDiscoveryAndForcedClose. The container logs showed a victim session being created and then closed after the attacker recovered session id 0, and the test verified that the victim's ephemeral key no longer existed.",
+  "verification_method": "The bundled Go test starts a real standalone Oxia server, creates a victim session and ephemeral key, uses a public range scan with include_internal_keys=true to recover the victim session metadata, calls public CloseSession with the recovered id, and asserts that the victim key disappears only after the unauthorized close.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction run emitted '=== RUN   TestPublicSessionDiscoveryAndForcedClose' followed by '--- PASS: TestPublicSessionDiscoveryAndForcedClose'.",
+    "Server logs from the run showed 'Session started' for the victim and then 'Session closing ... session-id=0' after the attacker-side action.",
+    "The test oracle confirmed that the victim's ephemeral key was gone after the unauthorized CloseSession call."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "599f30a2f68dccb099b0edd5b7c85dfc64eed638",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/go.mod",
+      "reproduction/go.sum",
+      "reproduction/session_hijack_test.go",
+      "reproduction/run-test.sh"
+    ]
+  }
+}

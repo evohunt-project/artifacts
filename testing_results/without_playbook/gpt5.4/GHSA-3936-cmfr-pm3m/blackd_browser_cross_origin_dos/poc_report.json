@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cross_origin_local_service_dos",
+  "summary": "The reproduction starts a local `blackd` instance from the bundled source tree, confirms browser-style cross-origin access to `localhost:45484`, and then drives concurrent formatting requests that push worker CPU well past the verification threshold while client requests stall.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that any browser origin can reach the local `blackd` service and that concurrent cross-origin requests can consume substantial CPU, degrading local service availability.",
+  "actual_observed_result": "During validation, the preflight request returned HTTP 200 with `Access-Control-Allow-Origin: *`. Eight concurrent 300,007-byte formatting requests then pushed `blackd` worker processes to roughly 770-790% aggregate CPU, and all eight requests timed out after about 20.8-20.9 seconds while the server continued processing them.",
+  "verification_method": "The reproduction verifies two conditions: wildcard CORS acceptance for an attacker origin and aggregate `blackd` worker CPU above a fixed threshold while attacker-driven requests are in flight. This distinguishes the finding from a generic network failure or a malformed request rejection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/request_results.json",
+    "reproduction/cpu_samples.txt",
+    "reproduction/verification.json",
+    "reproduction/server.log"
+  ],
+  "limitations_or_blockers": [
+    "The exact peak CPU depends on host core count and scheduler behavior, so the reproduction uses a conservative threshold rather than asserting a single precise percentage."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/_black_version.py",
+      "reproduction/trigger_browser_dos.py",
+      "reproduction/target_src/black/__init__.py",
+      "reproduction/target_src/blackd/__init__.py",
+      "reproduction/target_src/blib2to3/pgen2/driver.py"
+    ]
+  }
+}

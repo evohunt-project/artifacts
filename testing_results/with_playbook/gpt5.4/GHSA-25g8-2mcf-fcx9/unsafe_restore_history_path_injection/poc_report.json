@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The Docker-based reproduction confirms that a crafted restore archive can seed an absolute history snapshot path and make the preview route disclose arbitrary local files from the target container.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the restored watch preview disclose attacker-selected local file contents, demonstrated by exposing /etc/passwd through the normal preview route.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned changedetection.io, checked out commit b984426666a6f3ea9fa9645ea05992567a72427e, built the target and helper images, uploaded a crafted restore ZIP, and then observed the proof marker root:x:0:0: from /etc/passwd in the /preview/11111111-1111-1111-1111-111111111111 response.",
+  "verification_method": "The verification helper waits for the target service, extracts the CSRF token from /backups/restore, uploads the crafted ZIP to /backups/restore/start, and polls /preview/11111111-1111-1111-1111-111111111111 until it sees the exact /etc/passwd marker root:x:0:0:. This distinguishes real arbitrary file disclosure from startup failures, malformed restore handling, or unrelated preview behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verifier printed that the crafted restore ZIP was uploaded successfully.",
+    "The verifier printed that the proof marker root:x:0:0: was observed in the preview response.",
+    "The verifier completed with the success signal '[evohunt] SUCCESS: reproduction completed and verified'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the target image from that checkout, and mounts the checkout into the helper container at /target-repo.",
+    "pinned_commit_or_ref": "b984426666a6f3ea9fa9645ea05992567a72427e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/target.Dockerfile",
+      "reproduction/verify.py"
+    ]
+  }
+}

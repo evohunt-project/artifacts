@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:28:12.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5fc4c6f5",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-3ppc-4f35-3m26/GHSA-3ppc-4f35-3m26.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "repeated_wildcards_redos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5fc4c6f5/repeated_wildcards_redos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5fc4c6f5/repeated_wildcards_redos/vulnerability_report.json",
+      "title": "Repeated wildcard glob patterns trigger catastrophic regex backtracking",
+      "vulnerability_type": "redos",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same vulnerable logic and root cause as GHSA-3ppc-4f35-3m26: consecutive non-globstar `*` characters are compiled in `src/ast.ts` into separate `[^/]*?` regex groups instead of being coalesced, so a later missing literal forces exponential backtracking until the 2e111f3 patch.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "repeated_wildcards_redos",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5fc4c6f5/repeated_wildcards_redos",
+      "status": "qualifying_vuln",
+      "title": "Repeated wildcard glob patterns trigger catastrophic regex backtracking",
+      "vulnerability_type": "redos"
+    },
+    "reason": "The only final qualifying finding matches the advisory's root cause in minimatch's repeated-wildcard regex compilation path, and the copied PoC reproduced the advisory-described denial-of-service consequence with a single failing match that consumed about 1.98 seconds of CPU time.",
+    "evidence": [
+      "The advisory summary and patch 2e111f3a79abc00fa73110195de2c0f2351904f5 describe coalescing consecutive non-globstar `*` characters in `src/ast.ts`, which is the same vulnerable operation named in `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5fc4c6f5/repeated_wildcards_redos/vulnerability_report.json`.",
+      "The fresh copied PoC run in `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5fc4c6f5/.judge/poc_runs/repeated_wildcards_redos/run.log` produced a regex with repeated `[^/]*?` groups followed by a missing literal `X`, demonstrating activation of the advisory-described vulnerable compilation path.",
+      "The runtime artifact `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5fc4c6f5/.judge/poc_runs/repeated_wildcards_redos/observed_result.json` recorded `result=false` and `elapsedMs=1984.459666` for one `minimatch()` call, which is a concrete availability impact caused by the advisory root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "repeated_wildcards_redos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5fc4c6f5/repeated_wildcards_redos",
+      "executed": true,
+      "command": "bash finding_copy/reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5fc4c6f5/.judge/poc_runs/repeated_wildcards_redos",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5fc4c6f5/.judge/poc_runs/repeated_wildcards_redos/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5fc4c6f5/.judge/poc_runs/repeated_wildcards_redos/poc_execution.json",
+      "observed_effect": "The adapted copied PoC installed `minimatch@10.2.0`, generated a regex containing repeated `[^/]*?` groups for pattern `***************X***`, returned `false` on a non-matching string, and spent 1984.459666 ms in a single `minimatch()` call.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

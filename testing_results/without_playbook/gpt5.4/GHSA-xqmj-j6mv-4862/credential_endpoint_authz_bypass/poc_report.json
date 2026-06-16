@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction launches LiteLLM 1.83.7-stable with a shared credential-backed model, proves that a low-privileged key restricted to `/credentials*` can enumerate and delete the shared credential, and shows another user's model call fail until the credential is restored.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privileged authenticated key that can only call the reusable credential endpoints should be able to delete a shared credential and immediately break another user's model requests that rely on that credential.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `v1.83.7-stable`, started Postgres, LiteLLM, and a mock upstream, created a shared credential-backed model, verified a consumer request succeeded with `credential-present-proof`, used a low-privilege `/credentials*` key to enumerate `victim-credential` and delete it, observed the consumer request fail with HTTP 500 and `The api_key client option must be set`, then recreated the credential and observed the consumer request succeed again.",
+  "verification_method": "The harness uses a mock upstream that only returns success when LiteLLM forwards the shared credential's bearer token. Verification requires a pre-delete success containing the proof string, a post-delete failure while `/health/liveliness` remains healthy, and a post-restore success after recreating the credential.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`./reproduction/run.sh` reported `pre-delete model call: HTTP 200 with proof string present=True`.",
+    "`./reproduction/run.sh` reported `enumerated credentials: ['victim-credential']` from the low-privilege `/credentials` key.",
+    "`./reproduction/run.sh` reported `post-delete model call: HTTP 500` and captured the error excerpt `The api_key client option must be set` after the low-privilege delete.",
+    "`./reproduction/run.sh` reported `post-restore model call: HTTP 200 with proof string present=True` after recreating the deleted credential."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the verification container at /target-repo.",
+    "pinned_commit_or_ref": "v1.83.7-stable (e0d5c28db02b3219dbd944666a55f49732197922)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/target_config.yaml"
+    ]
+  }
+}

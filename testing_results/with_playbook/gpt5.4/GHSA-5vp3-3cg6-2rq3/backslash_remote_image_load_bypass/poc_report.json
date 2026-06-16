@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "origin_and_url_boundary_mismatches",
+  "summary": "The Docker-based reproduction confirms that the default JustHTML sanitizer strips normal remote image URLs but preserves backslash-prefixed variants that a WHATWG URL resolver upgrades to `https://evil.test/track`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that default `img[src]` sanitization blocks `https://evil.test/track` and `//evil.test/track`, but preserves `\\\\evil.test/track` and `/\\\\evil.test/track`, which a browser-style WHATWG resolver converts into `https://evil.test/track`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `https://github.com/EmilStenstrom/justhtml.git` at `c5185651a443fb806343e6e5b081b49bab588d21`, built the Docker image, and produced: `CONTROL_ABSOLUTE=<img>`, `CONTROL_PROTOCOL_RELATIVE=<img>`, `BYPASS_ONE_HTML=<img src=\"\\\\evil.test/track\">`, `BYPASS_ONE_RESOLVED=https://evil.test/track`, `BYPASS_TWO_HTML=<img src=\"/\\\\evil.test/track\">`, `BYPASS_TWO_RESOLVED=https://evil.test/track`, followed by the success message.",
+  "verification_method": "The helper script exercises the default sanitizer on both blocked controls and backslash-prefixed bypass inputs, extracts the surviving `src` values, and resolves them with Node's WHATWG `URL` implementation against `https://victim.test/view`. The run only succeeds if the controls are stripped and the surviving values resolve cross-origin.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The absolute and protocol-relative control cases both sanitized to `<img>` with no `src` attribute.",
+    "The first bypass case sanitized to `<img src=\"\\\\evil.test/track\">` and resolved to `https://evil.test/track`.",
+    "The second bypass case sanitized to `<img src=\"/\\\\evil.test/track\">` and resolved to `https://evil.test/track`.",
+    "The container printed `SUCCESS: default relative-only img[src] policy preserved backslash-prefixed values that resolve cross-origin`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "c5185651a443fb806343e6e5b081b49bab588d21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_url_bypass.py",
+      "reproduction/resolve_url.js"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_arbitrary_file_read",
+  "summary": "The PoC starts the server locally, requests a valid exact-version package to populate the npm store, then uses a traversal raw-file request to read /etc/hosts and verifies that the returned body contains the expected localhost entry.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A successful run should cause the server to return host file contents outside the requested package root, demonstrating arbitrary file read via path traversal.",
+  "actual_observed_result": "The confirmed request `GET /is-number@7.0.0/../../../../../../../../../../../../etc/hosts?raw` returned the host's /etc/hosts content with HTTP 200. A second request read the repository's go.mod file through the same primitive.",
+  "verification_method": "The run script verifies the exploit by grepping the traversal response for the expected `127.0.0.1` localhost line from /etc/hosts. This distinguishes a real file read from a package asset response, redirect, or generic error page.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/output/prime.headers.txt",
+    "reproduction/output/hosts.headers.txt",
+    "reproduction/output/hosts.body.txt",
+    "reproduction/output/server.log"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

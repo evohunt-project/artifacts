@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "default_owner_credentials",
+  "summary": "The Docker-based reproduction confirms that a fresh RustFS instance started with the shipped defaults accepts `rustfsadmin` / `rustfsadmin` as the live owner credential and returns an administrator confirmation from the admin API.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should authenticate with the shipped default credentials and prove owner-level admin access on the vulnerable RustFS instance.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `de4a3fa766305bed1f9d1be72fed06bade136c54`, built the reproduction image, started RustFS, and returned `[evohunt] SUCCESS: shipped default credentials authenticate as the RustFS owner` followed by `{\"access_key\": \"rustfsadmin\", \"is_admin\": true, \"message\": \"User is an administrator\"}`.",
+  "verification_method": "The run script starts the pinned vulnerable build, signs a request to `GET /rustfs/admin/v3/is-admin` with `rustfsadmin` / `rustfsadmin`, and verifies that the JSON response marks the caller as an administrator rather than returning an auth failure or non-admin result.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] SUCCESS: shipped default credentials authenticate as the RustFS owner",
+    "{\"access_key\": \"rustfsadmin\", \"is_admin\": true, \"message\": \"User is an administrator\"}",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "de4a3fa766305bed1f9d1be72fed06bade136c54",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/default_creds_poc.py",
+      "reproduction/sigv4.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

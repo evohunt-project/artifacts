@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "insecure_deserialization",
+  "summary": "The reproduction enables Fickling's default hook, confirms that pickle.load is blocked, and then demonstrates that pickle.loads still executes an attacker-controlled __reduce__ payload.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the documented hook blocks pickle.load while pickle.loads still reaches raw stdlib unpickling and emits the attacker-controlled proof string.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the vulnerable repository, built the reproduction image, confirmed the protected pickle.load path raised UnsafeFileError, and then observed the attacker-controlled proof string from pickle.loads together with a zero return code from the injected os.system call.",
+  "verification_method": "The verification script checks for three conditions in a single run: the hooked pickle.load path must print SAFE_PATH_BLOCKED, the bypassed pickle.loads path must emit the exact proof string, and the bypass call must return 0. This distinguishes the bypass from a startup failure or a generic parser error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included SAFE_PATH_BLOCKED from the protected pickle.load path.",
+    "Container output included FICKLING_HOOK_BYPASS_CONFIRMED from the attacker-controlled os.system payload executed through pickle.loads.",
+    "Container output included BYPASS_RETURN=0, confirming the bypassed call reached the intended sink and returned successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8249522c7180c69436516ff81bff394f62298c0c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:38:13.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_310d8db9",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-6h7w-v2xr-mqvw/GHSA-6h7w-v2xr-mqvw.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "installer_post_install_admin_takeover",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_310d8db9/installer_post_install_admin_takeover",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_310d8db9/installer_post_install_admin_takeover/vulnerability_report.json",
+      "title": "Installer post-install AJAX bypass permits unauthenticated admin takeover",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same post-install `/install/api/admin-config-setup` missing-authentication exposure described by the advisory: unauthenticated requests still reach installer logic after installation and can replace the admin account.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "installer_post_install_admin_takeover",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_310d8db9/installer_post_install_admin_takeover",
+      "status": "qualifying_vuln",
+      "title": "Installer post-install AJAX bypass permits unauthenticated admin takeover",
+      "vulnerability_type": "broken_access_control"
+    },
+    "reason": "The finding matches the advisory's vulnerable code path and root cause, and the copied PoC demonstrated the advisory impact by overwriting the installed instance's admin credentials through the unauthenticated installer API and then authenticating to the admin dashboard.",
+    "evidence": [
+      "The advisory describes direct unauthenticated exploitation of post-install installer API routes, especially `POST /install/api/admin-config-setup`; the finding uses the same endpoint and post-install attack path.",
+      "In the vulnerable Bagisto revision used by the reproduction, `CanInstall::handle()` allows installed `/install` requests to continue when they are AJAX requests, leaving installer APIs reachable after installation.",
+      "The same vulnerable revision mounts `POST /install/api/admin-config-setup`, and `InstallerController::adminConfigSetup()` writes attacker-controlled `admin`, `email`, and `password` values into `admins.id = 1`.",
+      "The upstream fix commit `380c045e48490da740cd505fb192cc45e1809bed` adds a 403 response for installed AJAX `/install` requests and removes the overwrite behavior, which aligns with the advisory's missing-authentication root cause.",
+      "The copied PoC run under `.judge/poc_runs/installer_post_install_admin_takeover/` exited with code 0 and `run.log` shows `EVOHUNT_INSTALLER_ACCOUNT_TAKEOVER_CONFIRMED` followed by `[evohunt] SUCCESS: reproduction completed and verified`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "installer_post_install_admin_takeover",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_310d8db9/installer_post_install_admin_takeover",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_310d8db9/.judge/poc_runs/installer_post_install_admin_takeover/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_310d8db9/.judge/poc_runs/installer_post_install_admin_takeover/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_310d8db9/.judge/poc_runs/installer_post_install_admin_takeover/poc_execution.json",
+      "observed_effect": "After the application was installed, the copied PoC successfully exercised the unauthenticated AJAX installer API, overwrote the admin credentials, authenticated with the attacker-controlled account, reached the admin dashboard, and emitted `EVOHUNT_INSTALLER_ACCOUNT_TAKEOVER_CONFIRMED`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

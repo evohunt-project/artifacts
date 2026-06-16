@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that an API key with no granted permissions can execute custom-function preview code and read a workspace secret, while a normal permissioned chatflow route still rejects that same key.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that a valid API key with `permissions=[]` is still able to execute preview JavaScript through `POST /api/v1/node-custom-function` and receive the seeded workspace secret in the response.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Flowise `3.1.0` at commit `378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97`, built the required `components` and `server` packages in the container, started the service, and observed `401` for the unauthenticated preview request, `200` with body `\"EVOHUNT_CUSTOM_FUNCTION_SECRET\"` for `Authorization: Bearer LOWPRIVKEY`, and `403` from `GET /api/v1/chatflows` with that same key.",
+  "verification_method": "The helper seeds a workspace variable and an API key record with an empty permission set, then checks three conditions: unauthenticated preview access must fail, the empty-permission key must return the exact secret string from the preview endpoint, and a permissioned control route must reject the same key.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `[evohunt] unauthenticated control status: 401`.",
+    "The reproduction printed `[evohunt] low-privilege key response: \"EVOHUNT_CUSTOM_FUNCTION_SECRET\"`.",
+    "The reproduction printed `[evohunt] permissioned control route status: 403` followed by `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

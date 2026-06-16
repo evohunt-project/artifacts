@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that a malformed multipart upload leaves an orphaned file on disk in Multer v2.0.2 even though the HTTP request fails.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should return an HTTP 400 parser error while still leaving at least one orphaned file in the upload directory and printing ORPHAN_COUNT 1 or higher.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned expressjs/multer at e5db9caf5da30b61e90ad56db5f6821d36ce2de9, built the reproduction image, and printed STATUS 400, BODY {\"error\":\"MISSING_FIELD_NAME\",\"message\":\"Field name missing\"}, ORPHAN_COUNT 1, and an orphaned filename before the run-script success message.",
+  "verification_method": "The helper starts an Express app that uses Multer disk storage with an asynchronous fileFilter, sends a malformed multipart request, waits for the error response to finish, and then counts files in the upload directory. The run only succeeds if the server rejects the request but an orphaned file remains on disk.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output contained the exact proof string: [evohunt] STATUS 400.",
+    "Container output contained the exact proof string: [evohunt] ORPHAN_COUNT 1.",
+    "Container output listed the orphaned filename created by the vulnerable request path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag and verifies the exact commit, then mounts that checkout into the container.",
+    "pinned_commit_or_ref": "e5db9caf5da30b61e90ad56db5f6821d36ce2de9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/package-lock.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

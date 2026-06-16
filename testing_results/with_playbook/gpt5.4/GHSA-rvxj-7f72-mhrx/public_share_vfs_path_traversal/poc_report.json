@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The reproduction mounts a share-like backend at VFS root using the repository's own VFS code, then proves that resolving `/../secret.txt` escapes the intended share root and reads the outside file contents.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that the repository resolves `../` outside the mounted share root and prints the contents of a file stored outside that root (`secret`).",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned EGroupware at commit `10dc43ea51de70f2bd010bb2fc6b5b7ed957254c`, built the Docker image, and printed JSON showing `resolved_escaped` mapped to `/tmp/evohunt-share-probe/secret.txt` rather than a path under `/tmp/evohunt-share-probe/share`, followed by the proof marker `EVOHUNT_PROOF: escaped mounted share root and read outside file`.",
+  "verification_method": "The container runs `probe.php`, which mounts a share-like backend at `/`, resolves both `/allowed.txt` and `/../secret.txt` through the repository's real VFS code, verifies that the escaped path points outside the mounted share directory, reads both backend URLs, and fails unless the outside file content is returned.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `resolved_allowed=filesystem://default/tmp/evohunt-share-probe/share/allowed.txt?...`.",
+    "The run printed `resolved_escaped=filesystem://default/tmp/evohunt-share-probe/secret.txt?...`, which is outside the mounted share directory.",
+    "The run printed `escaped=\"secret\\n\"`.",
+    "The run printed `EVOHUNT_PROOF: escaped mounted share root and read outside file`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "10dc43ea51de70f2bd010bb2fc6b5b7ed957254c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/probe.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

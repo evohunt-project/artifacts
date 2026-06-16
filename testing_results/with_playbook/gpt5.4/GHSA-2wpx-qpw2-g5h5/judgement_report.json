@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:41:46.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c93f437",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-2wpx-qpw2-g5h5/GHSA-2wpx-qpw2-g5h5.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "doh3_slow_post_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c93f437/doh3_slow_post_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c93f437/doh3_slow_post_dos/vulnerability_report.json",
+      "title": "Slow partial HTTP/3 POST bodies can starve CoreDNS DoH3 requests",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets the DoH3 HTTP request path (`ServerHTTPS3.ServeHTTP` -> `doh.RequestToMsgWire` -> `io.ReadAll` on POST bodies), while the advisory targets the distinct DoQ stream worker/backlog path in `core/dnsserver/server_quic.go` with blocking `readDOQMessage` framing reads.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's DoQ root cause. The only final qualifying finding is a separate DoH3 slow-body starvation issue on the HTTP/3 request-body read path, not the advisory's DoQ worker-pool backlog and blocking stream-framing read path.",
+    "evidence": [
+      "The advisory describes CoreDNS DoQ in `core/dnsserver/server_quic.go`: accepted QUIC streams can accumulate behind the global worker pool, and active workers can block in `readDOQMessage()` on `io.ReadFull()` while only 1 byte of the 2-byte length prefix has been sent.",
+      "Upstream CoreDNS v1.14.3 release notes explicitly call out the advisory-aligned fix as `core: Avoid spawning waiter goroutines when QUIC worker pool is full`, which is specific to the DoQ worker/backlog mechanism.",
+      "The final qualifying finding `doh3_slow_post_dos` instead documents `ServerHTTPS3.ServeHTTP` -> `doh.RequestToMsgWire` -> `toMsgWire`, where `io.ReadAll(http.MaxBytesReader(...))` waits for EOF on partial HTTP/3 POST bodies and starves later DoH3 requests.",
+      "The DoH3 PoC report verifies timeout of a legitimate follow-up `https://127.0.0.1:8443/dns-query` request under partial POST load, but it does not exercise the advisory's DoQ message-framing code, worker-pool backlog condition, or `readDOQMessage()` path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c93f437/doh3_slow_post_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c93f437/doh3_slow_post_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c93f437/doh3_slow_post_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

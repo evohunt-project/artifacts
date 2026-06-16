@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirmed that an authenticated SFTP user can read outside the configured root and rename files outside that root in the v1.1.4 release.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An authenticated SFTP client should be confined to the configured root, but the PoC should read an out-of-root file and rename a rooted file to an out-of-root destination.",
+  "actual_observed_result": "Running ./reproduction/run.sh printed `EVOHUNT_SUCCESS: SFTP read escaped the configured root and rename moved a file outside it` after the container authenticated with an authorized key, fetched an out-of-root secret, and renamed an in-root file to an out-of-root path.",
+  "verification_method": "The container starts the vulnerable SFTP service with a temporary root, generates an authorized client key, then uses the system `sftp` client in batch mode. It verifies the exact `outside-root` contents from the fetched file and separately verifies that `pwned.txt` outside the configured root contains the original `inside-root` bytes after the rename.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final run emitted `EVOHUNT_SUCCESS: SFTP read escaped the configured root and rename moved a file outside it`.",
+    "The reproduction fetched `/tmp/sftp-root-bypass-poc/root2/secret.txt` even though the configured root was `/tmp/sftp-root-bypass-poc/root`.",
+    "The reproduction confirmed that `/tmp/sftp-root-bypass-poc/pwned.txt` existed outside the configured root and contained the original in-root file contents."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5b5228ff042f284bc432e706699cf7252caf96fa",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh"
+    ]
+  }
+}

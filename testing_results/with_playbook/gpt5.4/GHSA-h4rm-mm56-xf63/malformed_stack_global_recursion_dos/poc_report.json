@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The reproduction builds a malformed pickle with a deeply nested STACK_GLOBAL module operand and confirms uncaught RecursionError across the AST, safety-analysis, and CLI entrypoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should produce a crafted pickle that parses successfully but then causes RecursionError when Fickling tries to build the AST or run safety analysis on the malformed STACK_GLOBAL operand.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the vulnerable repository, built the reproduction image, generated the malformed payload, and observed RecursionError in Pickled.ast, check_safety(), the default CLI path, and the CLI --check-safety path, followed by the expected proof signal.",
+  "verification_method": "The verification script reconstructs the malformed pickle and requires each of four surfaces to raise RecursionError: Pickled.ast, check_safety(), cli.main(['fickling', file]), and cli.main(['fickling', '--check-safety', file]). The run is only considered successful if all four conditions hold and the final proof string is emitted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included AST=RECURSION_ERROR.",
+    "Container output included CHECK_SAFETY=RECURSION_ERROR.",
+    "Container output included CLI_AST=RECURSION_ERROR.",
+    "Container output included CLI_SAFETY=RECURSION_ERROR.",
+    "Container output included STACK_GLOBAL_RECURSION_CONFIRMED after all four checks passed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8249522c7180c69436516ff81bff394f62298c0c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

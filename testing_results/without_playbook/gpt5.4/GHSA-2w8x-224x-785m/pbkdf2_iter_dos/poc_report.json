@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "algorithmic_complexity_dos",
+  "summary": "The reproduction generates a valid SJCL ciphertext, inflates its attacker-controlled `iter` field to 5000000, and shows that `sjcl.decrypt()` spends orders of magnitude longer deriving the key before returning a tag-mismatch error.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A crafted ciphertext should cause noticeably prolonged CPU work in the PBKDF2 loop before decryption fails, demonstrating attacker-triggered denial of service.",
+  "actual_observed_result": "The reproduced run showed the baseline decryption path completing quickly while the malicious ciphertext took about 8 seconds before failing with `CORRUPT: ccm: tag doesn't match`, confirming the expensive work happens before authentication failure.",
+  "verification_method": "The helper script measures wall-clock time for a baseline ciphertext and for the malicious ciphertext, then asserts both a minimum absolute delay and a large slowdown ratio for the malicious case.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The helper prints baseline and malicious elapsed times in milliseconds.",
+    "The malicious ciphertext returns only after a large delay and still fails with the expected authentication error, proving the extra work is in key derivation rather than successful decryption.",
+    "The helper exits successfully only when the slowdown crosses the configured thresholds."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/sjcl.js"
+    ]
+  }
+}

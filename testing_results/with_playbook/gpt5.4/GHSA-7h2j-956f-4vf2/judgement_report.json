@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:52:09.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_12a65f14",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-7h2j-956f-4vf2/GHSA-7h2j-956f-4vf2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "parse_comma_parts_stack_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_12a65f14/parse_comma_parts_stack_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_12a65f14/parse_comma_parts_stack_dos/vulnerability_report.json",
+      "title": "Recursive comma-option parsing overflows the JavaScript call stack",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory targets unbounded eager cross-product expansion of repeated brace ranges, but this finding is a parser-recursion stack overflow in `parseCommaParts()`/`balanced()` and does not identify the advisory's expansion-limit root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "sequence_progress_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_12a65f14/sequence_progress_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_12a65f14/sequence_progress_dos/vulnerability_report.json",
+      "title": "Non-progressing numeric sequence expansion causes fatal denial of service",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory's vulnerable path is repeated finite range expansion without an overall output cap, while this finding depends on a zero-step or non-progress numeric loop in sequence handling and therefore describes a different root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "None of the final qualifying findings identify the advisory-described vulnerable code or equivalent root cause. The advisory is about repeated brace-range expansion generating an unbounded cross-product before v5.0.1 added an expansion cap, while this session's qualifying findings are a recursive comma-parser stack overflow and a separate zero-step/non-progress numeric-loop DoS.",
+    "evidence": [
+      "The advisory summary and proof-of-concept describe repeated numeric ranges such as `{0..99}{0..99}{0..99}{0..99}{0..99}` causing exponential eager expansion and process memory/CPU exhaustion.",
+      "The upstream `v5.0.0...v5.0.1` patch adds `EXPANSION_MAX = 100_000`, threads a `max` argument through `expand_()`, and caps expansion accumulation; the new GHSA regression test uses `const str = '{1..10}'.repeat(10)` and asserts expansion is limited.",
+      "`parse_comma_parts_stack_dos` instead hinges on recursive `parseCommaParts(post)` / `balanced()` calls overflowing the JavaScript call stack, and `parseCommaParts()` is unchanged in v5.0.1.",
+      "`sequence_progress_dos` instead hinges on the numeric loop `for (let i = x; test(i, y); i += incr)` making no progress for zero-step input; that path was hardened later in v5.0.5 by clamping the increment to at least `1`, not by the v5.0.1 advisory fix."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_12a65f14/parse_comma_parts_stack_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_12a65f14/parse_comma_parts_stack_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_12a65f14/parse_comma_parts_stack_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_12a65f14/sequence_progress_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_12a65f14/sequence_progress_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_12a65f14/sequence_progress_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

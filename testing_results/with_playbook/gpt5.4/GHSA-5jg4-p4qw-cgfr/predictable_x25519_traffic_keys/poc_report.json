@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_cryptographic_usage",
+  "summary": "The Docker-based reproduction confirms that the pinned StableLib snapshot accepts an all-zero peer public key and derives the same X25519 session keys that an attacker can compute from public transcript data alone.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an all-zero peer public key yields an all-zero raw shared secret and matching victim/attacker send and receive keys on the default X25519 session helper path.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned StableLib at commit 0f153a6, built the required packages in Docker, and printed `EVOHUNT_X25519_ZERO_KEY_POC_OK` together with identical victim and attacker send/receive keys after the victim processed an all-zero peer public key.",
+  "verification_method": "The containerized verifier constructs the malicious peer input, checks that the victim shared secret is all-zero, recomputes the attacker-side session keys from public transcript data, and exits successfully only if the victim and attacker send/receive keys match exactly. The host run script then requires the proof string to appear in the run log.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/run.log contains `EVOHUNT_X25519_ZERO_KEY_POC_OK`.",
+    "The run log records an all-zero victim shared key.",
+    "The run log records identical victim and attacker send/receive keys."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the StableLib repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0f153a6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/verify_x25519.mjs"
+    ]
+  }
+}

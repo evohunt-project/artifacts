@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction clones `n8n@2.10.0`, starts a focused integration proof, sends an unauthenticated POST to `/webhook-waiting/<numeric execution id>`, and verifies that the waiting execution resumes with attacker-controlled downstream data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow an unauthenticated caller to resume a waiting workflow execution using only the numeric execution ID and to deliver attacker-controlled request data into downstream nodes.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `n8n@2.10.0` at `8e81f3e31398b04fd6f8cc27cf844980cd382117`, built the reproduction image, executed the focused Jest proof, and printed `[evohunt] verified unauthenticated resume via /webhook-waiting/1 with attacker-controlled downstream value owned-by-unauth-user` followed by `[evohunt] SUCCESS: unauthenticated waiting-webhook resume reproduced`.",
+  "verification_method": "The injected integration test creates a workflow that waits on a public webhook, polls until the execution reaches `waiting`, sends an unauthenticated POST to `/webhook-waiting/<executionId>`, and then asserts that the HTTP response is 200, the execution finishes successfully, and the final downstream Set node contains `{ \"attacker\": \"owned-by-unauth-user\" }`. `verify.sh` additionally validates the generated proof file fields `usedAuthCookie=false`, `responseStatus=200`, and the expected waiting path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `PASS test/integration/evohunt.waiting-webhook-authz.test.ts` from the focused integration proof.",
+    "The verification helper printed `[evohunt] verified unauthenticated resume via /webhook-waiting/1 with attacker-controlled downstream value owned-by-unauth-user`.",
+    "The proof file generated during the run recorded `usedAuthCookie=false`, `responseStatus=200`, `waitingPath=/webhook-waiting/1`, and `finalNodeJson.attacker=owned-by-unauth-user`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8e81f3e31398b04fd6f8cc27cf844980cd382117 (tag: n8n@2.10.0)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/evohunt.waiting-webhook-authz.test.ts"
+    ]
+  }
+}

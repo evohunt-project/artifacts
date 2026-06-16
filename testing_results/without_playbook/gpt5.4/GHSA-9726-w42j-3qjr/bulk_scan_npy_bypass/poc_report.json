@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "detection_bypass",
+  "summary": "The reproduction shows that a malicious .npy payload is flagged by direct file scanning but silently skipped by the directory scan workflow, which returns a clean result and exit code 0.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The scanner should miss the malicious .npy payload when invoked on a directory containing only that file, despite detecting the same file when scanned directly.",
+  "actual_observed_result": "The reproduction copied the included payload into a temporary directory, confirmed that scan_file_path() found ssl.get_server_certificate as a dangerous global, then confirmed that scan_directory_path() reported scanned_files=0 and issues_count=0. The CLI summary also reported zero scanned and infected files and exited with status 0.",
+  "verification_method": "The helper script compares the direct-file and directory-scan ScanResult values and fails unless the direct scan reports a dangerous global while the directory scan reports no scanned files and no issues. The shell wrapper separately asserts that the CLI exits 0 for the directory scan.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Direct file scan result contains Global(module='ssl', name='get_server_certificate', safety=Dangerous).",
+    "Directory scan result is ScanResult(globals=[], scanned_files=0, issues_count=0, infected_files=0, scan_err=False).",
+    "CLI output shows 'Scanned files: 0', 'Infected files: 0', and 'Dangerous globals: 0' before exiting successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/repro.py",
+      "reproduction/payload.npy"
+    ]
+  }
+}

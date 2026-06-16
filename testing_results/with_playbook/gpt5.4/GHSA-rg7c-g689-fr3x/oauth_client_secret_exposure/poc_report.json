@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "oauth_client_secret_exposure",
+  "summary": "The Docker-based reproduction confirms that the auth-request event leaks the OAuth client secret and that the auth-response handling path will replay that secret to an attacker-chosen token endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should expose the configured OAuth `client_secret` in the generated auth-request event and send a Basic-authenticated token request containing `client_id:client_secret` to the local attacker-controlled `/token` endpoint.",
+  "actual_observed_result": "Running `./reproduction/run.sh` printed `EVOHUNT_OAUTH_SECRET_EXPOSURE_OK`, `secret_in_event=csecret`, `authorization_header=Basic Y2lkOmNzZWNyZXQ=`, and `token_request_body=grant_type=authorization_code&redirect_uri=https%3A%2F%2Fclient%2Fcb&code=abc&client_id=cid`.",
+  "verification_method": "The verifier fails unless the generated auth-request event contains the configured secret and a local HTTP server captures the subsequent token exchange at `/token` with the expected Basic authorization header and authorization-code form body.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Verifier output contained the exact proof string `EVOHUNT_OAUTH_SECRET_EXPOSURE_OK`.",
+    "Verifier output showed `secret_in_event=csecret`, proving exposure of the configured client secret in the auth request event.",
+    "The local capture server recorded `authorization_header=Basic Y2lkOmNzZWNyZXQ=` and the expected authorization-code token request body."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the reproduction image, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "cf0f372528c7e6ece8596db4e44f18a8eb370314",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

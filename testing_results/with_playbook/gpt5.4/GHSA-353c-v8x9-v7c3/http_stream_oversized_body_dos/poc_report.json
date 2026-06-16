@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction confirms that POST /mcp ignores maxMessageSize, parses an oversized body before authentication, and can be crashed by an unauthenticated oversized request.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that a 2 MiB request bypasses a 1 KiB maxMessageSize guard and then crash the vulnerable server with an out-of-memory failure during an unauthenticated 90 MiB POST /mcp.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 81b8a8568439046560db54664ad2d7f75d35aca1, built the helper image, installed the target dependencies inside the container, started the vulnerable server, logged oversized_probe_status=401 for the 2 MiB probe, reset the crash request with ECONNRESET, emitted FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory from Node, and printed EVOHUNT_HTTP_STREAM_DOS_CONFIRMED before exiting successfully.",
+  "verification_method": "run_poc.mjs copies the mounted repository into a writable workspace, runs npm ci, starts HttpStreamTransport with maxMessageSize: 1024 and API-key auth under --max-old-space-size=64, verifies that a 2 MiB JSON request reaches auth and returns 401 instead of 413, then sends a 90 MiB unauthenticated body and requires a non-zero server exit plus the Node out-of-memory string before declaring success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed oversized_probe_status=401, proving the oversized body was fully read and reached the auth path instead of a size-limit rejection.",
+    "The crash request ended with ECONNRESET while the server emitted FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory.",
+    "The helper printed EVOHUNT_HTTP_STREAM_DOS_CONFIRMED and run.sh completed with [evohunt] SUCCESS: reproduction completed and verified."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction installs pinned npm dependencies inside the container at runtime, so it requires network access to the npm registry."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "81b8a8568439046560db54664ad2d7f75d35aca1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_poc.mjs",
+      "reproduction/vuln_server.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

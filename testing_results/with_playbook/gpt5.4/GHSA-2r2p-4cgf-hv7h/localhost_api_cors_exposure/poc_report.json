@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction starts the vulnerable localhost API, loads an attacker-controlled page in headless Chromium, and confirms that the page can both read `/api/graph/nodes` and persist attacker-controlled data through `POST /learn`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The attacker-controlled origin should be able to read repository-derived graph data from `http://127.0.0.1:7337/api/graph/nodes` and write a proof marker into the victim's persisted graph through `POST /learn`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `74c1e61040ff125124adbe8c99bf3fe5a6b5df20`, built the target, started the localhost server, and dumped browser DOM containing `LEAK_OK:http.ts` and `WRITE_OK:evohunt cross origin write proof`, followed by `[evohunt] verification succeeded`.",
+  "verification_method": "The verification script serves an attacker-controlled page from a different origin (`127.0.0.1:8000`), loads it in headless Chromium, dumps the rendered DOM, and greps for both the read proof (`LEAK_OK:`) and the persisted write proof (`WRITE_OK:evohunt cross origin write proof`).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Dumped browser DOM contained `LEAK_OK:http.ts`.",
+    "Dumped browser DOM contained `WRITE_OK:evohunt cross origin write proof`.",
+    "The verification helper printed `[evohunt] verification succeeded` and the host run script printed `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "74c1e61040ff125124adbe8c99bf3fe5a6b5df20",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/evil/poc.html"
+    ]
+  }
+}

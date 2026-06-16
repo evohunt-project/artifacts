@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction clones the vulnerable Glances commit, starts the default-open REST API with a canary configuration, and verifies that an unauthenticated request to `/api/4/config` returns operator-supplied backend usernames and service configuration details.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start Glances without the optional password gate and allow an unauthenticated HTTP request to read canary backend usernames and service configuration values from the JSON body returned by `/api/4/config`.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned Glances commit, built the reproduction image, started the web server with a canary config, fetched `/api/4/config` without authentication, and observed the expected canary `influxdb` and `mqtt` usernames, hosts, ports, and related service metadata in the response.",
+  "verification_method": "The helper script waits for the REST API to become healthy, downloads `/api/4/config` without credentials, parses the JSON body, and fails unless the expected canary usernames and service configuration values are present while password-like keys remain masked.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run produced an unauthenticated HTTP 200 response from `/api/4/config`.",
+    "The parsed response body contained the expected `influxdb.user`, `influxdb.host`, `influxdb.port`, `influxdb.db`, `mqtt.user`, `mqtt.host`, `mqtt.port`, and `mqtt.topic` values from the canary config.",
+    "The same response masked `jwt_secret_key` and exporter `password` fields, confirming that the issue is unauthenticated configuration disclosure rather than full secret recovery.",
+    "The helper script emitted the proof marker `EVOHUNT_CONFIG_DISCLOSURE_CONFIRMED` only after every canary check passed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "82d7dfbda372d6cccfa43563ed1521da6a72602a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

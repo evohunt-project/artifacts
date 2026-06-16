@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:58:32.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99679a28",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-69v7-xpr6-6gjm/GHSA-69v7-xpr6-6gjm.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "lupa_attribute_filter_sandbox_escape",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99679a28/lupa_attribute_filter_sandbox_escape",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99679a28/lupa_attribute_filter_sandbox_escape/vulnerability_report.json",
+      "title": "attribute_filter sandbox escape permits host command execution",
+      "vulnerability_type": "sandbox_escape_rce",
+      "advisory_match": true,
+      "advisory_match_reason": "Same root cause as the advisory: `attribute_filter` blocks direct Lua-side attribute access but is bypassed when untrusted Lua calls Python built-in `getattr()`/`setattr()` while builtins remain registered.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "H",
+          "SI": "H",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:H/SI:H/SA:H"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "lupa_attribute_filter_sandbox_escape",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99679a28/lupa_attribute_filter_sandbox_escape",
+      "status": "qualifying_vuln",
+      "title": "attribute_filter sandbox escape permits host command execution",
+      "vulnerability_type": "sandbox_escape_rce"
+    },
+    "reason": "The only final qualifying finding matches GHSA-69v7-xpr6-6gjm on the specific incomplete `attribute_filter` enforcement in built-in `getattr()`/`setattr()` paths, and a fresh copied-workspace PoC reached host command execution on pinned `lupa==2.6`.",
+    "evidence": [
+      "The advisory describes incomplete `attribute_filter` enforcement when attributes are reached through built-in `getattr`/`setattr`, enabling sandbox escape and host command execution.",
+      "The selected finding identifies the same vulnerable mechanism: untrusted Lua uses `python.builtins.getattr()` to recover filtered dunder attributes while `register_builtins` remains enabled.",
+      "Fresh runtime evidence in `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99679a28/.judge/poc_runs/lupa_attribute_filter_sandbox_escape/run.log` shows `DIRECT_ACCESS_BLOCKED AttributeError Access to '__import__' is forbidden`, followed by `PROOF_CONTENT EVOHUNT_FILTER_BYPASS_OK` and `VERIFIED True` after the bypass-driven `os.system(...)` call."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "lupa_attribute_filter_sandbox_escape",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99679a28/lupa_attribute_filter_sandbox_escape",
+      "executed": true,
+      "command": "python3 -m venv .venv && .venv/bin/pip install --upgrade pip setuptools wheel && .venv/bin/pip install lupa==2.6 && .venv/bin/python reproduction/exploit.py",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99679a28/.judge/poc_runs/lupa_attribute_filter_sandbox_escape/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99679a28/.judge/poc_runs/lupa_attribute_filter_sandbox_escape/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99679a28/.judge/poc_runs/lupa_attribute_filter_sandbox_escape/poc_execution.json",
+      "observed_effect": "Pinned `lupa 2.6` loaded, direct `python.builtins.__import__` access was blocked by `attribute_filter`, then the `python.builtins.getattr()` bypass recovered `__import__`, executed `os.system(...)`, and wrote the expected `EVOHUNT_FILTER_BYPASS_OK` proof marker with `VERIFIED True`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

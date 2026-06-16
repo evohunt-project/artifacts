@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The final Docker reproduction confirms that prototype-named REST paths hit inherited router properties and force unauthenticated HTTP 500 responses in both the Express and Koa Feathers wrappers.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Requests to `/constructor`, `/__proto__`, and `/toString` should return HTTP 500 and include `child.lookup is not a function` instead of reaching the normal not-found path.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Feathers `v5.0.41` (resolved by Git to commit `ddb9b9c558563ebd60ac1596da38b05bb54592db`), built the reproduction image, and printed JSON showing Express and Koa both returned HTTP 500 for `/constructor`, `/__proto__`, and `/toString`. The Express responses included `GeneralError` payloads and the Koa responses included the same `child.lookup is not a function` message.",
+  "verification_method": "The helper script starts minimal Express and Koa Feathers apps from the cloned vulnerable source, sends HTTP requests to the prototype-named paths, and asserts both the 500 status code and the exact `child.lookup is not a function` proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Express returned HTTP 500 for `/constructor`, `/__proto__`, and `/toString` with `GeneralError` payloads containing `child.lookup is not a function`.",
+    "Koa returned HTTP 500 for `/constructor`, `/__proto__`, and `/toString` with response bodies containing `child.lookup is not a function`.",
+    "The reproduction helper emitted the success signal `Each prototype-named path returns HTTP 500 and includes 'child.lookup is not a function'.`"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v5.0.41",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js"
+    ]
+  }
+}

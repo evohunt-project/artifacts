@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that the default GFM emphasis parser path repeatedly rescans long unclosed `*` runs and exhibits a dramatic parser-side CPU slowdown on the pinned vulnerable tag.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a 56,001-byte unclosed-emphasis payload takes at least 500 ms to parse and remains at least 100x slower than same-size plain text, demonstrating a repository-owned availability impact rather than ordinary large-input cost.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned `markedjs/marked` at `v18.0.1`, built the parser in the container, and measured the attack payload at a 2,022.062 ms median parse time versus a 0.505 ms median for same-size plain text, a 4,001.222x slowdown. The verifier reported success.",
+  "verification_method": "The helper copies the pinned repository into a writable workspace, installs dependencies from the bundled lockfile, builds the ESM output, then times three parses of a same-size plain-text control and three parses of the unclosed-emphasis attack payload in the same Node process. Verification requires an attack median of at least 500 ms and a slowdown ratio of at least 100x.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Verifier output recorded `control_times_ms` of `[0.664, 0.505, 0.465]` and `attack_times_ms` of `[2022.062, 1984.851, 2108.636]`.",
+    "The median control parse time was `0.505 ms`, the median attack parse time was `2022.062 ms`, and the measured slowdown ratio was `4001.222`.",
+    "The final `./reproduction/run.sh` invocation ended with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v18.0.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/measure_redos.mjs",
+      "reproduction/package-lock.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "insecure_deserialization",
+  "summary": "The Docker-based reproduction confirms that Fickling's generic runtime safety modes leave stdlib `pickle.loads()` unguarded while still blocking `pickle.Unpickler(...).load()` for the same malicious payload.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a malicious pickle payload still executes under `fickling.always_check_safety()` and `with fickling.check_safety():` when the program uses stdlib `pickle.loads()`, even though sibling entrypoints in the same hook family remain blocked.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `trailofbits/fickling` at commit `b6a983a3960cf1698276cb8647fd0007247a5eeb` (`v0.1.8`), built the Docker image, and produced both proof lines: `EVOHUNT_PROOF always_check_safety pickle.loads bypass confirmed` and `EVOHUNT_PROOF check_safety context pickle.loads bypass confirmed`.",
+  "verification_method": "The containerized helper script feeds the same malicious pickle bytes through `pickle.loads()` and `pickle.Unpickler(...).load()` after enabling each generic safety mode. Verification passes only if `pickle.loads()` writes the proof marker and the sibling `pickle.Unpickler` path raises `UnsafeFileError` instead of executing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output showed `CASE always_check/pickle.loads executed=True outcome=returned int=0` while `CASE always_check/pickle.Unpickler executed=False outcome=raised UnsafeFileError`.",
+    "Container output showed `CASE context/pickle.loads executed=True outcome=returned int=0` while `CASE context/pickle.Unpickler executed=False outcome=raised UnsafeFileError`.",
+    "The verification helper matched both expected proof lines and `run.sh` exited successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the upstream target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout read-only into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "b6a983a3960cf1698276cb8647fd0007247a5eeb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

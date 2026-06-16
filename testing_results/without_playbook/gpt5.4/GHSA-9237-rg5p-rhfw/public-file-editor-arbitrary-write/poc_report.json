@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass_arbitrary_file_write",
+  "summary": "A Docker-based reproduction confirmed that an unauthenticated requester can overwrite a publicly readable editable file through the Saltcorn file editor endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should demonstrate unauthenticated overwrite of a public editable JavaScript file and emit `EVOHUNT_PUBLIC_FILE_EDITOR_WRITE_CONFIRMED` after the served file body changes to attacker-controlled content.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Saltcorn tag `v1.6.0-beta.1`, built the reproduction image, installed the target dependencies, and printed `EVOHUNT_PUBLIC_FILE_EDITOR_WRITE_CONFIRMED`. The exploit observed `editPageStatus=200`, `saveStatus=302`, `saveRedirect=/files?dir=.`, `targetFile=public-editable-735-1780307804888.js`, and `servedBodyAfterOverwrite=\"console.log('pwned');\\n\"`.",
+  "verification_method": "The automated exploit creates a public JavaScript file, fetches `/files/edit/<file>` without authentication to obtain the CSRF token and session cookie, submits replacement content to `POST /files/edit/<file>`, and then fetches `/files/serve/<file>` to assert the exact overwritten body.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Proof string: `EVOHUNT_PUBLIC_FILE_EDITOR_WRITE_CONFIRMED`",
+    "Editor GET returned HTTP 200",
+    "Editor save returned HTTP 302 with redirect `/files?dir=.`",
+    "Served file body after overwrite was `console.log('pwned');\\n`",
+    "Target file used during the successful run: `public-editable-735-1780307804888.js`"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v1.6.0-beta.1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/prebuilt-dist.tar.gz",
+      "reproduction/verify.sh"
+    ]
+  }
+}

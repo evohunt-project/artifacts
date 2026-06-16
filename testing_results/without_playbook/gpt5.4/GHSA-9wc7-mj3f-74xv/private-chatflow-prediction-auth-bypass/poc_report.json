@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "improper_authorization",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated caller can execute a private Flowise AGENTFLOW through `POST /api/v1/prediction/:id` when the flow has no `apikeyid`, even though the corresponding public chatflow read endpoint rejects access.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that the same private chatflow returns `401 {\"message\":\"Unauthorized\"}` on `GET /api/v1/public-chatflows/:id` but still returns `200` and the private proof string `PRIVATE-FLOW-SECRET-3c1fddcc` on an unauthenticated `POST /api/v1/prediction/:id`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Flowise at `378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97`, built the target packages, started the server, seeded a private AGENTFLOW without `apikeyid`, then observed `PUBLIC_STATUS=401`, `PUBLIC_BODY={\"message\":\"Unauthorized\"}`, `PREDICTION_STATUS=200`, and a prediction response containing `PRIVATE-FLOW-SECRET-3c1fddcc`.",
+  "verification_method": "The containerized repro seeds a deterministic private AGENTFLOW and performs two unauthenticated requests against the same chatflow UUID. It only reports success when the public read path returns 401 and the prediction path returns 200 with the exact private proof string, distinguishing the auth bypass from a generic startup issue or an accidentally public flow.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `PUBLIC_STATUS=401` and `PUBLIC_BODY={\"message\":\"Unauthorized\"}` for the private chatflow read endpoint.",
+    "The run printed `PREDICTION_STATUS=200` for the unauthenticated prediction request against the same private chatflow UUID.",
+    "The prediction response body contained `PRIVATE-FLOW-SECRET-3c1fddcc` and included the executed `startAgentflow_0` and `directReplyAgentflow_0` nodes, proving the private flow executed successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the public Flowise repository on the host, checks out commit `378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97`, and mounts that checkout read-only into the reproduction container at `/target-repo`.",
+    "pinned_commit_or_ref": "378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/minimal-private-agentflow.json"
+    ]
+  }
+}

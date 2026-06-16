@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction confirms that an unauthenticated caller can register a new NF identity, obtain an NRF-signed bearer token for `nnrf-nfm`, and then use that token to access a management route that rejects unauthenticated requests.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the protected NNRF management route returns 401 before authentication, but becomes accessible after unauthenticated NF registration and token issuance through the vulnerable OAuth flow.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the upstream repository at commit 14b3216ef091b41287358803dbff60f18c68ac83, started MongoDB and the vulnerable NRF, observed a 401 response from the protected management route without a token, registered an attacker-controlled NF profile without authentication, obtained a 200 token response from /oauth2/token, and then observed a 200 response from the same protected route with the returned bearer token. The run emitted AUTH_BYPASS_CONFIRMED.",
+  "verification_method": "The helper starts the real service with OAuth enabled over HTTP, checks the protected route before and after the exploit sequence, and verifies that the authenticated response contains the registered NF profile. This distinguishes the bug from a startup issue, a generic route mismatch, or a mere parser failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Unauthenticated protected request status: 401",
+    "Unauthenticated registration status: 201",
+    "Token issuance status: 200",
+    "Authenticated protected request status: 200",
+    "Proof string: AUTH_BYPASS_CONFIRMED"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "14b3216ef091b41287358803dbff60f18c68ac83",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/register.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

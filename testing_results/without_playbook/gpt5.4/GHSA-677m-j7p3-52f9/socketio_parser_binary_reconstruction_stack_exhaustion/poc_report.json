@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "remote_dos",
+  "summary": "The reproduction builds a minimal Node environment containing the vulnerable parser files, sends a crafted binary-event payload with 6000 nested arrays, and confirms that reconstruction crashes with `RangeError: Maximum call stack size exceeded`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should trigger stack exhaustion during binary packet reconstruction and emit a `RangeError: Maximum call stack size exceeded` proof signal.",
+  "actual_observed_result": "The containerized reproduction executed the crafted packet sequence and printed the expected `RangeError: Maximum call stack size exceeded` message from the vulnerable reconstruction path.",
+  "verification_method": "The exploit script fails the run unless the decoder throws the exact stack-exhaustion exception after accepting the crafted header and one binary frame. The harness separately verifies that a shallow payload reconstructs normally, distinguishing the crash from setup or dependency failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output includes `SAFE_PATH_OK` for a shallow binary event.",
+    "Container output includes `EXPECTED_CRASH: RangeError: Maximum call stack size exceeded` for the deep crafted payload."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/package.json",
+      "reproduction/target/index.js",
+      "reproduction/target/binary.js",
+      "reproduction/target/is-buffer.js"
+    ]
+  }
+}

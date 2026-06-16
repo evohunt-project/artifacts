@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that the Event Exposure create and delete handlers allow a second caller to remove a victim `anyUE` subscription because the service stores it under a predictable numeric ID with no owner binding.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a victim Event Exposure subscription, delete it through a second request that supplies the predictable ID `1`, and emit `EVENT_EXPOSURE_SUBSCRIPTION_DELETED` only if the victim subscription was actually removed.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `free5gc/udm` at `f74127fcb0ad68a138d8dd9c3120c86c171f463a`, built the helper image, executed the repo's Event Exposure handler/processor path, and printed `EVENT_EXPOSURE_SUBSCRIPTION_DELETED` after the second delete request removed the stored victim subscription.",
+  "verification_method": "The helper asserts that the create request returns `201`, that the victim subscription is stored under ID `1`, that the delete request returns `204`, and that the in-memory `EeSubscriptions` map is empty afterward. It emits the proof string only if all of those checks pass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included `EVENT_EXPOSURE_SUBSCRIPTION_DELETED`.",
+    "The helper verified that `ue.EeSubscriptions[\"1\"]` existed after create and that the map length was `0` after delete."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "f74127fcb0ad68a138d8dd9c3120c86c171f463a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/go.mod",
+      "reproduction/main.go",
+      "reproduction/run-probe.sh"
+    ]
+  }
+}

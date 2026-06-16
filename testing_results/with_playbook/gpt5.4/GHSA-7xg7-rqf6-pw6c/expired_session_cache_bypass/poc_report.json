@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "token_lifecycle_and_predictable_identifiers",
+  "summary": "The Docker-based reproduction confirms that expired Parse session tokens remain usable on the auth-cache hit path and, when `extendSessionOnUse` is enabled, that the same expired-token request can extend the backing session and preserve access after the original cache entry rolls over.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show an expired session token still succeeding on an authenticated request after `_Session.expiresAt` has passed, and should show the renewal variant extending `expiresAt` and still succeeding after the original cache entry has expired.",
+  "actual_observed_result": "Running `./reproduction/run.sh` completed successfully. In the default configuration path, signup returned `201`, the warm-cache request returned `200`, the post-expiry request still returned `200`, and the same token was rejected with `400` and Parse error `209` only after cache rollover. In the renewal variant, signup returned `201`, the post-expiry cached request returned `200`, `_Session.expiresAt` advanced from `2026-06-04T22:51:16.817Z` to `2026-06-04T22:51:21.051Z`, and a later request after the original cache entry rolled over still returned `200`.",
+  "verification_method": "The proof helper starts Parse Server from the pinned vulnerable commit, signs up users, warms the auth cache with an authenticated `GET /users/me`, waits until the backing `_Session.expiresAt` is in the past, and then distinguishes a real stale-session bypass from unrelated startup or routing failures by checking for `200` after expiry, checking for `209` only after cache eviction in the default path, and checking for an increased `_Session.expiresAt` plus continued `200` after cache rollover in the renewal variant.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Default-window scenario: `GET /users/me` returned `200` after `_Session.expiresAt` had already passed.",
+    "Default-window scenario: the same session token returned `400` with Parse error `209` only after the auth-cache entry rolled over, isolating the bug to the cache-hit path.",
+    "Renewal scenario: the expired-token cache-hit request advanced `_Session.expiresAt` from `2026-06-04T22:51:16.817Z` to `2026-06-04T22:51:21.051Z`.",
+    "Renewal scenario: after the original cache entry rolled over, `GET /users/me` still returned `200` with the same stale token.",
+    "The run emitted the proof marker `EVOHUNT_SUCCESS expired session token remained usable after expiry and, with extendSessionOnUse enabled, remained usable again after the original cache entry rolled over.`"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit `efd0ac639b8fb5ad19eaf50b44c4502ecc15be25`, and mounts that checkout into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "efd0ac639b8fb5ad19eaf50b44c4502ecc15be25",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run-inside.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

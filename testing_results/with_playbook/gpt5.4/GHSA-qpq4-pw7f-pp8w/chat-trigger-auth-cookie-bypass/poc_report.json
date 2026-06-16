@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The packaged Docker-based reproduction cloned the pinned `n8n@2.2.0` repository, built the backend workspace needed for the webhook path, and confirmed that a forged `n8n-auth` cookie executes a published Chat Trigger workflow that is configured to require n8n user authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that `Cookie: n8n-auth=not-a-real-session` is accepted on a published Chat Trigger webhook configured with `Authentication = n8n User Auth`, and that the workflow executes anyway.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the helper image, cloned and checked out commit `67e25c890a7817b36190f7b679fb102864fe02c2`, installed dependencies, ran the integration exploit test, printed `PASS test/integration/chat-trigger-auth-bypass.api.test.ts`, and emitted `EVOHUNT_SUCCESS: forged chat cookie executed workflow`.",
+  "verification_method": "The helper test creates a published Chat Trigger workflow with `n8nUserAuth`, sends a request with `Cookie: n8n-auth=not-a-real-session`, asserts that the HTTP response is `200` with the attacker-supplied body `{ \"message\": \"hello\" }`, and then verifies that one execution record was created for the workflow. This distinguishes a real auth bypass from a startup failure or unrelated route exposure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Jest output reported `PASS test/integration/chat-trigger-auth-bypass.api.test.ts` from the packaged reproduction run.",
+    "The helper script emitted `EVOHUNT_SUCCESS: forged chat cookie executed workflow` after the exploit test passed.",
+    "The exploit test verified both the attacker-controlled HTTP response body and the creation of an execution record for the protected chat workflow."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "67e25c890a7817b36190f7b679fb102864fe02c2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run-poc.sh",
+      "reproduction/chat-trigger-auth-bypass.api.test.ts"
+    ]
+  }
+}

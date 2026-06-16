@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "insecure_deserialization",
+  "summary": "The reproduction clones Fickling v0.1.6, installs it in a clean container, builds the crafted outer `OBJ` payload, verifies that `is_likely_safe()` and CLI safety mode treat it as safe, and then confirms that `fickling.loads()` and the `run_hook()` path execute the nested malicious pickle.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should print `EVOHUNT_NESTED_PICKLE_OBJ_BYPASS_SUCCESS` after the helper confirms that the crafted payload was classified as safe by Fickling's outer gate and that the nested malicious pickle created the expected proof files.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `8249522c7180c69436516ff81bff394f62298c0c`, built the container image, verified `is_likely_safe=True` and CLI `--check-safety` exit code `0`, then executed the nested malicious pickle through both `fickling.loads()` and the `run_hook()` path and emitted the expected success marker.",
+  "verification_method": "The container helper installs the pinned source tree, constructs the crafted outer pickle with stdlib `pickle.loads` plus `OBJ`, writes it to disk, asserts that the static verdict remains `LIKELY_SAFE`, then checks for proof files created only if the nested malicious pickle really executed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`is_likely_safe(payload_path)` returned `True` for the crafted payload.",
+    "`python -m fickling --check-safety payload.pkl` exited with status `0`.",
+    "`fickling.loads(payload_bytes)` created `/tmp/evohunt_nested_pickle_obj_bypass_load.txt`.",
+    "`pickle.load()` after `fickling.hook.run_hook()` created `/tmp/evohunt_nested_pickle_obj_bypass_hook.txt`.",
+    "The helper printed `EVOHUNT_NESTED_PICKLE_OBJ_BYPASS_SUCCESS`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the upstream target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8249522c7180c69436516ff81bff394f62298c0c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.py"
+    ]
+  }
+}

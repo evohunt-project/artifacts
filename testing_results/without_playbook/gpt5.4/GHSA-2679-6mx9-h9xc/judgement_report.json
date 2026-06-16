@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:12:01.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1913fc91",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-2679-6mx9-h9xc/GHSA-2679-6mx9-h9xc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated_terminal_websocket_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1913fc91/unauthenticated_terminal_websocket_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1913fc91/unauthenticated_terminal_websocket_rce/vulnerability_report.json",
+      "title": "Unauthenticated terminal WebSocket exposes arbitrary shell access in edit mode",
+      "vulnerability_type": "auth_bypass_rce",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same `/terminal/ws` endpoint in `marimo/_server/api/endpoints/terminal.py`, with `websocket.accept()` and PTY creation reachable without any `validate_auth()` check; the upstream fix adds that missing authentication gate before accepting the socket.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "unauthenticated_terminal_websocket_rce",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1913fc91/unauthenticated_terminal_websocket_rce",
+      "status": "qualifying_vuln",
+      "title": "Unauthenticated terminal WebSocket exposes arbitrary shell access in edit mode",
+      "vulnerability_type": "auth_bypass_rce"
+    },
+    "reason": "The sole qualifying finding matches the advisory's root cause exactly and the judge rerun reproduced unauthorized terminal-shell command execution against a token-protected Marimo edit server.",
+    "evidence": [
+      "At vulnerable commit `78489d4621dc4358dc5974af0c727feb0b7331cb`, `marimo/_server/api/endpoints/terminal.py` accepts `/terminal/ws` after only edit-mode and terminal-support checks; unlike the normal WebSocket validator path, it performs no `validate_auth()` call before `websocket.accept()` and `pty.fork()`.",
+      "Upstream fix commit `c24d4806398f30be6b12acd6c60d1d7c68cfd12a` inserts `if app_state.enable_auth and not validate_auth(websocket): ... return` into the same terminal endpoint, confirming the advisory-described missing-auth root cause.",
+      "The judge reran `bash reproduction/run.sh` from a copied workspace under `.judge/poc_runs/unauthenticated_terminal_websocket_rce/`; [run.log](/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1913fc91/.judge/poc_runs/unauthenticated_terminal_websocket_rce/run.log) shows a `root@...:/app#` PTY prompt, the attacker-supplied `printf 'EVOHUNT_TERMINAL_PWNED\\n'`, the emitted proof string, and `[evohunt] verified unauthenticated terminal access despite token-protected server`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "unauthenticated_terminal_websocket_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1913fc91/unauthenticated_terminal_websocket_rce",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1913fc91/.judge/poc_runs/unauthenticated_terminal_websocket_rce/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1913fc91/.judge/poc_runs/unauthenticated_terminal_websocket_rce/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1913fc91/.judge/poc_runs/unauthenticated_terminal_websocket_rce/poc_execution.json",
+      "observed_effect": "The copied PoC started a token-protected edit-mode Marimo server, connected to `/terminal/ws` without any access token or authenticated headers, reached a root PTY prompt, and printed `EVOHUNT_TERMINAL_PWNED` from attacker-supplied shell input.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

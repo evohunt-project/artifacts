@@ -1,0 +1,118 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:18:38.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-jjwv-57xh-xr6r/GHSA-jjwv-57xh-xr6r.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "chromium-url-ssrf-pdf-exfiltration",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/chromium-url-ssrf-pdf-exfiltration",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/chromium-url-ssrf-pdf-exfiltration/vulnerability_report.json",
+      "title": "Chromium URL conversion fetches internal URLs and returns their content",
+      "vulnerability_type": "server_side_request_forgery",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a separate internal-HTTP SSRF issue. Its evidence and PoC rely on default allowance of internal HTTP targets and explicitly do not identify the advisory's mixed-case file-scheme deny-list bypass in Chromium filtering.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "downloadfrom-concurrent-map-write-dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/downloadfrom-concurrent-map-write-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/downloadfrom-concurrent-map-write-dos/vulnerability_report.json",
+      "title": "Concurrent downloadFrom handling crashes Gotenberg with concurrent map writes",
+      "vulnerability_type": "concurrent_map_write_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a denial-of-service bug in pkg/modules/api/context.go caused by unsynchronized map writes in downloadFrom handling, not a Chromium deny-list bypass or mixed-case file-scheme filtering flaw.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "exiftool-metadata-file-move-outside-workdir",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/exiftool-metadata-file-move-outside-workdir",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/exiftool-metadata-file-move-outside-workdir/vulnerability_report.json",
+      "title": "ExifTool metadata write moves output files outside the request cleanup directory",
+      "vulnerability_type": "arbitrary_file_move",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is an ExifTool metadata-to-filesystem boundary issue that moves output PDFs outside the request workdir; it does not involve Chromium URL filtering, the default file deny-list, or the advisory's case-insensitive file-scheme bypass.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's root cause: a mixed-case or uppercase file-scheme bypass of the Chromium default deny-list caused by case-sensitive regex matching in the URL filtering path.",
+    "evidence": [
+      "The advisory describes FILE:/File: URLs bypassing the default ^file:(?!//\\\\/tmp/).* deny-list because pkg/gotenberg/filter.go recompiles regexes with case-sensitive flags before Chromium normalizes the scheme.",
+      "The session's Chromium qualifying finding is about internal HTTP SSRF with PDF exfiltration; its PoC evidence uses http://host.docker.internal:8123/page-1-html/index.html and does not exercise a mixed-case file: URL.",
+      "artifacts/component_family_checklist.md states for the Chromium family that direct file:// reads outside /tmp were treated as blocked by the default deny list, which is inconsistent with the advisory's actual vulnerable condition.",
+      "The other qualifying findings are a downloadFrom concurrent map write crash and an ExifTool metadata file-move primitive, both in different components and with different root causes."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/chromium-url-ssrf-pdf-exfiltration",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/chromium-url-ssrf-pdf-exfiltration/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/chromium-url-ssrf-pdf-exfiltration/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/downloadfrom-concurrent-map-write-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/downloadfrom-concurrent-map-write-dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/downloadfrom-concurrent-map-write-dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/exiftool-metadata-file-move-outside-workdir",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/exiftool-metadata-file-move-outside-workdir/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c3d5b236/exiftool-metadata-file-move-outside-workdir/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

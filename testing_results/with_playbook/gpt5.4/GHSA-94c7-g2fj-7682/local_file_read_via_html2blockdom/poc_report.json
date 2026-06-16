@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_read",
+  "summary": "The Docker-based reproduction launches SiYuan in standard desktop mode inside the container, creates a victim-only `0600` secret file, and shows that a separate local attacker user can recover that secret through `/api/lute/html2BlockDOM` and `/api/file/getFile`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The attacker user should be unable to read the victim's secret file directly, but should recover the proof string after the vulnerable HTML-to-asset conversion copies the file into `data/assets`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned SiYuan at `4ba64580c29c0782153f43c2c278e9bea431c7e0`, built the reproduction image, launched the kernel, and printed `PROOF: attacker recovered victim-only file contents through data/assets/secret-20260604073816-46wtk47.txt` followed by `EVOHUNT_SECRET_5a4f7c4e`.",
+  "verification_method": "Inside the container, the helper creates a victim-owned `0600` secret file, confirms a separate attacker user cannot read it directly, then exploits `/api/lute/html2BlockDOM` with a `file://` link and verifies that `/api/file/getFile` on the generated asset returns the proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `PROOF: attacker recovered victim-only file contents through data/assets/secret-20260604073816-46wtk47.txt`.",
+    "The recovered asset bytes included the exact proof string `EVOHUNT_SECRET_5a4f7c4e`.",
+    "The helper script first verified that the attacker user could not read `/home/victim/secret.txt` directly."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "4ba64580c29c0782153f43c2c278e9bea431c7e0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh"
+    ]
+  }
+}

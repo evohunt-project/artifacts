@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction confirms that an app-scoped read-only dashboard user receives the configured AI provider API key from `/parse-dashboard-config.json` even though the app list itself is correctly scoped.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should return a bootstrap config response for a low-privilege authenticated user that leaks `agent.models[0].apiKey` while still showing that app scoping and read-only master-key substitution are otherwise applied.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 8a34c2f0d6af5ad11793f49b9427dad4b26f1b81, built the verification image, and executed a harness that received HTTP 200 with one visible app (`testAppId`), the read-only master key (`testReadOnlyMasterKey`), and the leaked API key `sk-evohunt-secret-key` in `agent.models[0].apiKey`.",
+  "verification_method": "The verification helper boots the dashboard with a synthetic app-scoped read-only user and agent config, requests `/parse-dashboard-config.json` with that user's authenticated session, confirms the app list is still correctly scoped to the single assigned app, and then asserts that `agent.models[0].apiKey` is present. It prints `EVOHUNT_SUCCESS agent_api_key_exposure sk-evohunt-secret-key` only when both conditions hold.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The harness logged a 200 response containing `visibleAppIds: [\"testAppId\"]` and `visibleMasterKeys: [\"testReadOnlyMasterKey\"]`.",
+    "The same response contained `exposedAgentApiKey: \"sk-evohunt-secret-key\"`.",
+    "The run emitted the success signal `EVOHUNT_SUCCESS agent_api_key_exposure sk-evohunt-secret-key`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8a34c2f0d6af5ad11793f49b9427dad4b26f1b81",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

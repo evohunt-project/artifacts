@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:07:24.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_60c19238",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-hmqr-wjmj-376c/GHSA-hmqr-wjmj-376c.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "platform_user_network_activity_authz_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_60c19238/platform_user_network_activity_authz_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_60c19238/platform_user_network_activity_authz_bypass/vulnerability_report.json",
+      "title": "Platform user can read audit logs for other networks",
+      "vulnerability_type": "authorization_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a platform-user read bypass on `GET /api/v1/network/activity` caused by leaving `network_id` out of the authorization context and then allowing the route through a platform-user global permission path. The advisory instead describes host JWT handling in `Authorise` on `hostAllowed=true` routes, where any valid host token skips object-level authorization for host-scoped resources.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's host-token verification flaw in `Authorise`. The only qualifying finding concerns a platform-user authorization bypass on `/api/v1/network/activity` caused by an unbound `network_id` query parameter and a route-specific platform-user allowlist.",
+    "evidence": [
+      "The advisory summary and details describe valid host JWTs being accepted on `hostAllowed=true` routes without checking whether the host is authorized for the requested object.",
+      "The finding report and PoC target `GET /api/v1/network/activity?network_id=<network>` and show a `platform-user` with no network roles retrieving another network's audit log records.",
+      "The finding's exploit path depends on `userMiddleWare` leaving `NET_ID` empty for `network_id`-based activity queries and `GlobalPermissionsCheck` allowing the activity route for platform users, which is a different actor, route family, and missing authorization check than the advisory."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_60c19238/platform_user_network_activity_authz_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_60c19238/platform_user_network_activity_authz_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_60c19238/platform_user_network_activity_authz_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

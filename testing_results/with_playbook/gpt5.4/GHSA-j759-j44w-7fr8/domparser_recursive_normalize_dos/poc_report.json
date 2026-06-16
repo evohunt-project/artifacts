@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirmed that deeply nested XML causes `DOMParser.parseFromString` to overflow the call stack during unconditional document normalization.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause `DOMParser.parseFromString` to throw `RangeError: Maximum call stack size exceeded` while parsing a deeply nested XML document, proving a low-complexity availability failure on the default parser entrypoint.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned xmldom at tag 0.8.12, built the reproduction image, and printed `DEPTH=20000` followed by `RECURSIVE_NORMALIZE_DOS_CONFIRMED` after `parseFromString` threw the expected RangeError.",
+  "verification_method": "The verification helper runs a Node harness inside the container, generates a 20,000-level nested XML document, calls `parseFromString`, and asserts that the thrown exception is a `RangeError` with the standard stack-overflow message. The helper emits the proof string only when that exact failure mode is observed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `DEPTH=20000`.",
+    "The helper observed `RangeError: Maximum call stack size exceeded` from `parseFromString`.",
+    "The verification helper emitted `RECURSIVE_NORMALIZE_DOS_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0.8.12",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

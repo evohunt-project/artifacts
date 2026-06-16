@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "information_disclosure",
+  "summary": "The Docker-based reproduction confirms that a normal Parse user can query /parse/classes/_User with explain=executionStats and receive internal MongoDB planner and execution metadata without the master key.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a normal user, issue an explain query with only that user's session token, and return raw database execution metadata such as queryPlanner, executionStats, indexName _id_, and serverInfo.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the target repository, built the reproduction image, started a MongoDB 7.0 sidecar, created a normal user, and returned EXPLAIN_STATUS=200 with queryPlanner, executionStats, namespace parse._User, indexName _id_, and serverInfo.version 7.0.34.",
+  "verification_method": "The reproduction script signs up a low-privilege user, runs the explain query against /parse/classes/_User using only that user's session token, and verifies the response contains queryPlanner, executionStats, namespace parse._User, indexName _id_, and serverInfo instead of a master-key error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "CREATE_STATUS=201 and CREATE_BODY returned a low-privilege session token.",
+    "EXPLAIN_STATUS=200 was returned for the low-privilege explain query.",
+    "EXPLAIN_BODY contained queryPlanner, executionStats, namespace parse._User, indexName _id_, and serverInfo.version 7.0.34."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, starts a temporary MongoDB sidecar on an isolated Docker network, and mounts the checked-out repository into the reproduction container.",
+    "pinned_commit_or_ref": "23ac05938b64451322b60fe6b031b4893ff62b67",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/public_explain_check.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

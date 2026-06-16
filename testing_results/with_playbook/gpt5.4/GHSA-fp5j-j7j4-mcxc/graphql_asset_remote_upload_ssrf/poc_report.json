@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker reproduction installs Craft CMS 4.17.3, provisions a mutation-capable GraphQL token, submits a `save_<volume>_Asset` mutation with `_file.url=http://localhost:9090/ssrf.txt`, and confirms that the loopback GET occurs before Craft returns the invalid-IP error.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should prove that the asset upload mutation performs a server-side request to a loopback target before the resolver rejects the resolved IP, by showing both the GraphQL invalid-IP error and the loopback server GET log.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Craft CMS `4.17.3`, built the reproduction image, installed the application, created a volume-scoped GraphQL token, submitted the malicious asset mutation, returned `http://localhost:9090/ssrf.txt resolves to an invalid IP address.`, and logged `GET /ssrf.txt HTTP/1.1` on the loopback server.",
+  "verification_method": "The run is treated as successful only if two signals appear in the same execution: the GraphQL response must contain the invalid-IP error, and the loopback HTTP server must log the GET request for `/ssrf.txt`. This distinguishes a real SSRF-before-validation condition from a startup error, auth failure, or purely blocked request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "GraphQL response contained `http://localhost:9090/ssrf.txt resolves to an invalid IP address.`",
+    "Loopback server log contained `127.0.0.1 - - [05/Jun/2026 04:46:32] \"GET /ssrf.txt HTTP/1.1\" 200 -`.",
+    "The run emitted the terminal proof marker `EVOHUNT_SSRF_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at tag `4.17.3`, verifies commit `17bf79c1dbc249b6c79d585eba1414838dc43521`, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "17bf79c1dbc249b6c79d585eba1414838dc43521 (tag: 4.17.3)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_container.sh",
+      "reproduction/provision_graphql_ssrf.php"
+    ]
+  }
+}

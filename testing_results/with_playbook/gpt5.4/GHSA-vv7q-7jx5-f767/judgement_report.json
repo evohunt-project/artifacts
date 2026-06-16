@@ -1,0 +1,71 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:28:42.248Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-vv7q-7jx5-f767/GHSA-vv7q-7jx5-f767.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "openapi_path_parameter_url_rewrite",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/openapi_path_parameter_url_rewrite",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/openapi_path_parameter_url_rewrite/vulnerability_report.json",
+      "title": "OpenAPI path-parameter URL rewriting lets MCP callers escape the intended downstream target",
+      "vulnerability_type": "origin_and_url_boundary_mismatches",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same vulnerable function, `RequestDirector._build_url()` in `src/fastmcp/utilities/openapi/director.py`, and the same root cause as the advisory: raw path-parameter substitution before `urljoin()` with no URL encoding, which lets attacker-controlled path values escape the intended downstream target.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "openapi_path_parameter_url_rewrite",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/openapi_path_parameter_url_rewrite",
+      "status": "qualifying_vuln",
+      "title": "OpenAPI path-parameter URL rewriting lets MCP callers escape the intended downstream target",
+      "vulnerability_type": "origin_and_url_boundary_mismatches"
+    },
+    "reason": "The only qualifying finding matches GHSA-vv7q-7jx5-f767 at the same vulnerable code and root cause, and the copied PoC produced end-to-end runtime evidence that attacker-controlled path input redirected an OpenAPI-backed request to an attacker-selected host while forwarding configured authentication headers.",
+    "evidence": [
+      "The advisory describes `OpenAPIProvider` path-parameter substitution in `_build_url()` followed by `urljoin()` as the root cause in `fastmcp/utilities/openapi/director.py`.",
+      "The vulnerable checkout at commit `bafd5419fabbd30415c3b782e778ba971f8019e7` still has raw `url_path.replace(placeholder, str(param_value))` followed by `urljoin(...)` in `src/fastmcp/utilities/openapi/director.py`.",
+      "The fixing commit `40bdfb6b1de0ce30609ee9ba5bb95ecd04a9fb71` changes that same function to URL-encode path parameters before `urljoin()`, confirming the advisory and the finding are about the same root cause.",
+      "`/Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/run.log` contains `EVOHUNT_PROOF: OpenAPITool sent the rewritten request to the attacker listener and leaked configured Authorization and X-Api-Key headers.`",
+      "The same run log also contains `EVOHUNT_NOTE: same-origin path traversal also rewrites /users/{id} with ../../admin/export to /admin/export.`"
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "openapi_path_parameter_url_rewrite",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/openapi_path_parameter_url_rewrite",
+      "executed": true,
+      "command": "bash -lc 'set -euo pipefail\nrm -rf /Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/target-repo /Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/.venv\ngit clone https://github.com/PrefectHQ/fastmcp.git /Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/target-repo\ngit -C /Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/target-repo checkout bafd5419fabbd30415c3b782e778ba971f8019e7\n/opt/homebrew/bin/python3.10 -m venv /Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/.venv\nPIP_NO_CACHE_DIR=1 /Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/.venv/bin/pip install --no-cache-dir -r /Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/finding_copy/reproduction/requirements.txt\nTARGET_REPO_PATH=/Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/target-repo /Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/.venv/bin/python /Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/finding_copy/reproduction/verify.py\n'",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be32b2c2/.judge/poc_runs/openapi_path_parameter_url_rewrite/poc_execution.json",
+      "observed_effect": "The adapted local verifier printed `EVOHUNT_PROOF` after `OpenAPITool` sent the rewritten request to the attacker listener and leaked the configured `Authorization` and `X-Api-Key` headers; it also printed `EVOHUNT_NOTE` confirming `../../admin/export` rewrites to `/admin/export`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

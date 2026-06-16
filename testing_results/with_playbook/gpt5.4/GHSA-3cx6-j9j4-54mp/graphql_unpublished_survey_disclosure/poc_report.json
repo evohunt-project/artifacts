@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "graphql_information_disclosure",
+  "summary": "The Docker-based reproduction builds Decidim v0.30.3, seeds one published survey and one unpublished draft survey in a published Surveys component, queries the public GraphQL endpoint, and observes that both titles are returned to an unauthenticated visitor.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should query the public /api GraphQL endpoint and return both the published survey title and the unpublished `Draft survey - secret` title from the same public Surveys component.",
+  "actual_observed_result": "Running `./reproduction/run.sh` completed successfully. The execution log emitted `GRAPHQL_LEAK_RESPONSE_START` and `GRAPHQL_LEAK_RESPONSE_END`, and the JSON response between those markers contained both `Published survey` and `Draft survey - secret`. The run finished with `1 example, 0 failures`.",
+  "verification_method": "The reproduction container copies the pinned vulnerable source tree, generates Decidim's test application, provisions a public participatory process with a published Surveys component, creates one published survey and one unpublished survey, then posts an unauthenticated GraphQL query to `Decidim::Api::QueriesController`. The exploit is considered successful only if the draft title appears in the public GraphQL response alongside the published title and the RSpec expectation passes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The execution log contains `GRAPHQL_LEAK_RESPONSE_START` and `GRAPHQL_LEAK_RESPONSE_END` around the captured GraphQL JSON response.",
+    "The returned JSON included both `Published survey` and `Draft survey - secret` in the same public `surveys` connection.",
+    "The final RSpec output was `1 example, 0 failures`, confirming the disclosure expectation passed on the vulnerable target."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit after verifying the expected v0.30.3 revision, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "f528d7b0babeb7d6dcc696f52fc2e80974bbfe2c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/unpublished_survey_graphql_poc_spec.rb"
+    ]
+  }
+}

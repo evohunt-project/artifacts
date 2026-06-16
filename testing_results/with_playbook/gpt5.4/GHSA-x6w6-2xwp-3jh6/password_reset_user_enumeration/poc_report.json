@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction confirms that Froxlor 2.3.4 returns a success message for a real seeded customer login/email pair and the generic failure message for a nonexistent pair on the public forgot-password route.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the public password-reset flow exposes a reliable account-existence oracle by returning pwdreminder.success only for a valid customer login/email pair and pwdreminder.notallowed for a nonexistent pair.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Froxlor 2.3.4, built the verifier image, seeded a customer account, exercised the forgot-password flow twice, and produced EVOHUNT_PROOF: password reset enumeration confirmed together with the exact valid and invalid response strings.",
+  "verification_method": "The verifier seeds one known customer, submits the forgot-password form with the seeded login/email pair and again with a nonexistent login, then requires the valid response to contain only the success text and the invalid response to contain only the generic failure text. Mixed or missing responses fail the run.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_PROOF: password reset enumeration confirmed",
+    "EVOHUNT_VALID_RESPONSE: Password reset successfully requested. Please follow the instructions in the email you received.",
+    "EVOHUNT_INVALID_RESPONSE: Unknown user or password reset is disabled",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref 2.3.4, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2.3.4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/seed_customer.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

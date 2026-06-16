@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:23:38.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_04ac9f39",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-253q-9q78-63x4/GHSA-253q-9q78-63x4.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "inbound-length-validation-panic-dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_04ac9f39/inbound-length-validation-panic-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_04ac9f39/inbound-length-validation-panic-dos/vulnerability_report.json",
+      "title": "Inbound Noise parser length validation uses panic-based rejection and crashes on malformed peer input",
+      "vulnerability_type": "availability_panics_and_validation_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a panic-based malformed-input denial of service in `TransportState::receive_vec`, `TransportState::receive`, and `Handshaker::read_message`, while the advisory is a PSK-validity-rule violation in post-quantum handshake pattern construction and encryption sequencing for affected `*_psk0` patterns.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's root cause. GHSA-253q-9q78-63x4 concerns missing PSK-validity enforcement for post-quantum handshake patterns and removal/rejection of offending `*_psk0` patterns, whereas the only final qualifying finding is a separate inbound parser panic denial of service in transport and handshake message length validation.",
+    "evidence": [
+      "The advisory summary and patch describe a protocol-compliance flaw where post-quantum `*_psk0` handshake patterns were allowed to encrypt after processing `psk` without prior self-chosen randomness, with affected defaults including `noise_pqkk_psk0`, `noise_pqkn_psk0`, `noise_pqnk_psk0`, and `noise_pqnn_psk0`.",
+      "The fixing commit `b65ae6e9b8019bed5407771e21f89ddff17c5a71` adds `PatternError::PskValidityViolation`, `HandshakePattern::try_new`/`validate_psk_rule`, runtime `psk_applied` and `own_randomness_applied` checks in the PQ handshake write path, and removes the offending `noise_pqkk_psk0`, `noise_pqkn_psk0`, `noise_pqnk_psk0`, and `noise_pqnn_psk0` constructors.",
+      "The only final qualifying finding, `inbound-length-validation-panic-dos`, instead cites `repo/src/transportstate.rs:186`, `repo/src/transportstate.rs:213`, and `repo/src/traits.rs:387` and demonstrates panic-based rejection of malformed inbound Noise frames, which is a different vulnerable code path and root-cause mechanism."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_04ac9f39/inbound-length-validation-panic-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_04ac9f39/inbound-length-validation-panic-dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_04ac9f39/inbound-length-validation-panic-dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:17:37.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-7x43-mpfg-r9wj/GHSA-7x43-mpfg-r9wj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "graphql_parse_refs_idor",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032/graphql_parse_refs_idor",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032/graphql_parse_refs_idor/vulnerability_report.json",
+      "title": "GraphQL @parseRefs leaks unauthorized user attributes through entry reads",
+      "vulnerability_type": "graphql_idor_information_disclosure",
+      "advisory_match": true,
+      "advisory_match_reason": "Same GraphQL `@parseRefs` -> `Elements::parseRefs()` path and missing authorization guard described by the advisory; the finding shows a schema that cannot query users directly still discloses a referenced user attribute.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "graphql_parse_refs_idor",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032/graphql_parse_refs_idor",
+      "status": "qualifying_vuln",
+      "title": "GraphQL @parseRefs leaks unauthorized user attributes through entry reads",
+      "vulnerability_type": "graphql_idor_information_disclosure"
+    },
+    "reason": "The only qualifying finding identifies the advisory's exact GraphQL `@parseRefs` to `Elements::parseRefs()` authorization bypass, and the judge rerun reproduced unauthorized admin-email disclosure through an entry-only schema while direct user queries remained blocked.",
+    "evidence": [
+      "The advisory describes GraphQL `@parseRefs` reaching `craft\\services\\Elements::parseRefs` without authorization checks; the finding identifies the same `ParseRefs::apply()` -> `Elements::parseRefs()` -> `_getRefTokenReplacement()` path.",
+      "In the vulnerable commit, `Gql::_loadGqlDirectives()` registers `ParseRefs::class` by default, and the fixing commit `4d98a07e47580f1712095825d3e3c4d67bc9f8b9` makes `@parseRefs` optional via the `directive:parseRefs` scope, matching the advisory's GraphQL exposure.",
+      "The judge-run log shows `DIRECT_USER_QUERY_BLOCKED=yes`, proving the restricted schema could not read users directly through the normal GraphQL path.",
+      "The same judge-run log shows `RAW_REFERENCE_TEXT={user:1:email}`, `LEAKED_VALUE=support@craftcms.com`, and `EVOHUNT_POC_SUCCESS`, proving `@parseRefs` disclosed the admin email anyway."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "graphql_parse_refs_idor",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032/graphql_parse_refs_idor",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032/.judge/poc_runs/graphql_parse_refs_idor/workspace",
+      "exit_code": 1,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032/.judge/poc_runs/graphql_parse_refs_idor/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032/.judge/poc_runs/graphql_parse_refs_idor/poc_execution.json",
+      "observed_effect": "The original Docker-based reproduction failed before the vulnerable GraphQL path ran because Docker Hub returned unauthenticated pull-rate-limit errors while building the required image.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    },
+    {
+      "finding_folder_name": "graphql_parse_refs_idor",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032/graphql_parse_refs_idor",
+      "executed": true,
+      "command": "DB_DRIVER=pgsql DB_SERVER=127.0.0.1 DB_PORT=55432 DB_DATABASE=craft_test DB_USER=craft DB_PASSWORD='' DB_SCHEMA=public DB_CHARSET=utf8 DB_COLLATION='' php reproduction/exploit.php /Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032/.judge/poc_runs/graphql_parse_refs_idor/target-repo",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032/.judge/poc_runs/graphql_parse_refs_idor/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032/.judge/poc_runs/graphql_parse_refs_idor/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d3f3d032/.judge/poc_runs/graphql_parse_refs_idor/poc_execution.json",
+      "observed_effect": "The host-native fallback installed the pinned vulnerable commit, initialized Craft on local PostgreSQL, confirmed direct users queries were blocked, and then leaked `support@craftcms.com` from `referenceText @parseRefs`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

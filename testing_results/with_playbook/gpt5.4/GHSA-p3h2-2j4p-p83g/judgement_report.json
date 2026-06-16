@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:32:27.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7be41759",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-p3h2-2j4p-p83g/GHSA-p3h2-2j4p-p83g.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "authenticated_system_config_auth_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7be41759/authenticated_system_config_auth_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7be41759/authenticated_system_config_auth_bypass/vulnerability_report.json",
+      "title": "Authenticated low-privilege users can disable auth and unlock admin-only routes",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets authorization logic around `PUT /api/system-config` and downstream `requireAdmin()` checks in user-management routes. The advisory targets unsanitized `manifest.name` in `POST /api/mcpb/upload` reaching path construction and filesystem operations in `src/controllers/mcpbController.ts`, which is a different vulnerable code path and root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding in this session identifies the advisory's MCPB manifest-name path traversal root cause in `uploadMcpbFile`.",
+    "evidence": [
+      "GHSA-p3h2-2j4p-p83g describes a path traversal in `POST /api/mcpb/upload` where `manifest.name` is concatenated into the final extraction path and reused by cleanup logic in `src/controllers/mcpbController.ts`; the fixing commit adds `validateMcpbServerName()` and `resolveMcpbServerExtractDir()` before those filesystem operations.",
+      "The only final qualifying finding materialized by this session is `authenticated_system_config_auth_bypass`, whose report and PoC target `PUT /api/system-config` in `src/controllers/serverController.ts` and the resulting bypass of `requireAdmin()` in `src/controllers/userController.ts`.",
+      "That qualifying finding does not identify attacker-controlled `manifest.json` input, MCPB upload handling, path joining for `server-${manifest.name}`, arbitrary filesystem write/delete outside the intended upload directory, or any equivalent source-to-sink condition.",
+      "`artifacts/component_family_checklist.md` separately notes the MCPB upload family and describes `manifest.name` path escape as a pruned sibling hypothesis rather than the accepted qualifying finding, which confirms the session did not finalize the advisory root cause as a qualifying report."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7be41759/authenticated_system_config_auth_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7be41759/authenticated_system_config_auth_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7be41759/authenticated_system_config_auth_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

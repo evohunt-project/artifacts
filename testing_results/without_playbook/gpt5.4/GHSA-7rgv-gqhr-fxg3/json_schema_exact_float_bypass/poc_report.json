@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "json_schema_validation_bypass",
+  "summary": "The Docker-based reproduction confirms that XGrammar v0.1.31 accepts a valid JSON payload of {\"x\":0e5} under a schema that should only allow the exact numeric value 0.5.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a schema requiring the exact value 0.5 still accepts {\"x\":0e5} as a complete match and that Python parses the accepted payload to {\"x\": 0.0}.",
+  "actual_observed_result": "Running ./reproduction/run.sh from the final session-root finding folder cloned mlc-ai/xgrammar at aa44ded202fdaa2cb55f48deb31d17c9822a8a1f, built xgrammar inside the container, and printed accepted=True/terminated=True for both the canonical payload and the bypass payload. The verifier also printed bypass payload parsed value=0.0 and a generated grammar excerpt containing root_prop_0 ::= ((\"0\" [\\0-\\U0010ffff] \"5\")).",
+  "verification_method": "The verifier uses only public XGrammar APIs: Grammar.from_json_schema(), GrammarCompiler.compile_grammar(), and GrammarMatcher.accept_string(). It asserts that the generated grammar contains the wildcard character class, verifies that {\"x\":0.5} is accepted, verifies that {\"x\":0e5} is also accepted as a complete match, and then confirms with Python's json module that the accepted bypass payload evaluates to 0.0 rather than 0.5.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] canonical payload accepted=True terminated=True",
+    "[evohunt] bypass payload accepted=True terminated=True",
+    "[evohunt] bypass payload parsed value=0.0",
+    "root_prop_0 ::= ((\"0\" [\\0-\\U0010ffff] \"5\"))"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, updates submodules recursively, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "aa44ded202fdaa2cb55f48deb31d17c9822a8a1f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify_bypass.py",
+      "reproduction/torch.py",
+      "reproduction/transformers.py"
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:22:55.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4bff3e54",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-5w5r-mf82-595p/GHSA-5w5r-mf82-595p.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "read_stream_repoll_panic",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4bff3e54/read_stream_repoll_panic",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4bff3e54/read_stream_repoll_panic/vulnerability_report.json",
+      "title": "Malformed frame followed by a normal second poll panics capnp-futures ReadStream",
+      "vulnerability_type": "availability_panic_validation_mismatch",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is about `capnp_futures::ReadStream::poll_next` retaining and re-polling a completed future after an error, while the advisory targets the safe APIs `constant::Reader::get` and `StructSchema::new` in `capnp/src/constant.rs` and `capnp/src/schema.rs` calling `PointerReader::get_root_unchecked` on unvalidated data.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's root cause in the safe constructors `constant::Reader::get` or `StructSchema::new`; the session's only qualifying result is a separate async `ReadStream` repoll panic in `capnp-futures`.",
+    "evidence": [
+      "The advisory summary and referenced fixes identify unsafe use of `PointerReader::get_root_unchecked` from the safe APIs `constant::Reader::get` and `StructSchema::new`, leading to undefined behavior from arbitrary words or encoded schema nodes.",
+      "The only qualifying finding, `read_stream_repoll_panic`, cites `capnp-futures/src/read_stream.rs:29`, `:73`, and `:76` and describes a completed future being re-polled after `try_read_message()` returns an error on malformed input.",
+      "That finding's reported source, sink, and exploit path do not involve `capnp/src/constant.rs`, `capnp/src/schema.rs`, `constant::Reader::get`, `StructSchema::new`, or unchecked schema/pointer construction, so it is not the advisory-described vulnerable code/root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4bff3e54/read_stream_repoll_panic",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4bff3e54/read_stream_repoll_panic/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4bff3e54/read_stream_repoll_panic/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

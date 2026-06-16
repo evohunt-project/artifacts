@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "csrf_method_confusion",
+  "summary": "The Docker reproduction confirms that a browser can reach a POST-only procedure through the exported low-level StandardRPCHandler using a plain GET request and cause an unauthorized server-side state mutation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Loading the attacker-controlled page should cause the victim browser to issue GET /rpc/increment against a POST-only procedure exposed through StandardRPCHandler, incrementing the server-side counter from 0 to 1.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned repository revision, built the reproduction image, installed the workspace in the container, loaded the attacker page in headless Chromium, and produced the expected verification signals: DOM_MARKER_PRESENT=true, COUNTER_AFTER=1, and TRIGGER_LOG=increment:1.",
+  "verification_method": "The container starts a vulnerable server that exposes a POST-only procedure through NodeHttpHandler(StandardRPCHandler(...)) and a separate attacker origin that auto-loads an image pointing at the RPC path. After headless Chromium loads the attacker page, the helper queries the target's /value endpoint and requires COUNTER_AFTER=1 while also checking that the dumped attacker-page DOM recorded the injected request marker.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/latest-run.log contains DOM_MARKER_PRESENT=true.",
+    "reproduction/latest-run.log contains COUNTER_AFTER=1.",
+    "reproduction/latest-run.log contains TRIGGER_LOG=increment:1 and the final SUCCESS line."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "44a1a1ee9b7f7c12eaeb3ed385a99929ffd27ee7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/reproduce.ts"
+    ]
+  }
+}

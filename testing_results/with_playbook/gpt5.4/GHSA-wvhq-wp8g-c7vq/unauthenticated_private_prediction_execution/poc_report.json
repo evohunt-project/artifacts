@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The packaged reproduction cloned Flowise `55b6913c03f0dba37cc207975f0c0d0786e0f3c7`, created a non-public agentflow as an authenticated owner, confirmed the public-read route still blocked that flow, and then anonymously executed it through `POST /api/v1/prediction/:id`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A private flow that is not publicly readable should still be anonymously executable through `POST /api/v1/prediction/:id`, yielding the proof string `EVOHUNT_PRIVATE_PREDICTION_BYPASS:<flow-id>:anonymous-test`.",
+  "actual_observed_result": "The final rerun created private flow `b398e8c5-efce-40e1-9982-dfd845830f41`, passed the public-read block check for `GET /api/v1/public-chatflows/:id`, and received `EVOHUNT_PRIVATE_PREDICTION_BYPASS:b398e8c5-efce-40e1-9982-dfd845830f41:anonymous-test` from an unauthenticated `POST /api/v1/prediction/b398e8c5-efce-40e1-9982-dfd845830f41` request.",
+  "verification_method": "The reproduction script registers and logs in an owner, creates a private `AGENTFLOW` through the internal client path, asserts that the public-read route rejects that flow, then anonymously invokes `/api/v1/prediction/:id` and checks the response JSON for the deterministic proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The packaged rerun printed `Private flow id: b398e8c5-efce-40e1-9982-dfd845830f41`.",
+    "The public-read verification step completed without error before the anonymous prediction request, which means `GET /api/v1/public-chatflows/:id` returned the expected blocking response.",
+    "The anonymous prediction response contained `\"text\":\"EVOHUNT_PRIVATE_PREDICTION_BYPASS:b398e8c5-efce-40e1-9982-dfd845830f41:anonymous-test\"`.",
+    "The reproduction ended with `[+] SUCCESS: EVOHUNT_PRIVATE_PREDICTION_BYPASS:b398e8c5-efce-40e1-9982-dfd845830f41:anonymous-test`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "55b6913c03f0dba37cc207975f0c0d0786e0f3c7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_entrypoint.sh",
+      "reproduction/create_private_flow.js"
+    ]
+  }
+}

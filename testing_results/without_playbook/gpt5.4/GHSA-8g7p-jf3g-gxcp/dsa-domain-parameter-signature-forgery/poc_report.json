@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dsa_signature_forgery",
+  "summary": "The Dockerized reproduction clones jsrsasign 11.1.0, builds a malicious self-signed DSA certificate with g=1 and y=1, and shows that X509.verifySignature() accepts it while the same forged signature verifies for multiple unrelated message hashes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should prove that attacker-controlled DSA domain parameters collapse verification so that a forged self-signed certificate and a fixed forged DSA signature are accepted as valid.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 58bb24192f501927014b67911bbde8ef27532319, built the reproduction image, and printed version 11.1.0 with certAccepted=true plus five perHashResults entries where accepted=true, followed by the success marker EVOHUNT_POC_SUCCESS: forged DSA certificate accepted and universal DSA signature verified.",
+  "verification_method": "The helper script constructs a malicious DSA SubjectPublicKeyInfo with g=1 and y=1, calls X509.verifySignature() on the forged certificate, then separately checks KJUR.crypto.DSA.verifyWithMessageHash() with the same forged signature across multiple unrelated hashes. The script only emits the success marker if every verification returns true.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed version 11.1.0 from /target-repo/npm/lib/jsrsasign.js.",
+    "The runtime output showed certAccepted=true for the forged self-signed certificate with subject and issuer /CN=Malicious CA.",
+    "The runtime output showed accepted=true for hashes 00, 01, ff, deadbeef, and da39a3ee5e6b4b0d3255bfef95601890afd80709 using the same forged signature 3006020101020107.",
+    "The run ended with EVOHUNT_POC_SUCCESS: forged DSA certificate accepted and universal DSA signature verified."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "58bb24192f501927014b67911bbde8ef27532319",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

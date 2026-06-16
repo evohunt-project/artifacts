@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "hardcoded_jwt_secret",
+  "summary": "The Docker-based reproduction clones `salvo` at `v0.89.3`, starts the vulnerable `db-postgres-sea-orm` example against a local PostgreSQL instance, forges an HS256 JWT with the hard-coded secret `YOUR SECRET_KEY`, and uses that token to impersonate a victim account on protected user and post endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should prove that an unauthenticated attacker can mint a valid JWT for an arbitrary known username and then access protected profile and post routes as that victim.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the pinned vulnerable example, created a victim account, forged a JWT offline with `YOUR SECRET_KEY`, received `FORGED_PROFILE status=200` from `/users/me`, received `CREATE_POST status=200` on a protected post-creation route, received `LIST_POSTS status=200` containing the attacker-created `forged-post`, and emitted `EVOHUNT_FORGED_JWT_IMPERSONATION_SUCCESS`.",
+  "verification_method": "The reproduction starts the vulnerable service from the pinned upstream checkout, executes an exploit helper that must first create a real account, then verifies impersonation by requiring successful protected API responses and a victim-scoped post listing before printing the unique success marker. The host `run.sh` treats the PoC as successful only if that exact marker appears in the container output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit helper created a new victim account and observed `CREATE_USER status=201`.",
+    "The forged JWT was accepted by the protected `/users/me` route, which returned `FORGED_PROFILE status=200` together with the victim account record.",
+    "The forged JWT was accepted by the protected post-creation route, which returned `CREATE_POST status=200`.",
+    "The victim post listing returned `LIST_POSTS status=200` and included the attacker-created `forged-post` record.",
+    "The container output ended with the verification signal `EVOHUNT_FORGED_JWT_IMPERSONATION_SUCCESS`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "f8fb007c4c765dd0a4961f81846e6f27629dcd28 (tag: v0.89.3)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

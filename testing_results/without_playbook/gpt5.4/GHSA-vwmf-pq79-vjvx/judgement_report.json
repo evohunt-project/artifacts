@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:56:29.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_06bbcb23",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-vwmf-pq79-vjvx/GHSA-vwmf-pq79-vjvx.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated_auto_login_superuser_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_06bbcb23/unauthenticated_auto_login_superuser_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_06bbcb23/unauthenticated_auto_login_superuser_bypass/vulnerability_report.json",
+      "title": "Default-enabled auto-login route grants unauthenticated superuser access",
+      "vulnerability_type": "authentication_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding covers the default-enabled `/api/v1/auto_login` token-issuance path, not the advisory's unauthenticated `POST /api/v1/build_public_tmp/{flow_id}/flow` path that accepts attacker-supplied flow data and drives it into the custom-component `exec()` chain.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final `qualifying_vuln` finding identifies the advisory's `build_public_tmp` root cause. The only qualifying report is a separate unauthenticated `auto_login` superuser bypass that may help satisfy advisory prerequisites under default settings, but it does not describe the advisory's attacker-supplied public-flow build data reaching unsandboxed `exec()`.",
+    "evidence": [
+      "GHSA-vwmf-pq79-vjvx describes unauthenticated `POST /api/v1/build_public_tmp/{flow_id}/flow` accepting attacker-controlled `data` and sending it through the graph-building path into `prepare_global_scope(...); exec(...)`.",
+      "The sole qualifying finding in this run targets `GET /api/v1/auto_login` in `src/backend/base/langflow/api/v1/login.py`, where default-enabled `AUTO_LOGIN` returns a superuser token and cookie; it does not involve `build_public_tmp`, public-flow graph substitution, or the custom-component execution chain.",
+      "The run does contain `public_flow_arbitrary_graph_execution`, which is advisory-adjacent and names the `build_public_tmp` endpoint, but that folder is `non_qualifying_vuln`; there is therefore no qualifying finding that matches the advisory-described vulnerable code/root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_06bbcb23/unauthenticated_auto_login_superuser_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_06bbcb23/unauthenticated_auto_login_superuser_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_06bbcb23/unauthenticated_auto_login_superuser_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

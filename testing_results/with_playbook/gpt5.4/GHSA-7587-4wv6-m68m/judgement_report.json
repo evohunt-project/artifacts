@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:43:10.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a16641a",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-7587-4wv6-m68m/GHSA-7587-4wv6-m68m.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "compressed_message_materialization_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a16641a/compressed_message_materialization_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a16641a/compressed_message_materialization_dos/vulnerability_report.json",
+      "title": "Unbounded compressed-message materialization allows multi-gigabyte memory exhaustion",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets `Message::decompress()` plus `Message::as_data_vec()` and `Message::as_data_string()` full-buffer materialization of compressed message bodies, while the advisory is a distinct crafted RSA secret key packet path that panics during `rsa` key construction and was fixed by upgrading the `rsa` dependency.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or equivalent root cause. The only manifest-backed qualifying session finding is a separate compressed-message materialization DoS rather than the advisory's crafted RSA secret-key parsing panic.",
+    "evidence": [
+      "The advisory says rPGP crashes when parsing a crafted RSA secret key packet because vulnerable versions call into the `rsa` crate and hit a panic during RSA key construction.",
+      "The rPGP fix referenced by the advisory only bumps `rsa` from 0.9.9 to 0.9.10, and the upstream RSA patch changes `RsaPrivateKey::from_components` to reject prime value `1` instead of panicking.",
+      "The only qualifying finding in `.judge/input_manifest.json` is `compressed_message_materialization_dos`.",
+      "That finding targets `Message::decompress()` followed by `Message::as_data_vec()` or `Message::as_data_string()` on compressed message bodies, and the session checklist explicitly cleared the key and crypto-parameter validation family."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a16641a/compressed_message_materialization_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a16641a/compressed_message_materialization_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a16641a/compressed_message_materialization_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

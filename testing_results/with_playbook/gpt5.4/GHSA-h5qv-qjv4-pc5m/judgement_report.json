@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:05:10.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ce8e154f",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-h5qv-qjv4-pc5m/GHSA-h5qv-qjv4-pc5m.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unbounded_zlib_decompression_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ce8e154f/unbounded_zlib_decompression_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ce8e154f/unbounded_zlib_decompression_dos/vulnerability_report.json",
+      "title": "Unbounded zlib inflation in parse_compressed allows compressed-input denial of service",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same vulnerable file, parser path, and missing decompressed-size guard described by the advisory: attacker-controlled base64 input reaches `unfurl/parsers/parse_compressed.py`, which calls `zlib.decompress(decoded)` without a maximum output size.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "unbounded_zlib_decompression_dos",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ce8e154f/unbounded_zlib_decompression_dos",
+      "status": "qualifying_vuln",
+      "title": "Unbounded zlib inflation in parse_compressed allows compressed-input denial of service",
+      "vulnerability_type": "resource_exhaustion_dos"
+    },
+    "reason": "The selected finding matches GHSA-h5qv-qjv4-pc5m at the exact root cause: `parse_compressed` accepts attacker-controlled base64url input and performs unbounded zlib inflation before any effective size guard. The copied PoC reproduced the advisory impact by proving a benign `/json/visjs` request succeeds and the crafted compressed request then drives the vulnerable process into the expected memory-exhaustion kill path.",
+    "evidence": [
+      "The advisory JSON says `unfurl/parsers/parse_compressed.py` calls `zlib.decompress(decoded)` without a maximum output size on attacker-controlled base64 URL components.",
+      "The vulnerable-side source snapshot at `/Users/lumi/ziyue/EvoHunt-Run/advisory_ce8e154f/artifacts/upstream_repo/artifacts/upstream_vuln/unfurl/parsers/parse_compressed.py` contains raw `zlib.decompress(node.value)` and `zlib.decompress(decoded)` calls with no decompressed-size cap.",
+      "The patched source snapshot at `/Users/lumi/ziyue/EvoHunt-Run/advisory_ce8e154f/artifacts/upstream_repo/unfurl/parsers/parse_compressed.py` now routes both cases through `utils.safe_decompress`, and `/Users/lumi/ziyue/EvoHunt-Run/advisory_ce8e154f/artifacts/upstream_repo/unfurl/utils.py` defines a 1 MB `MAX_DECOMPRESSED_SIZE` guard.",
+      "The retained PoC log at `/Users/lumi/ziyue/EvoHunt-Run/advisory_ce8e154f/.judge/poc_runs/unbounded_zlib_decompression_dos/run.log` shows `CONTROL_STATUS 200`, then `PAYLOAD_BYTES 1391528`, and finally the scripted success path after the exploit-phase container terminated as expected under the 512 MB memory limit."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "unbounded_zlib_decompression_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ce8e154f/unbounded_zlib_decompression_dos",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ce8e154f/.judge/poc_runs/unbounded_zlib_decompression_dos/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ce8e154f/.judge/poc_runs/unbounded_zlib_decompression_dos/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ce8e154f/.judge/poc_runs/unbounded_zlib_decompression_dos/poc_execution.json",
+      "observed_effect": "The copied PoC cloned vulnerable commit `442c2be70885049c57b807220e848988732644cb`, built the reproduction image, logged `CONTROL_STATUS 200` for a benign `/json/visjs` request, then reached the success path that requires the exploit-phase run to terminate with exit code `137` instead of returning normally. This is consistent with the advisory-described availability impact from unbounded zlib decompression.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

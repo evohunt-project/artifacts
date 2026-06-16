@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a read-only collaborator can complete the OAuth reconnect flow and overwrite `oauthTokenData` on a shared credential even though direct credential updates are forbidden.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A read-only collaborator should be unable to patch the credential directly but should still be able to complete the OAuth callback flow and overwrite `oauthTokenData` on the shared credential.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `n8n@2.10.0` at `8e81f3e31398b04fd6f8cc27cf844980cd382117`, built the reproduction image, executed the focused integration proof, and printed `[evohunt] verified read-only shared credential escalation on credential yje7pOTP9li6KGYc; direct PATCH was blocked but oauthTokenData became attacker-access-token` followed by `[evohunt] SUCCESS: shared OAuth read-to-write escalation reproduced`.",
+  "verification_method": "The integration proof creates an owner-owned OAuth2 credential, shares it read-only to the attacker, verifies direct `PATCH /credentials/:id` is denied with `403`, starts the OAuth reconnect flow as the attacker, completes the callback through a real local OAuth token endpoint, and then asserts that the shared credential's stored `oauthTokenData.access_token` changed to `attacker-access-token`. `verify.sh` validates those proof fields from the generated proof file.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `PASS test/integration/evohunt.oauth-readwrite-escalation.test.ts` from the focused integration proof.",
+    "The verification helper printed `[evohunt] verified read-only shared credential escalation on credential yje7pOTP9li6KGYc; direct PATCH was blocked but oauthTokenData became attacker-access-token`.",
+    "The proof file generated during the run recorded `patchStatus=403`, `authStatus=200`, `callbackStatus=200`, `overwrittenAccessToken=attacker-access-token`, and `tokenEndpointHits=1`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8e81f3e31398b04fd6f8cc27cf844980cd382117 (tag: n8n@2.10.0)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/evohunt.oauth-readwrite-escalation.test.ts"
+    ]
+  }
+}

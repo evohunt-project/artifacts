@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_file_upload_and_write",
+  "summary": "The reproduction confirms that an unauthenticated caller can write into the live `_appdata` directory and overwrite a web-served `_images` file via `POST /api/upload`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create an attacker-controlled file in `_appdata` and then overwrite an attacker-controlled file in `_images` without presenting any authentication token.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned upstream FUXA at `bbd738d21d7192d5eaaf58577de68eced4a609eb`, built the reproduction image, installed the pinned server dependencies, started the vulnerable service, created `_appdata/evohunt-appdata-proof.txt` through `POST /api/upload`, overwrote `_images/evohunt-upload-proof.svg` through a second unauthenticated upload, and printed `EVOHUNT_UPLOAD_ARBITRARY_WRITE_CONFIRMED`.",
+  "verification_method": "The container-side verifier first checks that an unauthenticated upload with `destination=appdata` creates the exact proof file under the live `_appdata` directory. It then uploads and re-uploads the same `_images` path, fetches the file over HTTP, and confirms that the second proof string replaced the first one. These checks distinguish a real arbitrary write from a startup issue or a harmless temp-file write.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run created `_appdata/evohunt-appdata-proof.txt` with the exact marker `EVOHUNT-APPDATA-PROOF`.",
+    "Fetching `/_images/evohunt-upload-proof.svg` after the first upload returned `EVOHUNT-UPLOAD-PROOF`.",
+    "Fetching the same `/_images/evohunt-upload-proof.svg` after the second upload returned `EVOHUNT-OVERWRITE-PROOF`.",
+    "The reproduction printed the success signal `EVOHUNT_UPLOAD_ARBITRARY_WRITE_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "bbd738d21d7192d5eaaf58577de68eced4a609eb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_entrypoint.sh",
+      "reproduction/verify_upload.sh"
+    ]
+  }
+}

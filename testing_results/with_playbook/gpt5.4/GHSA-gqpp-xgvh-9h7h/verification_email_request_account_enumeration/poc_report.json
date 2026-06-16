@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction starts Parse Server with email verification enabled, creates one verified and one unverified account, and then shows that `POST /verificationEmailRequest` leaks whether an email is nonexistent, already verified, or still unverified while the sibling password-reset flow keeps nonexistent emails normalized.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should produce distinct unauthenticated responses for an existing unverified email, an existing verified email, and a nonexistent email on `POST /verificationEmailRequest`, while `POST /requestPasswordReset` should still return the generic success response for the nonexistent email.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned repository revision, built the reproduction image, started a MongoDB sidecar, installed the target dependencies, created one verified and one unverified user, and then observed: existing unverified email -> HTTP 200 `{}`; existing verified email -> HTTP 400 `Email ... is already verified.`; nonexistent email -> HTTP 400 `No user found with email ...`; nonexistent password-reset email -> HTTP 200 `{}`.",
+  "verification_method": "The helper starts a live Parse Server instance, drives the documented verification workflow end to end to create accounts in different states, and then compares four direct HTTP responses. The script exits nonzero unless the account-state leak appears and the sibling password-reset route remains normalized.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The runtime output included an HTTP 200 `{}` response for the existing unverified address.",
+    "The runtime output included an HTTP 400 `Email ... is already verified.` response for the existing verified address.",
+    "The runtime output included an HTTP 400 `No user found with email ...` response for the nonexistent address while `POST /requestPasswordReset` for the same nonexistent address still returned HTTP 200 `{}`.",
+    "The packaged `./reproduction/run.sh` ended with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the verification container.",
+    "pinned_commit_or_ref": "16a583da10081165576cde82f976b472e1796bcf",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify-enumeration.js"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a user with only the `user-manager` role can grant themselves the `ts` flag and immediately gain Trust and Safety authorization.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a user starting without Trust and Safety access can pass the real `update` authorization path, persist the `ts` flag onto their own account, and then pass the `ts` gate and `InvestigationPolicy::viewAny()`.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned TSPortal at eab74b4c25151617c7f333d1ef10c165f62d8967, built the reproduction image, installed the pinned PHP dependencies, migrated SQLite, and printed `EVOHUNT_PROOF user-manager escalated to ts` followed by `before_ts=false`, `before_investigation_viewAny=false`, `update_allowed=true`, `after_ts=true`, `after_investigation_viewAny=true`, and `final_flags=[\"user-manager\",\"ts\"]`.",
+  "verification_method": "The containerized helper boots Laravel against a fresh SQLite database, seeds a user with only the `user-manager` flag, checks the real gate result for `update`, invokes the real `UserController::update()` path with attacker-controlled `new-access[]`, refreshes the user from the database, and then verifies that the same account now passes the `ts` gate and `InvestigationPolicy::viewAny()`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `EVOHUNT_PROOF user-manager escalated to ts`.",
+    "The run showed `before_ts=false` and `before_investigation_viewAny=false`, proving the attacker started below Trust and Safety.",
+    "The run showed `update_allowed=true`, proving the low-privilege user passed the real authorization gate for the update path.",
+    "The run showed `after_ts=true`, `after_investigation_viewAny=true`, and `final_flags=[\"user-manager\",\"ts\"]`, proving the privilege escalation and downstream authorization impact."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "eab74b4c25151617c7f333d1ef10c165f62d8967",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.php"
+    ]
+  }
+}

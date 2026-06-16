@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction confirms that a single public BentoML request can trigger an attacker-chosen 100MB server-side download through the documented file-URL input path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make BentoML fetch a 100MB file from an attacker-chosen public URL, fully materialize it server-side, and report the downloaded size from the service handler.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned BentoML at 73c4dbead99be6515fa25fcd91e348ac30f5c22e, built the reproduction image, issued a POST /measure request with content type application/x-www-form-urlencoded, and observed a 200 response after 20754.741ms. The handler returned {\"label\": \"evohunt\", \"name\": \"tmp6cxi1dk7100Mb.dat\", \"size\": 104857600}, and the proof token EVOHUNT_URL_INPUT_UNBOUNDED_DOWNLOAD_DOS_CONFIRMED was emitted.",
+  "verification_method": "verify.py launches a minimal Bento service on the pinned checkout, sends a request that passes a public URL where a pathlib.Path input is expected, asserts that the handler receives a 104857600-byte file, and verify.sh requires the exact proof token in the run output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "BentoML logged POST /measure with content type application/x-www-form-urlencoded, status 200, and 20754.741ms processing time.",
+    "The service response contained size 104857600 and a temporary filename derived from 100Mb.dat.",
+    "The run output ended with EVOHUNT_URL_INPUT_UNBOUNDED_DOWNLOAD_DOS_CONFIRMED and the host script reported reproduction success."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "73c4dbead99be6515fa25fcd91e348ac30f5c22e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/service.py",
+      "reproduction/verify.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:26:07.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2ac0469e",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-95fx-jjr5-f39c/GHSA-95fx-jjr5-f39c.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "bmp_dimension_memory_exhaustion",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2ac0469e/bmp_dimension_memory_exhaustion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2ac0469e/bmp_dimension_memory_exhaustion/vulnerability_report.json",
+      "title": "Crafted BMP dimensions trigger uncontrolled memory allocation in the BMP parser",
+      "vulnerability_type": "image_parser_dos",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding matches the advisory's `BMPDecoder` root cause: attacker-controlled BMP width and height reach the `addImage` BMP path and drive `new Uint8Array(width * height * 4)` without a size bound, which is the exact check added by advisory patch `ae4b93f76d8fc1baa5614bd5fdb5d174c3b85f0d` in `src/libs/BMPDecoder.js`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "bmp_dimension_memory_exhaustion",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2ac0469e/bmp_dimension_memory_exhaustion",
+      "status": "qualifying_vuln",
+      "title": "Crafted BMP dimensions trigger uncontrolled memory allocation in the BMP parser",
+      "vulnerability_type": "image_parser_dos"
+    },
+    "reason": "The selected finding identifies the same vulnerable `BMPDecoder` allocation path described by the advisory, and the copied PoC reproduced the advisory impact end to end: a crafted BMP sent through the public `addImage(..., 'BMP', ...)` API forced a 40,000,000,000-byte allocation attempt and made the image-processing operation fail.",
+    "evidence": [
+      "The advisory summary names unvalidated BMP dimensions in `BMPDecoder`, and the advisory patch adds a missing size check in `src/libs/BMPDecoder.js` before `new Uint8Array(len)`.",
+      "The staged vulnerable `jspdf@4.0.0` package used for PoC execution still contains `BmpDecoder.prototype.parseBGR` with `var len = this.width * this.height * 4; this.data = new Uint8Array(len);` and no size cap.",
+      "The copied PoC run log at `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2ac0469e/.judge/poc_runs/bmp_dimension_memory_exhaustion/run.log` shows `bit decode error:RangeError: Invalid typed array length: 40000000000` followed by `caught_error=TypeError: Cannot read properties of undefined (reading '0')` and `verification_passed=true`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "bmp_dimension_memory_exhaustion",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2ac0469e/bmp_dimension_memory_exhaustion",
+      "executed": true,
+      "command": "bash finding_copy/reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2ac0469e/.judge/poc_runs/bmp_dimension_memory_exhaustion",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2ac0469e/.judge/poc_runs/bmp_dimension_memory_exhaustion/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2ac0469e/.judge/poc_runs/bmp_dimension_memory_exhaustion/poc_execution.json",
+      "observed_effect": "A tiny crafted BMP with forged `100000 x 100000` dimensions reached the `addImage` BMP decode path, triggered an attempted 40,000,000,000-byte typed-array allocation, logged `RangeError: Invalid typed array length: 40000000000`, and caused the public API call to fail with `TypeError`, denying the image-processing operation.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

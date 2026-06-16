@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:15:16.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c3d5b236",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-jjwv-57xh-xr6r/GHSA-jjwv-57xh-xr6r.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "download_from_ssrf_exfil",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c3d5b236/download_from_ssrf_exfil",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c3d5b236/download_from_ssrf_exfil/vulnerability_report.json",
+      "title": "Default-enabled downloadFrom feature allows SSRF with response exfiltration via PDF embeds",
+      "vulnerability_type": "ssrf_exfiltration",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a separate API-level SSRF in the `downloadFrom` multipart fetch flow with empty default allow/deny lists. The advisory is a Chromium `file:` deny-list bypass caused by case-sensitive matching before mixed-case schemes are normalized.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's Chromium mixed-case `file:` scheme bypass. The only real final finding is a different `downloadFrom` SSRF/exfiltration bug in the API module.",
+    "evidence": [
+      "The advisory describes `pkg/modules/chromium/chromium.go` default `chromium-deny-list` `^file:(?!//\\\\/tmp/).*`, `pkg/modules/chromium/events.go` request interception, and `pkg/gotenberg/filter.go` case-sensitive regex compilation as the root cause for mixed-case `FILE:///...` bypass.",
+      "The qualifying finding instead follows `pkg/modules/api/context.go` lines 206-282, where `downloadFrom` input is parsed, checked with `FilterDeadline`, and fetched with `retryablehttp` GET under `api-download-from-allow-list` and `api-download-from-deny-list` defaults from `pkg/modules/api/api.go` lines 198-241.",
+      "Its reported impact depends on `pkg/modules/pdfengines/routes.go` lines 469-497 and 1173-1201, which embed downloaded HTTP response bodies into a returned PDF. That is SSRF response exfiltration, not Chromium navigation to mixed-case `file:` URLs or arbitrary container file read."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c3d5b236/download_from_ssrf_exfil",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c3d5b236/download_from_ssrf_exfil/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_c3d5b236/download_from_ssrf_exfil/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

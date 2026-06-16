@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:10:30.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8e33ea13",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-hx9q-6w63-j58v/GHSA-hx9q-6w63-j58v.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "enum_value_attr_segfault",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8e33ea13/enum_value_attr_segfault",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8e33ea13/enum_value_attr_segfault/vulnerability_report.json",
+      "title": "Unhandled Enum.value exceptions in dumps() crash the interpreter",
+      "vulnerability_type": "availability_panics_and_validation_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is about missing recursion-depth enforcement when serializing deeply nested list/dict JSON structures with orjson.dumps(), while this finding is a different enum-serialization bug: PyObject_GetAttr(..., \"value\") can return NULL after an exception and that NULL is dereferenced in the enum serialization path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described missing recursion-limit bug in orjson.dumps() for deeply nested JSON documents, so no advisory-matched PoC execution was warranted.",
+    "evidence": [
+      "The session manifest lists only one final qualifying finding: enum_value_attr_segfault.",
+      "The advisory summary/details and linked CVE reproduction describe denial of service from deeply nested list/dict input passed to orjson.dumps(), i.e. uncontrolled recursion / missing depth limit.",
+      "The advisory-linked upstream fix adds test/test_recursion.py, which accepts depths below 128 and expects orjson.JSONEncodeError at depth 128 for nested recursive list/dict structures.",
+      "The qualifying finding instead concerns a separate root cause in enum serialization: unchecked NULL from PyObject_GetAttr(..., \"value\") in src/serialize/per_type/pyenum.rs and src/serialize/per_type/dict.rs, leading to a NULL dereference in src/serialize/obtype.rs."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8e33ea13/enum_value_attr_segfault",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8e33ea13/enum_value_attr_segfault/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_8e33ea13/enum_value_attr_segfault/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

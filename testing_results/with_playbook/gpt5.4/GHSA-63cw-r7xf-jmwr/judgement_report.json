@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:24:53.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2bf7d60f",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-63cw-r7xf-jmwr/GHSA-63cw-r7xf-jmwr.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "file_include_secret_leak",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2bf7d60f/file_include_secret_leak",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2bf7d60f/file_include_secret_leak/vulnerability_report.json",
+      "title": "Zone-file $INCLUDE on live reload leaks service-readable files to low-privilege local writers",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding concerns unrestricted `$INCLUDE` processing on zone-file live reload paths in `plugin/file` and `plugin/auto`, not the advisory's missing early size validation on the DoH GET `dns=` path in `plugin/pkg/doh/doh.go`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "proxyproto_default_acl_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2bf7d60f/proxyproto_default_acl_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2bf7d60f/proxyproto_default_acl_bypass/vulnerability_report.json",
+      "title": "Default proxyproto trust lets network clients bypass IP-based ACL decisions",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding concerns default trust of PROXY protocol headers and downstream ACL/view authorization decisions, not the advisory's DoH GET oversized `dns=` parsing and pre-validation resource-amplification path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described vulnerable code or root cause. The advisory is a DoH GET denial-of-service issue caused by missing early size validation before query parsing, base64 decoding, and DNS unpacking on `/dns-query?dns=...`; the qualifying findings instead target unrelated `$INCLUDE` reload disclosure and `proxyproto` trust behavior.",
+    "evidence": [
+      "The advisory root cause is specific to `plugin/pkg/doh/doh.go` GET handling (`requestToMsgGet()` passing the oversized `dns` value into `base64ToMsg()`) and missing early request-size validation on the HTTPS DoH path.",
+      "The `file_include_secret_leak` finding names `plugin/file/file.go`, `plugin/file/reload.go`, and `plugin/auto/walk.go` and requires a low-privilege local writer to inject `$INCLUDE` into zone reload input; it does not involve DoH, `/dns-query`, base64 decoding, or pre-validation resource amplification.",
+      "The `proxyproto_default_acl_bypass` finding names `plugin/proxyproto/setup.go`, `request/request.go`, and ACL/view consumers and depends on forged PROXY headers influencing client-IP authorization, which is a different component, sink, and security failure mode from the advisory."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2bf7d60f/file_include_secret_leak",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2bf7d60f/file_include_secret_leak/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2bf7d60f/file_include_secret_leak/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2bf7d60f/proxyproto_default_acl_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2bf7d60f/proxyproto_default_acl_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2bf7d60f/proxyproto_default_acl_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

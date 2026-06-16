@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:58:51.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e17a9356",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-h4rm-mm56-xf63/GHSA-h4rm-mm56-xf63.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "hook_pickle_loads_bypass_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e17a9356/hook_pickle_loads_bypass_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e17a9356/hook_pickle_loads_bypass_rce/vulnerability_report.json",
+      "title": "Incomplete hook coverage leaves pickle.loads unprotected and enables code execution",
+      "vulnerability_type": "insecure_deserialization",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets incomplete pickle hook/context coverage in fickling/hook.py and fickling/context.py, not the advisory's AST-emission blind spot where builtins imports were omitted from fickling/fickle.py and therefore missed by unsafe-import analysis.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "malformed_stack_global_recursion_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e17a9356/malformed_stack_global_recursion_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e17a9356/malformed_stack_global_recursion_dos/vulnerability_report.json",
+      "title": "Malformed STACK_GLOBAL operands trigger uncaught recursion in AST and safety analysis",
+      "vulnerability_type": "availability_panics_and_validation_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "Although it also touches fickling/fickle.py, this finding is a malformed-operand recursion crash in STACK_GLOBAL fallback handling; the advisory fixes a different root cause by emitting builtins import AST nodes so unsafe-import checks can see them.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "None of the final qualifying findings identifies the advisory's vulnerable code or root cause. GHSA-h4rm-mm56-xf63 is specifically the builtins-import detection bypass fixed by always emitting builtins import AST nodes in fickling/fickle.py for Global/StackGlobal/Inst handling.",
+    "evidence": [
+      "The advisory patch 9f309ab834797f280cb5143a2f6f987579fa7cdf removes the special-case suppression for module values '__builtin__', '__builtins__', and 'builtins' and always appends ImportFrom AST nodes in fickling/fickle.py.",
+      "The advisory regression test test_builtins_import_bypass asserts that check_safety() now reports 'from builtins import getattr', showing the root cause is analysis blindness to builtins imports rather than a generic pickle execution bug.",
+      "hook_pickle_loads_bypass_rce instead describes documented hook/context defenses failing to patch pickle.loads/_pickle.loads, which is a separate boundary in hook.py/context.py.",
+      "malformed_stack_global_recursion_dos instead describes uncaught recursion during malformed STACK_GLOBAL identifier extraction, which is a denial-of-service bug distinct from the advisory's unsafe-import detection bypass."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e17a9356/hook_pickle_loads_bypass_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e17a9356/hook_pickle_loads_bypass_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e17a9356/hook_pickle_loads_bypass_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e17a9356/malformed_stack_global_recursion_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e17a9356/malformed_stack_global_recursion_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e17a9356/malformed_stack_global_recursion_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

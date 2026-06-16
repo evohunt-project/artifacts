@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle clones Traefik v1.7.34, mounts the pinned vulnerable checkout into a container, and demonstrates that a forged X-Forwarded-For value bypasses the IP whitelist while the same request without the forged header is rejected.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A request without a forged X-Forwarded-For value should be rejected with HTTP 403, while an otherwise equivalent request with an allowlisted forged X-Forwarded-For value should reach the protected handler and emit the proof string.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, cloned commit bf650d7623bfb2bd3f0653364d8f0b4fc97782b6, and printed no_xff_status=403 body=\"Forbidden\", forged_xff_status=200 body=\"backend reached\", and proof=whitelist bypass via forged X-Forwarded-For.",
+  "verification_method": "reproduction/verify.sh copies the mounted target checkout into a writable container workspace, runs the harness in reproduction/whitelist_poc.go, and requires exact matches for the 403 baseline, the 200 bypass response, and the final proof string before declaring success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The baseline request without X-Forwarded-For returned HTTP 403 with body \"Forbidden\".",
+    "The forged-header request returned HTTP 200 with body \"backend reached\".",
+    "The harness emitted proof=whitelist bypass via forged X-Forwarded-For and the verifier accepted the run."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "bf650d7623bfb2bd3f0653364d8f0b4fc97782b6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/whitelist_poc.go"
+    ]
+  }
+}

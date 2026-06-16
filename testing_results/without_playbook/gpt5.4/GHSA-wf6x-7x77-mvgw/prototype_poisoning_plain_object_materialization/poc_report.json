@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_poisoning",
+  "summary": "The reproduction bundles the vulnerable `src/Immutable.js` entrypoint from commit `6618019acce116395d8c8ab4260d94cb4ec158e6` with `esbuild`, runs `Immutable.setIn()` and `Immutable.updateIn()` against a `__proto__` key path, and confirms that both returned objects expose inherited `isAdmin=true` without an own `isAdmin` property.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that `setIn` and `updateIn` return objects with no own keys but with inherited attacker-controlled `isAdmin=true` via prototype mutation.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `immutable-js` tag `v5.1.4`, checked out commit `6618019acce116395d8c8ab4260d94cb4ec158e6`, bundled `src/Immutable.js` with `esbuild`, and printed `EVOHUNT_PROOF: prototype poisoning confirmed via setIn,updateIn` together with proof objects showing `ownKeys: []`, `hasOwnIsAdmin: false`, and `inheritedIsAdmin: true` for both APIs.",
+  "verification_method": "The helper script bundles the mounted target source and executes assertions that reject false positives unless both APIs return objects whose inherited `isAdmin` property is true while `Object.prototype.hasOwnProperty.call(result, 'isAdmin')` remains false. The wrapper then checks for the exact proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `EVOHUNT_PROOF: prototype poisoning confirmed via setIn,updateIn`.",
+    "The proof JSON showed `setIn.ownKeys` and `updateIn.ownKeys` as empty arrays.",
+    "The proof JSON showed `setIn.hasOwnIsAdmin` and `updateIn.hasOwnIsAdmin` as `false` while `inheritedIsAdmin` was `true` for both."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "6618019acce116395d8c8ab4260d94cb4ec158e6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

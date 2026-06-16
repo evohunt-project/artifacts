@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "algorithmic_complexity_redos",
+  "summary": "The Docker-based reproduction confirms that the timestamp format in convict-format-with-moment blocks on a crafted timestamp string because it passes attacker-controlled input into vulnerable Moment.js parsing.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a small control input completes quickly while a crafted 300000-character timestamp string causes the vulnerable timestamp parsing path to exceed an 8 second timeout.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the repository at ba7693f368e10f596397dc676263a578f910a2a9, built the reproduction image, installed production dependencies from the pinned lockfile, completed a 1000-character control parse in about 3.1 ms, and then confirmed that the crafted 300000-character timestamp input exceeded the 8 second timeout.",
+  "verification_method": "The container copies the mounted repository into a writable workspace, runs npm ci --omit=dev from the pinned lockfile, executes a quick control parse through the convict timestamp format, and then wraps the crafted parse in timeout 8s. Verification succeeds only if the control input stays fast and the crafted parse exits with timeout status 124.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The control path printed {\"payload_size\":1000,\"elapsed_ms\":3.116846,\"error\":\"ts: must be a positive integer\"}, confirming that the helper reached the vulnerable timestamp format and completed quickly on a small input.",
+    "The exploit path printed \"[evohunt] exploit exceeded the 8 second timeout as expected\", confirming that the crafted input drove the vulnerable parse into a long-running state.",
+    "The run finished with \"[evohunt] SUCCESS: reproduction completed and verified\", confirming that both the control check and timeout-based oracle passed."
+  ],
+  "limitations_or_blockers": [
+    "The oracle is time-based because the underlying flaw is algorithmic complexity rather than memory corruption or direct code execution."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "ba7693f368e10f596397dc676263a578f910a2a9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

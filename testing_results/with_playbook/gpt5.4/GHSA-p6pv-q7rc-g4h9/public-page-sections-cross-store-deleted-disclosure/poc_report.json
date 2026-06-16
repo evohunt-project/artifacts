@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction creates a deleted CustomCode section under store B and then fetches it anonymously from store A's public page section route, confirming cross-store deleted-content disclosure.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should return HTTP 200 for a public GET /page_sections/:id request on store A's host while the response body contains the proof string stored only in a deleted CustomCode section owned by store B.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned spree/spree at commit 3e18ec0055a117b7a65a6f09226ddd823ede4ea3, built the reproduction image, and printed STATUS=200, BODY_HAS_PROOF=true, SECTION_STORE=store-b-3f9b.test, REQUEST_HOST=store-a-3f9b.test, and a response snippet containing EVOHUNT-SECTION-SECRET-123.",
+  "verification_method": "The helper script provisions two stores in the generated test app, creates and soft-deletes a CustomCode section under store B, performs the public request as a Turbo Frame against store A, and asserts both HTTP 200 and the presence of the proof string in the response body.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "STATUS=200",
+    "BODY_HAS_PROOF=true",
+    "SECTION_STORE=store-b-3f9b.test",
+    "REQUEST_HOST=store-a-3f9b.test",
+    "PROOF_CONTEXT=on--border-bottom-width: 0px\"> <div>EVOHUNT-SECTION-SECRET-123</div> </div> </div> </turbo-frame>"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3e18ec0055a117b7a65a6f09226ddd823ede4ea3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.rb"
+    ]
+  }
+}

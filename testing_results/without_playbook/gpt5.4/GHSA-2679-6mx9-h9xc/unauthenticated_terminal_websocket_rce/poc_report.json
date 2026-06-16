@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "auth_bypass_rce",
+  "summary": "The Docker-based reproduction starts a token-protected marimo edit server from the pinned vulnerable commit and still reaches the unauthenticated terminal WebSocket, proving arbitrary shell command execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should connect to `/terminal/ws` without supplying the configured access token and cause the terminal shell to print the attacker-controlled proof string `EVOHUNT_TERMINAL_PWNED`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `marimo` at `78489d4621dc4358dc5974af0c727feb0b7331cb`, built the reproduction image, started a token-protected edit-mode server, connected to `/terminal/ws` without auth material, and printed `EVOHUNT_TERMINAL_PWNED` from the shell before reporting success.",
+  "verification_method": "The verifier starts the server with a fixed token password, omits all access tokens and auth headers from the WebSocket exploit, and treats reproduction as successful only if the PTY output contains the exact proof string emitted by the injected shell command.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The containerized verifier printed `EVOHUNT_TERMINAL_PWNED` from the `/terminal/ws` shell session.",
+    "The reproduction completed against a server configured with token authentication, so the proof string came from an authentication bypass rather than an intentionally open server.",
+    "The final `./reproduction/run.sh` invocation ended with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "78489d4621dc4358dc5974af0c727feb0b7331cb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/minimal_notebook.py",
+      "reproduction/requirements.txt",
+      "reproduction/verify.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

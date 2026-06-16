@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_dynamic_evaluation",
+  "summary": "The final reproduction cloned the vulnerable 1.0.4 revision, loaded its `simpleeval.py`, and proved that a supposedly safe `os.path` exposure can traverse to `os.popen` and execute an attacker-chosen shell command.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print the exact proof string `EVOHUNT_MODULE_BREAKOUT` from the result of `path.os.popen('printf EVOHUNT_MODULE_BREAKOUT').read()`, proving command execution through attribute-resolved module access.",
+  "actual_observed_result": "Running `./reproduction/run.sh` from the final finding folder cloned commit `0425898b23abb3f1a9ed56dbb0bb4244d6350f2f`, built the Docker image, executed the exploit, printed `EVOHUNT_MODULE_BREAKOUT`, and finished with `[evohunt] verification succeeded`.",
+  "verification_method": "The helper script loads `simpleeval.py` from the mounted vulnerable checkout, evaluates the exploit expression against `names={\"path\": os.path}`, and checks that the returned value exactly matches the proof string instead of a parser error or blocked attribute access.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included `expression: path.os.popen('printf EVOHUNT_MODULE_BREAKOUT').read()`.",
+    "Container output included `result: EVOHUNT_MODULE_BREAKOUT`.",
+    "The host-side run completed with `[evohunt] verification succeeded` and `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the upstream repository on the host, checks out the pinned vulnerable commit, and mounts that checkout read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "0425898b23abb3f1a9ed56dbb0bb4244d6350f2f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that a public share can traverse outside its shared directory to disclose `secret.txt`, and that a modify-enabled public share can move a shared file onto `../../secret.txt` outside the share root.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should first read `ORIGINAL_SECRET` from a file outside the shared directory via `GET /public/api/resources`, then overwrite that sibling file via `PATCH /public/api/resources` on a modify-enabled public share.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the vulnerable repository at `a8c9b9419ec530568991a2f72cec4ed263f99e3c`, built the reproduction image, started the target service, read `ORIGINAL_SECRET` from `../../secret.txt` through a default public share, and then changed `/secret.txt` to `SHARED_NOTE` via the public PATCH route. The container printed `EVOHUNT_SUCCESS public_share_path_traversal`.",
+  "verification_method": "The container script waits for the target health endpoint, creates public shares through the authenticated admin API, then verifies that the read response contains `ORIGINAL_SECRET` and that the final on-disk `secret.txt` content equals `SHARED_NOTE` after the modify-enabled PATCH request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The public resource response contained `\"content\":\"ORIGINAL_SECRET\\n\"` for `path=../../secret.txt` on a share rooted at `/shared`.",
+    "The PATCH response returned HTTP 200 with a successful operation result.",
+    "The final `secret.txt` content changed from `ORIGINAL_SECRET` to `SHARED_NOTE` outside the shared directory.",
+    "The reproduction emitted the success marker `EVOHUNT_SUCCESS public_share_path_traversal`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, prepares a temporary Docker build context containing the reproduction helper files plus the target backend module manifests, and mounts the checked-out tree into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "a8c9b9419ec530568991a2f72cec4ed263f99e3c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

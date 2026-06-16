@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that FUXA v1.2.7 accepts unauthenticated administrative user-management requests in its default configuration and allows creation of an administrator-group account.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create an administrator-group user through POST /api/users without credentials and then retrieve that record through unauthenticated GET /api/users.",
+  "actual_observed_result": "Running ./reproduction/run.sh emitted DEFAULT_AUTH_POC_OK and returned a JSON array containing the created user record with username evopoc and groups -1, confirming that unauthenticated requests could create and read an administrator-group account.",
+  "verification_method": "The verification helper starts the vulnerable server in its default configuration, submits an unauthenticated POST /api/users request, then performs unauthenticated GET /api/users?username=evopoc and requires the created username to be present in the returned JSON. This distinguishes real administrative API access from a mere startup success or unrelated response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "STDOUT contained the proof marker DEFAULT_AUTH_POC_OK.",
+    "The returned JSON from GET /api/users contained the attacker-created username evopoc with groups -1.",
+    "The host wrapper reported successful completion after the verification helper observed the expected proof signal."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "bbd738d21d7192d5eaaf58577de68eced4a609eb (tag: v1.2.7)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/common.sh",
+      "reproduction/package.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

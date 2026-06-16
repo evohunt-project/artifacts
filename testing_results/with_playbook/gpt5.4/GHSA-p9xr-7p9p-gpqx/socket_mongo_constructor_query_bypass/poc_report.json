@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "query_operator_smuggling",
+  "summary": "The final Docker reproduction confirms that a Socket.io caller can bypass Feathers query sanitization with an own `constructor` property and make a normally blocked Mongo `$where` query execute with attacker-controlled delay.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A control Socket.io query containing `$where` should fail with `Invalid query parameter $where`, while the constructor-bypass query should succeed and incur a measurable server-side Mongo execution delay.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Feathers `v5.0.41` (resolved by Git to commit `ddb9b9c558563ebd60ac1596da38b05bb54592db`), built the reproduction image, started MongoDB, and printed JSON showing the control query failed immediately with `BadRequest: Invalid query parameter $where` while the bypass query succeeded, returned the seeded `alpha` and `beta` documents, and took about 2024 ms to complete.",
+  "verification_method": "The helper script starts a Feathers Socket.io app backed by `@feathersjs/mongodb`, seeds known documents, emits a control `find` call and a constructor-bypass `find` call, and distinguishes success by asserting that the control query is rejected while the bypass query returns results only after a noticeable delay.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The control Socket.io query failed with `BadRequest`, code `400`, and message `Invalid query parameter $where`.",
+    "The constructor-bypass query succeeded, returned 2 seeded documents, and took about 2024 ms to complete.",
+    "The reproduction helper emitted the success signal `The control Socket.io query fails with Invalid query parameter $where, while the constructor-bypass query succeeds and incurs a measurable Mongo execution delay.`"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, starts the required MongoDB dependency, and mounts the checkout into the container.",
+    "pinned_commit_or_ref": "v5.0.41",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_socket_mongo.js"
+    ]
+  }
+}

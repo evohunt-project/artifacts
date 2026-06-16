@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:39:35.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7f1b4701",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-crxp-chh4-9ghp/GHSA-crxp-chh4-9ghp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "ephemeral_token_cache_shell_injection",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7f1b4701/ephemeral_token_cache_shell_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7f1b4701/ephemeral_token_cache_shell_injection/vulnerability_report.json",
+      "title": "Unsanitized cacheFile path reaches a shell command in EphemeralTokenCache",
+      "vulnerability_type": "command_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a shell command injection in EphemeralTokenCache file-cache initialization, while the advisory covers deterministic IV derivation in SecurityIO passphrase AES helpers; the vulnerable code, mechanism, and fix path do not overlap.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's SecurityIO passphrase-encryption root cause. The only qualifying finding is an EphemeralTokenCache shell injection unrelated to deterministic IV reuse or the affected SecurityIO methods.",
+    "evidence": [
+      "The advisory references SecurityIO.groovy passphrase AES helpers where `salt = sha256Sum(passphrase)` and `b_iv = salt.substring(0, 16)` make the IV deterministic for a given passphrase and plaintext pair.",
+      "The upstream fix commit `c3981ff71de7b0f767dfe7b37a2372cb2a51974a` deprecates `encryptWithAES256(String passphrase, ...)` and `decryptWithAES256(String passphrase, ...)` and introduces `encryptWithPassphraseGCM` and `decryptWithPassphraseGCM` with random salt and nonce handling.",
+      "The session's only qualifying finding points to EphemeralTokenCache.groovy building `/bin/sh -ec` with attacker-controlled `cacheFile`; it does not reference SecurityIO, passphrase-based AES encryption, IV derivation, or ciphertext reuse."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7f1b4701/ephemeral_token_cache_shell_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7f1b4701/ephemeral_token_cache_shell_injection/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_7f1b4701/ephemeral_token_cache_shell_injection/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

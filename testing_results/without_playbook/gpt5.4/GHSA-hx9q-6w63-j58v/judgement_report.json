@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:11:02.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_8e33ea13",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-hx9q-6w63-j58v/GHSA-hx9q-6w63-j58v.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unchecked_allocation_failure_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_8e33ea13/unchecked_allocation_failure_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_8e33ea13/unchecked_allocation_failure_dos/vulnerability_report.json",
+      "title": "Unchecked allocation failures in orjson can crash the interpreter",
+      "vulnerability_type": "allocation_failure_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is a recursion-depth bug in `orjson.dumps` fixed in `src/serialize/writer/formatter.rs`, while this finding is an unchecked allocator-failure crash path in `loads()` and `dumps()` that depends on forced memory exhaustion in different code paths.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's recursion-related `orjson.dumps` root cause or the patched vulnerable code.",
+    "evidence": [
+      "The GHSA summary and details describe `orjson.dumps` failing to enforce a recursion limit for deeply nested JSON documents.",
+      "The fixing commit `62bb185b70785ded49c79c26f8c9781f1e6fe370` changes `src/serialize/writer/formatter.rs` from `debug_assert_has_capacity!` to `reserve_minimum!` in `end_object()` and adds recursion-focused tests.",
+      "The only qualifying finding instead attributes the bug to unchecked null allocator returns in `yyjson.rs`, `pylistref.rs`, `pydictref.rs`, `byteswriter.rs`, and `util.rs` under memory pressure.",
+      "Its reproduction forces `RLIMIT_AS` and crashes `orjson.loads()` with a large payload, which is a different trigger and root-cause condition from the advisory's deeply nested `dumps()` behavior."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_8e33ea13/unchecked_allocation_failure_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_8e33ea13/unchecked_allocation_failure_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_8e33ea13/unchecked_allocation_failure_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

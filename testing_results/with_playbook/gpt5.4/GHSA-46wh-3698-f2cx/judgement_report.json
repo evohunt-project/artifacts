@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:56:00.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dfc4ec85",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-46wh-3698-f2cx/GHSA-46wh-3698-f2cx.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "forwardauth-unbounded-response-buffering-dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dfc4ec85/forwardauth-unbounded-response-buffering-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dfc4ec85/forwardauth-unbounded-response-buffering-dos/vulnerability_report.json",
+      "title": "ForwardAuth unbounded auth-response buffering can cause request-driven memory exhaustion",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an HTTP ForwardAuth memory-exhaustion path in pkg/config/dynamic/middlewares.go and pkg/middlewares/auth/forward.go where an unset maxResponseBodySize becomes -1 and the auth response body is fully buffered with io.ReadAll. The advisory is a distinct gRPC authorization-bypass root cause triggered by malformed :path values without a leading slash in the grpc-go dependency, causing deny-rule mismatches while routing still succeeds.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described gRPC deny-rule bypass. The only final qualifying finding is a separate ForwardAuth response-buffering denial-of-service issue.",
+    "evidence": [
+      "The advisory JSON describes a remote, unauthenticated gRPC authorization bypass caused by malformed HTTP/2 :path values that omit the leading slash, so path-based deny rules evaluate the wrong non-canonical path while routing still succeeds.",
+      "The EvoHunt session manifest and execution history materialized one final qualifying finding: /Users/lumi/ziyue/EvoHunt-Run/advisory_dfc4ec85/forwardauth-unbounded-response-buffering-dos. The example/ directory is session scaffolding and was not listed as a final vulnerability folder.",
+      "That finding's report, checklist, and code references point to ForwardAuth configuration and runtime code in pkg/config/dynamic/middlewares.go and pkg/middlewares/auth/forward.go, where an unset MaxResponseBodySize defaults to -1 and readResponseBodyBytes uses io.ReadAll on the auth response body before the allow or deny decision.",
+      "The advisory-specific dependency surface is google.golang.org/grpc in artifacts/upstream-check/go.mod, but the qualifying finding does not reference malformed gRPC :path handling, deny-rule matching, or the grpc-go authorization path at all."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dfc4ec85/forwardauth-unbounded-response-buffering-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dfc4ec85/forwardauth-unbounded-response-buffering-dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dfc4ec85/forwardauth-unbounded-response-buffering-dos/poc_report.json",
+      "poc_report_status": "failed"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "tenant_isolation_bypass",
+  "summary": "The Docker-based reproduction confirmed that a customer mailbox on alpha.local can be authorized to send as finance@beta.local, even though beta.local belongs to a different customer.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proof should show that customer alice can add finance@beta.local as an allowed sender for alice@alpha.local and that Froxlor's sender-auth query then resolves finance@beta.local to alice@alpha.local.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Froxlor tag 2.3.4, built the reproduction image, initialized a fresh Froxlor database, and executed the real EmailSender.add path as customer alice. The run reported pre-exploit sasl_users=<empty> for finance@beta.local and post-exploit sasl_users=alice@alpha.local after the alias insertion.",
+  "verification_method": "The helper script creates two customers and two local domains through Froxlor's own APIs, creates alice@alpha.local, invokes EmailSender.add with allowed_sender=finance@beta.local as customer alice, verifies the inserted row in mail_sender_aliases, and then executes the same SQL shape Froxlor ships in its Postfix sender-auth configuration to confirm that the victim-domain sender resolves to the attacker's mailbox only after exploitation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console output showed [evohunt] pre-exploit sasl_users: <empty>.",
+    "Console output showed [evohunt] post-exploit sasl_users: alice@alpha.local.",
+    "Console output showed inserted_alias={\"email\":\"alice@alpha.local\",\"allowed_sender\":\"finance@beta.local\"} in the proof details payload.",
+    "Console output ended with EVOHUNT_SUCCESS: alice@alpha.local became authorized to send as finance@beta.local, even though beta.local is owned by customer bob."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "05b3228ebfa08f04ee7064d2452c68cdfa8fadae",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/poc.php"
+    ]
+  }
+}

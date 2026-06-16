@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based probe confirmed that repeated requests on the default placeholder-root handler path retain one extra shared `requestOptions` entry per request and grow retained heap state.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that 20,000 requests produce 20,000 retained `requestOptions` entries on a shared `FrankenPHPModule`, along with positive retained heap growth, proving a remote memory and CPU exhaustion path.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `php/frankenphp` at `04fdc0c1e8fde94e2c1ad86217e962c88d27c53e`, built the helper image, and printed `iterations=20000 requestOptions=20000 heapAllocDelta=1431064 heapObjectsDelta=40005` followed by `PROOF: placeholder-root requests retain one additional request option per request on the shared FrankenPHPModule`.",
+  "verification_method": "The host-side `run.sh` greps the container output for both the exact `iterations=20000 requestOptions=20000` count line and the explicit `PROOF:` string. The helper itself also exits non-zero unless the retained option count matches the request count and retained heap/object growth is positive.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included `iterations=20000 requestOptions=20000 heapAllocDelta=1431064 heapObjectsDelta=40005`.",
+    "Container output included `PROOF: placeholder-root requests retain one additional request option per request on the shared FrankenPHPModule`.",
+    "`run.sh` printed `[evohunt] SUCCESS: reproduction completed and verified` after the verification greps passed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the reproduction image from a temporary context that includes the checked-out repo for dependency priming, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "04fdc0c1e8fde94e2c1ad86217e962c88d27c53e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/execute.sh",
+      "reproduction/go.mod.tmpl",
+      "reproduction/main.go"
+    ]
+  }
+}

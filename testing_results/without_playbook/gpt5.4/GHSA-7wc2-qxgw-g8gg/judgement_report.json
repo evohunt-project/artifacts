@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:11:26.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_41e1af48",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-7wc2-qxgw-g8gg/GHSA-7wc2-qxgw-g8gg.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "cache_backed_oauth_client_csrf_ato",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_41e1af48/cache_backed_oauth_client_csrf_ato",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_41e1af48/cache_backed_oauth_client_csrf_ato/vulnerability_report.json",
+      "title": "Cache-backed OAuth state is not session-bound, enabling login CSRF and session misbinding",
+      "vulnerability_type": "login_csrf_account_takeover",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns cache-backed OAuth state handling in authlib.integrations.starlette_client callback code, while the advisory concerns the default jose JWT verification path accepting alg:none with a blank signature; the finding's PoC also targets v1.5.2, which the advisory describes as rejecting the forged token.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "A",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:N/VI:N/VA:N/SC:N/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only qualifying finding is a Starlette OAuth cache-state login-CSRF issue, not the advisory's JWT signature-verification bypass. The advisory root cause is the default jose jwt.decode path accepting alg:none with an empty signature after the none algorithm was added to the default JWT instance, which is a different subsystem, different code path, and different vulnerable behavior.",
+    "evidence": [
+      "The advisory summary and PoC describe forged JWT acceptance when jwt.decode processes a token with header alg:none and a blank signature.",
+      "The introducing commit a61c2acb807496e67f32051b5f1b1d5ccf8f0a75 changes authlib/jose/rfc7518/jws_algs.py so the none algorithm verifies an empty signature, and the fixing commit b87c32ed07b8ae7f805873e1c9cafd1016761df7 removes none from the default authlib.jose.jwt instance.",
+      "The qualifying finding instead points to authlib/integrations/starlette_client/apps.py and integration.py, where OAuth state is cached without session binding and authorize_access_token accepts an attacker-generated callback in a different browser session.",
+      "The finding's own reproduction pins Authlib v1.5.2, while the advisory's PoC states v1.5.2 rejects the forged alg:none token with BadSignatureError."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_41e1af48/cache_backed_oauth_client_csrf_ato",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_41e1af48/cache_backed_oauth_client_csrf_ato/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_41e1af48/cache_backed_oauth_client_csrf_ato/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:46:46.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-77rh-m34w-rv36/GHSA-77rh-m34w-rv36.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "agentos_continue_run_eval_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5/agentos_continue_run_eval_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5/agentos_continue_run_eval_rce/vulnerability_report.json",
+      "title": "AgentOS continue-run deserialization evaluates client-supplied field types and enables server-side code execution",
+      "vulnerability_type": "unsafe_dynamic_evaluation",
+      "advisory_match": true,
+      "advisory_match_reason": "The advisory fix commit replaces the same attacker-controlled `field_type` `eval()` sink in `UserInputField.from_dict()` that this finding reaches through continue-run deserialization, so it identifies the advisory's vulnerable code/root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "agentos_knowledge_url_ssrf",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5/agentos_knowledge_url_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5/agentos_knowledge_url_ssrf/vulnerability_report.json",
+      "title": "Knowledge URL uploads trigger unrestricted server-side requests to attacker-chosen destinations",
+      "vulnerability_type": "server_side_request_forgery",
+      "advisory_match": false,
+      "advisory_match_reason": "This is an SSRF in the knowledge upload router and does not involve the advisory's attacker-controlled `field_type` evaluation path or the fixed `eval()` sink.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "agentos_continue_run_eval_rce",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5/agentos_continue_run_eval_rce",
+      "status": "qualifying_vuln",
+      "title": "AgentOS continue-run deserialization evaluates client-supplied field types and enables server-side code execution",
+      "vulnerability_type": "unsafe_dynamic_evaluation"
+    },
+    "reason": "The selected finding reaches the same attacker-controlled `field_type` `eval()` sink fixed by GHSA-77rh-m34w-rv36, and the copied PoC demonstrated attacker-controlled Python execution in the AgentOS process through that sink.",
+    "evidence": [
+      "GHSA-77rh-m34w-rv36 describes attacker-controlled `field_type` reaching `eval()` in Agno before 2.3.24, and fix commit `cbf675521d4d2281925a051784a3b94172e56416` replaces that `eval()` in `libs/agno/agno/tools/function.py` and related model parsing logic.",
+      "At vulnerable commit `d667f085b3392f9c66719caca364ef3cc73a3f7b`, the continue-run route deserializes attacker-supplied `tools` into `ToolExecution.from_dict()`, which rebuilds `user_input_schema` fields through `UserInputField.from_dict()` and reaches `eval(data[\"field_type\"])`.",
+      "The copied PoC run log shows a benign continuation returned status 200 without creating the proof file, then a malicious continuation returned status 200 and printed `EVOHUNT_PROOF: continue-run unsafe eval created the proof file` after creating `/tmp/evohunt-continue-run-eval-proof.txt`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "agentos_continue_run_eval_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5/agentos_continue_run_eval_rce",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5/.judge/poc_runs/agentos_continue_run_eval_rce/finding_copy",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5/.judge/poc_runs/agentos_continue_run_eval_rce/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5/.judge/poc_runs/agentos_continue_run_eval_rce/poc_execution.json",
+      "observed_effect": "The copied PoC completed successfully; a benign continue-run request left the proof path absent, then a malicious `field_type` continuation payload returned 200 and created `/tmp/evohunt-continue-run-eval-proof.txt`, and the log printed `EVOHUNT_PROOF: continue-run unsafe eval created the proof file`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5/agentos_knowledge_url_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5/agentos_knowledge_url_ssrf/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5d4369c5/agentos_knowledge_url_ssrf/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

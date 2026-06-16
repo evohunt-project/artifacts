@@ -1,0 +1,101 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:56:47.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-44vg-5wv2-h2hg/GHSA-44vg-5wv2-h2hg.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "module-attribute-breakout-rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61/module-attribute-breakout-rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61/module-attribute-breakout-rce/vulnerability_report.json",
+      "title": "Attribute-resolved module access bypasses the sandbox and reaches command execution",
+      "vulnerability_type": "unsafe_dynamic_evaluation",
+      "advisory_match": true,
+      "advisory_match_reason": "Same `_eval_attribute` and `_eval_call` root cause fixed in 1.0.5: attribute access on exposed objects or modules leaks dangerous modules and disallowed callables, allowing traversal from `os.path` to `os.popen` inside the sandbox.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "string-length-guard-bypass-dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61/string-length-guard-bypass-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61/string-length-guard-bypass-dos/vulnerability_report.json",
+      "title": "Bound string methods bypass MAX_STRING_LENGTH and enable resource-exhaustion DoS",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a separate string-length enforcement flaw that can drive oversized allocations, not the advisory's attribute-based module or callback breakout root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "module-attribute-breakout-rce",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61/module-attribute-breakout-rce",
+      "status": "qualifying_vuln",
+      "title": "Attribute-resolved module access bypasses the sandbox and reaches command execution",
+      "vulnerability_type": "unsafe_dynamic_evaluation"
+    },
+    "reason": "The advisory describes the 1.0.4 sandbox flaw where exposed objects or modules leak dangerous modules or disallowed callables through attribute access. The selected finding identifies that exact `_eval_attribute` and `_eval_call` boundary, and the judge-owned PoC reproduced command execution by traversing `os.path` to `os.popen` inside the sandbox.",
+    "evidence": [
+      "The advisory summary and details describe dangerous module or callback access through objects passed in `names`, and upstream fixed that exact boundary in commit `1654cbf0219345f707c79664b8657be6b8d23e33` (`Disallow module access & disallowed function access via attributes`).",
+      "The selected finding ties the root cause to `simpleeval.py`'s attribute resolution and call handling: `_eval_attribute` returns public attributes without filtering modules or disallowed callables, and `_eval_call` only forbids disallowed functions on bare-name lookups.",
+      "Fresh runtime evidence under `.judge/poc_runs/module-attribute-breakout-rce/run.log` shows `path.os.popen('printf EVOHUNT_MODULE_BREAKOUT').read()` executing successfully with `result: EVOHUNT_MODULE_BREAKOUT` and `[evohunt] verification succeeded`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "module-attribute-breakout-rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61/module-attribute-breakout-rce",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61/.judge/poc_runs/module-attribute-breakout-rce/finding_copy",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61/.judge/poc_runs/module-attribute-breakout-rce/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61/.judge/poc_runs/module-attribute-breakout-rce/poc_execution.json",
+      "observed_effect": "The copied reproduction cloned the vulnerable 1.0.4 commit, evaluated `path.os.popen('printf EVOHUNT_MODULE_BREAKOUT').read()` against `names={\"path\": os.path}`, and logged `result: EVOHUNT_MODULE_BREAKOUT`, proving attacker-controlled command execution through attribute-resolved module access.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61/string-length-guard-bypass-dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61/string-length-guard-bypass-dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_82b44a61/string-length-guard-bypass-dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

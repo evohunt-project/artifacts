@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The reproduction compares a valid dotted STACK_GLOBAL pickle against the equivalent GLOBAL form and verifies that only the STACK_GLOBAL path crashes Fickling's guarded load boundary.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that CPython accepts the dotted STACK_GLOBAL pickle, the equivalent GLOBAL pickle loads successfully through Fickling, and the dotted STACK_GLOBAL payload crashes Fickling's guarded library, hook, and CLI safety-check paths with the expected ValueError.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Fickling v0.1.6 at commit 8249522c7180c69436516ff81bff394f62298c0c, built the Docker image, and showed that builtin pickle accepted both payloads, fickling.loads() accepted the equivalent GLOBAL payload, but the valid dotted STACK_GLOBAL payload caused the expected ValueError in fickling.loads(), the hooked pickle.load() path, and the CLI --check-safety path before emitting EVOHUNT_PROOF=stack_global_dotted_module_crash.",
+  "verification_method": "The verification helper runs a Python harness that compares builtin pickle behavior with Fickling behavior and requires the exact proof string only after the expected ValueError is observed on the dotted STACK_GLOBAL path and the equivalent GLOBAL path succeeds.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output showed builtin pickle accepted both the STACK_GLOBAL and GLOBAL payloads and returned xml.etree.ElementTree.Element for each.",
+    "Container output showed fickling.loads() accepted the GLOBAL payload but raised the expected ValueError for the dotted STACK_GLOBAL payload.",
+    "Container output showed the hooked pickle.load() path and the CLI --check-safety path raised the same expected ValueError before the harness printed EVOHUNT_PROOF=stack_global_dotted_module_crash."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8249522c7180c69436516ff81bff394f62298c0c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

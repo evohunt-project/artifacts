@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stored_xss",
+  "summary": "The reproduction mounts a pinned vulnerable OpenMeetings checkout, verifies the unsanitized chat pipeline source locations, loads the repository's actual chat.js module in a jsdom-backed browser context, and confirms that an attacker-supplied chat payload executes JavaScript.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print the proof string EVOHUNT_CHAT_XSS_EXECUTED after the repository's chat renderer executes attacker-supplied script content.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 41677b22f9ba4236ac890332da823821065a5ca8, built the Docker image, verified the unsanitized chat source path, and printed the proof string EVOHUNT_CHAT_XSS_EXECUTED after the repository's actual chat.js module executed the attacker-controlled payload.",
+  "verification_method": "The verification helper checks that the server-side source path stores and serializes chat messages without sanitization, then executes the repository's actual chat.js addMessage path inside a jsdom environment and requires the attacker-controlled script payload to set the proof variable before printing the proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction output included '[evohunt] source checks passed', confirming the mounted checkout still stores and forwards chat messages without sanitization along the expected path.",
+    "The reproduction output included '[evohunt] frontend sink executed attacker script', showing that the repository's chat.js renderer reached the vulnerable DOM insertion sink.",
+    "The reproduction output included the proof string 'EVOHUNT_CHAT_XSS_EXECUTED'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "41677b22f9ba4236ac890332da823821065a5ca8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js"
+    ]
+  }
+}

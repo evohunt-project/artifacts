@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xml_parser_attribute_confusion",
+  "summary": "The Docker-based reproduction confirms that xmldom 0.9.9 accepts malformed XML with duplicate expanded-name attributes, returns the attacker-controlled later value from `getAttributeNS`, and serializes the document with only that later value while a standards-compliant parser rejects the original payload.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a malformed XML payload containing two differently-prefixed attributes that resolve to the same namespace URI and local name is accepted by xmldom, yields the attacker-chosen `admin` value, and is rejected by a standards-compliant parser as a duplicate attribute.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned xmldom at commit `7ffb16bce1170c7314151379531147637ab772a1`, built the Docker image, and produced the expected proof lines: `xmldom parsed role: admin`, `standards parser rejection: ParseError: duplicate attribute: line 1, column 0`, `AUTHORIZATION_GRANTED_FOR_MALFORMED_XML`, and `EVOHUNT_SUCCESS duplicate expanded-name attributes were accepted and collapsed to the attacker-controlled later value`.",
+  "verification_method": "The reproduction helper parses a crafted payload with xmldom from the pinned checkout, verifies that `Element.getAttributeNS(\"urn:acl\", \"role\")` returns `admin`, confirms that serialization preserved only the later attacker-controlled attribute, and independently checks with Python's `xml.etree.ElementTree` that the original payload is rejected as malformed due to a duplicate attribute.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`[evohunt] xmldom parsed role: admin`",
+    "`[evohunt] standards parser rejection: ParseError: duplicate attribute: line 1, column 0`",
+    "`[evohunt] AUTHORIZATION_GRANTED_FOR_MALFORMED_XML`",
+    "`EVOHUNT_SUCCESS duplicate expanded-name attributes were accepted and collapsed to the attacker-controlled later value`"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "7ffb16bce1170c7314151379531147637ab772a1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

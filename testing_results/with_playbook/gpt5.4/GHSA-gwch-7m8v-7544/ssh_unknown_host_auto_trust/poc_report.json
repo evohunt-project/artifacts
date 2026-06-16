@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "improper_ssh_host_key_verification",
+  "summary": "The reproduction starts a fake SSH server, exercises the vulnerable SSH helper against an unknown host, and confirms that the helper auto-trusts the host, writes it to known_hosts, and authenticates with the configured password.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The vulnerable client should trust an attacker-controlled first SSH endpoint, authenticate to it, and persist the attacker's host key into known_hosts.",
+  "actual_observed_result": "Running ./reproduction/run.sh produced EVOHUNT_SSH_UNKNOWN_HOST_AUTO_TRUST_CONFIRMED after the fake SSH server captured the configured password and the helper auto-added the unknown host entry to known_hosts.",
+  "verification_method": "The exploit harness starts a fake SSH server, captures the password passed through the vulnerable client's SSH authentication flow, verifies that the client accepted command output from the fake host, and checks that a new [127.0.0.1]:2222 entry was written into known_hosts.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_SSH_UNKNOWN_HOST_AUTO_TRUST_CONFIRMED",
+    "The fake SSH server recorded the password rootpass through the vulnerable client's authentication flow.",
+    "The helper-created known_hosts file contained a new [127.0.0.1]:2222 entry for the untrusted host."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "62a78c3e338d42c90cb1120765477bb0f6f6a0b6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/verify.sh",
+      "reproduction/go.mod"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_cache_confusion",
+  "summary": "The Docker-based reproduction confirms that a cached Heimdall `remote` authorizer can reuse an allow decision for one output-derived resource when authorizing a different resource under the same subject.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should return `200` for both `/resource/public` and `/resource/secret`, contact the authorization backend only for `/authz/public`, and emit the proof signal `[evohunt] CACHE_BYPASS_CONFIRMED`, demonstrating an authorization bypass caused by cache reuse.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Heimdall at `982a33fbf8f37904c9343834b38c2ecb6d997ac2`, built the reproduction image, returned `public_status=200` and `secret_status=200`, logged only `/authz/public` at the backend, printed `[evohunt] CACHE_BYPASS_CONFIRMED`, and exited with `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The verifier starts a backend authorization stub that allows only the `public` resource, then checks that the second request for `secret` still returns `200` while the backend log contains `/authz/public` but not `/authz/secret`. This distinguishes true cache-based authorization reuse from a permissive backend, an unrelated routing issue, or a generic startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The wrapper run printed `public_status=200`.",
+    "The wrapper run printed `secret_status=200` even though the backend was configured to deny `secret`.",
+    "The backend hit log contained only `/authz/public`.",
+    "The run printed `[evohunt] CACHE_BYPASS_CONFIRMED` followed by `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host into a temporary directory under the finding folder, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "982a33fbf8f37904c9343834b38c2ecb6d997ac2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/authz_server.py",
+      "reproduction/config.yaml",
+      "reproduction/rules.yaml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

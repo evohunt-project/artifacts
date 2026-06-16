@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "graphql_schema_disclosure",
+  "summary": "The Docker-based reproduction confirms that the default GraphQL introspection block can be bypassed for schema reconnaissance through validation-error suggestions returned to unauthenticated callers.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that explicit introspection is denied while a malformed unauthenticated query still leaks a valid schema field name through a `Did you mean ...?` suggestion.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Parse Server 8.6.57, built the reproduction image, and observed that `{ __schema { types { name } } }` returned `Introspection is not allowed` while the unauthenticated malformed query `{ heaalth }` returned `Cannot query field \"heaalth\" on type \"Query\". Did you mean \"health\"?`.",
+  "verification_method": "The helper waits for the GraphQL endpoint and then issues two unauthenticated requests using only X-Parse-Application-Id: one explicit introspection query and one malformed query. Reproduction succeeds only if introspection is blocked and the malformed query still leaks a schema suggestion.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The explicit introspection request returned `Introspection is not allowed`.",
+    "The malformed query `{ heaalth }` returned `Did you mean \"health\"?`.",
+    "The proof used only X-Parse-Application-Id and no privileged headers."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "e397b83c515c612844935ac7aa7028bb142f442b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

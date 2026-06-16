@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The Docker-based reproduction confirms that the vulnerable Sliver MCP HTTP transport accepts an unauthenticated local client, exposes operator-authorized MCP tools, and allows that client to queue a remote fs_rm beacon task.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should connect to the unauthenticated MCP HTTP endpoint, enumerate the seeded beacon, and queue an fs_rm task for /tmp/evohunt-proof without presenting any authentication token.",
+  "actual_observed_result": "Running ./reproduction/run.sh against upstream commit 9077596f2509f9163e69054e909b1aaba8d13f4e printed proof JSON showing one enumerated beacon, exposed fs_* tools, an async rm task with a non-empty task_id, task_verified=true, request_path_hit=/tmp/evohunt-proof, and the success signal EVOHUNT_SUCCESS: unauthenticated_mcp_task_queued.",
+  "verification_method": "The verification helper starts the vulnerable MCP HTTP server against a fresh temporary Sliver root, uses an unauthenticated MCP client to call list_sessions_and_beacons and fs_rm, and then checks the resulting JSON for the exposed tool names, beacons_count=1, operation=rm, task_verified=true, and request_path_hit=/tmp/evohunt-proof. This distinguishes the missing-auth boundary failure from a generic startup, parser, or database error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container printed proof JSON whose tools_exposed list included list_sessions_and_beacons and fs_rm.",
+    "The proof JSON showed beacons_count set to 1 for the seeded beacon created during the run.",
+    "The proof JSON showed rm_result.operation set to rm with a non-empty task_id and task_verified set to true.",
+    "The proof JSON decoded the queued beacon task request and recovered request_path_hit as /tmp/evohunt-proof.",
+    "The run ended with the success signal EVOHUNT_SUCCESS: unauthenticated_mcp_task_queued."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, prepares the missing embed placeholder files required for compilation, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "9077596f2509f9163e69054e909b1aaba8d13f4e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/go.mod",
+      "reproduction/main.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction clones Kirby 4.9.0, creates an accessible parent page plus a protected child page with a file, impersonates a low-privilege editor, and demonstrates that the direct child route is blocked while the parent route with `secret%2Fsecret.txt` returns and deletes the protected child file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that direct access to `pages/public+secret/files/secret.txt` is blocked for the editor, but `pages/public/files/secret%2Fsecret.txt` still resolves `public/secret/secret.txt` and allows DELETE.",
+  "actual_observed_result": "Running ./reproduction/run.sh succeeded. The verifier reported `protected_page_lookup.status=blocked`, `direct_child_route.status=blocked`, `bypass_route_get.code=200` with `file_id=public/secret/secret.txt`, `bypass_route_delete.status=success`, and `post_delete_lookup.status=deleted`.",
+  "verification_method": "A containerized PHP harness mounts the cloned Kirby checkout read-only at /target-repo, builds a temporary site with a protected child page blueprint and editor account, then drives the real API route handlers in-process and fails closed unless the direct child route is blocked while the encoded-slash parent route succeeds.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/run-output.txt",
+    "The reproduction printed `pass: true` together with the blocked direct route and successful bypass GET/DELETE results.",
+    "The reproduction printed the returned protected file identifier `public/secret/secret.txt` before deleting that file through the bypass route.",
+    "The run completed successfully from the final folder layout via ./reproduction/run.sh."
+  ],
+  "limitations_or_blockers": [
+    "The harness drives the real Kirby API handlers in-process and uses `api.allowImpersonation` only to install the low-privilege editor context inside the temporary site; it does not change the vulnerable lookup or authorization logic."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag and commit, builds the reproduction image, and mounts that checkout into the container read-only.",
+    "pinned_commit_or_ref": "4.9.0 (d952dfc0a890979c863ec5fa11660e37400f0f4c)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.php"
+    ]
+  }
+}

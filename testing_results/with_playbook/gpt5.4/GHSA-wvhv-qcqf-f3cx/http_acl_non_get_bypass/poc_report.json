@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that goshs enforces `.goshs` ACLs on normal GETs but skips them on the bulk-download, upload, and delete helper paths, allowing unauthenticated read/write/delete operations inside an auth-protected folder.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that direct access to `ACLAuth/` and `ACLAuth/poc.txt` remains blocked with `401`, while unauthenticated bulk download leaks `ACLAuth/.goshs`, unauthenticated upload creates `ACLAuth/poc.txt`, and unauthenticated delete removes that file.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `patrickhener/goshs` at commit `237f3af891a90df9b903b85f1cd3438040ca261a`, built the reproduction image, launched the verifier, and produced the success signal `EVOHUNT_POC_SUCCESS: unauthenticated bulk/upload/delete bypassed ACLAuth .goshs protection` followed by `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The verifier starts a vulnerable goshs instance with the repository's own `integration/keepFiles/goshsACLAuth` fixture, checks that normal GET access to `ACLAuth/` and `ACLAuth/poc.txt` returns `401`, then confirms unauthenticated upload creates `ACLAuth/poc.txt`, unauthenticated bulk download returns a zip containing `ACLAuth/.goshs`, and unauthenticated delete removes the uploaded file from disk.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Direct `GET /ACLAuth/` remained blocked with `401`, confirming the folder ACL was active on the normal retrieval path.",
+    "Unauthenticated `POST /ACLAuth/upload` returned `303` and created `poc.txt` inside the protected `ACLAuth` folder.",
+    "Unauthenticated `GET /?bulk&file=%2FACLAuth%2F.goshs` returned a zip whose contents included `ACLAuth/.goshs`.",
+    "Unauthenticated `GET /ACLAuth/poc.txt?delete` returned `200` and removed the uploaded file from the protected folder.",
+    "The containerized verifier emitted `EVOHUNT_POC_SUCCESS: unauthenticated bulk/upload/delete bypassed ACLAuth .goshs protection`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "237f3af891a90df9b903b85f1cd3438040ca261a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/payload.txt",
+      "reproduction/verify.sh"
+    ]
+  }
+}

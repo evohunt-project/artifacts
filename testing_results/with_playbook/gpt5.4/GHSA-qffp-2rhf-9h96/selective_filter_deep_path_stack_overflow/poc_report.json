@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction confirms that selective list and selective extract crash with RangeError on a deeply nested tar entry while the unfiltered control paths complete safely.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show plain list and plain extract completing successfully, while selective list and selective extract exit nonzero with RangeError: Maximum call stack size exceeded and stack frames in dist/esm/list.js.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 1f0c2c9006b10199cf2686f8ef43e79a1773e1aa, built the target package, and verified that the plain list/extract controls exited 0 while selective list and selective extract both exited 1 with RangeError traces rooted in dist/esm/list.js:34.",
+  "verification_method": "The verification helper spawns child Node processes so the crashing path cannot terminate the verifier itself. It asserts that unfiltered list/extract succeed, then checks that selective list/extract fail with RangeError and mapHas stack frames in dist/esm/list.js.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The plain-list control process exited 0 and printed plain-list-ok.",
+    "The plain-extract control process exited 0 and printed TAR_ENTRY_ERROR:path excessively deep.",
+    "The selective-list and selective-extract child processes both exited 1 with RangeError: Maximum call stack size exceeded and stack traces through dist/esm/list.js:34."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "1f0c2c9006b10199cf2686f8ef43e79a1773e1aa",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

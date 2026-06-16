@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "user_enumeration",
+  "summary": "The reproduction clones OpenMage `v20.17.0`, installs a fresh Magento instance, seeds one confirmed and one unconfirmed customer, and then verifies that the public confirmation endpoint returns three different messages for confirmed, unconfirmed, and nonexistent email addresses.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that `POST /customer/account/confirmation/` leaks account existence and confirmation state by returning distinct messages for three attacker-chosen email cases.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `OpenMage/magento-lts` at `v20.17.0`, installed the application in Docker, seeded `confirmed@example.test` and `unconfirmed@example.test`, and verified the exact messages `This email does not require confirmation.`, `Please, check your email for confirmation key.`, and `Wrong email.`.",
+  "verification_method": "The run script builds a small helper container and uses it to submit three confirmation requests against the live Dockerized target. Verification succeeds only if the rendered responses contain the exact state-specific messages for confirmed, unconfirmed, and nonexistent addresses.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The seeded confirmed account produced `This email does not require confirmation.`.",
+    "The seeded unconfirmed account produced `Please, check your email for confirmation key.`.",
+    "A nonexistent account produced `Wrong email.`.",
+    "The three-message split was observed after a clean install of OpenMage `v20.17.0` in Docker."
+  ],
+  "limitations_or_blockers": [
+    "The target repository currently requires `composer install --ignore-platform-req=ext-mysqli` in the provided dev container because the shipped CLI image does not expose that extension even though the application itself runs correctly after installation."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, provisions the target with Docker Compose, and mounts that checkout into the helper container at /target-repo.",
+    "pinned_commit_or_ref": "v20.17.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/seed_customers.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

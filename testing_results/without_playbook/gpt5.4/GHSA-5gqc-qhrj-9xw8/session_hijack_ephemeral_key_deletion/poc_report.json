@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass_session_hijack",
+  "summary": "The Docker-based reproduction starts a standalone Oxia server, creates a victim ephemeral key, enumerates the victim session via internal-key listing, closes that session as an unrelated attacker client, and confirms the victim key is deleted.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The attacker should be able to discover a victim session ID through the public API, successfully close that session, and observe that the victim ephemeral key is removed without possessing the victim's session.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 7972221e8fb3bce4d367d9edfbd5ac04e8528a5a, built the reproduction image, and printed discovered-session-key=__oxia/session/0000000000000000, unauthorized-close-session=ok, proof=victim-ephemeral-key-deleted, and verified=proof=victim-ephemeral-key-deleted.",
+  "verification_method": "The containerized helper fails unless it observes both unauthorized-close-session=ok and proof=victim-ephemeral-key-deleted in the exploit log after using include_internal_keys to discover the victim session ID.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit output exposed the victim session metadata key as discovered-session-key=__oxia/session/0000000000000000.",
+    "The unauthorized CloseSession call completed successfully and emitted unauthorized-close-session=ok.",
+    "A follow-up read of the victim key returned key-not-found semantics and emitted proof=victim-ephemeral-key-deleted."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "7972221e8fb3bce4d367d9edfbd5ac04e8528a5a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/run_poc.sh"
+    ]
+  }
+}

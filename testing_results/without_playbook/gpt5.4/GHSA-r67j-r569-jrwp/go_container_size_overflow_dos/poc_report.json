@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "integer_overflow_dos",
+  "summary": "The reproduction spins up a minimal Go Thrift server using the vulnerable library code, sends a crafted binary-protocol request with a declared list size of 1073741824, and verifies that the server dies with a runtime out-of-memory fault during generated-style slice preallocation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The server should accept the oversized attacker-controlled list declaration, enter the generated Go list deserialization path, and terminate with an out-of-memory crash before safely rejecting the request.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Apache Thrift at 7107195895ce4a2f9c0621a9753e8bf6ed3b92b2, built the helper binaries, started the vulnerable server, and sent the exploit request. The server log showed 'declared size accepted by protocol: 1073741824' followed by 'fatal error: runtime: out of memory', and the server process exited with code 2.",
+  "verification_method": "run.sh checks the server logs for the accepted oversized list declaration and then for a fatal OOM or panic signal after the exploit request. This distinguishes the vulnerability from a generic connection failure because the server must first acknowledge the attacker-controlled wrapped size.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Server logs contained 'declared size accepted by protocol: 1073741824'.",
+    "Server logs contained 'fatal error: runtime: out of memory'.",
+    "The crash stack trace pointed at /app/server.go in the make([][]byte, 0, size) path reached from /target-repo/lib/go/thrift/simple_server.go:368."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, compiles the helper binaries against that checkout in a build container, and then runs the vulnerable server and exploit client in Docker.",
+    "pinned_commit_or_ref": "7107195895ce4a2f9c0621a9753e8bf6ed3b92b2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/go.mod",
+      "reproduction/server.go",
+      "reproduction/client.go",
+      "reproduction/server_entrypoint.sh",
+      "reproduction/client_entrypoint.sh"
+    ]
+  }
+}

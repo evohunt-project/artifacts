@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that a low-privilege S3 writer can store an object whose traversal key causes RustFS to create `xl.meta` outside the configured storage root.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should create RustFS object metadata outside the configured data root by submitting a traversal key through a low-privilege `PutObject` request.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `de4a3fa766305bed1f9d1be72fed06bade136c54`, built the reproduction image, created a constrained low-privilege user and bucket, then returned `[evohunt] SUCCESS: low-privilege PutObject created xl.meta outside the configured data root` followed by `{\"bucket\": \"evohuntuser1780562262-bucket\", \"outside_dir\": \"/tmp/tmp.SkzW8MSxK6/evohunt_escape_lp_1780562262\", \"outside_listing\": [\"xl.meta\"], \"user\": \"evohuntuser1780562262\"}`.",
+  "verification_method": "The run script provisions a low-privilege S3 user, performs a signed `PutObject` with `%2E%2E/%2E%2E` traversal segments in the key, and verifies that an `xl.meta` file appears in a directory adjacent to the configured data root rather than under the mounted RustFS data directory.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] SUCCESS: low-privilege PutObject created xl.meta outside the configured data root",
+    "{\"bucket\": \"evohuntuser1780562262-bucket\", \"outside_dir\": \"/tmp/tmp.SkzW8MSxK6/evohunt_escape_lp_1780562262\", \"outside_listing\": [\"xl.meta\"], \"user\": \"evohuntuser1780562262\"}",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "de4a3fa766305bed1f9d1be72fed06bade136c54",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/path_traversal_poc.py",
+      "reproduction/sigv4.py",
+      "reproduction/verify.sh",
+      "reproduction/verify_host.sh"
+    ]
+  }
+}

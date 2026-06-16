@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "catalog_signature_verification_bypass",
+  "summary": "The reproduction bundle generates a trusted root and a serverAuth-only leaf certificate, re-signs an existing catalog, and demonstrates that Signify accepts the catalog and flat file without enforcing the code-signing EKU.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that a catalog signed by a certificate with only the serverAuth EKU is accepted by Signify's catalog verification path and can successfully validate a flat file, while the same signer fails once code_signing is explicitly required.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned signify at 25e7046ba148c468a96acbc5a18ea5aec52044eb, built the Docker image, generated a trusted root plus a serverAuth-only leaf certificate, re-signed the existing oem89.cat catalog, and successfully verified amdacpbtscoext.inf with that catalog. The run printed leaf_ekus=['server_auth'], default_ctl_verify=success, explicit_code_signing_check=failure, flat_file_verify=success, and the final proof string EVOHUNT_EKU_BYPASS_CONFIRMED.",
+  "verification_method": "The helper script verifies four conditions: the generated leaf certificate does not contain the code_signing EKU, CertificateTrustList.verify succeeds by default, the same catalog fails when extended_key_usages=[\"code_signing\"] is enforced, and flat-file verification succeeds with the re-signed catalog. Success is signaled by the exact proof string EVOHUNT_EKU_BYPASS_CONFIRMED.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container printed leaf_ekus=['server_auth'], proving the catalog signer lacked the code_signing EKU.",
+    "The container printed default_ctl_verify=success, proving Signify accepted the catalog signer anyway.",
+    "The container printed explicit_code_signing_check=failure, proving that enforcing code_signing rejects the same signer and isolating the missing EKU requirement as the root cause.",
+    "The container printed flat_file_verify=success and EVOHUNT_EKU_BYPASS_CONFIRMED, proving end-to-end flat-file verification succeeded with the attacker-signed catalog."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "25e7046ba148c468a96acbc5a18ea5aec52044eb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/root-openssl.cnf",
+      "reproduction/leaf-req.cnf",
+      "reproduction/leaf-ext.cnf"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xml_recursion_dos",
+  "summary": "The Docker-based reproduction confirms that a valid deeply nested XML document drives `DOMParser.parseFromString()` into an uncaught stack-exhaustion path during `normalize()`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should feed a deeply nested valid XML payload into `DOMParser.parseFromString()` and trigger `RangeError: Maximum call stack size exceeded` from the recursive normalize path.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned upstream tag `0.9.9`, attempted to parse a document with 20000 nested `<a>` elements, printed `observed error message: Maximum call stack size exceeded`, and then printed the success signal after confirming the stack trace included `normalize`.",
+  "verification_method": "The verification script generates a 20000-level nested XML document, calls `DOMParser.parseFromString()`, requires either a `RangeError` instance or the exact stack-exhaustion message, and additionally checks that the stack trace includes the recursive `normalize` path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `observed error message: Maximum call stack size exceeded`.",
+    "The reproduction printed `EVOHUNT_SUCCESS: parseFromString() hit RangeError in normalize() with 20000 nested elements`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out upstream tag `0.9.9`, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0.9.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js"
+    ]
+  }
+}

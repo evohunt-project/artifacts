@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "A Docker-based reproduction is prepared to compile the repository, execute a focused regression test, and verify that a malicious cacheFile path causes an injected shell command to create a proof file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the malicious cacheFile payload to escape the quoted touch command and create a proof file from attacker-controlled shell syntax.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, compiled the copied repository, executed the focused Gradle test, and verified that the injected cacheFile payload created `/app/repo/evohunt-proof.txt` with the expected contents `exploited`.",
+  "verification_method": "The reproduction runs a targeted Gradle test and then checks for a proof file with the exact expected contents.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Gradle reported `BUILD SUCCESSFUL` for `EphemeralTokenCacheShellInjectionTest` inside the reproduction container.",
+    "The reproduction verified the presence of `/app/repo/evohunt-proof.txt` after the vulnerable cache initialization path ran.",
+    "The proof file contained the exact expected string `exploited`, confirming attacker-controlled shell execution rather than an unrelated file-write side effect."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/repo/src/test/groovy/net/gleske/jervis/evohunt/EphemeralTokenCacheShellInjectionTest.groovy"
+    ]
+  }
+}

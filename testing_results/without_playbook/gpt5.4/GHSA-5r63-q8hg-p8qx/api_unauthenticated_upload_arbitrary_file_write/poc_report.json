@@ -1,0 +1,22 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_write",
+  "summary": "The reproduction starts an isolated copy of the server, uploads an unauthenticated marker file that becomes reachable from `/resources/marker.txt`, and then uses the `destination` parameter to write `owned.txt` outside the upload root into the server directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The exploit should let an unauthenticated client create a file in the public upload area and then create another file outside that area by abusing the `destination` path handling.",
+  "actual_observed_result": "The server accepted an unauthenticated `POST /api/upload`, returned `{\"location\":\"/resources/marker.txt\"}`, served back `Hello EvoHunt` from `GET /resources/marker.txt`, and created `owned.txt` in the server root when the request used `destination: \"resources/..\"`.",
+  "verification_method": "The run script waits for the server to become reachable, checks that the HTTP response body for `/resources/marker.txt` exactly matches the uploaded marker text, and then verifies that the traversal step created `owned.txt` in the copied server root with the expected contents.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP response body `Hello EvoHunt` from `GET /resources/marker.txt` after an unauthenticated upload.",
+    "A created file at `<temp>/FUXA/server/owned.txt` containing `TRAVERSAL passed` after the traversal upload request.",
+    "Server startup and request logs captured in the reproduction workspace."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": []
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The Docker-based reproduction confirms that the vulnerable multimodal prompt path reads a non-image local file through an image-suffixed symlink and embeds the leaked bytes into the generated image data URI.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the vulnerable multimodal prompt logic to treat an attacker-supplied `.jpg` symlink as an image, read the target file, and emit the proof signal `EVOHUNT_ARBITRARY_FILE_READ_CONFIRMED` after decoding the leaked bytes from the generated data URI.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `c35021085c47843b659537460468bfbe8b63612c`, built the reproduction image, and printed `EVOHUNT_ARBITRARY_FILE_READ_CONFIRMED` together with the decoded secret `EVOHUNT_FILE_READ_SECRET=multimodal_arbitrary_file_read` from the generated `data:image/jpeg;base64,...` payload.",
+  "verification_method": "The helper script loads the exact vulnerable `multi_modal_prompt.py` module from the pinned repository checkout, creates a non-image secret file plus a `.jpg` symlink to it, calls `ImageTextPromptValue.to_messages()`, decodes the emitted data URI, and asserts that the decoded bytes exactly match the secret file contents. This distinguishes the file-read flaw from a benign text path, parser error, or unrelated startup issue.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container stdout contained `EVOHUNT_ARBITRARY_FILE_READ_CONFIRMED`.",
+    "Container stdout printed `decoded=EVOHUNT_FILE_READ_SECRET=multimodal_arbitrary_file_read`.",
+    "Container stdout printed a `data:image/jpeg;base64,...` prefix for the generated payload."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "c35021085c47843b659537460468bfbe8b63612c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py",
+      "reproduction/requirements.txt"
+    ]
+  }
+}

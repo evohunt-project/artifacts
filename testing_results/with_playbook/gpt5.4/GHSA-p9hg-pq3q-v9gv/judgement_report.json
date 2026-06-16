@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:38:01.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0aca393b",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-p9hg-pq3q-v9gv/GHSA-p9hg-pq3q-v9gv.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "callback_unbounded_body_memory_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0aca393b/callback_unbounded_body_memory_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0aca393b/callback_unbounded_body_memory_dos/vulnerability_report.json",
+      "title": "Unauthenticated callback endpoint reads request bodies without size limits, enabling memory-exhaustion DoS",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory fixes missing SUPI/UE ID validation in Nudm_SDM path-parameter handlers under `internal/sbi/api_subscriberdatamanagement.go`, while this finding is a different callback-route bug in `internal/sbi/api_httpcallback.go` where `POST /sdm-subscriptions` reads the full request body with `c.GetRawData()` before validation.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's null-byte path-parameter root cause. The advisory patch validates `supi` and `ueId` on Subscriber Data Management handlers before those values reach the UDR client, while the only qualifying finding is an unrelated unauthenticated callback body-allocation DoS on `POST /sdm-subscriptions`.",
+    "evidence": [
+      "The advisory summary and patch `88de9fa74a1b3f3522e53b4cfa2d184712ffa4ee` describe null-byte injection in the Nudm_SDM `supi` path parameter and add `validator.IsValidSupi` / `IsValidGpsi` checks in `internal/sbi/api_subscriberdatamanagement.go` before SDM procedures run.",
+      "In the vulnerable SDM flow, `HandleGetAmData` reads `c.Params.ByName(\"supi\")` and passes it to `GetAmDataProcedure`, which places that value into `QueryAmDataRequest.UeId` before calling the generated UDR client.",
+      "The qualifying finding instead targets `internal/sbi/api_httpcallback.go` on the separate callback route `POST /sdm-subscriptions`, where `c.GetRawData()` buffers the entire attacker-controlled body on an unauthenticated router group and causes a memory-exhaustion DoS."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0aca393b/callback_unbounded_body_memory_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0aca393b/callback_unbounded_body_memory_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0aca393b/callback_unbounded_body_memory_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

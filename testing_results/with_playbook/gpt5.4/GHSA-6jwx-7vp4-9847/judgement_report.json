@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:34:50.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b7306aef",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-6jwx-7vp4-9847/GHSA-6jwx-7vp4-9847.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "default_entrypoint_slowloris_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b7306aef/default_entrypoint_slowloris_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b7306aef/default_entrypoint_slowloris_dos/vulnerability_report.json",
+      "title": "Default HTTP entrypoint lacks request read timeouts and permits slow-connection slot exhaustion",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a slow-connection DoS in the public listener timeout path (`server.prepareServer` and related entrypoint setup). The advisory is an authorization bypass in `StripPrefixRegex` caused by slicing `RawPath` with a decoded-path prefix length before `ForwardAuth`, `BasicAuth`, or `DigestAuth` evaluate the request. The component, vulnerable code, trigger, and security consequence are different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described `StripPrefixRegex` path/raw-path desynchronization or the resulting authentication bypass against `ForwardAuth`, `BasicAuth`, or `DigestAuth`. The only qualifying finding is an unrelated slowloris-style availability issue in the public HTTP listener timeout configuration.",
+    "evidence": [
+      "The advisory describes `pkg/middlewares/stripprefixregex/strip_prefix_regex.go` using the byte length of a decoded path match to slice `req.URL.RawPath`, which can turn a request like `/api%2e/admin/secret` into `/./admin/secret` and cause auth middleware to approve a protected request.",
+      "The only qualifying finding is `default_entrypoint_slowloris_dos`, whose reported code locations are `repo/server/server.go:575`, `repo/server/server.go:665`, `repo/server/server_test.go:45`, `repo/cmd/configuration.go:326`, and `repo/configuration/configuration.go:177`.",
+      "That finding's exploit path is unauthenticated partial-header TCP connections against a public listener with `ReadTimeout=0` and no `ReadHeaderTimeout`, causing connection-slot exhaustion and degraded availability rather than path normalization or authorization bypass."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b7306aef/default_entrypoint_slowloris_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b7306aef/default_entrypoint_slowloris_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b7306aef/default_entrypoint_slowloris_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

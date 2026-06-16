@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that a crafted 22-byte LZ4 frame reaches Lz4FrameDecoder and forces a 33,554,432-byte buffer allocation request before the malformed block is rejected.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make Lz4FrameDecoder request a 33,554,432-byte buffer after receiving a 22-byte attacker-controlled frame, demonstrating how very small inputs can drive disproportionate memory allocation and denial-of-service pressure.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Netty tag netty-4.2.11.Final, checked out commit c94a8180e749f694fb76963dd494bae17c31aff6, built image evohunt-advisory_9f612283-lz4_frame_decoder_resource_exhaustion, and produced PAYLOAD_BYTES=22, MATCHED_ALLOC_INITIAL_CAPACITY=33554432, MATCHED_ALLOC_MAX_CAPACITY=33554432, SERVER_EXCEPTION_CLASS=java.lang.IndexOutOfBoundsException, and [evohunt] verification passed.",
+  "verification_method": "verify.sh first confirms that the mounted target checkout contains the vulnerable allocator call in Lz4FrameDecoder, then runs the harness and requires the proof lines PAYLOAD_BYTES=22, ALLOC_REQUEST_SEEN=true, MATCHED_ALLOC_INITIAL_CAPACITY=33554432, MATCHED_ALLOC_MAX_CAPACITY=33554432, and a server-side decoder exception before declaring success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed PAYLOAD_BYTES=22, showing that the attack traffic is only 22 bytes long.",
+    "The reproduction printed MATCHED_ALLOC_INITIAL_CAPACITY=33554432 and MATCHED_ALLOC_MAX_CAPACITY=33554432, proving that the decoder requested a 32 MiB buffer.",
+    "The reproduction printed SERVER_EXCEPTION_CLASS=java.lang.IndexOutOfBoundsException after the allocation attempt, showing the malformed frame was rejected only after the oversized allocation path was reached.",
+    "verify.sh reported [evohunt] verification passed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "c94a8180e749f694fb76963dd494bae17c31aff6 (tag: netty-4.2.11.Final)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/pom.xml",
+      "reproduction/src/main/java/Lz4FrameDecoderResourceExhaustion.java"
+    ]
+  }
+}

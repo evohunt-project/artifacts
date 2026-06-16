@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that an installed Bagisto instance still accepts AJAX installer requests and lets an unauthenticated attacker overwrite admin ID 1 and sign in to the admin dashboard.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should overwrite the default admin record through `/install/api/admin-config-setup` and print `EVOHUNT_INSTALLER_ACCOUNT_TAKEOVER_CONFIRMED` after an authenticated request to `/admin/dashboard` succeeds with attacker-controlled credentials.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned vulnerable Bagisto revision, started MariaDB and the application, sent the AJAX installer request, logged in with the attacker-controlled credentials, printed `EVOHUNT_INSTALLER_ACCOUNT_TAKEOVER_CONFIRMED`, and exited with `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The verification helper installs and seeds the application, marks it as installed, submits the unauthenticated installer AJAX request, and then requires both the exact proof string and a successful authenticated `/admin/dashboard` response for the attacker-controlled credentials. This distinguishes real admin takeover from a generic installer response or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit trigger returned success from `/install/api/admin-config-setup` after the application was already marked installed.",
+    "The attacker-controlled credentials authenticated successfully to `/admin/login` and reached `/admin/dashboard`.",
+    "The container printed the exact proof string `EVOHUNT_INSTALLER_ACCOUNT_TAKEOVER_CONFIRMED`.",
+    "The host run script exited with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout read-only into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "d642d9a038c3740d0ea0b095b1843521c49012a7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

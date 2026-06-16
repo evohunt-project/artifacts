@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The packaged Docker reproduction confirms that Parse Server issues a normal session on repeated auth-provider login for an unverified user even though password login for the same user is blocked by `preventLoginWithUnverifiedEmail`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should create an unverified authData-backed user without a session, confirm that password login returns Parse error 205 (`User email is not verified.`), and then show that a repeated authData login returns a `sessionToken` for that same unverified user.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Parse Server at `9b44d25e9f9b7e6fdf3c08ab946de25e4075dc59`, built the reproduction image, started MongoDB, created an unverified authData-backed user, observed password login fail with code 205, and observed a repeated authData login return a `sessionToken` for the same objectId. The run printed the proof string `EVOHUNT_PROOF: authData login returned a session for an unverified email while password login was blocked.`",
+  "verification_method": "The helper script verifies five conditions from the HTTP responses: the stored user remains unverified, signup returns no session token, password login returns code 205, the repeated authData login resolves to the same objectId, and that authData login returns a non-empty `sessionToken`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The packaged run reported `stored_user.emailVerified: false` for the created account.",
+    "The packaged run reported `password_login.body.code: 205` with error `User email is not verified.`",
+    "The packaged run reported `authdata_login.body.objectId` equal to the original signup objectId.",
+    "The packaged run reported a non-empty `authdata_login.body.sessionToken` for that same unverified user.",
+    "The packaged run emitted the proof string `EVOHUNT_PROOF: authData login returned a session for an unverified email while password login was blocked.`"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, stages that checkout into the Docker build context, and mounts the host checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "9b44d25e9f9b7e6fdf3c08ab946de25e4075dc59",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/validate.js"
+    ]
+  }
+}

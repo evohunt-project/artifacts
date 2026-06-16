@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stack_exhaustion_dos",
+  "summary": "The Docker-based reproduction builds protobuf from the pinned upstream commit, shows that a parser with an explicit recursion limit rejects the nested payload cleanly, and then triggers an AddressSanitizer stack-overflow when the same parser logic runs with default settings.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The default TextFormat parser configuration should recurse on a crafted deeply nested textproto until the process stack overflows, while a bounded parser configuration should reject a comparable payload without crashing.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned protocolbuffers/protobuf at 3ddb41be1f87312cd6a9b955dbbfd9730d341dd7, built the helper inside Docker, confirmed a bounded parser run exited with parse_result=0, and then observed AddressSanitizer stack-overflow at payload depth 2000 under default parser settings.",
+  "verification_method": "verify.sh first runs the helper with recursion_limit=100 and expects a graceful parse failure. It then reruns the helper without setting a recursion limit and treats the reproduction as successful only if the log contains AddressSanitizer's explicit stack-overflow signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The bounded control run exited with status 2 and emitted [evohunt] parse_result=0.",
+    "The default-settings run emitted [evohunt] observed AddressSanitizer stack-overflow at depth 2000.",
+    "ASan reported ERROR: AddressSanitizer: stack-overflow while parsing the generated nested textproto."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3ddb41be1f87312cd6a9b955dbbfd9730d341dd7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/CMakeLists.txt",
+      "reproduction/textformat_stack_poc.cc",
+      "reproduction/verify.sh"
+    ]
+  }
+}

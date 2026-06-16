@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:07:11.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_072b22af",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-54v4-4685-vwrj/GHSA-54v4-4685-vwrj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "public_booking_appointment_idor",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_072b22af/public_booking_appointment_idor",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_072b22af/public_booking_appointment_idor/vulnerability_report.json",
+      "title": "Unauthenticated booking registration lets attackers overwrite arbitrary appointments",
+      "vulnerability_type": "broken_access_control_idor",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is an unauthenticated booking-update IDOR in `Booking::register()` and `Appointments_model::save()`, not the advisory's non-POST CSRF validation bypass in `EA_Security::csrf_verify()`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "recovery_forced_password_reset",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_072b22af/recovery_forced_password_reset",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_072b22af/recovery_forced_password_reset/vulnerability_report.json",
+      "title": "Unauthenticated recovery flow resets passwords without inbox verification",
+      "vulnerability_type": "improper_authentication",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a public password-reset logic flaw in `Recovery::perform()` and `Accounts::regenerate_password()`, not the advisory's CSRF bypass caused by `EA_Security::csrf_verify()` skipping token validation on non-POST requests.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's root cause: the early return in `application/core/EA_Security.php::csrf_verify()` that skips CSRF token validation for non-POST requests and enables state-changing GET requests.",
+    "evidence": [
+      "The advisory describes a CSRF protection bypass in `application/core/EA_Security.php::csrf_verify()` where non-POST requests return before token validation.",
+      "`public_booking_appointment_idor` is rooted in attacker-controlled `appointment[id]` handling in `Booking::register()` and update behavior in `Appointments_model::save()`; its CSRF note is a separate route exemption in `application/config/config.php`, not the advisory's non-POST branch.",
+      "`recovery_forced_password_reset` is rooted in `Recovery::perform()` calling `Accounts::regenerate_password()` without a reset-token or inbox-verification step, and does not depend on `EA_Security::csrf_verify()` or state-changing GET requests."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_072b22af/public_booking_appointment_idor",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_072b22af/public_booking_appointment_idor/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_072b22af/public_booking_appointment_idor/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_072b22af/recovery_forced_password_reset",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_072b22af/recovery_forced_password_reset/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_072b22af/recovery_forced_password_reset/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

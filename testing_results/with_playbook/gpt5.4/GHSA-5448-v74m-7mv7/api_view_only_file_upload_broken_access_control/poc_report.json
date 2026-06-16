@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction seeds a view-only API user, uploads a file to an asset without edit permission, and verifies that the API accepted the write.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A token that has object view permission but lacks object edit permission should still be able to upload a file through the API and leave a new uploaded-file record on the target asset.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `9e23117f9c6d2f595372eae1f83ca4f7d7f8ff9e`, built the reproduction image, seeded a view-only API user, and successfully uploaded a proof file. The run emitted `EVOHUNT_UPLOAD_AUTHZ_PROOF`, recorded `upload_http_code=200`, and confirmed `list_total=1` for the target asset while `setup.json` showed `can_view=true` and `can_update=false`.",
+  "verification_method": "The run script seeds a user that can view but not update the target asset, performs the upload via the API token, then checks the proof string, the HTTP 200 success response, and the follow-up listing that contains the newly created uploaded-file record.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/last-run/setup.json",
+    "reproduction/last-run/upload_response.json",
+    "reproduction/last-run/list_response.json",
+    "reproduction/last-run/run.log",
+    "reproduction/last-run/proof.txt"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones `https://github.com/snipe/snipe-it.git` on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "9e23117f9c6d2f595372eae1f83ca4f7d7f8ff9e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/bootstrap_case.php",
+      "reproduction/container_run.sh"
+    ]
+  }
+}

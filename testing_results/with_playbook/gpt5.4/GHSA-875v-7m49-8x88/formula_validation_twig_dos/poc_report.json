@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_dynamic_evaluation",
+  "summary": "The Docker-based reproduction confirms that the vulnerable Commerce formula-validation path reaches the Twig evaluation sink and can be driven into deterministic PHP memory exhaustion with attacker-controlled template input.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should verify that the vulnerable formula-validation route remains non-CP scoped and that attacker-supplied Twig can exhaust PHP memory through the same formula evaluation sink used by validation.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `64017c085b89cf386d19ad0cc324c44229e91ed8`, built the reproduction image, installed Composer dependencies in the container, and emitted `EVOHUNT_SUCCESS: validate-formula sink exhausted memory as expected` together with `PHP Fatal error: Allowed memory size of 67108864 bytes exhausted ... eval()'d code on line 45`.",
+  "verification_method": "The verification helper first checks the vulnerable source preconditions in `FormulasController.php` and `Formulas.php`, then launches a child PHP process with `memory_limit=64M` to execute the same formula-evaluation service path. The run only passes if the child exits nonzero and stderr contains the exact `Allowed memory size` fatal signal rather than an unrelated bootstrap or syntax error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_SUCCESS: validate-formula sink exhausted memory as expected",
+    "EVOHUNT_OBSERVED_EXIT_CODE: 255",
+    "EVOHUNT_OBSERVED_FATAL: PHP Fatal error:  Allowed memory size of 67108864 bytes exhausted (tried to allocate 134217736 bytes) in /workspace/repo/vendor/twig/twig/src/Environment.php(420) : eval()'d code on line 45"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "64017c085b89cf386d19ad0cc324c44229e91ed8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_run.sh",
+      "reproduction/trigger_formula_dos.php",
+      "reproduction/verify_formula_dos.php"
+    ]
+  }
+}

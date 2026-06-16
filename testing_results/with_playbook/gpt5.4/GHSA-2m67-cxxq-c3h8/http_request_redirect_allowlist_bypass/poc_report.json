@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "origin_and_url_boundary_mismatches",
+  "summary": "The Docker-based reproduction confirms that http_request blocks a direct off-allowlist destination but still follows an allowlisted httpbin.org redirect to example.com.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that a direct request to https://example.com/ is rejected by allowed_domains while a request to https://httpbin.org/redirect-to?url=https://example.com/ still reaches example.com and returns the Example Domain page.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned ZeptoClaw v0.7.5, built the reproduction image, mounted the pinned checkout into the container, and emitted the success signal \"POC_SUCCESS: http_request reached example.com through an allowlisted httpbin.org redirect\".",
+  "verification_method": "Inside the container, verify.sh runs the helper crate twice: it first requires a direct https://example.com/ request to fail with \"Host 'example.com' not in allowed_domains\", then requires the allowlisted httpbin.org redirect path to return HTTP 200 and the Example Domain proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The direct control request failed with the expected allowed_domains rejection.",
+    "The redirected request succeeded and returned the Example Domain content from example.com.",
+    "The container printed the explicit proof signal: POC_SUCCESS: http_request reached example.com through an allowlisted httpbin.org redirect."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction depends on https://httpbin.org and https://example.com being reachable during reruns."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at tag v0.7.5, verifies the pinned commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "12b55ff6f8f3963991b90b6b813e80572b2e2159",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Cargo.toml",
+      "reproduction/src/main.rs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

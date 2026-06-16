@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that the pinned v10.2.0 release throws RangeError during normal brace expansion of a deeply nested brace pattern.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the exported braceExpand API to throw RangeError: Maximum call stack size exceeded for a crafted nested brace pattern and emit the proof marker EVOHUNT_BRACE_STACK_OVERFLOW_CONFIRMED.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned minimatch at commit 1a62a2a667db92078811f2b7fc345737deded17a, built the Docker image, installed the pinned dependencies inside the container, and printed EVOHUNT_BRACE_STACK_OVERFLOW_CONFIRMED followed by RangeError: Maximum call stack size exceeded.",
+  "verification_method": "reproduction/verify.sh copies the mounted target repository into a writable workspace, runs npm ci, invokes reproduction/exploit.js against the built dist output, and greps for the exact proof marker to confirm the expected RangeError path was reached.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run output contained EVOHUNT_BRACE_STACK_OVERFLOW_CONFIRMED.",
+    "The run output contained RangeError: Maximum call stack size exceeded.",
+    "The verification helper completed successfully and printed [evohunt] nested brace expansion stack overflow verified."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "1a62a2a667db92078811f2b7fc345737deded17a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

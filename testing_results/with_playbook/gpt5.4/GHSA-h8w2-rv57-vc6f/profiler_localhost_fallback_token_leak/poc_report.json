@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction confirms that the profiler localhost fallback sends the inherited `X-SF-TOKEN` header to a loopback listener when `splunk.realm` and `splunk.access.token` are configured.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the profiler HTTP exporter to POST to `localhost:4318` and expose `X-SF-TOKEN: EVOHUNT_PROOF_TOKEN` in the captured request headers.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned repository revision, built the agent, launched a JVM with profiling enabled, and captured a profiler export request whose headers included `X-SF-TOKEN: EVOHUNT_PROOF_TOKEN` and `Host: localhost:4318`.",
+  "verification_method": "The bundle starts a loopback HTTP listener, runs a JVM with the vulnerable profiler configuration, records the first profiler POST headers, and fails unless the captured headers contain both the proof token and the localhost fallback host.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Captured request headers contained `X-SF-TOKEN: EVOHUNT_PROOF_TOKEN`.",
+    "The same request targeted `Host: localhost:4318`, confirming the profiler fallback path rather than the intended Splunk ingest endpoint.",
+    "The verifier completed through the bundled `./reproduction/run.sh` command and printed the success signal after matching both conditions."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "9649cbefb96eae60996f0511314b4f859dad0ebd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/capture.py",
+      "reproduction/LoopApp.java"
+    ]
+  }
+}

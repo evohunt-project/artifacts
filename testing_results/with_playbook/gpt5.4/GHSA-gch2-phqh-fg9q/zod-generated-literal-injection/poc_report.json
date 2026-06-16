@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "generated_code_injection",
+  "summary": "The packaged Docker reproduction confirms that `@orval/zod` emits attacker-controlled JavaScript into a generated Zod module and that importing the generated module executes the injected payload.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should build the vulnerable `@orval/core` and `@orval/zod` packages, generate a poisoned Zod module whose `zod.literal(...)` call contains attacker-controlled JavaScript, and print the proof marker `PROOF:EVOHUNT_ZOD_INJECTION` when the generated module is imported.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `orval` at `b932e804fef8a7dec89f71546fc4e60629bea0cb`, installed the workspace dependencies with Yarn 4, built `@orval/core` and `@orval/zod`, printed a generated module containing `zod.literal(\"x\" , (() => { globalThis.__EVOHUNT_PROOF__ = 'EVOHUNT_ZOD_INJECTION'; return 'ignored'; })(), \"\")`, and then emitted `PROOF:EVOHUNT_ZOD_INJECTION` after importing that generated module.",
+  "verification_method": "The host `run.sh` fails closed unless the container completes successfully and its stdout contains `PROOF:EVOHUNT_ZOD_INJECTION`. Inside the container, `run.mjs` generates the vulnerable source, imports it, and throws unless the injected expression sets the expected global proof marker.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container stdout included the vulnerable generated source with the injected `zod.literal(...)` expression.",
+    "Container stdout included the proof marker `PROOF:EVOHUNT_ZOD_INJECTION` from the imported generated module."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b932e804fef8a7dec89f71546fc4e60629bea0cb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/package.json",
+      "reproduction/run.mjs"
+    ]
+  }
+}

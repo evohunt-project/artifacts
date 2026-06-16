@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_module_execution",
+  "summary": "The reproduction clones the upstream repository at the matching vulnerable commit, mounts it read-only into the container, and proves both the CommonJS built-in escape to `child_process.execSync` and the ESM traversal escape outside the configured module root.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that the configured module root is not enforced: the CommonJS path should reach `child_process.execSync`, and the ESM path should import a module from outside the configured root.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `8cc8fa6fd729c0643e74a2f1d0734b78ac0d691e`, built the Docker image, and printed `[verify] CommonJS built-in module escape reached child_process.execSync`, `[verify] ESM traversal escaped the configured module root`, and `[verify] SUCCESS: unrestricted module resolution verified`.",
+  "verification_method": "The container helper sends protocol frames directly to `priv/server.js` with the same `NODE_PATH` and `WRITE_CHUNK_SIZE` contract the Elixir worker uses, then matches the exact prefixed success lines for a CommonJS built-in command-execution probe and an ESM `..` traversal probe.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[verify] CommonJS built-in module escape reached child_process.execSync",
+    "[verify] ESM traversal escaped the configured module root",
+    "[verify] SUCCESS: unrestricted module resolution verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8cc8fa6fd729c0643e74a2f1d0734b78ac0d691e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

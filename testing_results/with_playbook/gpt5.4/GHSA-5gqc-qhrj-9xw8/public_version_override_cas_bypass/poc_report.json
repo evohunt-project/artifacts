@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "integrity_bypass_version_override",
+  "summary": "The reproduction shows that Oxia correctly rejects a stale conditional write after a normal concurrent update, but accepts the same stale conditional write after an attacker rewrites the record with override_version_id set to the victim's original version token.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The helper should print a baseline stale-write rejection, then demonstrate that a stale ExpectedVersionId write is accepted after an attacker preserves the old version token through override_version_id.",
+  "actual_observed_result": "Running ./reproduction/run.sh against commit 20ee8d1fbe9e95a4e8960906b800e8aa53ff0ef4 built the containerized helper, showed the baseline stale conditional put being rejected, then rewrote the target key with attacker-controlled override_version_id and observed the victim stale conditional put being accepted, ending with 'RESULT: override_version_id CAS bypass reproduced'.",
+  "verification_method": "The host run script clones the pinned repository commit, runs the helper in Docker, and verifies the exact success string. The helper includes a negative control without override_version_id so the observed acceptance is attributable to the override field rather than ordinary write semantics.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The helper printed 'BASELINE stale conditional put rejected: unexpected version id'.",
+    "The helper printed an attacker rewrite that preserved the original version token.",
+    "The helper printed 'VICTIM stale conditional put accepted' for the old ExpectedVersionId.",
+    "The helper printed 'RESULT: override_version_id CAS bypass reproduced'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /workspace/target-repo.",
+    "pinned_commit_or_ref": "20ee8d1fbe9e95a4e8960906b800e8aa53ff0ef4",
+    "target_repo_mount_path": "/workspace/target-repo",
+    "helper_files": [
+      "reproduction/main.go",
+      "reproduction/container-run.sh",
+      "reproduction/go.mod",
+      "reproduction/go.sum"
+    ]
+  }
+}

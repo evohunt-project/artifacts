@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based bundle cloned the pinned vulnerable commit, exercised the public directory-share endpoints, and demonstrated unauthorized sibling-file listing and download outside the shared folder.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that unauthenticated direct access to `sibling.txt` is denied while the public directory-share endpoints still list `sibling.txt` and download `TOP-SECRET-SIBLING` from outside the intended shared folder.",
+  "actual_observed_result": "Running ./reproduction/run.sh printed `UNAUTH_RAW_STATUS=401`, `PUBLIC_LIST_STATUS=200`, `PUBLIC_DOWNLOAD_STATUS=200`, and `PUBLIC_DOWNLOAD_CONTENT=TOP-SECRET-SIBLING`.",
+  "verification_method": "The host-side run script clones the pinned repository, builds the helper image, runs the container with the checkout mounted read-only at `/target-repo`, and then checks the container output for the exact proof lines that distinguish the share-boundary failure from ordinary authentication or startup behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included `UNAUTH_RAW_STATUS=401` for the normal unauthenticated raw-file request.",
+    "Container output included `PUBLIC_LIST_STATUS=200` and `PUBLIC_LIST_LEAKS=sibling.txt` for the public directory-share listing.",
+    "Container output included `PUBLIC_DOWNLOAD_STATUS=200` and `PUBLIC_DOWNLOAD_CONTENT=TOP-SECRET-SIBLING` for the unauthorized sibling-file download."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the upstream repository on the host, checks out the pinned vulnerable commit, and mounts that checkout read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "7b16e2de903228cc463188483c2f976e1131209b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/main.go",
+      "reproduction/go.mod",
+      "reproduction/go.sum",
+      "reproduction/target-repo.go.mod",
+      "reproduction/target-repo.go.sum"
+    ]
+  }
+}

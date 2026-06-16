@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction proves that the default URL-import workflow can fetch a loopback URL and expose the response body back to the attacker as imported task data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make Label Studio fetch `http://127.0.0.1:9000/tasks.csv` from the server side and return `SSRF-SECRET-LOCALHOST-READ` in the imported task data.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `600993c598d385f2411b626878809651b35ead1e`, built the reproduction image, started Label Studio, self-registered an attacker account, created a project, imported `http://127.0.0.1:9000/tasks.csv`, and read back `SSRF-SECRET-LOCALHOST-READ` from `/api/tasks?project=<id>`.",
+  "verification_method": "The helper `exploit.py` fails unless the first imported task contains the exact proof string, and `verify.sh` separately checks that the internal fixture server observed a GET for `/tasks.csv`. Together these checks distinguish real server-side fetching and response exfiltration from parser errors or unrelated startup behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit output JSON included `imported_task_text` set to `SSRF-SECRET-LOCALHOST-READ`.",
+    "The import API response reported `task_count: 1` and `found_formats: {\".csv\": 1}` for the attacker-controlled URL import.",
+    "`./reproduction/run.sh` ended with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "600993c598d385f2411b626878809651b35ead1e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

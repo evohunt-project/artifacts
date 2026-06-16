@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction confirms that a tiny unknown P2P command frame can strand already-buffered `version` and `verack` frames inside Zebra's network decoder until one extra byte arrives.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that a normal `version`/`verack` handshake completes immediately in the control case, but stalls when an unknown command frame is prefixed before those valid frames, only recovering after one extra byte wakes the decoder.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Zebra at commit `92a4e55f9e702468dbb0d8ec57df3e0c3fdd4ea9`, built the reproduction container, and produced `control_result=decoded_immediately`, `stalled_until_extra_byte=true`, and `decoded_after_wakeup=handshake_completed`.",
+  "verification_method": "The host-side run script executes the in-container harness and requires three exact output lines: the control handshake must complete immediately, the attack case must remain stalled while valid frames are already buffered, and the stalled handshake must complete only after an extra wake-up byte is sent.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "control_result=decoded_immediately",
+    "stalled_until_extra_byte=true",
+    "decoded_after_wakeup=handshake_completed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "92a4e55f9e702468dbb0d8ec57df3e0c3fdd4ea9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_inside.sh",
+      "reproduction/Cargo.toml",
+      "reproduction/Cargo.lock",
+      "reproduction/main.rs"
+    ]
+  }
+}

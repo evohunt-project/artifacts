@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The final Docker-based reproduction cloned upstream Grackle v0.70.1, built the CLI/server from source, started the vulnerable server, filled the unauthenticated OAuth registration table with 100 requests, and verified that the 101st registration was rejected with the expected 503 temporarily_unavailable response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should exhaust the server's fixed OAuth client registration table and cause a subsequent legitimate registration attempt to fail with HTTP 503 and the \"Too many registered clients\" error.",
+  "actual_observed_result": "Running ./reproduction/run.sh from the final finding folder cloned commit 3eb82b077bc434eb0eb876c6e452e6c3a49797d6, built Grackle inside the reproduction container, started the server, and printed {\"status\": 503, \"body\": \"{\\\"error\\\":\\\"temporarily_unavailable\\\",\\\"error_description\\\":\\\"Too many registered clients\\\"}\"} followed by EVOHUNT_POC_SUCCESS: 101st registration returned 503 temporarily_unavailable.",
+  "verification_method": "The container-side helper sends 100 successful POST /register requests and then performs a 101st registration attempt. It parses the final HTTP response and fails closed unless the status is exactly 503 and the body contains \"Too many registered clients\". This distinguishes the exhaustion condition from a startup failure, parser error, or unrelated server crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final registration attempt returned HTTP 503.",
+    "The response body contained {\"error\":\"temporarily_unavailable\",\"error_description\":\"Too many registered clients\"}.",
+    "The helper emitted EVOHUNT_POC_SUCCESS: 101st registration returned 503 temporarily_unavailable after validating the response."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag/commit, verifies the resulting HEAD, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3eb82b077bc434eb0eb876c6e452e6c3a49797d6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh"
+    ]
+  }
+}

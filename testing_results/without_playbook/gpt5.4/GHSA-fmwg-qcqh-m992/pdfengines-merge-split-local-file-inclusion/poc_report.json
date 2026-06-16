@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "local_file_inclusion",
+  "summary": "The Docker-based reproduction clones the vulnerable Gotenberg commit, builds and starts the service, sends a merge request with a server-local watermark path and no uploaded watermark file, and verifies that the returned PDF contains an embedded image sourced from the server filesystem.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause POST /forms/pdfengines/merge to accept watermarkExpression=/usr/share/pixmaps/debian-logo.png without an uploaded watermark file and return a PDF that embeds that server-local image.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 35f1a990a65cff4abc98561644d805d66993128d, built the target image, started the service, and printed the success marker after pdfimages confirmed that the baseline generated PDF had no embedded images while the returned PDF contained a 48x48 embedded image and soft mask sourced from /usr/share/pixmaps/debian-logo.png.",
+  "verification_method": "The helper script generates a clean one-page PDF with no embedded images, confirms that baseline state with pdfimages -list, submits the exploit request, and then uses pdfimages -list and pdfinfo on the returned PDF to confirm that an image object was newly embedded only after the server processed the attacker-supplied local watermark path. The run must also emit the exact EVOHUNT_POC_SUCCESS marker.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run log shows the baseline pdfimages output with no image rows before exploitation.",
+    "The run log shows the exploited output pdfimages rows containing a 48x48 image and matching soft-mask object in the returned PDF.",
+    "The run log ends with: EVOHUNT_POC_SUCCESS local image from /usr/share/pixmaps/debian-logo.png was embedded into the returned PDF."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the target image from that checkout, and mounts the checked-out tree into the helper container at /target-repo.",
+    "pinned_commit_or_ref": "35f1a990a65cff4abc98561644d805d66993128d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

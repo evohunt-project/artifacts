@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction clones the pinned dotnet/runtime revision, mounts that checkout into the container, and proves that extracting a tar entry named `linkdir/owned.txt` writes `owned.txt` outside the requested extraction root through a preexisting symlinked parent directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that TarFile.ExtractToDirectory writes the attacker-controlled file outside the requested extraction root and prints `escape_confirmed=True`.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned dotnet/runtime at 5e11a0fabecd7f757d677b2a6362366e3cafc9a0, built the reproduction image, verified the vulnerable source pattern in TarEntry.cs, and then the probe printed `escape_confirmed=True` after creating `/tmp/.../outside/owned.txt` via the preexisting `extract/linkdir` symlink.",
+  "verification_method": "reproduction/verify.sh first checks the mounted source for the lexical containment and regular-file write sites in TarEntry.cs and the sibling symbolic-link regression test, then executes the probe and requires the exact proof string `escape_confirmed=True`. The probe only returns success when the file is created outside the extraction root with attacker-controlled contents.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The mounted target source matched `Path.GetFullPath(qualifiedPath)`, `VerifyDestinationPath(...)`, and `private void ExtractAsRegularFile` in TarEntry.cs.",
+    "The run printed `symlink_path=.../extract/linkdir`, `symlink_target=.../outside`, and `escaped_file=.../outside/owned.txt`.",
+    "The run printed `escape_confirmed=True` and finished with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh creates a temporary host checkout under the finding directory, clones the target repository, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "5e11a0fabecd7f757d677b2a6362366e3cafc9a0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Program.cs",
+      "reproduction/TarSymlinkProbe.csproj",
+      "reproduction/verify.sh"
+    ]
+  }
+}

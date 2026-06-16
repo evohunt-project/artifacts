@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction clones Langflow v1.7.3 at the pinned vulnerable commit, removes the Webhook node from a fixture flow, and proves that the unauthenticated webhook route still executes that non-webhook flow while the sibling `/run` route remains protected.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an unauthenticated caller can invoke `/api/v1/webhook/{endpoint_name}` for a flow with no Webhook node, receive the accepted response, and cause observable background execution records, while an unauthenticated call to `/api/v1/run/{endpoint_name}` is rejected.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `dbe777ecaa51042f84c6f31629d59a6596835fd2`, built the reproduction image, and emitted `{\"status\": \"success\", \"endpoint_name\": \"non-webhook-flow\", \"contains_webhook_node\": false, \"unauth_webhook_status\": 202, \"unauth_run_status\": 403, \"builds_status\": 200, \"build_count\": 2}` before the wrapper reported `SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The run script clones the pinned upstream repository on the host, mounts it at `/target-repo`, and invokes `reproduction/verify.sh`. The verifier copies that checkout into a writable workspace, installs the pinned dependencies with `uv`, runs `reproduction/exploit.py`, and fails closed unless the exploit prints a JSON object with `\"status\": \"success\"` after confirming the flow fixture no longer contains any Webhook node IDs, the unauthenticated webhook request returns `202`, the unauthenticated `/run` request returns `403`, and owner-visible build telemetry records that the unauthorized flow execution actually ran.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit mutated the seeded flow so that `contains_webhook_node` was `false`, proving the target was not a legitimate webhook flow.",
+    "The exploit reported `unauth_webhook_status: 202` for `POST /api/v1/webhook/non-webhook-flow`, showing the unauthenticated request was accepted and scheduled.",
+    "The exploit reported `unauth_run_status: 403` for the sibling `/api/v1/run/non-webhook-flow` route, confirming that direct flow execution is otherwise protected.",
+    "The exploit reported `builds_status: 200` and `build_count: 2` from the owner's monitor endpoint, demonstrating that the unauthorized webhook request triggered real background execution rather than a superficial acceptance response."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh creates a temporary workspace under the session directory, shallow-fetches the pinned vulnerable commit from the upstream Langflow repository on the host, and mounts that checked-out tree into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "dbe777ecaa51042f84c6f31629d59a6596835fd2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

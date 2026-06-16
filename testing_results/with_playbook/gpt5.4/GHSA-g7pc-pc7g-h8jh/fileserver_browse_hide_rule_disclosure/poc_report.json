@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction confirms that a path-based `hide` rule blocks direct reads but still leaks the hidden filename through a `file_server` browse listing.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show the hidden `note.txt` entry in the browse JSON listing while direct `GET /secret/note.txt` still returns `404`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `e2eee6a7fce366321294c9c2a79f3146891dcbdf`, built Caddy inside the container, and printed `EVOHUNT_PROOF_LISTING=[{\"name\":\"note.txt\",...}]`, `EVOHUNT_PROOF_DIRECT_STATUS=404`, and `EVOHUNT_STATUS=success`.",
+  "verification_method": "The reproduction enables `file_server` browse mode with a path-based `hide` rule, requests the parent directory as JSON, and verifies that the browse output still contains `note.txt` even though a direct fetch of the same file returns `404`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_PROOF_LISTING=[{\"name\":\"note.txt\",\"size\":12,\"url\":\"./note.txt\",\"mod_time\":\"2026-06-03T03:35:23.030461613Z\",\"mode\":420,\"is_dir\":false,\"is_symlink\":false}]",
+    "EVOHUNT_PROOF_DIRECT_STATUS=404",
+    "EVOHUNT_STATUS=success"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "e2eee6a7fce366321294c9c2a79f3146891dcbdf",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Caddyfile",
+      "reproduction/reproduce.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control_idor",
+  "summary": "The reproduction confirms that a network client can read and overwrite another user's ADK session by supplying the victim `user_id` and `session_id` to the generated FastAPI endpoints, without presenting any authentication material.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should disclose the victim session's secret state and then show attacker-controlled changes in the victim session after an unauthenticated PATCH request.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `google/adk-python` at commit `4006fe408c583bffd95c23455f00184baa4fad6d`, built the reproduction image, installed the target package inside the container, started a generated FastAPI app, created a victim session with secret state, fetched that session without credentials, patched the victim state to set `balance=0` and `tampered_by=attacker`, and printed `EVOHUNT_SUCCESS: unauthorized victim session disclosure and tampering confirmed`.",
+  "verification_method": "The `verify.py` helper starts the generated FastAPI application, creates separate victim and attacker sessions, performs unauthenticated GET and PATCH requests against the victim session, and only reports success if the victim secret is disclosed before tampering and the follow-up GET shows the attacker-controlled state changes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Victim session state before tampering: `{\"balance\":100,\"secret\":\"victim-only\"}`.",
+    "Victim session state after tampering: `{\"balance\":0,\"secret\":\"victim-only\",\"tampered_by\":\"attacker\"}`.",
+    "Container stdout included `EVOHUNT_SUCCESS: unauthorized victim session disclosure and tampering confirmed`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "4006fe408c583bffd95c23455f00184baa4fad6d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py",
+      "reproduction/test_agents/demo_agent/__init__.py",
+      "reproduction/test_agents/demo_agent/agent.py"
+    ]
+  }
+}

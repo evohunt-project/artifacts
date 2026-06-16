@@ -1,0 +1,24 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "signature_verification_bypass",
+  "summary": "The reproduction builds a small Swift executable against the local jose-swift checkout and confirms that JWT.verify accepts a nested JWT whose outer JWS signature is forged.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The public verification API should return a verified JWT object for a nested token even though the outer wrapper carries a bogus signature.",
+  "actual_observed_result": "Running the reproduction printed the VERIFIED_NESTED_WITH_FORGED_OUTER_SIGNATURE success marker after JWT.verify accepted a nested token whose outer signature bytes were attacker-controlled garbage.",
+  "verification_method": "The run script executes the bundled Swift PoC and fails unless the process prints the VERIFIED_NESTED_WITH_FORGED_OUTER_SIGNATURE marker emitted only after JWT.verify accepts the forged outer wrapper and decodes the inner claims.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The PoC printed VERIFIED_NESTED_WITH_FORGED_OUTER_SIGNATURE after calling JWT.verify on a nested token with a forged outer signature.",
+    "The decoded payload preserved the inner signed claims for sub=nested-admin and tier=gold."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc/Package.swift",
+      "reproduction/poc/Sources/alg-none-poc/main.swift"
+    ]
+  }
+}

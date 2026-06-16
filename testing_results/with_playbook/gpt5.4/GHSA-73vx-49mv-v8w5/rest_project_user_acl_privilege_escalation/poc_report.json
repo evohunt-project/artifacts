@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a manager-level REST API token can self-promote to administrator on a private project and remove a higher-level project member through the vulnerable project-user mutation endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show a manager token receiving `204` from the self-promotion and higher-level-user deletion requests, then verify that the manager's project access becomes `administrator` and the victim's explicit project membership is removed.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned MantisBT at commit `3f952e68fa864e0e60abc3e84adecf3cfa84c75e`, built the reproduction image, installed the application, created a private project with manager and administrator members, then used the manager token to obtain `promote_status=204`, `after_manager_level=administrator`, `delete_status=204`, `after_victim_present=0`, and `after_delete_local_rows=0` before printing the final success banner.",
+  "verification_method": "The verification helper seeds a private project and two low-privilege users, drives the exploit with the manager's REST API token, then checks the post-action project-user listing and the explicit `mantis_project_user_list_table` membership row count. The run fails unless self-promotion returns `204`, the listing shows the manager as `administrator`, the delete returns `204`, the victim disappears from the listing, and the explicit membership row count becomes `0`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `promote_status=204` for the manager self-promotion request.",
+    "The reproduction printed `after_manager_level=administrator` after rereading the project-user listing.",
+    "The reproduction printed `delete_status=204` for the higher-level-user deletion request.",
+    "The reproduction printed `after_victim_present=0` and `after_delete_local_rows=0`, confirming that the victim no longer appears in the project-user listing and no longer has an explicit project-membership row.",
+    "The run ended with `[evohunt] SUCCESS: project manager self-promoted to administrator and removed a higher-level project user via REST` and `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh creates a temporary checkout under the session tree, fetches the pinned vulnerable commit from the upstream repository, checks it out on the host, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "3f952e68fa864e0e60abc3e84adecf3cfa84c75e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

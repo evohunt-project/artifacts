@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xml_markup_injection",
+  "summary": "The reproduction clones the pinned vulnerable commit and confirms two serializer breakouts: comment data becomes an injected element on the default path, and processing-instruction data becomes an injected element even when requireWellFormed is requested.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should emit EVOHUNT_COMMENT_BREAKOUT_CONFIRMED and EVOHUNT_PI_BREAKOUT_CONFIRMED after serializing attacker-controlled Comment and ProcessingInstruction data into XML that round-trips into injected nodes.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit fda7cc313de30243fea35cada64e0bb12099c2a1, built the Docker image, mounted the checkout at /target-repo, and emitted both expected proof strings with serialized payloads showing injected markup.",
+  "verification_method": "The helper requires /target-repo/lib/index.js directly, constructs DOM documents, mutates comment and processing-instruction data, serializes them, reparses the resulting XML, and verifies injected element counts and PI child-node sequence. The host run.sh greps for both proof strings and fails closed if either one is missing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_COMMENT_BREAKOUT_CONFIRMED serialized=<root><!--clean--><injected-comment/><!----></root>",
+    "EVOHUNT_PI_BREAKOUT_CONFIRMED serialized=<root><?target data?><injected-pi/><?x?></root>"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "fda7cc313de30243fea35cada64e0bb12099c2a1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_arbitrary_file_inclusion",
+  "summary": "The Docker-based reproduction confirms that a traversal-bearing GO `chaincodePath` escapes the declared source root and embeds an outside file into the generated chaincode package.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should produce a chaincode package whose tar entries include `src/../../secrets/secret.txt` and whose extracted payload reveals the outside-file proof string `EVOHUNT_SECRET_PROOF`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `a61508e5bf7c8f7197926f28db51cdab0a6b9f1e`, built the reproduction image, compiled the target SDK inside the container, and printed `ENTRIES=[src/../../secrets/secret.txt]`, `EXTRACTED=EVOHUNT_SECRET_PROOF`, `EVOHUNT_VALIDATION_SUCCESS`, and `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The container-side verifier compiles the pinned target repo and executes a helper harness that calls `LifecycleChaincodePackage.fromSource()` with `chaincodePath=../../secrets`. Verification only passes if the harness observes the exact traversal entry name and extracts the exact proof string from the generated package bytes.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduced package contained the exact tar entry `src/../../secrets/secret.txt`.",
+    "The verifier extracted `EVOHUNT_SECRET_PROOF` from that entry, proving inclusion of an outside file rather than a benign in-tree source file.",
+    "The final run printed `EVOHUNT_VALIDATION_SUCCESS` and `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "a61508e5bf7c8f7197926f28db51cdab0a6b9f1e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/PathTraversalHarness.java"
+    ]
+  }
+}

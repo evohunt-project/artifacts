@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "credential_exfiltration_via_dynamic_request_routing",
+  "summary": "The Docker-based reproduction confirms that a low-privilege user with only `credential:user` access to a shared credential can coerce `/rest/dynamic-node-parameters/options` into making an authenticated outbound request to an attacker-controlled endpoint and exfiltrating the bearer token.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should show that a read-only credential sharee can trigger an authenticated outbound request through dynamic load-options routing and recover the credential-derived `Authorization` header from an attacker-controlled capture endpoint.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned n8n at ref `n8n@2.25.1`, checked out commit `d1c8049ddb5dd8013cca746e450c5933b8403462`, built the Docker reproduction image, executed the bundled integration test, and produced `reproduction/last-run/capture.json` containing `Authorization: Bearer evohunt-secret-token` together with `reproduction/last-run/result.json` showing a 200 response from `/rest/dynamic-node-parameters/options`.",
+  "verification_method": "The bundled Jest test provisions an owner-held Asana credential, shares it to a member account with only `credential:user` access, invokes `POST /rest/dynamic-node-parameters/options` with attacker-controlled routing, and verifies that the attacker capture server recorded the exact bearer token in `reproduction/last-run/capture.json` while the endpoint returned the expected success payload.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/last-run/checked-out-commit.txt records the pinned vulnerable commit `d1c8049ddb5dd8013cca746e450c5933b8403462`.",
+    "reproduction/last-run/capture.json shows the attacker-controlled endpoint received `Authorization: Bearer evohunt-secret-token`.",
+    "reproduction/last-run/result.json records that the caller only had `credential:user` sharing and that `/rest/dynamic-node-parameters/options` returned HTTP 200 with the expected option payload.",
+    "reproduction/last-run/in-container.log shows the Dockerized build path and a passing Jest suite for the bundled exploit test."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref and commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "n8n@2.25.1 (commit d1c8049ddb5dd8013cca746e450c5933b8403462)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/in-container.sh",
+      "reproduction/dynamic-node-parameters-credential-exfiltration.test.ts"
+    ]
+  }
+}

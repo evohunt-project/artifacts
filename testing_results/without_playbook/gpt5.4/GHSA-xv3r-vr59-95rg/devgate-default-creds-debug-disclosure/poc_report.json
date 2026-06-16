@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "hardcoded_default_credentials",
+  "summary": "The Docker-based reproduction provisions a fresh CI4MS install, verifies that unauthenticated requests are challenged by DevGate, and then proves that the shipped `admin:bertug` credential pair bypasses the gate and exposes a development-mode exception trace.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that `GET /` returns `401 Unauthorized` without credentials, then returns a development-mode `500 Internal Server Error` containing the `Attempt to read property \"scalar\" on string` proof string and an `app/Filters/Ci4ms.php` path when the request is repeated with the hardcoded `admin:bertug` credentials.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `5c889e995ddf7bb29615af0c81316616523e328b`, installed the application in a disposable container, returned `HTTP/1.1 401 Unauthorized` for unauthenticated `GET /`, and then returned `HTTP/1.1 500 Internal Server Error` with the `Attempt to read property \\\"scalar\\\" on string` proof string and an `app/Filters/Ci4ms.php` file path when the same request was repeated with `admin:bertug`.",
+  "verification_method": "The helper script provisions the vulnerable application, waits for the development server, performs one unauthenticated and one authenticated request to `/`, and verifies the expected HTTP status codes plus the exact exception proof strings in the authenticated response body.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated request to `/` returned `HTTP/1.1 401 Unauthorized` with the DevGate `WWW-Authenticate` challenge.",
+    "The authenticated request to `/` using `admin:bertug` returned `HTTP/1.1 500 Internal Server Error`.",
+    "The authenticated response body contained the proof string `Attempt to read property \\\"scalar\\\" on string`.",
+    "The authenticated response body disclosed the internal path `app/Filters/Ci4ms.php`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5c889e995ddf7bb29615af0c81316616523e328b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_protection_bypass_to_code_execution",
+  "summary": "The reproduction enables Fickling's hook-based protection, then shows that the same malicious pickle payload still executes through `pickle.loads(...)` and `_pickle.load(...)` and writes proof files instead of being blocked.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The protected process should reject the malicious pickle with `UnsafeFileError`, but the vulnerable behavior is that attacker-controlled pickle execution still occurs and creates proof files.",
+  "actual_observed_result": "Running `./reproduction/run.sh` successfully imported the repo version of Fickling, enabled `always_check_safety()`, and then produced proof files for both the `pickle.loads(...)` and `_pickle.load(...)` paths, confirming execution of the attacker-controlled payload.",
+  "verification_method": "The helper script deletes any stale proof files, runs the payload through the protected APIs, and then asserts that the proof files were newly created. Creation of those files is a direct oracle that the malicious pickle executed instead of being rejected.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/proof_always_check_safety.txt",
+    "reproduction/proof__pickle_load.txt"
+  ],
+  "limitations_or_blockers": [
+    "The reproduction expects `python3` plus the `stdlib_list` dependency required by the target repo. The run script installs that dependency if it is missing."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc.py"
+    ]
+  }
+}

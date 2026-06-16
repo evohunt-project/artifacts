@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The reproduction confirms that concurrent authenticated agenda requests can kill the target process with Go's concurrent-map fatal error.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Concurrent authenticated requests to a cold agenda cache entry should not be able to terminate the service, but the vulnerable implementation will eventually exit with a `concurrent map writes` or `concurrent map read and map write` fatal.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the target repository, started the application, seeded a low-privilege account and campaign, logged in, repeatedly sent parallel `GET /campaign/1/agenda` requests against fresh app instances, and observed the process die while many clients received empty replies. The verification logic matched the expected Go concurrent-map fatal signal in the server log.",
+  "verification_method": "The verification script keeps the cache cold by restarting the app, logs in as a non-admin user, launches a large burst of concurrent agenda requests, and treats the run as successful only if the target process exits and the server log contains `concurrent map writes` or `concurrent map read and map write`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Concurrent `curl` clients began receiving `Empty reply from server` once the process died mid-burst.",
+    "The verification script detected target-process exit during the cold-cache request burst.",
+    "The server log matched the expected Go concurrent-map fatal signal, distinguishing the crash from ordinary request failures."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "c832e05a6780a3aabd312f29db73aaf86b6d5cb6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/seed_agenda_case.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

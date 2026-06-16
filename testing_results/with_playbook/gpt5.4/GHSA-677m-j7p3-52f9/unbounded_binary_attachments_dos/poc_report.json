@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that a zero-attachment binary packet leaves socket.io-parser in reconstruction mode and causes later binary frames to be retained in memory until RSS exceeds the verification threshold.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should decode a zero-attachment binary packet, leave the decoder's BinaryReconstructor live, buffer 128 subsequent 1 MiB binary frames that are not needed by the decoded packet, and push process RSS above 150 MB.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned socket.io-parser commit 060339a206268d8860d82aa3c0766e867ce5bb8a, built the reproduction image, and produced EVOHUNT_POC_CONFIRMED. The run decoded {\"type\":5,\"attachments\":0,\"nsp\":\"/\",\"data\":[\"evohunt\"]}, kept reconstructor live after the header, buffered 128 later binary frames, and reported peak_rss_mb=167.4.",
+  "verification_method": "verify.sh runs exploit.js inside the container with NODE_PATH pointing at pinned dependencies, then greps for EVOHUNT_POC_CONFIRMED. exploit.js only prints that signal when the decoded packet is emitted from the zero-attachment header, reconstructor stays live, buffered_frames equals 128, and peak_rss_mb is at least 150.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output showed the decoded packet {\"type\":5,\"attachments\":0,\"nsp\":\"/\",\"data\":[\"evohunt\"]}.",
+    "Container output confirmed reconstructor live after header: true.",
+    "Container output reported sent=128 buffered=128 rss_mb=167.4 external_mb=129.4.",
+    "verify.sh observed EVOHUNT_POC_CONFIRMED and returned success."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "060339a206268d8860d82aa3c0766e867ce5bb8a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

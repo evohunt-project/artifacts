@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authentication_bypass",
+  "summary": "The Docker-based reproduction confirms that the pinned Langflow 1.8.0 code path exposes an unauthenticated auto-login endpoint that issues a valid superuser session and unlocks administrator-only APIs.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should obtain a token from GET /api/v1/auto_login without prior authentication and then successfully access superuser-only user-management endpoints as the default langflow superuser.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned 1.8.0 tag at commit c0736fe4d8ec0a5eb3650cd64c9dfa37b7a48b9b, verified the vulnerable source path, started Langflow, received HTTP 200 plus an access token from /api/v1/auto_login, and then successfully called /api/v1/users/whoami and /api/v1/users/ as username=langflow with is_superuser=True. The run emitted the proof string EVOHUNT_AUTO_LOGIN_SUPERUSER_BYPASS_CONFIRMED.",
+  "verification_method": "The helper script verifies that the mounted source checkout contains the vulnerable AUTO_LOGIN defaults and unauthenticated auto_login route, waits for the target service health check to succeed, then uses a cookie-aware HTTP client to call /api/v1/auto_login followed by /api/v1/users/whoami and /api/v1/users/. The run only passes if those endpoints prove that the returned session belongs to the langflow superuser and the exact proof string is printed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction verified the pinned commit c0736fe4d8ec0a5eb3650cd64c9dfa37b7a48b9b contains AUTO_LOGIN enabled by default, fixed default superuser credentials, and the unauthenticated auto_login token issuance path.",
+    "GET /api/v1/auto_login returned HTTP 200 and a bearer token during the reproduction run.",
+    "GET /api/v1/users/whoami returned username=langflow and is_superuser=True after the unauthenticated auto-login request.",
+    "GET /api/v1/users/ returned HTTP 200 with one visible user after the same unauthenticated session was established.",
+    "The container printed EVOHUNT_AUTO_LOGIN_SUPERUSER_BYPASS_CONFIRMED as the final success signal."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out refs/tags/1.8.0 at the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "refs/tags/1.8.0 (commit c0736fe4d8ec0a5eb3650cd64c9dfa37b7a48b9b)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

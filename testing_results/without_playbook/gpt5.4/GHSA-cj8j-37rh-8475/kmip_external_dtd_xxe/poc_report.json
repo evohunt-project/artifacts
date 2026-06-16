@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "xxe_local_file_read",
+  "summary": "The Docker-based reproduction confirms that KMIPInputStream resolves an attacker-controlled external DTD and injects file:///etc/hostname from inside the vulnerable parser container into the parsed NameValue field.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the KMIP parser fetch the attacker DTD and print NAME_VALUE=kmip-target, proving that DTD-controlled entity expansion disclosed /etc/hostname from inside the vulnerable container.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned bc-java at d716d7716a452bad283323aefd88ff21eba8deef, built the reproduction image, started the attacker DTD server, and the vulnerable parser printed NAME_VALUE=kmip-target while the DTD server logged REQUEST /evil.dtd.",
+  "verification_method": "The run script fixes the vulnerable parser container hostname to kmip-target, captures the parser output, and verifies both a NAME_VALUE=kmip-target proof string and a REQUEST /evil.dtd fetch in the attacker DTD server logs. This distinguishes real DTD-based file disclosure from a benign parse or a startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Parser output contained NAME_VALUE=kmip-target.",
+    "Attacker DTD server logs contained REQUEST /evil.dtd."
+  ],
+  "limitations_or_blockers": [
+    "The KMIP source lives under the repository's kmip/ tree and is compiled directly by the reproduction helper because this source tree does not expose kmip as a Gradle project in settings.gradle."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag/commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "d716d7716a452bad283323aefd88ff21eba8deef",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/KmipXXEHarness.java",
+      "reproduction/payload_xxe_via_dtd.xml",
+      "reproduction/dtd_server.py"
+    ]
+  }
+}

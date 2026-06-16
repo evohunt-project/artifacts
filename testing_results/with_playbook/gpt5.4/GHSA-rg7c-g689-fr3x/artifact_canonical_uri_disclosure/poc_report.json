@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "artifact_canonical_uri_disclosure",
+  "summary": "The Docker-based reproduction confirms that file-backed artifact metadata exposes the absolute host `file://` path for the stored payload through `canonical_uri`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should save an artifact, fetch its metadata, and print a `file://` URI that reveals the absolute host-side path of the stored artifact payload.",
+  "actual_observed_result": "Running `./reproduction/run.sh` printed `EVOHUNT_ARTIFACT_CANONICAL_URI_DISCLOSURE_OK` and `canonical_uri=file:///tmp/tmpu3otl4p0/users/user/sessions/sess/artifacts/docs/report.txt/versions/0/report.txt`.",
+  "verification_method": "The verifier saves an artifact, requests its version metadata, and fails unless the serialized metadata contains the same `canonicalUri` value, the URI uses the `file://` scheme, and the decoded path exposes the absolute artifact storage layout.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Verifier output contained the exact proof string `EVOHUNT_ARTIFACT_CANONICAL_URI_DISCLOSURE_OK`.",
+    "Verifier output printed a concrete absolute `canonical_uri` under the temporary artifact root.",
+    "The helper aborts unless the serialized `canonicalUri` field matches the metadata object and reveals the resolved on-disk storage path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the reproduction image, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "cf0f372528c7e6ece8596db4e44f18a8eb370314",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

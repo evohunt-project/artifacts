@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a low-privileged storefront user can rebind a guest checkout address to their own account and read it back through the storefront account API.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should let an authenticated storefront user submit a guest address ID to `PATCH /api/v2/storefront/account` and then retrieve that victim address through `GET /api/v2/storefront/account?include=default_billing_address`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `spree/spree` at commit `62e41d24e3f0b982f632d935b19291ecc967c42c`, built the reproduction container, generated the API dummy app, and executed the request-spec helper. The run emitted `EVOHUNT_POC_SUCCESS attacker_user=kenton@jacobs.co.uk victim_order=R862139141 leaked_address_id=3 leaked_address1=1337 Leak St` followed by `EVOHUNT_VERIFIED account address disclosure reproduced`.",
+  "verification_method": "The helper spec performs the real storefront request flow inside the generated test app: it patches the attacker account with the victim guest address ID, reloads the account, requests the included default billing address, and asserts that the serialized response contains the victim-specific address markers. `verify.sh` then greps for the proof line and leaked street marker to distinguish a real disclosure from setup noise or unrelated test success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The request-spec run printed `EVOHUNT_POC_SUCCESS attacker_user=kenton@jacobs.co.uk victim_order=R862139141 leaked_address_id=3 leaked_address1=1337 Leak St`.",
+    "RSpec completed with `1 example, 0 failures` for the targeted exploit spec.",
+    "The helper finished with `EVOHUNT_VERIFIED account address disclosure reproduced`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the reproduction image, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "62e41d24e3f0b982f632d935b19291ecc967c42c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/account_unowned_address_spec.rb",
+      "reproduction/verify.sh"
+    ]
+  }
+}

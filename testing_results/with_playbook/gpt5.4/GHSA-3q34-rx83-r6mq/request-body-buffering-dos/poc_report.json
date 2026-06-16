@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction cloned the pinned vulnerable Heimdall commit, mounted it into the verifier container, and confirmed that a 64 MiB form body on the default body-token extraction path causes large transient and retained heap growth.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a 64 MiB application/x-www-form-urlencoded body containing access_token is fully buffered and decoded, yielding BODY_BYTES=67108864, TOKEN_BYTES=67108864, retained heap above 120000000 bytes, and total allocations above 200000000 bytes.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit b0716ebc564ad2205179a39978b795f5db4870c5, built the verifier image, and produced BODY_BYTES=67108864, TOKEN_BYTES=67108864, HEAP_ALLOC_AFTER=201473200, HEAP_ALLOC_AFTER_GC=134364000, HEAP_ALLOC_DELTA=201326616, HEAP_ALLOC_DELTA_AFTER_GC=134217416, and TOTAL_ALLOC_DELTA=268436168, followed by the verifier success signal.",
+  "verification_method": "verify.sh copies the mounted target repository into a writable workspace, injects the bundled Go probe under cmd/evohunt-body-probe, runs go run ./cmd/evohunt-body-probe 64, and verifies both the exact 64 MiB body/token sizes and heap-allocation thresholds that distinguish full-body buffering from a harmless parse failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted BODY_BYTES=67108864 and TOKEN_BYTES=67108864, confirming full extraction of the oversized form-body token.",
+    "The run emitted HEAP_ALLOC_AFTER_GC=134364000, showing large retained heap while the request context stayed live.",
+    "The run emitted TOTAL_ALLOC_DELTA=268436168 and ended with [evohunt] SUCCESS: observed full-body buffering and multi-copy heap growth."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b0716ebc564ad2205179a39978b795f5db4870c5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/body_alloc_probe.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "concurrent_map_write_dos",
+  "summary": "The Docker-based reproduction cloned the pinned Gotenberg snapshot, injected a focused regression test for downloadFrom fan-out, and observed the fatal concurrent map write crash signature during request-context construction.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should trigger fatal error: concurrent map writes while Gotenberg processes many attacker-controlled downloadFrom entries in parallel.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 410c1dfd7f4f49440fc00e07ef2b8cc0e72ca767, built the helper image, executed the focused go test, and printed fatal error: concurrent map writes with a stack trace ending at /target-repo/pkg/modules/api/context.go:331 before reporting success.",
+  "verification_method": "The helper captures go test output, requires a non-zero test exit, and checks the exact fatal error: concurrent map writes signature. That distinguishes the vulnerability from an unrelated test failure, compile error, or benign request rejection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted fatal error: concurrent map writes during TestNewContext_DownloadFromConcurrentMapWrite.",
+    "The stack trace pointed to /target-repo/pkg/modules/api/context.go:331 inside newContext.",
+    "The helper script confirmed the expected crash signature before printing its success banner."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "410c1dfd7f4f49440fc00e07ef2b8cc0e72ca767",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/downloadfrom_concurrent_map_write_test.go"
+    ]
+  }
+}

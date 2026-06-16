@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "improper_certificate_validation",
+  "summary": "The Docker-based reproduction clones the pinned wolfssl-py revision, builds the wrapper in-container, and shows that the default client APIs complete a TLS handshake with a self-signed server and exchange attacker-controlled data, while a CERT_REQUIRED control client rejects the same server.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow an attacker-controlled TLS server with a self-signed certificate to complete the default client handshake and return the proof payload, while a CERT_REQUIRED control client should reject the same server.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 3e4ec8484403ea16db79cf4ebde10b5b36d944b3, checked out the wolfSSL submodule at v5.8.2-stable, built wolfssl-py in the container, and printed EVOHUNT_DEFAULT_CLIENT_ACCEPTED_SELF_SIGNED, EVOHUNT_MITM_PROOF, and EVOHUNT_CONTROL_CERT_REQUIRED_REJECTED_SELF_SIGNED before exiting successfully.",
+  "verification_method": "verify.sh copies the pinned checkout into a temporary container workspace, applies an ephemeral arm64-only build-flag fix if needed so the sources compile natively, builds the wrapper in place, launches exploit.py against a generated self-signed TLS server, records the run log, and requires both the insecure-acceptance proof strings and the rejecting CERT_REQUIRED control path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit run printed EVOHUNT_DEFAULT_CLIENT_ACCEPTED_SELF_SIGNED after the default client completed a TLS handshake with the attacker-controlled self-signed server.",
+    "The exploit run printed EVOHUNT_MITM_PROOF after the attacker-controlled TLS server returned its chosen payload over the accepted connection.",
+    "The exploit run printed EVOHUNT_CONTROL_CERT_REQUIRED_REJECTED_SELF_SIGNED, showing that the same server is rejected when CERT_REQUIRED is explicitly enabled."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, initializes the wolfSSL submodule to v5.8.2-stable, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3e4ec8484403ea16db79cf4ebde10b5b36d944b3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

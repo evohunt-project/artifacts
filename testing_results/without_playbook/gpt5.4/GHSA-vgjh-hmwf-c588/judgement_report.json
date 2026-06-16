@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:54:18.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_72e36318",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-vgjh-hmwf-c588/GHSA-vgjh-hmwf-c588.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "client_version_redos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_72e36318/client_version_redos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_72e36318/client_version_redos/vulnerability_report.json",
+      "title": "Pre-auth client version parsing enables request-level ReDoS and worker DoS",
+      "vulnerability_type": "regex_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets `_ClientVersion` regex parsing in `handleParseHeaders()` and `ClientSDK.fromString()`, while the advisory concerns MongoDB operator injection through the `token` field in password reset and email verification resend endpoints.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only final qualifying finding is a pre-auth header/body client-version regex denial-of-service issue, not the advisory's token-field NoSQL injection in password reset and email verification resend flows.",
+    "evidence": [
+      "The advisory summary and details describe unauthenticated MongoDB operator injection via the `token` field in password reset and email verification resend endpoints, enabling extraction of reset or verification tokens.",
+      "`.judge/input_manifest.json` lists only one materialized final qualifying finding: `client_version_redos`.",
+      "That finding's reported exploit path is `POST /1/functions/nope -> handleParseHeaders -> ClientSDK.fromString()` with catastrophic regex backtracking on `_ClientVersion`, not a database query that consumes `token` input.",
+      "The finding's demonstrated impact is request latency and worker pinning, whereas the advisory impact is token extraction and unauthorized email verification without inbox access."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_72e36318/client_version_redos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_72e36318/client_version_redos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_72e36318/client_version_redos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

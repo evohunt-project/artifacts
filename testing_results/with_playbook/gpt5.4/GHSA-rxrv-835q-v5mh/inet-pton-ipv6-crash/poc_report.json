@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction confirms that malformed overlong IPv6 text reaches inet_pton's negative String.repeat path and throws RangeError instead of returning false.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print EVOHUNT_INET_PTON_RANGEERROR_CONFIRMED after inet_pton throws RangeError: Invalid count value: -2 for malformed over-8-hextet IPv6 input.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned locutus at 57ea89d4da3b9bcfc983fd27da77a1bdd5d53f01, built the reproduction image, printed EVOHUNT_INET_PTON_RANGEERROR_CONFIRMED, printed the observed parser crash RangeError: Invalid count value: -2, and exited successfully.",
+  "verification_method": "verify.js first confirms a valid inet_pton baseline on ::, then invokes inet_pton with 1:2:3:4:5:6:7:8:9 and asserts that the exact RangeError proof signal is produced.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed EVOHUNT_INET_PTON_RANGEERROR_CONFIRMED.",
+    "The verification helper observed RangeError: Invalid count value: -2 from the vulnerable parser path.",
+    "A valid baseline inet_pton(::) call succeeded before the malformed-input trigger, distinguishing the proof from a generic startup or import failure."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh shallow-clones the target repository on the host from the v2.0.38 tag, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "57ea89d4da3b9bcfc983fd27da77a1bdd5d53f01",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js"
+    ]
+  }
+}

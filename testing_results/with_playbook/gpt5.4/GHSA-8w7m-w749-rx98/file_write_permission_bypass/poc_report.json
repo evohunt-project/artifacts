@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "improper_authorization",
+  "summary": "The Docker-based reproduction confirms that a subuser with only `file.create` can still hit the existing-file write sink and overwrite a pre-existing server file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should prove that a `file.create`-only subuser can overwrite `/existing.txt` through the client write endpoint and emit the success signal `EVOHUNT_FILE_WRITE_PERMISSION_BYPASS_CONFIRMED`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned vulnerable repository, built the reproduction image, started the MySQL and helper sidecars, installed dependencies, executed `WriteFileCreatePermissionBypassTest`, and printed `EVOHUNT_FILE_WRITE_PERMISSION_BYPASS_CONFIRMED`. The helper service captured `POST /api/servers/<uuid>/files/write` with `file=/existing.txt`, body `PWNED`, and `Authorization: Bearer panel-secret`.",
+  "verification_method": "The run script executes a targeted PHPUnit integration test that creates a subuser with only `file.create`, asserts that rename remains forbidden without `file.update`, exercises the write endpoint against an existing file, and then verifies the helper-captured request path, file parameter, body, and authorization header to distinguish a real overwrite request from unrelated startup or parser behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "PHPUnit reported `OK (1 test, 6 assertions)` for `WriteFileCreatePermissionBypassTest`.",
+    "The run printed the explicit proof signal `EVOHUNT_FILE_WRITE_PERMISSION_BYPASS_CONFIRMED`.",
+    "The helper-side capture returned JSON showing `/api/servers/<uuid>/files/write`, `file=/existing.txt`, body `PWNED`, and `Authorization: Bearer panel-secret`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host from tag `v1.12.0`, verifies that HEAD matches the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "09caa0d4995bd924b53b9a9e9b4883ac27bd5607",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/helper_server.py",
+      "reproduction/WriteFileCreatePermissionBypassTest.php"
+    ]
+  }
+}

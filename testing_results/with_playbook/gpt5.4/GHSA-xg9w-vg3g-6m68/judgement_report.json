@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:55:21.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_835753cc",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-xg9w-vg3g-6m68/GHSA-xg9w-vg3g-6m68.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "safe_extract_zip_traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_835753cc/safe_extract_zip_traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_835753cc/safe_extract_zip_traversal/vulnerability_report.json",
+      "title": "Zip member traversal in safe_extract writes outside the intended extraction root",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same guarddog/utils/archives.py safe_extract() call to zip.extract(file, path=os.path.join(target_directory, file)) and the same zip path-sanitization bypass described by the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "safe_extract_zip_traversal",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_835753cc/safe_extract_zip_traversal",
+      "status": "qualifying_vuln",
+      "title": "Zip member traversal in safe_extract writes outside the intended extraction root",
+      "vulnerability_type": "path_traversal"
+    },
+    "reason": "The finding matches the advisory's exact vulnerable function and root cause, and the copied PoC reproduced an attacker-controlled write outside the intended extraction root on the pinned vulnerable GuardDog commit.",
+    "evidence": [
+      "The advisory and the finding both identify guarddog/utils/archives.py safe_extract() and the vulnerable zip.extract(file, path=os.path.join(target_directory, file)) call that reuses the attacker-controlled member name in the extraction path.",
+      "The copied PoC log at /Users/lumi/ziyue/EvoHunt-Run/advisory_835753cc/.judge/poc_runs/safe_extract_zip_traversal/run.log shows the vulnerable commit 5ca1d2e930c4f2c423c94306e2cfba28b6066c02 was checked out before execution.",
+      "That same log shows escaped_exists=True, escaped_within_extract_root=False, escaped_content=EVOHUNT_ZIP_TRAVERSAL_PROOF, and VERIFICATION_PASSED, confirming attacker-controlled file creation outside the intended extraction root."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "safe_extract_zip_traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_835753cc/safe_extract_zip_traversal",
+      "executed": true,
+      "command": "bash reproduction/run_host.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_835753cc/.judge/poc_runs/safe_extract_zip_traversal/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_835753cc/.judge/poc_runs/safe_extract_zip_traversal/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_835753cc/.judge/poc_runs/safe_extract_zip_traversal/poc_execution.json",
+      "observed_effect": "The adapted copied PoC cloned the pinned vulnerable GuardDog commit, processed a crafted zip member with ../ traversal, and produced escaped_exists=True, escaped_within_extract_root=False, escaped_content=EVOHUNT_ZIP_TRAVERSAL_PROOF, and VERIFICATION_PASSED in run.log.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

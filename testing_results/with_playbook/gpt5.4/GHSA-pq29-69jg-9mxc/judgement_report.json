@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:45:51.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_03ce2d54",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-pq29-69jg-9mxc/GHSA-pq29-69jg-9mxc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "default_owner_credentials_admin_takeover",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_03ce2d54/default_owner_credentials_admin_takeover",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_03ce2d54/default_owner_credentials_admin_takeover/vulnerability_report.json",
+      "title": "Shipped default owner credentials grant immediate RustFS admin takeover",
+      "vulnerability_type": "default_owner_credentials",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a default-credential admin takeover issue. It does not involve the advisory's `/rustfs/rpc/read_file_stream` endpoint or the path-join read logic in `crates/ecstore/src/disk/local.rs`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "object_key_path_traversal_storage_escape",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_03ce2d54/object_key_path_traversal_storage_escape",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_03ce2d54/object_key_path_traversal_storage_escape/vulnerability_report.json",
+      "title": "Object-key traversal escapes the configured storage root and writes outside `/data`",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a separate authenticated S3 `PutObject` write-path traversal: `validate_object_key()` allows traversal segments and later write/rename code joins attacker-controlled object-key paths into `dst_file_path` and related write targets. The advisory is a different RPC read-path bug in `LocalDisk::read_file_stream()` for `/rustfs/rpc/read_file_stream`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "None of the qualifying findings identify the advisory-described vulnerable code/root cause. The advisory is a path traversal in the RustFS RPC `read_file_stream` handler where `LocalDisk::read_file_stream()` joins an attacker-controlled `path` and opens the resulting file for reading. The session's only RustFS traversal finding targets a different authenticated `PutObject` write path and different local.rs join sites, while the other qualifying findings are unrelated vulnerability classes.",
+    "evidence": [
+      "The advisory JSON names `/rustfs/rpc/read_file_stream` as the affected component and `crates/ecstore/src/disk/local.rs` read-path logic using `volume_dir.join(Path::new(&path))` before `open_file(...)` as the root cause.",
+      "In the vulnerable RustFS source at commit `de4a3fa766305bed1f9d1be72fed06bade136c54`, `LocalDisk::read_file_stream()` builds `file_path` from the attacker-controlled RPC `path` and opens it for reading in `crates/ecstore/src/disk/local.rs` lines 1788-1791.",
+      "The `object_key_path_traversal_storage_escape` finding instead traces S3 `PUT /{bucket}/{key}` through `validate_object_key()` and `put_object()` into write/rename joins at `crates/ecstore/src/disk/local.rs` lines 1926-2045; that is a different endpoint, input path, sink, and security consequence from the advisory.",
+      "The `default_owner_credentials_admin_takeover` finding is an unrelated authentication flaw and does not exercise the advisory's file-read traversal root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_03ce2d54/default_owner_credentials_admin_takeover",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_03ce2d54/default_owner_credentials_admin_takeover/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_03ce2d54/default_owner_credentials_admin_takeover/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_03ce2d54/object_key_path_traversal_storage_escape",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_03ce2d54/object_key_path_traversal_storage_escape/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_03ce2d54/object_key_path_traversal_storage_escape/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

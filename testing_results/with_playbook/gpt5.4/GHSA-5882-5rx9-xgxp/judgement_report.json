@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:09:56.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3be513ab",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-5882-5rx9-xgxp/GHSA-5882-5rx9-xgxp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "docker_api_arbitrary_file_write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3be513ab/docker_api_arbitrary_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3be513ab/docker_api_arbitrary_file_write/vulnerability_report.json",
+      "title": "Docker API output_path lets remote callers overwrite arbitrary server-side files",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a filesystem overwrite bug in `/screenshot` and `/pdf` caused by trusting `output_path`; the advisory is a `/crawl` hooks RCE caused by executing attacker-supplied hook code via `exec()` with `__import__` available.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's hook-execution root cause. The only final qualifying finding in the session is an unauthenticated arbitrary file overwrite in the Docker API screenshot/PDF export paths, which is a different vulnerable code path and security mechanism.",
+    "evidence": [
+      "The advisory describes `POST /crawl` accepting a `hooks` payload whose Python code is executed with `exec()`, with `__import__` available in `allowed_builtins`.",
+      "The only final qualifying finding listed in `.judge/input_manifest.json` is `docker_api_arbitrary_file_write`, and its report traces exploitation through `POST /screenshot` and `POST /pdf` to `os.path.abspath(body.output_path)` followed by `open(abs_path, \"wb\")` in `deploy/docker/server.py`.",
+      "The session checklist explicitly separated the hook-execution family from the accepted screenshot/PDF overwrite family and pruned the hook family rather than accepting it."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3be513ab/docker_api_arbitrary_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3be513ab/docker_api_arbitrary_file_write/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3be513ab/docker_api_arbitrary_file_write/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

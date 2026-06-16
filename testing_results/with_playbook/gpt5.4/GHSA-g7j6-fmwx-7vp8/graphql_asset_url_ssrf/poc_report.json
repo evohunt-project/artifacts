@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction confirms that the GraphQL asset URL-upload helper reaches the outbound HTTP request before it enforces the private-IP SSRF guard.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should force the vulnerable helper to send `GET /proof.txt` to a hostname that resolves to loopback and then abort with the `invalid IP address` validation error after the request has already reached the target.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Craft CMS at `c4e8e75fb785017dcad6a653513f8569b190b4c9`, built the reproduction image, and produced `HANDLE_UPLOAD_RETURNED=NULL`, `VALIDATION_ERROR=http://proof.local:18080/proof.txt resolves to an invalid IP address.`, `REQUEST_LOG=GET /proof.txt host=proof.local:18080`, followed by `PROOF=GRAPHQL_ASSET_SSRF_PRE_IP_VALIDATION` and the script’s success banner.",
+  "verification_method": "The reproduction starts a local HTTP proof server inside the container, maps `proof.local` to `127.0.0.1`, invokes the real GraphQL asset upload helper with `_file.url`, and requires both the proof-server request log and the later private-IP validation error. That combination distinguishes a true pre-validation SSRF request from a hostname-rejection failure, a DNS failure, or a generic upload error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof server logged `GET /proof.txt host=proof.local:18080`, confirming that the outbound request was emitted.",
+    "The helper then raised `http://proof.local:18080/proof.txt resolves to an invalid IP address.`, showing that IP validation happened after the request completed.",
+    "The reproduction emitted `PROOF=GRAPHQL_ASSET_SSRF_PRE_IP_VALIDATION` and the host `run.sh` printed `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "c4e8e75fb785017dcad6a653513f8569b190b4c9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce-graphql-ssrf.sh",
+      "reproduction/ssrf_oracle.php",
+      "reproduction/proof_router.php"
+    ]
+  }
+}

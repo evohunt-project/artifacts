@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_file_upload_and_write",
+  "summary": "The reproduction exercises the repository-owned `/api/upload` handler and proves that an unauthenticated upload with a traversing `destination` writes `proof.html` into the web root instead of the intended upload directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Uploading `proof.html` with `destination=widgets/../../client/dist` should place the file into the web root, make it reachable over HTTP, and avoid writing it inside `_upload_files`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `206fee15277412bf2813f10ecb8531b93439993f`, built the helper image, posted the crafted upload, and then retrieved the attacker-written file from the web root with HTTP 200 while the upload root remained untouched.",
+  "verification_method": "The helper starts the repository-owned upload route, posts the crafted JSON request, and fails unless the upload returns 200, the file is absent from `_upload_files`, the file exists in the web root, and the served response contains the proof marker `evohunt-path-write`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container printed a reproduced status object showing `upload_status: 200` and `served_status: 200`.",
+    "The run recorded the resulting web-root path as `/tmp/evohunt-upload-sandbox/client/dist/proof.html`.",
+    "The run completed successfully with the message `[evohunt] SUCCESS: unauthenticated upload traversal reproduced`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "206fee15277412bf2813f10ecb8531b93439993f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/package.json",
+      "reproduction/verify.js"
+    ]
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:38:24.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38fa38bf",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-2v35-w6hq-6mfw/GHSA-2v35-w6hq-6mfw.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "domparser_deep_nesting_stack_overflow",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38fa38bf/domparser_deep_nesting_stack_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38fa38bf/domparser_deep_nesting_stack_overflow/vulnerability_report.json",
+      "title": "Deeply nested XML causes stack exhaustion in DOMParser.parseFromString",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding reaches `Document.normalize()` -> recursive `Element.normalize()` in `lib/dom.js`, which the advisory explicitly lists as an affected traversal sharing the same missing depth guard/root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "domparser_deep_nesting_stack_overflow",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38fa38bf/domparser_deep_nesting_stack_overflow",
+      "status": "qualifying_vuln",
+      "title": "Deeply nested XML causes stack exhaustion in DOMParser.parseFromString",
+      "vulnerability_type": "resource_exhaustion_dos"
+    },
+    "reason": "The selected finding identifies the advisory's recursive `normalize()` root cause in `lib/dom.js`, and a fresh copied-workspace PoC run reproduced the stack-exhaustion denial of service on a deeply nested XML payload.",
+    "evidence": [
+      "The advisory details explicitly list `Node.prototype.normalize()` in `lib/dom.js` as an affected recursive traversal with no depth guard, and note that it was reported via `DOMParser.parseFromString()`.",
+      "The finding's exploit path is `DOMParser.parseFromString -> DOMHandler.endDocument -> Document.normalize -> recursive child.normalize -> RangeError`, which is the same vulnerable traversal family described by the advisory.",
+      "Fresh execution from `/Users/lumi/ziyue/EvoHunt-Run/advisory_38fa38bf/.judge/poc_runs/domparser_deep_nesting_stack_overflow/finding_copy` exited successfully and wrote runtime artifacts under `.judge/poc_runs/domparser_deep_nesting_stack_overflow`.",
+      "The run log shows a control parse succeeded, then a 20,000-level payload triggered `RangeError: Maximum call stack size exceeded` with repeated `Element.normalize` frames in `/target-repo/lib/dom.js`, satisfying the advisory-specific denial-of-service success condition."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "domparser_deep_nesting_stack_overflow",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38fa38bf/domparser_deep_nesting_stack_overflow",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38fa38bf/.judge/poc_runs/domparser_deep_nesting_stack_overflow/finding_copy",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38fa38bf/.judge/poc_runs/domparser_deep_nesting_stack_overflow/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38fa38bf/.judge/poc_runs/domparser_deep_nesting_stack_overflow/poc_execution.json",
+      "observed_effect": "The copied PoC parsed a control document successfully, then a 20,000-level XML payload caused `RangeError: Maximum call stack size exceeded` with repeated `Element.normalize` frames from `/target-repo/lib/dom.js`, proving stack-exhaustion denial of service in the advisory-listed recursive normalize path during `DOMParser.parseFromString`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

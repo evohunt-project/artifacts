@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:24:51.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_34016004",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-8x4m-qw58-3pcx/GHSA-8x4m-qw58-3pcx.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "proxy-post-auth-method-bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_34016004/proxy-post-auth-method-bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_34016004/proxy-post-auth-method-bypass/vulnerability_report.json",
+      "title": "Proxy POST fallback bypasses configured method checks and forwards unregistered writes upstream",
+      "vulnerability_type": "proxy_method_bypass",
+      "advisory_match": true,
+      "advisory_match_reason": "The advisory explicitly calls out bypassing payment on free routes via method-mismatch fallback, and the 0.4.8 proxy-routing fix changes this exact path-only POST fallback to exclude free routes.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "proxy-post-auth-method-bypass",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_34016004/proxy-post-auth-method-bypass",
+      "status": "qualifying_vuln",
+      "title": "Proxy POST fallback bypasses configured method checks and forwards unregistered writes upstream",
+      "vulnerability_type": "proxy_method_bypass"
+    },
+    "reason": "The finding is the advisory's free-route method-mismatch fallback in proxy routing, and the copied PoC demonstrated the advisory impact by forwarding a POST through a GET-only free route and causing an unauthorized upstream mutation.",
+    "evidence": [
+      "The advisory details include \"Bypassing payment on free routes via method-mismatch fallback\" among the vulnerabilities fixed in 0.4.8.",
+      "At vulnerable commit 539c5607a2b0abedf1125bc9f1604d4b16d85ef7, src/proxy/Proxy.ts falls back from method-aware Route.match() to method-agnostic Route.matchPath() for POST requests with an Authorization header, and src/proxy/internal/Route.ts ignores the configured HTTP method during matchPath().",
+      "The 0.4.8 diff changes that fallback to skip free routes by filtering out endpoint === true, which is the exact root cause described by the finding.",
+      "The copied PoC run log shows noAuthStatus=404, withAuthStatus=201, upstreamPostCount=1, and EVOHUNT_PROXY_METHOD_BYPASS_CONFIRMED, demonstrating an unauthorized upstream state change on a GET-only free route."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "proxy-post-auth-method-bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_34016004/proxy-post-auth-method-bypass",
+      "executed": true,
+      "command": "pnpm install --frozen-lockfile --store-dir /Users/lumi/ziyue/EvoHunt-DryRun/advisory_34016004/.judge/poc_runs/proxy-post-auth-method-bypass/host-workspace/.pnpm-store && node --import tsx /Users/lumi/ziyue/EvoHunt-DryRun/advisory_34016004/.judge/poc_runs/proxy-post-auth-method-bypass/finding_copy/reproduction/proxy-method-bypass-verify.mjs",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_34016004/.judge/poc_runs/proxy-post-auth-method-bypass/host-workspace/repo",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_34016004/.judge/poc_runs/proxy-post-auth-method-bypass/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_34016004/.judge/poc_runs/proxy-post-auth-method-bypass/poc_execution.json",
+      "observed_effect": "The initial Docker-based attempt in the copied workspace failed on a Docker Hub 429 pull-rate limit, but the adapted host-side run against the same copied PoC and vulnerable commit completed and showed noAuthStatus=404, withAuthStatus=201, created=true, upstreamPostCount=1, and EVOHUNT_PROXY_METHOD_BYPASS_CONFIRMED.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

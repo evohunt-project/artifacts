@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:25:50.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4f653080",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-6384-m2mw-rf54/GHSA-6384-m2mw-rf54.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "forwarded_header_default_trust",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4f653080/forwarded_header_default_trust",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4f653080/forwarded_header_default_trust/vulnerability_report.json",
+      "title": "Default forwarded-header trust lets clients spoof backend security metadata",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is about Traefik v1.7 default entrypoint forwarding trusting client-supplied `X-Forwarded-*` headers on normal backend requests (`configuration/configuration.go`, `configuration/entrypoints.go`, `server/header_rewriter.go`, `server/server_configuration.go`). The advisory instead targets the distinct `ForwardAuth` auth-subrequest path where `pkg/middlewares/auth/forward.go` fails to strip or rebuild attacker-controlled `X-Forwarded-Prefix` when `trustForwardHeader=false`, often after `StripPrefix`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "h2c_preface_stall_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4f653080/h2c_preface_stall_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4f653080/h2c_preface_stall_dos/vulnerability_report.json",
+      "title": "Cleartext h2c preface handling lets clients pin front-end connections indefinitely",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a cleartext h2c connection-stall denial of service in `h2c/h2c.go` and `server/server.go`. It does not involve `ForwardAuth`, auth-service subrequests, `X-Forwarded-Prefix`, `StripPrefix`, or an authentication bypass behind a trusted upstream proxy.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's `ForwardAuth` root cause: attacker-controlled `X-Forwarded-Prefix` surviving into the auth subrequest when `trustForwardHeader=false` behind a trusted upstream proxy.",
+    "evidence": [
+      "The advisory describes `pkg/middlewares/auth/forward.go` copying request headers into the auth subrequest and failing to strip or rebuild `X-Forwarded-Prefix`, with `StripPrefix` potentially appending a second value before the auth service evaluates the first one.",
+      "The closest session finding, `forwarded_header_default_trust`, is a different v1.7 bug on the normal backend forwarding path where default entrypoint config sets `ForwardedHeaders.Insecure=true`; it does not mention `ForwardAuth`, auth subrequests, `trustForwardHeader=false`, or `X-Forwarded-Prefix`.",
+      "`h2c_preface_stall_dos` is an unrelated availability issue in cleartext h2c preface handling."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4f653080/forwarded_header_default_trust",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4f653080/forwarded_header_default_trust/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4f653080/forwarded_header_default_trust/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4f653080/h2c_preface_stall_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4f653080/h2c_preface_stall_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4f653080/h2c_preface_stall_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

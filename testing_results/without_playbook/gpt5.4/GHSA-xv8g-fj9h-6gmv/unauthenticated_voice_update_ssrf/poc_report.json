@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_voice_endpoint_ssrf",
+  "summary": "The reproduction confirms that an unauthenticated `/ws` client can send a forged `OpVoiceUpdate` and make Linkdave open an attacker-chosen WSS connection and send a Discord UDP discovery probe to an attacker-chosen IP and port.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the target to accept an unauthenticated WebSocket control connection, send a voice Identify message to the fake gateway, and emit a 74-byte UDP discovery packet to the attacker-selected UDP listener.",
+  "actual_observed_result": "Running `./reproduction/run.sh` against commit `ac37037c6f1be2641108459d6f2aedff74e68aa6` produced the proof string `EVOHUNT_PROOF unauthenticated_voice_update_ssrf`. The fake gateway received the unauthenticated Identify message with attacker-controlled token `attacker-token`, the UDP listener received a 74-byte probe with prefix `00010046112233440000000000000000`, and the fake gateway observed Linkdave send `SelectProtocol` for `127.0.0.1:9999`.",
+  "verification_method": "The helper starts the vulnerable server, a fake TLS voice gateway, and a UDP listener. Verification passes only if the fake gateway receives the unauthenticated Identify request, the UDP listener receives the Discord voice IP-discovery packet with the expected SSRC and size, and the fake gateway then receives the follow-up `SelectProtocol` message proving the UDP probe succeeded.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Stdout contains `EVOHUNT_PROOF unauthenticated_voice_update_ssrf`.",
+    "The fake gateway observed `{\"op\":0,...\"token\":\"attacker-token\"...}` from Linkdave after only an unauthenticated `/ws` connection.",
+    "The UDP listener received the 74-byte discovery probe with header prefix `0001004611223344...` from the Linkdave process.",
+    "The fake gateway observed Linkdave send `{\"op\":1,\"d\":{\"protocol\":\"udp\",\"data\":{\"address\":\"127.0.0.1\",\"port\":9999,...}}}` after the UDP probe completed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "ac37037c6f1be2641108459d6f2aedff74e68aa6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

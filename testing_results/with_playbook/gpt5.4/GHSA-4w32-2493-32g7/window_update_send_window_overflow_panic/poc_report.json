@@ -1,0 +1,27 @@
+{
+  "status": "not_attempted",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The reproduction bundle is complete and targets upstream commit 7adbe8bffe4de18da0a9f90734455c9f4dec8f74, but ./reproduction/run.sh was not executed in this session because the local environment does not provide Docker. The exploit logic itself was validated separately with the same two-frame trigger against both the unpacked workspace copy and a fresh upstream clone.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should clone the pinned yamux source, build the helper harness, send the crafted two-frame WINDOW_UPDATE sequence to a server-side Connection, and observe the proof string WINDOW_UPDATE_OVERFLOW_PANIC_CONFIRMED after the server task panics at send-window overflow.",
+  "actual_observed_result": "Did not execute ./reproduction/run.sh in this session because the Docker CLI/runtime is unavailable. Separate direct cargo-based validation against the same vulnerable code path and pinned upstream commit observed the expected proof string and the panic message \"send window not to exceed u32\".",
+  "verification_method": "The bundled verify.sh script compiles a minimal harness against /target-repo/yamux, drives the two-frame attack sequence, and requires the exact proof string WINDOW_UPDATE_OVERFLOW_PANIC_CONFIRMED. The harness returns success only when the server task ends in a panic after processing the crafted WINDOW_UPDATE on a live stream.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [],
+  "limitations_or_blockers": [
+    "Docker is not installed in the session environment, so ./reproduction/run.sh could not be executed end to end here."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out commit 7adbe8bffe4de18da0a9f90734455c9f4dec8f74, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "7adbe8bffe4de18da0a9f90734455c9f4dec8f74",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/harness.Cargo.toml",
+      "reproduction/harness.main.rs"
+    ]
+  }
+}

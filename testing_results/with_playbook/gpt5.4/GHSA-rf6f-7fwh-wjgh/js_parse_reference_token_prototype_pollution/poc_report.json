@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution_and_object_shape",
+  "summary": "The reproduction bundle clones the upstream repository at the pinned vulnerable v3.4.1 commit and proves that malformed flatted reference tokens resolve to ambient Array objects and allow reviver-assisted `Array.prototype` pollution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that attacker-controlled tokens resolve to `Array`, `Array.prototype`, and `Array.prototype.map`, and that the documented reviver path can set a proof property on `Array.prototype`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the upstream repository at commit `2a02dce7c641dec31194c67663f9b0b12e62da20`, built the Node-based verifier image, and printed the expected proof sequence: `resolved constructor -> Array`, `resolved __proto__ -> Array.prototype`, `resolved map -> Array.prototype.map`, `observed Array.prototype.evohuntPolluted = evohunt-proof`, `confirmed fromJSON([{a:\"__proto__\"}]).a === Array.prototype`, followed by the final success signal.",
+  "verification_method": "The verifier loads the pinned JavaScript implementation from the mounted target repo, asserts the ambient-object resolutions, performs reviver-assisted `Array.prototype` pollution, confirms the proof property appears on a new array, and only then prints the success signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] resolved constructor -> Array",
+    "[evohunt] resolved __proto__ -> Array.prototype",
+    "[evohunt] resolved map -> Array.prototype.map",
+    "[evohunt] observed Array.prototype.evohuntPolluted = evohunt-proof",
+    "[evohunt] confirmed fromJSON([{a:\"__proto__\"}]).a === Array.prototype",
+    "[evohunt] SUCCESS: Array.prototype polluted via attacker-selected reference token"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2a02dce7c641dec31194c67663f9b0b12e62da20",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

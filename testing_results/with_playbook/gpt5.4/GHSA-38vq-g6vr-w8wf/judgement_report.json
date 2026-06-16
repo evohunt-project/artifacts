@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:48:39.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be0d9ab8",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-38vq-g6vr-w8wf/GHSA-38vq-g6vr-w8wf.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "malformed_charsmap_decompile_stack_overflow",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be0d9ab8/malformed_charsmap_decompile_stack_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be0d9ab8/malformed_charsmap_decompile_stack_overflow/vulnerability_report.json",
+      "title": "Malformed precompiled charsmap in spm_normalize --decompile triggers a stack-overflow crash",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory fix patches PrefixMatcher trie construction in src/normalizer.cc during model loading of user_defined_symbols, while this finding crashes the separate Builder::DecompileCharsMap path that is only reached by spm_normalize --decompile. Its reproduction also targets v0.2.1, the advisory's fixed release.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code/root cause. The only final qualifying finding is a stack-overflow crash in Builder::DecompileCharsMap behind spm_normalize --decompile, whereas GHSA-38vq-g6vr-w8wf fixes a heap-overflow condition in PrefixMatcher trie construction in src/normalizer.cc and marks v0.2.1 as the fixed release.",
+    "evidence": [
+      "The advisory reference commit d856b67fdb3492e035489abf9b3aaf486144b2c0 changes PrefixMatcher construction in src/normalizer.cc to pass explicit string lengths into Darts::DoubleArray::build, which is a different code path and bug class than the finding's recursive decompile crash.",
+      "The finding report and PoC describe malformed precompiled_charsmap data flowing through Normalizer::DecodePrecompiledCharsMap into Builder::DecompileCharsMap, then recursing until stack overflow only when spm_normalize is invoked with --decompile.",
+      "The finding's reproduction bundle pins sentencepiece to v0.2.1, while the advisory states versions less than 0.2.1 are affected and references v0.2.1 as the release containing the fix."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be0d9ab8/malformed_charsmap_decompile_stack_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be0d9ab8/malformed_charsmap_decompile_stack_overflow/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_be0d9ab8/malformed_charsmap_decompile_stack_overflow/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

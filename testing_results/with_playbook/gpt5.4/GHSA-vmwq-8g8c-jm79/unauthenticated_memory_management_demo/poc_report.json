@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction seeds a victim memory entry, launches the shipped sample memory UI, and confirms that an unauthenticated GET /memory response includes the victim's secret marker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should expose a victim-only memory marker in the unauthenticated /memory page returned by the sample Gradio memory UI.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned repository commit, built the reproduction image, installed the target dependencies, seeded victim memory data, started sample_ui/memory_ui.py, and observed EVOHUNT_MEMORY_SECRET_9b57f4e4 in the unauthenticated /memory HTTP response.",
+  "verification_method": "The verification script seeds a deterministic marker into the victim namespace, fetches the /memory page over HTTP without credentials, saves the response body, and checks for the exact marker string. That oracle distinguishes a real cross-user disclosure from a startup failure, empty page, or unrelated UI response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container log emitted '[evohunt] observed leaked marker in unauthenticated /memory response'.",
+    "The verification helper saved the HTTP response body to /tmp/evohunt-memory-ui-response.html inside the container.",
+    "The end-to-end run completed through ./reproduction/run.sh against commit b28da615a0b0a2c9eb5f79cc244bad842dbe2e8b."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction enables the documented memory feature with a local helper embedding backend so the sample memory surfaces become active without external API services."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b28da615a0b0a2c9eb5f79cc244bad842dbe2e8b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/config.yaml",
+      "reproduction/repro_providers.py",
+      "reproduction/seed_memory.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

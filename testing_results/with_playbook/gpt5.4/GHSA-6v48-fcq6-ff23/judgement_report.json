@@ -1,0 +1,101 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:39:20.284Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-6v48-fcq6-ff23/GHSA-6v48-fcq6-ff23.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "dag-api-arbitrary-file-write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982/dag-api-arbitrary-file-write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982/dag-api-arbitrary-file-write/vulnerability_report.json",
+      "title": "Create DAG API allows arbitrary file creation outside the DAG root",
+      "vulnerability_type": "arbitrary_file_write",
+      "advisory_match": true,
+      "advisory_match_reason": "It reaches the same advisory-described POST /api/v1/dags -> CreateNewDAG -> Storage.Create -> generateFilePath path. The report's blank-spec and absolute-path variant is a narrower exploit of the same missing DAG-name validation and out-of-root path resolution root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "dag-api-secret-disclosure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982/dag-api-secret-disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982/dag-api-secret-disclosure/vulnerability_report.json",
+      "title": "Viewer-readable DAG APIs disclose secret-bearing workflow configuration",
+      "vulnerability_type": "sensitive_data_exposure",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding concerns lower-privilege read APIs returning secret-bearing DAG data. The advisory is a DAG-creation path traversal write flaw in CreateNewDAG and filedag.generateFilePath, so the vulnerable code and root cause are different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "dag-api-arbitrary-file-write",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982/dag-api-arbitrary-file-write",
+      "status": "qualifying_vuln",
+      "title": "Create DAG API allows arbitrary file creation outside the DAG root",
+      "vulnerability_type": "arbitrary_file_write"
+    },
+    "reason": "The selected finding identifies the advisory's vulnerable code path: CreateNewDAG accepts a path-like DAG name without ValidateDAGName and passes it into Storage.Create, where generateFilePath resolves separator-bearing names outside the DAG base directory. The copied PoC then reproduced out-of-root file creation at an attacker-chosen path.",
+    "evidence": [
+      "The vulnerable commit's CreateNewDAG handler has no ValidateDAGName call, while the fixing commit adds that check before the spec/default-spec branches.",
+      "The vulnerable commit's internal/persis/filedag/store.go generateFilePath returns filepath.Abs(name) when the name contains a path separator, and Storage.Create writes the resulting path with os.WriteFile.",
+      "The copied PoC run under .judge/poc_runs/dag-api-arbitrary-file-write/run.log printed EVOHUNT_PROOF: developer-created file outside the DAG root and EVOHUNT_PROOF_FILE: /tmp/evohunt-vuln-commit-proof, confirming a file was created outside the configured DAG directory."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "dag-api-arbitrary-file-write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982/dag-api-arbitrary-file-write",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982/.judge/poc_runs/dag-api-arbitrary-file-write/finding_copy",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982/.judge/poc_runs/dag-api-arbitrary-file-write/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982/.judge/poc_runs/dag-api-arbitrary-file-write/poc_execution.json",
+      "observed_effect": "The copied PoC authenticated as a developer, submitted POST /api/v1/dags with an absolute-path name, and run.log confirmed /tmp/evohunt-vuln-commit-proof was created outside the DAG root with the expected default DAG content.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982/dag-api-secret-disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982/dag-api-secret-disclosure/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_10690982/dag-api-secret-disclosure/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

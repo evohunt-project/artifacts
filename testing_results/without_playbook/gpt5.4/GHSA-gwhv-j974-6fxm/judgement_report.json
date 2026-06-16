@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:01:43.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_bfd5aae1",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-gwhv-j974-6fxm/GHSA-gwhv-j974-6fxm.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "entity_assigner_proto_pollution",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_bfd5aae1/entity_assigner_proto_pollution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_bfd5aae1/entity_assigner_proto_pollution/vulnerability_report.json",
+      "title": "EntityAssigner allows __proto__ payload keys to rewrite entity prototypes",
+      "vulnerability_type": "prototype_pollution",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding shows EntityAssigner accepting an attacker-controlled __proto__ key and directly assigning it onto the entity instance, which rewrites the entity prototype. The advisory is about duck-typed __raw raw-SQL fragment recognition in ORM write APIs, so the vulnerable sink and missing guard are different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's SQL-injection root cause. The session's only genuine qualifying finding is EntityAssigner prototype pollution via __proto__, while the advisory concerns user-crafted objects impersonating internal raw SQL fragments through duck-typed __raw checks.",
+    "evidence": [
+      "The advisory states MikroORM is vulnerable to SQL injection when specially crafted objects are interpreted as raw SQL query fragments, and says the fix replaces duck-typed internal marker checks with symbol-based markers.",
+      "In vulnerable MikroORM v7.0.0, packages/core/src/utils/RawQueryFragment.ts implements isRaw() as a duck-typed '__raw' in value check; in fixed v7.0.6 that logic is replaced with a private symbol marker and Object.hasOwn(value, rawSymbol).",
+      "The session finding instead targets packages/core/src/entity/EntityAssigner.ts, where Object.keys(data) iterates attacker-controlled keys and the unknown-property fallback assigns entity[propName] = value, enabling __proto__ prototype rewriting.",
+      "The reproduced runtime evidence for the finding is EVOHUNT_PROOF: user.isAdmin=true protoChanged=true with inherited property resolution changes; it does not show __raw impersonation, raw SQL fragment handling, or SQL execution."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_bfd5aae1/entity_assigner_proto_pollution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_bfd5aae1/entity_assigner_proto_pollution/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_bfd5aae1/entity_assigner_proto_pollution/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

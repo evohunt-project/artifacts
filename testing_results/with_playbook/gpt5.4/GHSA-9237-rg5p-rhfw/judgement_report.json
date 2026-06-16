@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:13:09.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_fcccae26",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-9237-rg5p-rhfw/GHSA-9237-rg5p-rhfw.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "filter_aggregation_ownership_leak",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_fcccae26/filter_aggregation_ownership_leak",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_fcccae26/filter_aggregation_ownership_leak/vulnerability_report.json",
+      "title": "Filter aggregations ignore non-translatable ownership formulas and leak unauthorized row counts",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets `Table.aggregationQuery()` and `updateWhereWithOwnership()` leaking aggregate counts when ownership-formula translation fails, while the advisory describes the `/tenant/create` authorization bug where tenant-local admin role state is incorrectly used for root-domain tenant creation checks.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's tenant-creation privilege check flaw. The only qualifying finding is an ownership-filter aggregation leak in a different endpoint family and code path.",
+    "evidence": [
+      "The advisory describes a root-domain tenant-creation authorization failure on `/tenant/create`, where tenant-local admin role context is used to satisfy the root-domain tenant creation check and causes writes into `PUBLIC SCHEMA > _sc_tenants`.",
+      "The only final qualifying finding in `.judge/input_manifest.json` is `filter_aggregation_ownership_leak`.",
+      "That finding's report and PoC concern `Table.aggregationQuery()` and `updateWhereWithOwnership()` returning unrestricted aggregate results after ownership-formula SQL translation throws, with proof signals `OWNERSHIP_WHERE=translator_threw`, `OWNED_ROWS=1`, and `AGG_COUNT=2`.",
+      "The qualifying finding does not involve `/tenant/create`, tenant provisioning, `role_to_create_tenant`, tenant/root-domain role-context selection, or writes to `_sc_tenants`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_fcccae26/filter_aggregation_ownership_leak",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_fcccae26/filter_aggregation_ownership_leak/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_fcccae26/filter_aggregation_ownership_leak/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

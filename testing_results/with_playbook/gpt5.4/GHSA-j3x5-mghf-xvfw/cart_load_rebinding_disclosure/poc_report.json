@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a guest attacker can create a cart, a victim can resume that attacker-known cart, and a later anonymous update can still modify the now victim-bound cart.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the victim resumes the attacker-created cart, the victim identity becomes associated with that cart during normal cart access, and an anonymous attacker can still mutate the same cart afterward by reusing its known number.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Commerce 4.10.1 at `dc3642f0cf0695b319bd1b7aade6d9f0cc9c4e55`, built the reproduction container, and executed `CartLoadRebindPocTest`. Codeception reported `OK (1 test, 37 assertions)` and the harness emitted the `EVOHUNT_CART_REBIND_POC_SUCCESS` marker after verifying that the victim-bound cart's line-item quantity was increased from 1 to 3 by a later anonymous attacker-side update.",
+  "verification_method": "The unit-test harness drives the controller actions directly and asserts the exact exploit invariants: the victim resumes the attacker-created cart number, the cart becomes associated with the victim during subsequent cart access, victim addresses are auto-populated on the cart, and a later anonymous `update-cart` against the same cart number successfully changes the persisted line-item quantity.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run log contains `OK (1 test, 37 assertions)` from the dedicated exploit test.",
+    "The run log contains the `EVOHUNT_CART_REBIND_POC_SUCCESS` proof marker.",
+    "The exploit test verified that the victim-bound cart retained the attacker-known cart number and that a later anonymous update changed the persisted quantity from 1 to 3."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "dc3642f0cf0695b319bd1b7aade6d9f0cc9c4e55",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/inside-container.sh",
+      "reproduction/CartLoadRebindPocTest.php"
+    ]
+  }
+}

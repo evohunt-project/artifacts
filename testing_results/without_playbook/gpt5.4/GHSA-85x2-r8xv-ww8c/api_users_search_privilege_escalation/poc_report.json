@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_method_call_privilege_escalation",
+  "summary": "The Docker-based reproduction confirms that a low-privilege authenticated user can abuse `/api/users/search` query fields to invoke `loginPasswordless()` on the admin model, take over the admin session, and then perform an admin-only user-creation action.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the editor session cannot create users before exploitation, then switch the session to `admin@example.com` via the vulnerable `users/search` request, and finally create `newuser@example.com` with the escalated admin session. The run must print `EVOHUNT_ADMIN_SESSION_ESCALATION_CONFIRMED`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Kirby 4.9.0, built the reproduction image, triggered `POST /api/users/search` with `not=[editor]` and `filterBy=loginPasswordless`, observed the session change from `editor@example.com` to `admin@example.com`, and then successfully created `newuser@example.com`. The run log contains `EVOHUNT_ADMIN_SESSION_ESCALATION_CONFIRMED`.",
+  "verification_method": "The helper first authenticates as the low-privilege editor, verifies that `POST /api/users` returns HTTP 403, triggers the vulnerable `users/search` request, refreshes the CSRF token for the regenerated session, checks that `/api/auth` now reports `admin@example.com`, and finally verifies that `POST /api/users` succeeds with HTTP 200. This distinguishes a real session takeover from a generic login failure, stale token issue, or unrelated server behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The executed run printed `EVOHUNT_ADMIN_SESSION_ESCALATION_CONFIRMED`.",
+    "The executed run printed the pre-exploit HTTP 403 for editor user creation and the post-exploit HTTP 200 for `newuser@example.com`.",
+    "The executed run printed that the session identity changed to `admin@example.com` after the crafted `users/search` request."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at tag `4.9.0`, checks out the pinned vulnerable commit, and mounts that checkout into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "d952dfc0a890979c863ec5fa11660e37400f0f4c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/site_index.php",
+      "reproduction/site_router.php"
+    ]
+  }
+}

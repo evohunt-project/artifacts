@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "insecure_credential_permissions",
+  "summary": "The reproduction imports the vulnerable `FileCredentialStore` implementation from the pinned `google/clasp` source, saves proof credentials as one local user, and confirms that a second low-privilege user can read the resulting token file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create the victim's `.clasprc.json` through the real vulnerable code path with mode `0644` under a standard Unix umask and allow a different low-privilege local user to read the stored `refresh-token-proof` value.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `google/clasp` at commit `fd7c582b31385db675861d81e0ac4d2611cb369e`, built the reproduction image, executed `FileCredentialStore` as user `victim`, observed `/home/victim/.clasprc.json` with mode `644`, and then printed the JSON blob containing `refresh-token-proof` while reading the file as user `attacker`.",
+  "verification_method": "The container runs the real `src/auth/file_credential_store.ts` implementation from the mounted target repo via `ts-node`, saves proof credentials as `victim`, stats the resulting file, then uses `runuser` to read that file as a separate `attacker` account and checks for the `refresh-token-proof` marker. This distinguishes a true cross-user disclosure from a generic file-creation success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/last-run.log records `[evohunt] observed file mode 644`.",
+    "reproduction/last-run.log contains the JSON output read by `attacker`, including `\"refresh_token\": \"refresh-token-proof\"`.",
+    "reproduction/last-run.log ends with `[evohunt] SUCCESS: attacker read victim credential file and recovered the stored refresh token`."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction models the common Unix default `umask 022`; stricter process umasks can reduce the exposure even though the application itself does not enforce a safe file mode."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "fd7c582b31385db675861d81e0ac4d2611cb369e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exercise-store.mjs",
+      "reproduction/package.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

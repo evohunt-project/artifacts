@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:39:37.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b0bdcbc5",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-pchf-49fh-w34r/GHSA-pchf-49fh-w34r.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "public_lfs_oid_path_oracle",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b0bdcbc5/public_lfs_oid_path_oracle",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b0bdcbc5/public_lfs_oid_path_oracle/vulnerability_report.json",
+      "title": "Public LFS batch requests can escape the repo LFS root and probe arbitrary file existence",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is an HTTP Git LFS path-containment bug in `pkg/web/git_lfs.go`, `pkg/lfs/pointer.go`, and `pkg/storage/local.go`. The advisory is an SSH handshake authentication bypass caused by storing the offered-key user too early and not rebinding session identity from the key that actually authenticated.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "repo_import_private_repo_clone",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b0bdcbc5/repo_import_private_repo_clone",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b0bdcbc5/repo_import_private_repo_clone/vulnerability_report.json",
+      "title": "repo import lets a low-privilege user clone private local repositories",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding begins after the attacker has already authenticated as their own low-privilege SSH user and then abuses `repo import` authorization in `pkg/ssh/cmd/import.go` and `pkg/backend/repo.go`. The advisory is a pre-command SSH authentication bypass during public-key negotiation that lets an attacker impersonate another user.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's root cause: Soft Serve's SSH authentication flow stored user identity for an offered public key before that key actually authenticated, then failed to rebind session user state from the key that ultimately succeeded.",
+    "evidence": [
+      "The advisory describes impersonation by offering a victim's public key during the SSH handshake, failing that key's authentication, and then authenticating with the attacker's own valid key while retaining the victim identity.",
+      "Patch commit 8539f9ad39918b67d612a35785a2b4326efc8741 removes early user binding from `pkg/ssh/ssh.go` `PublicKeyHandler`, resets permission state more carefully, and sets the authenticated user in `pkg/ssh/middleware.go` only after validating the actual key used for authentication.",
+      "The `public_lfs_oid_path_oracle` finding targets HTTP LFS path traversal and storage-root escape, not SSH authentication state.",
+      "The `repo_import_private_repo_clone` finding is a post-auth `repo import` authorization flaw, not an SSH handshake impersonation bug."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b0bdcbc5/public_lfs_oid_path_oracle",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b0bdcbc5/public_lfs_oid_path_oracle/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b0bdcbc5/public_lfs_oid_path_oracle/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b0bdcbc5/repo_import_private_repo_clone",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b0bdcbc5/repo_import_private_repo_clone/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b0bdcbc5/repo_import_private_repo_clone/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

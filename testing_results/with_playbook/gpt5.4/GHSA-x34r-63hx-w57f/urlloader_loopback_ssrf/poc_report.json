@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The reproduction confirms that the default `URLLoader` path fetches an attacker-chosen loopback URL and returns the response body as ingested content.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start a loopback HTTP server inside the container, fetch `http://127.0.0.1:8765/proof.txt` through `URLLoader`, return `EVOHUNT_URLLOADER_SSRF_PROOF` in the loaded content, and emit `SUCCESS_SIGNAL: URLLOADER_LOOPBACK_FETCH`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned tag `0.59.31`, built the Docker image, installed the target repo in the container, fetched the loopback URL through `URLLoader`, printed the proof response body despite parser warnings about non-HTML content, and emitted `SUCCESS_SIGNAL: URLLOADER_LOOPBACK_FETCH`.",
+  "verification_method": "The helper script starts a local HTTP server on `127.0.0.1:8765`, calls `URLLoader([loopback_url]).load()`, joins the returned document bodies, checks that the joined content contains the exact proof string, and only then prints the success signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction started a loopback-only HTTP server and served a proof file at `http://127.0.0.1:8765/proof.txt`.",
+    "The fetched content returned by `URLLoader` included `EVOHUNT_URLLOADER_SSRF_PROOF`.",
+    "The run emitted `SUCCESS_SIGNAL: URLLOADER_LOOPBACK_FETCH` after verifying the loopback response body."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0.59.31",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

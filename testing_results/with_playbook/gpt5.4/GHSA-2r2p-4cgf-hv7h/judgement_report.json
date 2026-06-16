@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:45:01.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c389da7",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-2r2p-4cgf-hv7h/GHSA-2r2p-4cgf-hv7h.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "localhost_api_cors_exposure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c389da7/localhost_api_cors_exposure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c389da7/localhost_api_cors_exposure/vulnerability_report.json",
+      "title": "Default localhost API is browser-readable and browser-writable through wildcard CORS and optional auth",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": true,
+      "advisory_match_reason": "This finding identifies the same src/server/http.ts root cause as the advisory: fail-open auth when ENGRAM_API_TOKEN is unset, wildcard CORS on JSON and OPTIONS responses, and browser-writable /learn on the localhost HTTP server.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "localhost_api_cors_exposure",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c389da7/localhost_api_cors_exposure",
+      "status": "qualifying_vuln",
+      "title": "Default localhost API is browser-readable and browser-writable through wildcard CORS and optional auth",
+      "vulnerability_type": "broken_access_control"
+    },
+    "reason": "The selected finding matches the advisory's vulnerable localhost HTTP server logic in src/server/http.ts, and the copied PoC run demonstrated both anonymous cross-origin graph data read and persistent attacker-controlled /learn write under wildcard CORS.",
+    "evidence": [
+      "At commit 74c1e61040ff125124adbe8c99bf3fe5a6b5df20, /Users/lumi/ziyue/EvoHunt-Run/advisory_2c389da7/.judge/reference/engram/src/server/http.ts implements wildcard Access-Control-Allow-Origin in json() and OPTIONS handling and returns true from checkAuth() whenever ENGRAM_API_TOKEN is unset.",
+      "The v2.0.2 patch diff for src/server/http.ts removes wildcard CORS, changes auth to fail closed, and adds Content-Type enforcement on mutations, which aligns with the advisory remediation details.",
+      "The copied PoC artifacts /Users/lumi/ziyue/EvoHunt-Run/advisory_2c389da7/.judge/poc_runs/localhost_api_cors_exposure/run.log and http_probe.json show LEAK_OK:src/server/http.ts, a 204 wildcard-CORS preflight on /learn, a 201 {\"ok\":true} write response, and the persisted marker node captured in persisted_marker.json."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "localhost_api_cors_exposure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c389da7/localhost_api_cors_exposure",
+      "executed": true,
+      "command": "bash reproduction/judge_host_probe.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c389da7/.judge/poc_runs/localhost_api_cors_exposure/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c389da7/.judge/poc_runs/localhost_api_cors_exposure/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2c389da7/.judge/poc_runs/localhost_api_cors_exposure/poc_execution.json",
+      "observed_effect": "Unauthenticated requests with an attacker Origin header received Access-Control-Allow-Origin: * on graph reads and /learn preflight/write, leaked graph metadata including src/server/http.ts, and persisted the attacker-controlled marker `evohunt cross origin write proof` via /learn.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

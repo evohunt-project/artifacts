@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle launches n8n 1.123.21, creates a waiting execution, and verifies that an unauthenticated request to `/webhook-waiting/<executionId>` resumes it and injects attacker-controlled data.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should show that an unauthenticated request to the public waiting-webhook endpoint resumes a paused execution and stores the attacker marker `evohunt-proof` in the execution record.",
+  "actual_observed_result": "Running `./reproduction/run.sh` successfully built the helper image, launched `n8nio/n8n:1.123.21`, created waiting execution `1`, resumed it through an unauthenticated `POST /webhook-waiting/1`, and confirmed that the attacker marker `evohunt-proof` was preserved in the stored execution data.",
+  "verification_method": "The helper creates a waiting execution through the authenticated API, resumes it without any auth on `/webhook-waiting/<executionId>`, then confirms that the execution finished successfully and that the exact attacker marker appears in the stored execution data.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The helper printed `created waiting execution id=1` before the unauthenticated resume attempt.",
+    "The unauthenticated resume call returned success and the helper printed `unauthenticated wait-resume request returned success`.",
+    "The verification step printed `EVOHUNT_SUCCESS unauthorized wait resume verified execution_id=1 marker=evohunt-proof` after confirming that the marker was preserved in the finished execution record."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "7762bef712ee7da86b5d84f23212463e7a745064",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

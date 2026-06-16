@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "nil_dereference_dos",
+  "summary": "The Docker-based reproduction confirms that a valid unauthenticated POST to `/sdm-subscriptions` drives the UDM callback handler into a nil-pointer panic path and yields an HTTP 500 response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the callback route returns `callback_phase_status=500` and that the underlying handler panics with `runtime error: invalid memory address or nil pointer dereference`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `github.com/free5gc/udm` at commit `9308405abd0ddc01ce9499a125536002bca9b5cc`, built the reproduction image, and executed the helper harness. The run printed `callback_phase_status=500`, `callback_phase_raw_panic=runtime error: invalid memory address or nil pointer dereference`, `[evohunt] verification passed`, and `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The container-side `verify.sh` helper copies the mounted target checkout into a writable workspace, runs `repro_callback_panic.go` against the real target code, and asserts both the production-style 500 response and the raw nil-pointer panic string. This distinguishes the bug from a malformed-request rejection or an unrelated startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction output included `callback_phase_status=500`.",
+    "The reproduction output included `callback_phase_raw_panic=runtime error: invalid memory address or nil pointer dereference`.",
+    "The wrapper script printed `[evohunt] verification passed` and `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "9308405abd0ddc01ce9499a125536002bca9b5cc",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/repro_callback_panic.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

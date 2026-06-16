@@ -1,0 +1,117 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:25:21.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-vwcg-c828-9822/GHSA-vwcg-c828-9822.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "default-auth-anonymous-admin",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/default-auth-anonymous-admin",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/default-auth-anonymous-admin/vulnerability_report.json",
+      "title": "Default deployment grants anonymous callers admin access to protected API routes",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets the default `secureEnabled=false` posture and anonymous admin promotion through `verifyGroups()`, while the advisory is the distinct `secureEnabled=true` heartbeat refresh bypass that mints admin JWTs.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "secure-mode-jwt-admin-forgery",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/secure-mode-jwt-admin-forgery",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/secure-mode-jwt-admin-forgery/vulnerability_report.json",
+      "title": "Secure mode keeps a predictable JWT signing key and accepts forged admin tokens",
+      "vulnerability_type": "token_lifecycle_and_predictable_identifiers",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding exploits the predictable fallback secret `frangoteam751` and forged `x-access-token` claims; the advisory instead fixes `/api/heartbeat` re-signing identity from `x-auth-user` without requiring an authenticated request.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "secure-mode-upload-webroot-overwrite",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/secure-mode-upload-webroot-overwrite",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/secure-mode-upload-webroot-overwrite/vulnerability_report.json",
+      "title": "Unauthenticated upload route overwrites the active webroot even when secure mode is enabled",
+      "vulnerability_type": "unsafe_file_upload_and_write",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is an unauthenticated file-write/webroot-overwrite bug in `POST /api/upload`; it does not involve the heartbeat refresh endpoint or the token-minting logic fixed by the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the heartbeat refresh authentication-bypass root cause fixed by GHSA-vwcg-c828-9822. The closest secure-mode finding is a different predictable-secret bug in the same auth subsystem.",
+    "evidence": [
+      "The advisory patch `fe82348d160904d0013b9a3e267d50158f5c7afb` changes only the `/api/heartbeat` refresh flow and `jwt-helper` token-refresh helper so that only authenticated requests can receive a refreshed token.",
+      "In the validated FUXA v1.2.9 tree, `server/api/index.js` calls `authJwt.getNewToken(req.headers)` from the `req.body.params` heartbeat branch, and `server/api/jwt-helper.js` signs a fresh token directly from `x-auth-user` header claims.",
+      "The `secure-mode-jwt-admin-forgery` qualifying finding instead exploits the predictable JWT secret `frangoteam751` via a forged `x-access-token`; its documented exploit path and reproduced PoC do not use `/api/heartbeat`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/default-auth-anonymous-admin",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/default-auth-anonymous-admin/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/default-auth-anonymous-admin/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/secure-mode-jwt-admin-forgery",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/secure-mode-jwt-admin-forgery/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/secure-mode-jwt-admin-forgery/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/secure-mode-upload-webroot-overwrite",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/secure-mode-upload-webroot-overwrite/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cfdd2caf/secure-mode-upload-webroot-overwrite/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

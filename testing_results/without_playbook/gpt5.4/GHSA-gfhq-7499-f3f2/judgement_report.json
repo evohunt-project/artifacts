@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:51:48.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ba768f18",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-gfhq-7499-f3f2/GHSA-gfhq-7499-f3f2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "dpa_duplicate_under13_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ba768f18/dpa_duplicate_under13_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ba768f18/dpa_duplicate_under13_bypass/vulnerability_report.json",
+      "title": "Authenticated users can bypass DPA duplicate protection for third-party under-13 requests",
+      "vulnerability_type": "business_logic_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is about empty `evidence` being converted to `null` in `DPAController::store()`, causing a third-party under-13 DPA to be rendered as an apparent self-deletion request. This finding instead targets `App\\Rules\\DPAAlreadyLive::passes()`, where the duplicate check compares `dpas.user` against a raw username string and allows repeated submissions. The v29..v30 fix adds `evidence` validation in `DPAController::store()` and leaves `DPAAlreadyLive.php` unchanged, so the finding does not identify the advisory's vulnerable code or root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described root cause. The advisory concerns missing validation of the under-13 `evidence` field, which allows Laravel's empty-string-to-null conversion to store `underage = null` and make a third-party report look like a genuine self-deletion request. The session's only final qualifying finding is a separate duplicate-check bug in `DPAAlreadyLive::passes()`.",
+    "evidence": [
+      "The advisory summary and details describe forging self-deletion requests by leaving the under-13 `evidence` field empty so the report is indistinguishable from a genuine self-requested deletion.",
+      "The TSPortal v29..v30 diff for `app/Http/Controllers/DPAController.php` adds only `evidence` validation (`'required', 'string'`) in the non-`own-removal` branch, matching the advisory's stated remediation.",
+      "In v29 `resources/views/dpa/view.blade.php`, `is_null($dpa->underage)` renders the `dpa-own-account` message, which is the advisory's misclassification path when empty evidence becomes null.",
+      "The final qualifying finding and its reproduced PoC instead show that `app/Rules/DPAAlreadyLive.php` compares `dpas.user` against a raw submitted username for third-party requests, permitting duplicate open DPA rows. That file is unchanged between v29 and v30."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ba768f18/dpa_duplicate_under13_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ba768f18/dpa_duplicate_under13_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ba768f18/dpa_duplicate_under13_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

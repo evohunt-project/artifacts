@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction confirms that a single crafted Action Text HTML content attachment crashes Rails 7.2.3's render pipeline with `ActionView::Template::Error` when the rich text is rendered.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should clone Rails 7.2.3, render a crafted `<action-text-attachment content-type=\"text/html\" ...>` payload, and surface the render-time crash signature from `ActionView::Renderer::AbstractRenderer#merge_prefix_into_object_path`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `rails/rails` at `v7.2.3`, built the reproduction image, installed the target bundle, executed the probe, and emitted `ERROR_CLASS=ActionView::Template::Error`, `ERROR_MESSAGE=undefined method `include?' for nil`, `BACKTRACE=/target-repo/actionview/lib/action_view/renderer/abstract_renderer.rb:93:in `merge_prefix_into_object_path'`, followed by `EVOHUNT_SUCCESS actiontext_content_attachment_render_dos`.",
+  "verification_method": "The host run script builds the reproduction image and runs `verify.sh`, which installs the pinned target bundle, executes `probe.rb`, and requires the exact `EVOHUNT_SUCCESS actiontext_content_attachment_render_dos` proof marker after observing the expected exception class, message shape, and `abstract_renderer.rb:93` backtrace frame.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction emitted `ERROR_CLASS=ActionView::Template::Error` while rendering a single crafted HTML content attachment.",
+    "The reproduction emitted `ERROR_MESSAGE=undefined method `include?' for nil`.",
+    "The backtrace included `/target-repo/actionview/lib/action_view/renderer/abstract_renderer.rb:93:in `merge_prefix_into_object_path'`.",
+    "The verification helper observed `EVOHUNT_SUCCESS actiontext_content_attachment_render_dos` and `run.sh` exited successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that temporary checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v7.2.3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/probe.rb",
+      "reproduction/verify.sh"
+    ]
+  }
+}

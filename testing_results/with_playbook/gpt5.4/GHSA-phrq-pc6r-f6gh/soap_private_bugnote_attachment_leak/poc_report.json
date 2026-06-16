@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction installs the vulnerable MantisBT commit, seeds an issue with one public attachment and one private-bugnote attachment, and confirms that a VIEWER cannot pass the repository's own private-bugnote attachment ACL while SOAP still returns the hidden attachment bytes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privileged SOAP caller should be able to retrieve the bytes of a private-bugnote attachment even though the same viewer remains blocked by the repository's attachment authorization logic for private bugnotes.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned MantisBT at commit 5b7f5bc9c5a89303027e8855330fd48cd95e4df0, installed it in Docker, created a project and issue, added a private bugnote attachment, verified that the viewer saw no private note and that the in-app ACL helper reported viewer_can_download_private_bugnote_attachment=false, then successfully retrieved EVOHUNT_PRIVATE_BUGNOTE_SECRET through mc_issue_attachment_get().",
+  "verification_method": "The exploit script seeds both a public issue attachment and a hidden private-bugnote attachment, checks the viewer's SOAP issue view to confirm the private note is not exposed, invokes reproduction/acl_check.php inside the installed app to evaluate file_can_download_bug_attachments() and file_can_download_bugnote_attachments() for the same viewer, and finally verifies that SOAP returns the exact secret bytes from the hidden attachment.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The successful run emitted JSON showing viewer_visible_note_count=0 and viewer_visible_issue_attachment_ids=[1], confirming that the viewer-facing issue representation hid the private bugnote attachment.",
+    "The same JSON reported viewer_can_download_issue_attachment=true, viewer_can_download_private_bugnote_attachment=false, and viewer_can_view_private_bugnote=false from the repository's own ACL helper execution.",
+    "The run emitted soap_secret=EVOHUNT_PRIVATE_BUGNOTE_SECRET together with the final EVOHUNT_SUCCESS marker, demonstrating that SOAP still returned the hidden private-bugnote attachment bytes."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5b7f5bc9c5a89303027e8855330fd48cd95e4df0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/in_container.sh",
+      "reproduction/exploit.php",
+      "reproduction/acl_check.php"
+    ]
+  }
+}

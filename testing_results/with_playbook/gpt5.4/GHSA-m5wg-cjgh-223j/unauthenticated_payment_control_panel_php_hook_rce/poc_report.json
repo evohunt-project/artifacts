@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_php_hook_overwrite",
+  "summary": "The reproduction provisions a minimal Laravel host, installs the vulnerable package from the pinned repository commit, confirms unauthenticated access to the payment edit surface, overwrites `before_response.php` through `/payment/api/editable/update`, and then triggers the overwritten hook on the documented Click callback path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should show that an unauthenticated caller can read the payment-system edit page, overwrite `before_response.php`, and cause the application to print `EVOHUNT_POC_OK` after `GET /handle/click` executes the overwritten hook.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `2c5fa0515bdb01b403bf3cacf419afca2738d05b`, built the Docker image, created a Laravel host app inside the container, verified unauthenticated secret exposure on `/payment/payment_systems/1/edit`, overwrote `before_response.php` through `/payment/api/editable/update`, triggered `GET /handle/click`, received `{\"error\":0,\"error_note\":\"Success\",\"merchant_prepare_id\":1,\"click_trans_id\":\"12345\",\"merchant_trans_id\":\"1\"}`, and printed `EVOHUNT_POC_OK` from the proof file created by the overwritten hook.",
+  "verification_method": "The verification helper checks four independent signals: the unauthenticated edit page returns plaintext secret values, the overwrite endpoint returns `responseStatus=success`, the Click callback returns `error:0`, and the overwritten hook creates `storage/app/evohunt-proof.txt` containing the exact marker `EVOHUNT_POC_OK`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated GET to `/payment/payment_systems/1/edit` succeeded and exposed seeded secret values.",
+    "The unauthenticated GET to `/payment/api/editable/update` returned `{\"responseStatus\":\"success\",...}` after writing the attacker payload into `before_response.php`.",
+    "The documented callback route returned `{\"error\":0,\"error_note\":\"Success\",\"merchant_prepare_id\":1,\"click_trans_id\":\"12345\",\"merchant_trans_id\":\"1\"}`.",
+    "The overwritten hook wrote `EVOHUNT_POC_OK` into `storage/app/evohunt-proof.txt`, and the verification helper printed that marker before exiting successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, downloads a minimal Alpine root filesystem into a temporary Docker build context, and mounts the checked-out repository into the container at /target-repo.",
+    "pinned_commit_or_ref": "2c5fa0515bdb01b403bf3cacf419afca2738d05b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

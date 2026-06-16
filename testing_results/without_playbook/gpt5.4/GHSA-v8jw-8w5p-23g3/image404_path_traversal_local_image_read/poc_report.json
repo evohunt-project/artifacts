@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_arbitrary_file_read",
+  "summary": "The Docker-based reproduction cloned the pinned vulnerable commit, served the application with PHP's built-in server, requested `view/img/image404.php?image=../secret.png`, and received the exact bytes of a sibling image file outside the repository root.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should disclose a local image file that sits outside the checked-out repository root but inside the mounted workspace, proving arbitrary local image read via path traversal.",
+  "actual_observed_result": "Running `./reproduction/run.sh` produced `EVOHUNT_IMAGE404_READ_SUCCESS status=200 sha256=531561db154fa71b259ffe8d63e904dc6b82586a91541a5c5351da9e9bee1434 content_type=image/png content_length=68`, confirming that the HTTP response body matched the sibling secret image file byte-for-byte.",
+  "verification_method": "The verification container writes a known image file to `/workspace/secret.png`, requests `view/img/image404.php?image=../secret.png`, and compares the SHA-256 hash of the HTTP response body against the source file while also checking for an HTTP 200 response and an image content type.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction emitted the proof string `EVOHUNT_IMAGE404_READ_SUCCESS`.",
+    "The response status was `200` with `Content-Type: image/png` and `Content-Length: 68`.",
+    "The disclosed response body hash matched the sibling source image hash: `531561db154fa71b259ffe8d63e904dc6b82586a91541a5c5351da9e9bee1434`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host into a temporary workspace, checks out the pinned vulnerable commit, and mounts that workspace into the container so the vulnerable repo is available at `/workspace/repo` during execution.",
+    "pinned_commit_or_ref": "0dbadbcaaa1b415c7db078a72dc4b26d9fac0485",
+    "target_repo_mount_path": "/workspace/repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/secret.png.b64"
+    ]
+  }
+}

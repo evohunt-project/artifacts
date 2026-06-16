@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction confirms that one authenticated customer can overwrite another customer's address record by ID and that ownership of the address changes to the attacker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should show that an authenticated customer can submit another customer's address ID to the API update route, overwrite that record, and transfer it into the attacker's account.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 22f4aee6223107bb6c72fbba25b26573488681e2, built the reproduction image, seeded the application, and executed the bundled Pest test. The run reported PASS for CustomerAddressIdorTest with 6 assertions and emitted EVOHUNT_SUCCESS: customer API address IDOR reproduced.",
+  "verification_method": "The automated Pest test creates a victim customer address, logs in as a different customer, calls the API update route with the victim address ID, and verifies that the address record's customer_id and contents now belong to the attacker while the victim no longer owns that address record.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "PASS Packages\\Webkul\\Shop\\tests\\Feature\\API\\CustomerAddressIdorTest",
+    "Tests: 1 passed (6 assertions)",
+    "EVOHUNT_SUCCESS: customer API address IDOR reproduced",
+    "Pinned commit: 22f4aee6223107bb6c72fbba25b26573488681e2"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "22f4aee6223107bb6c72fbba25b26573488681e2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/CustomerAddressIdorTest.php",
+      "reproduction/validate.sh"
+    ]
+  }
+}

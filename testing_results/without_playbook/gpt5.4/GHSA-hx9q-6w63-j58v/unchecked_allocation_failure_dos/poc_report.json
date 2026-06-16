@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "allocation_failure_dos",
+  "summary": "A Docker-based reproduction builds the repository version of orjson and then constrains process memory so a large `loads()` input reaches the unchecked allocation-failure path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The child Python process should terminate with a native crash signal while parsing valid JSON under a low address-space limit, demonstrating denial of service rather than a handled Python exception.",
+  "actual_observed_result": "Running `./reproduction/run.sh` from the final finding directory built the repository version of orjson inside Linux Docker, executed the constrained-memory `loads()` trigger, and observed the child Python process terminate with `SIGSEGV`.",
+  "verification_method": "The verification wrapper runs the vulnerable operation in a child process, captures its exit status, and only reports success when the child exits due to a crash signal or an equivalent fatal termination code.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verification wrapper printed the payload size and applied `RLIMIT_AS=251658240` before invoking `orjson.loads()`.",
+    "The child Python process exited with return code `-11`, which the wrapper classified as `SIGSEGV`.",
+    "The outer `run.sh` script completed successfully only after detecting that fatal signal."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/verify.py",
+      "reproduction/victim_loads.py"
+    ]
+  }
+}

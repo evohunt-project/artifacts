@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_dynamic_evaluation",
+  "summary": "The Docker-based reproduction confirms that attacker-controlled `.jervis.yml` matrix metadata reaches the matrix-filter `GroovyShell` evaluator and executes injected Groovy code during pipeline planning.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause injected Groovy from `matrix.include.platform` to execute while `PipelineGenerator` computes buildable matrix axes and create `build/evohunt-matrix-eval-proof.txt` containing `evohunt-proof`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `ff0d9b0b726c32e29fa3b9b44deae2bc9356736c`, built the reproduction image, executed the Gradle `validateMatrixEval` task, printed `proof_exists=true` and `proof_contents=evohunt-proof`, and finished with `EVOHUNT_MATRIX_EVAL_RCE_CONFIRMED`.",
+  "verification_method": "The reproduction helper injects a crafted `matrix.include.platform` value into `.jervis.yml`, triggers `getBuildableMatrixAxes()`, and verifies that the evaluation side effect created `build/evohunt-matrix-eval-proof.txt` with the exact contents `evohunt-proof`. The wrapper also requires the final success banner.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Gradle output included the attacker-influenced `matrix_filter=` expression built from the injected `.jervis.yml` value.",
+    "Gradle output included `proof_exists=true`.",
+    "Gradle output included `proof_contents=evohunt-proof`.",
+    "The container run ended with `EVOHUNT_MATRIX_EVAL_RCE_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "ff0d9b0b726c32e29fa3b9b44deae2bc9356736c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_validation.sh",
+      "reproduction/validate_matrix_eval.init.gradle"
+    ]
+  }
+}

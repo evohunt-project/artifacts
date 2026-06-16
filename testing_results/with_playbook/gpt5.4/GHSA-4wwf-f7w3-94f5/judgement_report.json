@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:00:20.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_95e08e3e",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-4wwf-f7w3-94f5/GHSA-4wwf-f7w3-94f5.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "restapi_default_insecure_api_key",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_95e08e3e/restapi_default_insecure_api_key",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_95e08e3e/restapi_default_insecure_api_key/vulnerability_report.json",
+      "title": "RestAPI falls back to the hard-coded token \"insecure\" and exposes secret-bearing endpoints",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory fixes authenticated locale handling in `includes/system.php` and `includes/locale.php`, where user-controlled `locale` state reached `putenv(\"LANG=...\")`. This finding is a separate unauthenticated RestAPI authentication bypass in `api/auth.py` that exposes `/ddns` and related endpoints, so it does not identify the advisory's vulnerable code or root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described command-injection root cause. The advisory is the logged-in-user locale injection path where `includes/system.php` stores attacker-controlled `$_POST['locale']` in session and pre-fix `includes/locale.php` passes that session value into `putenv(\"LANG=\" . $_SESSION['locale'])`. The only qualifying finding is a separate RestAPI hard-coded-token authentication bypass in `api/auth.py`.",
+    "evidence": [
+      "GHSA-4wwf-f7w3-94f5 / JVN#27202136 describe OS command injection allowing a logged-in user to execute arbitrary OS commands, with CVSS `PR:L`.",
+      "The fixing commit `f514f5a12ef0c34853b5370ef55d630b499f977d` modifies only `includes/locale.php`, adds a `$validLocales` allowlist, validates `$_POST['locale']`/`$_SESSION['locale']`, and changes the vulnerable `putenv(\"LANG=\" . $_SESSION['locale'])` flow.",
+      "In vulnerable `3.3.5`, `includes/system.php` assigns `$_SESSION['locale'] = $_POST['locale'];`, establishing the advisory's authenticated input path into `includes/locale.php`.",
+      "The only final `qualifying_vuln` finding instead targets `api/auth.py`, where `RASPAP_API_KEY` falls back to the literal `insecure` token and guarded endpoints such as `/ddns` disclose secrets. That is a different component, boundary, and root cause from the locale command injection."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_95e08e3e/restapi_default_insecure_api_key",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_95e08e3e/restapi_default_insecure_api_key/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_95e08e3e/restapi_default_insecure_api_key/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

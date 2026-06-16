@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated LFS batch request can traverse out of a public repo's LFS root and turn arbitrary-file existence into a remote JSON error oracle.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The same unauthenticated batch request shape should return `size mismatch` when the escaped target file exists and `object not found` when a sibling escaped target file does not exist.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 2d0e48f65fd1f8637ed3831a2b7527c3d6447ba2, built the reproduction image, started a vulnerable Soft Serve instance, created a public repo, wrote a probe file outside that repo's LFS root, and printed `EVOHUNT_LFS_OID_PATH_ORACLE_OK` together with an `existing_response` containing `\"message\":\"size mismatch\"` and a `missing_response` containing `\"message\":\"object not found\"`.",
+  "verification_method": "The helper script starts the vulnerable server, creates a public repo, writes a probe file outside the per-repo LFS root, sends two unauthenticated LFS batch download requests with crafted OIDs, and checks that the JSON error changes based only on whether the escaped target file exists.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Bundle output included `EVOHUNT_LFS_OID_PATH_ORACLE_OK`.",
+    "Bundle output included an `existing_response` with `\"message\":\"size mismatch\"` for the escaped existing file.",
+    "Bundle output included a `missing_response` with `\"message\":\"object not found\"` for the escaped missing file."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2d0e48f65fd1f8637ed3831a2b7527c3d6447ba2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "browser_path_traversal_arbitrary_resource_read",
+  "summary": "The reproduction confirms that the browser bundle follows a relative partial reference outside the configured root and renders the fetched same-origin resource body into template output.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The browser UMD build should render `entry:TOP_SECRET` after a template rooted at `/views/public/` includes `../secrets/secret.txt`, demonstrating an out-of-root same-origin read.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `906707833e196733e592ca52fbe5eda48b71a8a6`, built the target bundles in Docker, and printed `EVOHUNT_BROWSER_ROOT_ESCAPE_OK entry:TOP_SECRET`. The same helper then printed `EVOHUNT_NODE_CONTROL_BLOCKED ENOENT: Failed to lookup \"../secrets/secret.txt\" in \"/tmp/liquidjs-node-control-ZLCtue/public\", file:/tmp/liquidjs-node-control-ZLCtue/public/entry.html, line:1, col:7`, confirming the root escape is specific to the browser bundle.",
+  "verification_method": "The helper script starts a local HTTP server, renders `entry.html` with the browser UMD bundle using root `/views/public/`, and asserts the exact output `entry:TOP_SECRET`. It then runs the same template through the Node build and expects a lookup failure to distinguish the bug from ordinary include behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Console proof string: `EVOHUNT_BROWSER_ROOT_ESCAPE_OK entry:TOP_SECRET`",
+    "Control signal: `EVOHUNT_NODE_CONTROL_BLOCKED ENOENT: Failed to lookup \"../secrets/secret.txt\" ...`",
+    "The run script completed with `[evohunt] SUCCESS: browser bundle escaped the configured root and read the protected resource`"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "906707833e196733e592ca52fbe5eda48b71a8a6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

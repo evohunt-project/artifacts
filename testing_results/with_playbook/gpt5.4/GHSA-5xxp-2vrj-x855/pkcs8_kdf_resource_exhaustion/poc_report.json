@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that attacker-controlled PBES2 scrypt parameters in an encrypted PKCS#8 blob can OOM-kill the parser before decryption fails.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should compile a probe against the pinned vulnerable repository and then OOM-kill the parsing container while it processes a tiny crafted encrypted PKCS#8 blob with an attacker-inflated scrypt cost parameter.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit d5d88f01dcd4965388bb953b186cb1cc4b7dab7c, built the probe against that checkout, executed it under a 512 MB Docker memory limit, and reported EVOHUNT_PROOF after Docker marked the parser container as OOM-killed.",
+  "verification_method": "The run script builds the probe against the pinned repository, executes it in a memory-limited container, and then verifies success by inspecting Docker's State.OOMKilled flag. The script also accepts a Go runtime out-of-memory log as a success signal and fails closed otherwise.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run log printed the original parsed scrypt parameters and then the final proof line: EVOHUNT_PROOF: container was OOM-killed while parsing the crafted PKCS#8 blob.",
+    "Docker reported State.OOMKilled=true for the parser container created by ./reproduction/run.sh.",
+    "The probe was built against the pinned repository commit d5d88f01dcd4965388bb953b186cb1cc4b7dab7c rather than against the session snapshot."
+  ],
+  "limitations_or_blockers": [
+    "The proof uses the library's local parsing API directly. Network reachability depends on an embedding application exposing PKCS#8 parsing of attacker-supplied encrypted keys."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the reproduction image, compiles the probe against that checkout, and then runs the probe container.",
+    "pinned_commit_or_ref": "d5d88f01dcd4965388bb953b186cb1cc4b7dab7c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/probe.go",
+      "reproduction/build_probe.sh",
+      "reproduction/run_probe.sh"
+    ]
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:04:28.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f65df3d0",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-88q6-jcjg-hvmw/GHSA-88q6-jcjg-hvmw.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "jwt_signature_verification_bypass_none_algorithm",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f65df3d0/jwt_signature_verification_bypass_none_algorithm",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f65df3d0/jwt_signature_verification_bypass_none_algorithm/vulnerability_report.json",
+      "title": "JWT none-algorithm verification bypass accepts attacker-forged unsigned tokens",
+      "vulnerability_type": "jwt_signature_verification_bypass",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same vulnerable function and root cause as the advisory: `Sources/JSONWebSignature/JWS+Verify.swift` returns `true` for `SigningAlgorithm.none` in `JWS.verify(key:)`, and `JWT.verify(...)` reaches that helper.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "jwt_signature_verification_bypass_none_algorithm",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f65df3d0/jwt_signature_verification_bypass_none_algorithm",
+      "status": "qualifying_vuln",
+      "title": "JWT none-algorithm verification bypass accepts attacker-forged unsigned tokens",
+      "vulnerability_type": "jwt_signature_verification_bypass"
+    },
+    "reason": "The selected finding matches the advisory's exact vulnerable code path and the copied PoC demonstrated end-to-end exploit success: an unsigned `alg:none` JWT with attacker-chosen claims was accepted during verification even when a trusted verification key was supplied.",
+    "evidence": [
+      "The advisory and finding both identify `Sources/JSONWebSignature/JWS+Verify.swift` as the root cause: `JWS.verify(key:)` immediately returns success when the protected header algorithm is `none`.",
+      "The finding's exploit path through `repo/Sources/JSONWebToken/JWT+Verification.swift:144` matches the advisory's affected high-level API `JWT.verify(jwtString:senderKey:)`, so the same vulnerable verification flow is implicated.",
+      "The judge-run PoC at `/Users/lumi/ziyue/EvoHunt-Run/advisory_f65df3d0/.judge/poc_runs/jwt_signature_verification_bypass_none_algorithm/run.log` produced `FORGED_ACCEPTED attacker true` and `SIGNED_TAMPER_REJECTED JWTError`, showing that a forged unsigned token was accepted while a tampered signed token was still rejected."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "jwt_signature_verification_bypass_none_algorithm",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f65df3d0/jwt_signature_verification_bypass_none_algorithm",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f65df3d0/.judge/poc_runs/jwt_signature_verification_bypass_none_algorithm/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f65df3d0/.judge/poc_runs/jwt_signature_verification_bypass_none_algorithm/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f65df3d0/.judge/poc_runs/jwt_signature_verification_bypass_none_algorithm/poc_execution.json",
+      "observed_effect": "The copied Docker-based reproduction accepted an attacker-forged unsigned JWT and printed `FORGED_ACCEPTED attacker true`; a tampered ES256 token still failed verification and printed `SIGNED_TAMPER_REJECTED JWTError`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

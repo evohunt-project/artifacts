@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a non-admin Craft Pro user with no asset-view permission can read a protected text asset through `POST /actions/assets/preview-file`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that a low-privilege authenticated user lacking both `accessCp` and the target volume's `viewAssets` permission can still retrieve the protected text asset contents in the preview response.",
+  "actual_observed_result": "Running `./reproduction/run.sh` fetched Craft CMS 4.16.17 at `b5f17cd3246cf10034a914464964757b0b84bcd3`, built the helper image, installed the application into a disposable database, created a protected text asset, switched to a non-admin user with no view permission, and printed `attacker_access_cp=false`, `attacker_view_assets_permission=false`, `attacker_admin=false`, the seeded proof secret, and the success line for the unauthorized preview read.",
+  "verification_method": "The harness seeds a secret text asset in a private volume, creates a non-admin user with an explicit empty permission set, fails closed if `accessCp`, `viewAssets`, or admin state is unexpectedly present, invokes `assets/preview-file`, and only succeeds if the exact secret appears inside `previewHtml`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Run output contained `attacker_access_cp=false`.",
+    "Run output contained `attacker_view_assets_permission=false`.",
+    "Run output contained `attacker_admin=false`.",
+    "Run output contained the seeded secret string in the preview proof output.",
+    "Run output ended with `SUCCESS: low-privilege user read private asset contents through assets/preview-file`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh fetches the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "b5f17cd3246cf10034a914464964757b0b84bcd3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

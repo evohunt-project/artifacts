@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "jwt_auth_bypass_rce",
+  "summary": "The reproduction clones upstream `v1.24.0`, starts the server without `JWT_SECRET`, registers a legitimate user, forges a JWT with the shipped fallback secret, reaches the `/shell` WebSocket to create a proof file, and then reads that proof back through a protected REST file endpoint with the same forged token.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A forged JWT should bypass the normal auth boundary, let the attacker reach the `/shell` PTY surface, and permit a protected REST file read that returns the proof string `EVOHUNT_JWT_RCE_SUCCESS`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` printed `EVOHUNT_PROOF: forged JWT reached /shell and protected REST file read` and returned JSON showing `projectName: \"-home-node\"`, `proofPath: \"/home/node/evohunt-jwt-proof.txt\"`, and `proofText: \"EVOHUNT_JWT_RCE_SUCCESS\"`.",
+  "verification_method": "The containerized exploit first uses the forged token to send an attacker-controlled `initialCommand` to `/shell`, which creates a proof file in the server user's home directory. It then uses the same forged token against the protected project/file API and verifies that the exact proof string is returned from the created file. This distinguishes real auth bypass and command execution from a generic startup issue or unauthenticated read failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed the success banner `EVOHUNT_PROOF: forged JWT reached /shell and protected REST file read`.",
+    "The run returned JSON with `proofPath` `/home/node/evohunt-jwt-proof.txt` and `proofText` `EVOHUNT_JWT_RCE_SUCCESS`.",
+    "The protected REST read only succeeded after the proof file was created through the `/shell` WebSocket reached with the forged JWT."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "bc164140e031f8010a4e672ac8bc20b61e84701a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-entrypoint.sh",
+      "reproduction/exploit.mjs"
+    ]
+  }
+}

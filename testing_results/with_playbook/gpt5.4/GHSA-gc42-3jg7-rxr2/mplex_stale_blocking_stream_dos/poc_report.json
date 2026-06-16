@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction clones the pinned upstream rust-libp2p commit, applies a targeted regression test, and confirms that dropping a blocked mplex substream leaves the connection stuck behind a stale `blocking_stream` marker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should prove that after one remote-controlled substream overflows the default mplex buffer and the victim drops that substream, reads on a different substream remain pending even after new data arrives, demonstrating a connection-wide availability stall.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `rust-libp2p`, checked out commit `7453e47ee17ce604ba0951facf17e4809ba596f3`, built the reproduction image, applied the regression patch, and ran `cargo test -p libp2p-mplex dropped_blocking_stream_stalls_other_streams -- --nocapture`. Cargo reported `test io::tests::dropped_blocking_stream_stalls_other_streams ... ok`, the container printed `[evohunt] REPRODUCED: dropping the blocked substream leaves mplex stuck on a stale blocker`, and the host script exited with `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "`reproduction/verify.sh` applies `reproduction/mplex_stale_blocker_test.patch` to the pinned checkout and then greps the cargo output for the exact passing test line `test io::tests::dropped_blocking_stream_stalls_other_streams ... ok`. That oracle is tied to the stale-blocker state transition and distinguishes the target bug from unrelated build or startup failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container printed the pinned revision `7453e47ee17ce604ba0951facf17e4809ba596f3` before executing the regression.",
+    "Cargo reported `test io::tests::dropped_blocking_stream_stalls_other_streams ... ok` for the patched `libp2p-mplex` test run.",
+    "The reproduction container printed `[evohunt] REPRODUCED: dropping the blocked substream leaves mplex stuck on a stale blocker`.",
+    "The host entrypoint printed `[evohunt] SUCCESS: reproduction completed and verified` after the container exited cleanly."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "7453e47ee17ce604ba0951facf17e4809ba596f3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/mplex_stale_blocker_test.patch"
+    ]
+  }
+}

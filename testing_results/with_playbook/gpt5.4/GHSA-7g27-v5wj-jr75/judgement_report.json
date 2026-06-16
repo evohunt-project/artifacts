@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:51:49.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_27c678e8",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-7g27-v5wj-jr75/GHSA-7g27-v5wj-jr75.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "event_exposure_subscription_delete_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_27c678e8/event_exposure_subscription_delete_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_27c678e8/event_exposure_subscription_delete_bypass/vulnerability_report.json",
+      "title": "Event Exposure subscription deletion lacks ownership enforcement and uses predictable IDs",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets Event Exposure subscription create/delete ownership logic in `internal/sbi/processor/event_exposure.go`, not the advisory's nil-pointer dereference in callback handling through `internal/sbi/api_httpcallback.go` and `internal/sbi/processor/notifier.go`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable callback path or the nil-pointer dereference root cause in `DataChangeNotificationProcedure`.",
+    "evidence": [
+      "The advisory and patch `65d7070f4bfd016864cbbaefbd506bbc85d2fa92` address `POST /sdm-subscriptions` callback handling by validating `NotifyItems` and `:supi` in `internal/sbi/api_httpcallback.go` and by guarding nil `UdmUeFindBySupi` results in `internal/sbi/processor/notifier.go` before dereferencing `ue.UdmSubsToNotify`.",
+      "GitHub issue `free5gc/free5gc#781` shows the crash path is a malformed callback request to `/nudm-sdm/v2/../../sdm-subscriptions...` that reaches `processor.(*Processor).DataChangeNotificationProcedure` and panics with `runtime error: invalid memory address or nil pointer dereference` at `notifier.go:30`.",
+      "The only final qualifying finding, `event_exposure_subscription_delete_bypass`, instead concerns predictable Event Exposure subscription IDs and missing ownership checks on `POST/PATCH/DELETE /nudm-ee/v1/:ueIdentity/ee-subscriptions/:subscriptionId` in `internal/context/context.go` and `internal/sbi/processor/event_exposure.go`.",
+      "`artifacts/component_family_checklist.md` also records the callback family tied to `/sdm-subscriptions` as pruned, while the accepted final finding is the separate Event Exposure access-control issue."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_27c678e8/event_exposure_subscription_delete_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_27c678e8/event_exposure_subscription_delete_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_27c678e8/event_exposure_subscription_delete_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

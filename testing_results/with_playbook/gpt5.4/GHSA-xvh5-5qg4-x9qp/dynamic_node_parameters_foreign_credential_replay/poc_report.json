@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a low-privilege user can replay a foreign Jenkins credential through the dynamic node parameter endpoint even though direct credential reads are forbidden.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An attacker who cannot read the credential directly should still be able to invoke the dynamic node parameter endpoint with the foreign credential ID and receive data fetched with the victim's Jenkins Basic Auth.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `n8n@2.10.0` at `8e81f3e31398b04fd6f8cc27cf844980cd382117`, built the reproduction image, executed the focused integration proof, and printed `[evohunt] verified foreign credential replay on credential i6ORVphokefG9o9w; direct read was blocked but dynamic parameters returned poc-job` followed by `[evohunt] SUCCESS: dynamic node parameter foreign credential replay reproduced`.",
+  "verification_method": "The integration proof creates an owner-owned Jenkins credential, verifies the attacker receives `403` from direct `GET /credentials/:id`, then calls `POST /dynamic-node-parameters/options` with the victim credential ID and asserts that the endpoint returns the protected Jenkins job list while the local Jenkins server observes the victim Basic Auth header. `verify.sh` validates the generated proof fields `directReadStatus=403`, `dynamicStatus=200`, `returnedJobName=poc-job`, `jenkinsHitCount=1`, and `usedVictimBasicAuth=true`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `PASS test/integration/evohunt.dynamic-node-parameters-credential-replay.test.ts` from the focused integration proof.",
+    "The verification helper printed `[evohunt] verified foreign credential replay on credential i6ORVphokefG9o9w; direct read was blocked but dynamic parameters returned poc-job`.",
+    "The proof file generated during the run recorded `directReadStatus=403`, `dynamicStatus=200`, `returnedJobName=poc-job`, `jenkinsHitCount=1`, and `usedVictimBasicAuth=true`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8e81f3e31398b04fd6f8cc27cf844980cd382117 (tag: n8n@2.10.0)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/evohunt.dynamic-node-parameters-credential-replay.test.ts"
+    ]
+  }
+}

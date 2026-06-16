@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stored_xss",
+  "summary": "The reproduction exercises the repository-owned theme update path, proves that an event-handler payload survives storage after only script-tag stripping, and confirms that the storefront render sink emits the surviving payload unchanged.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should store an event-handler-based HTML payload in a `static_content` theme block, show that the repository strips only the `<script>` tag portion, and verify that the storefront render sink still outputs the surviving event-handler payload.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Bagisto at `813e28551dd1d3207b9e275e6c2bd63f68f0f8b0`, installed dependencies, migrated MySQL, updated a theme customization through the vulnerable repository path, and printed `stored_event_handler_survived=1`, `rendered_event_handler_survived=1`, and `rendered_proof_marker=theme-xss`.",
+  "verification_method": "The verification helper stores a payload that combines a removable `<script>` tag with an `onerror` handler, reads back the translated `options` row to confirm that only the script tag was removed, and then renders the same static-content branch as the storefront sink to confirm the surviving event-handler HTML is emitted. This distinguishes stored XSS from mere theme persistence or inert text storage.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted `stored_event_handler_survived=1`, proving the repository filter left the event-handler payload intact in stored theme options.",
+    "The run emitted `rendered_event_handler_survived=1`, proving the storefront render sink emitted the same active HTML.",
+    "The run emitted `rendered_proof_marker=theme-xss`, tying the rendered payload back to the attacker-controlled stored block."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "813e28551dd1d3207b9e275e6c2bd63f68f0f8b0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.php"
+    ]
+  }
+}

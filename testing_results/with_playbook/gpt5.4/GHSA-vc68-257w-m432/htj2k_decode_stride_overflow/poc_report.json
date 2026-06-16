@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "integer_overflow_memory_corruption",
+  "summary": "The reproduction builds OpenEXRCore from the pinned vulnerable tag, generates a minimal valid HTJ2K chunk, patches its codestream width to a wide value, and triggers the signed overflow in internal_ht.cpp during decode.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should abort with a UBSan report that flags signed integer overflow in src/lib/OpenEXRCore/internal_ht.cpp:216 while decoding the crafted HTJ2K chunk.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned and checked out the pinned vulnerable revision, built the harness inside the reproduction container, and produced the expected UBSan failure: `/target-repo/src/lib/OpenEXRCore/internal_ht.cpp:216:51: runtime error: signed integer overflow: 4 * 536870912 cannot be represented in type 'int'`.",
+  "verification_method": "The containerized verify.sh script builds the harness, runs it, captures stderr, and checks for the exact UBSan overflow string and the exact vulnerable source location in internal_ht.cpp.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Harness output reached the HTJ2K decode path and printed `about to trigger internal_exr_undo_ht with width=536870912`.",
+    "UBSan reported `runtime error: signed integer overflow: 4 * 536870912 cannot be represented in type 'int'`.",
+    "The reported source location was `/target-repo/src/lib/OpenEXRCore/internal_ht.cpp:216:51`."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction uses a sanitizer-instrumented build so the arithmetic UB aborts at the exact overflow site before any later memory write occurs."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6768d5da78af4ba5b91bf3820ed11258f72743b0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/CMakeLists.txt",
+      "reproduction/harness.cpp",
+      "reproduction/verify.sh"
+    ]
+  }
+}

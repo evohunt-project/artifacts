@@ -1,0 +1,34 @@
+{
+  "status": "failed",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The reproduction bundle drives the real developer-provider OAuth signup flow and tampers avatar_url on the signed completion form, but the session did not reach a verified SSRF proof because Decidim dummy-app bootstrap remained unstable under the container's setup constraints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the target fetch http://127.0.0.1:8888/probe.png through CreateOmniauthRegistration#attach_avatar, then verify that the fetched bytes were persisted as the new user's avatar and emit SSRF_PROOF_CONFIRMED.",
+  "actual_observed_result": "Repeated executions of ./reproduction/run.sh cloned the pinned vulnerable commit, built the reproduction image, started the local PostgreSQL and Redis services inside the container, and advanced through real Decidim dummy-app generation. Earlier runs failed on a Spring preload conflict and later on a shakapacker compile-time Node heap exhaustion. The latest compile-free rerun still did not emit SSRF_PROOF_PATH, AVATAR_ATTACHED, or SSRF_PROOF_CONFIRMED before terminating, so the PoC was not verified successfully in this session.",
+  "verification_method": "exploit.py starts a local HTTP probe server, completes the real developer-provider OAuth signup flow, tampers user[avatar_url] on the follow-up registration form, and then verify.sh uses rails runner to require an attached avatar with the expected SHA-256 digest plus a persisted developer identity before printing SSRF_PROOF_CONFIRMED.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The run reached the real Decidim dummy-app setup stages, including organization seeding and the follow-up reproduction bootstrap around the OAuth signup surface.",
+    "A Spring runtime error was observed before the DISABLE_SPRING patch: Spring required reloading-enabled development mode and aborted when cache_classes had been forced on.",
+    "A later run reached explicit shakapacker compilation and failed with a Node heap out-of-memory condition during webpack asset generation.",
+    "No successful run in this session produced SSRF_PROOF_PATH, AVATAR_ATTACHED, AVATAR_SHA256, or SSRF_PROOF_CONFIRMED."
+  ],
+  "limitations_or_blockers": [
+    "Decidim dummy-app setup is resource-heavy in the reproduction container and repeatedly failed before the exploit verification stage completed.",
+    "Spring preloading conflicted with the earlier boost-performance workaround until Spring was disabled explicitly.",
+    "Explicit shakapacker compilation exceeded the container's Node heap budget, so the reproduction was revised to strip pack-dependent layout hooks instead.",
+    "The final compile-free rerun still did not reach a verified proof signal within this session."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "d47201a6e34314e9b4deaa6f054b1c8f97874d6b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

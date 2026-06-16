@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction shows that a low-privilege member can claim a different pending global admin invite by supplying their own inviterId to the authless invitation acceptance route.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should prove that a member-controlled inviterId can activate a different pending global admin shell and return an authenticated session for that higher-privilege account.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned n8n@1.123.21, built the reproduction image, staged the pinned repository into the container, ran a focused integration test, printed `EVOHUNT_PROOF: member-controlled inviterId claimed pending global:admin invite`, and finished with a passing Jest suite.",
+  "verification_method": "reproduction/verify.sh installs the workspace, builds the backend packages required by the CLI integration harness, injects the focused test file, runs Jest for that single test, and greps for the exact proof string. The test also asserts that the claimed account returns as global:admin and that an auth cookie is issued.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Stdout contained `EVOHUNT_PROOF: member-controlled inviterId claimed pending global:admin invite`.",
+    "Jest reported `PASS test/integration/controllers/invitation/evohunt.invitation-claim.poc.test.ts` with 1 of 1 tests passing.",
+    "The injected integration test verified that the returned account role was `global:admin` and that the response issued an authenticated session cookie."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "n8n@1.123.21",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/invite_claim.poc.test.ts"
+    ]
+  }
+}

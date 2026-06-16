@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "uncontrolled_memory_allocation_dos",
+  "summary": "The Docker-based reproduction clones OpenEXR at the pinned vulnerable commit, crafts an EXR file with a width of 1073741823 pixels in the accepted header metadata, and verifies that exr2aces aborts with an AddressSanitizer allocation-size-too-big failure after accepting the oversized header.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should show that OpenEXR accepts the attacker-controlled oversized EXR header and that exr2aces then requests an impossible image allocation, terminating with an AddressSanitizer allocation-size-too-big signal.",
+  "actual_observed_result": "Running ./reproduction/run.sh built OpenEXR 3.4.7 at commit 6768d5da78af4ba5b91bf3820ed11258f72743b0 inside the reproduction container, printed dataWindow and displayWindow values of (0 0) - (1073741822 255) for the crafted input through exrheader, and then aborted exr2aces with 'ERROR: AddressSanitizer: requested allocation size 0x1fffffff800' followed by 'SUMMARY: AddressSanitizer: allocation-size-too-big'.",
+  "verification_method": "The verification helper first runs exrheader against the crafted file and requires the oversized dataWindow line to appear, proving that the header passed default validation. It then runs exr2aces under ASan and requires both the 'requested allocation size' message and the 'allocation-size-too-big' summary, distinguishing the vulnerability from an unrelated parse error or generic build failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "exrheader printed 'dataWindow (type box2i): (0 0) - (1073741822 255)' for the crafted EXR file.",
+    "exrheader printed 'displayWindow (type box2i): (0 0) - (1073741822 255)' for the crafted EXR file.",
+    "exr2aces emitted 'ERROR: AddressSanitizer: requested allocation size 0x1fffffff800'.",
+    "exr2aces emitted 'SUMMARY: AddressSanitizer: allocation-size-too-big'.",
+    "The run script completed with '[evohunt] SUCCESS: reproduction completed and verified'."
+  ],
+  "limitations_or_blockers": [
+    "The proof signal is made deterministic with AddressSanitizer. In an unsanitized build the same bug may manifest as allocator-dependent memory exhaustion, termination by the host, or a later decode failure rather than the exact ASan diagnostic."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "6768d5da78af4ba5b91bf3820ed11258f72743b0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/craft_input.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:26:09.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99d106f2",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-p523-jq9w-64x9/GHSA-p523-jq9w-64x9.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "pickle_hook_bypass_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99d106f2/pickle_hook_bypass_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99d106f2/pickle_hook_bypass_rce/vulnerability_report.json",
+      "title": "Generic Fickling safety hook leaves pickle.loads paths unprotected",
+      "vulnerability_type": "unsafe_deserialization_protection_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is about `fickling.hook.run_hook()` and `fickling.check_safety()` failing to hook `pickle.loads` and `_pickle.loads`, while GHSA-p523-jq9w-64x9 is a separate unsafe-import classification gap for `cProfile.run`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause. The only qualifying finding is a runtime-hook coverage gap in `hook.py`/`context.py`, not the advisory's missing `cProfile` unsafe-import detection.",
+    "evidence": [
+      "GHSA-p523-jq9w-64x9 describes a `check_safety()` misclassification bypass where `cProfile.run` is not treated as an unsafe import, so malicious pickles are downgraded to `SUSPICIOUS` instead of `OVERTLY_MALICIOUS`.",
+      "The upstream fix commit `dc8ae12966edee27a78fe05c5745171a2b138d43` adds `cProfile` to Fickling's unsafe-import handling and adds a `test_missing_cprofile` regression test for `from cProfile import run`.",
+      "The session's only qualifying finding instead reports that `fickling.always_check_safety()` leaves `pickle.loads(...)` and `_pickle.loads(...)` unhooked, which is a different code path and different bypass mechanism."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99d106f2/pickle_hook_bypass_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99d106f2/pickle_hook_bypass_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_99d106f2/pickle_hook_bypass_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

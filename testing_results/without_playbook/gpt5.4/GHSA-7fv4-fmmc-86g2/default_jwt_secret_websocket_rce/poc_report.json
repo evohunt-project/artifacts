@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "default_jwt_secret_auth_bypass_rce",
+  "summary": "The reproduction starts the target server, registers a baseline user, forges a different JWT with the published fallback secret, confirms the forged token is accepted by a protected HTTP route, and then uses the same token to execute an attacker-controlled command through the authenticated shell WebSocket.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A forged JWT signed with the default fallback secret should be accepted as an authenticated session and allow command execution through /shell without using a legitimate server-issued token.",
+  "actual_observed_result": "Running ./reproduction/run.sh started the target on a local port, created a baseline user, forged a new JWT for userId 1 using the hardcoded fallback secret, observed that GET /api/auth/user returned the victim account, and then received the proof string EVOHUNT_JWT_RCE from the /shell WebSocket after submitting an attacker-controlled plain-shell command.",
+  "verification_method": "The helper script first calls a protected HTTP endpoint with the forged JWT and checks that the server returns the real stored user. It then opens /shell with the same forged token and waits for the exact proof string emitted by the attacker-controlled command, distinguishing successful shell access from a generic connection or startup error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Protected HTTP call returned the stored owner account when presented with the forged JWT.",
+    "Shell WebSocket session printed EVOHUNT_JWT_RCE after the attacker-controlled init payload was sent.",
+    "The reproduction did not use the token returned by /api/auth/register; it generated its own token from the published fallback secret."
+  ],
+  "limitations_or_blockers": [
+    "The target host must have Node.js and npm available so the repository dependencies can be installed if they are not already present.",
+    "The reproduction assumes the server is running in OSS mode with JWT_SECRET unset, which is exactly the vulnerable fallback configuration."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc.mjs"
+    ]
+  }
+}

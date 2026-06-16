@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_information_disclosure",
+  "summary": "The reproduction builds the vulnerable File Browser commit, creates a public share for /parent/shared, and confirms that unauthenticated requests can list the parent directory and download /parent/secret.txt.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a public share for a directory and then let an unauthenticated request read sibling data outside that shared directory, including the proof string from /parent/secret.txt.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the vulnerable target, created a public share for /parent/shared, and observed that the unauthenticated public share listing contained sibling entries while GET /api/public/dl/<hash>/secret.txt returned sibling-secret.",
+  "verification_method": "The helper builds and runs the vulnerable server, creates a public directory share through the authenticated API, then verifies that the unauthenticated public listing contains the sibling file secret.txt and that downloading it returns the exact proof string sibling-secret. The helper also confirms that the in-scope file /parent/shared/inside.txt remains reachable, so the signal is a real scope breakout rather than a setup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated GET /api/public/share/<hash> response listed sibling entries otherdir, shared, and secret.txt even though the shared path was /parent/shared.",
+    "The unauthenticated GET /api/public/dl/<hash>/secret.txt response body was sibling-secret.",
+    "The helper printed a success line after confirming the parent-directory listing and sibling-file download conditions."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "aa809096eb35fdfbdeb6784b1ebfe2ca1e42f52b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.py"
+    ]
+  }
+}

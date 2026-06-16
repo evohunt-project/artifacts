@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:56:05.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_41e1af48",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-7wc2-qxgw-g8gg/GHSA-7wc2-qxgw-g8gg.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "protocol_relative_api_base_url_token_exfiltration",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_41e1af48/protocol_relative_api_base_url_token_exfiltration",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_41e1af48/protocol_relative_api_base_url_token_exfiltration/vulnerability_report.json",
+      "title": "Protocol-relative URL bypass in api_base_url OAuth client helpers leaks credentials",
+      "vulnerability_type": "origin_and_url_boundary_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a protocol-relative URL confinement bug in authlib's OAuth client request helpers, while the advisory is a JOSE/JWT signature-verification flaw where the default authlib.jose.jwt decoder accepted alg:none tokens with empty signatures. They do not share the vulnerable function, verification path, or root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's JWT alg:none signature-verification flaw. The session's only qualifying finding concerns outbound OAuth client URL resolution and bearer-token forwarding, which is a different subsystem and root cause.",
+    "evidence": [
+      "The advisory describes forged JWT acceptance when authlib.jose.jwt.decode(...) is used with alg:none and a blank signature.",
+      "Introducing commit a61c2acb807496e67f32051b5f1b1d5ccf8f0a75 changed NoneAlgorithm.verify to accept an empty signature, enabling unsecured JWS support.",
+      "Fix commit b87c32ed07b8ae7f805873e1c9cafd1016761df7 removed none from the default authlib.jose.jwt algorithm set and converted legitimate none cases to explicit opt-in JsonWebToken([\"none\"]).",
+      "The only final qualifying finding targets authlib.integrations.base_client api_base_url request helpers and urljoin-based protocol-relative host escape, not JOSE/JWT signature verification."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_41e1af48/protocol_relative_api_base_url_token_exfiltration",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_41e1af48/protocol_relative_api_base_url_token_exfiltration/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_41e1af48/protocol_relative_api_base_url_token_exfiltration/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

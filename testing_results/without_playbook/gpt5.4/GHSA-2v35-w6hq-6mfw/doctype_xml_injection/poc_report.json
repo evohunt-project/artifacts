@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "doctype_xml_injection",
+  "summary": "The Docker-based reproduction confirms that attacker-controlled `DocumentType.systemId` data can escape the DOCTYPE declaration and inject a live processing instruction before the root element.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should serialize attacker-controlled `DocumentType.systemId` data into XML that reparses with an unexpected top-level processing instruction before the root element.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned upstream tag `0.9.9`, serialized the payload to `<!DOCTYPE root SYSTEM \"sysid\"><?x ?><root/>`, reparsed the result, and reported top-level nodes `10:root, 7:x, 1:root` before printing the success signal.",
+  "verification_method": "The verification script sets `DocumentType.systemId` to `\"sysid\"?><?x ?`, serializes the document, reparses the serialized XML with the same library, and asserts that the second top-level node is a live processing instruction with target `x`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `serialized XML: <!DOCTYPE root SYSTEM \"sysid\"><?x ?><root/>`.",
+    "The reproduction printed `top-level nodes after reparse: 10:root, 7:x, 1:root`.",
+    "The reproduction printed `EVOHUNT_SUCCESS: DocumentType systemId payload escaped the DOCTYPE and injected a live processing instruction`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out upstream tag `0.9.9`, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0.9.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "improper_authorization",
+  "summary": "The reproduction logs in as a low-privilege tutor, submits a tutoring-hour record for an unassigned victim user, receives `404 Not Found`, and then proves that the backend still persisted the unauthorized `tutor_hours` row.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a tutor can trigger a persistent `tutor_hours` insert for a victim who has no matching `tutee_registrations` entry in the target subject.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `Romitou/INSATutorat`, checked out commit `8dccb2fb3b9740f89588116942e192b554448847`, logged in as a seeded tutor, posted a forged hour for victim user `2`, received `HTTP 404`, and then confirmed via SQL that `registration_count=0` while a `tutor_hours` row for `tutor_subject_id=1` and `tutee_id=2` existed.",
+  "verification_method": "The container first authenticates through the real login route, then sends the forged hour-creation request, and finally verifies two database predicates: there is no matching `tutee_registrations` row for `(tutee_id=2, tutor_subject_id=1)` and there is exactly one persisted `tutor_hours` row carrying those attacker-selected identifiers. The proof marker is emitted only when both predicates hold and the exploit request returned 404.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output includes `EVOHUNT_PROOF: 404 response still created tutor_hours row for victim user 2 in tutor_subject 1`.",
+    "The exploit request returned `HTTP 404` even though the row was inserted.",
+    "SQL verification reported `registration_count=0` and a persisted `tutor_hours` row with `tutor_subject_id=1` and `tutee_id=2`."
+  ],
+  "limitations_or_blockers": [
+    "The provided session snapshot is not a Git checkout, so the reproduction pins upstream commit `8dccb2fb3b9740f89588116942e192b554448847`, which contains the same vulnerable `PostHour` logic as the audited snapshot."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8dccb2fb3b9740f89588116942e192b554448847",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/verify.sh",
+      "reproduction/seed.sql"
+    ]
+  }
+}

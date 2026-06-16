@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Improper Access Control",
+  "summary": "The reproduction starts a PHP server that exposes the vulnerable installer helper, creates an old temp file, requests the endpoint over HTTP, and verifies that the file was deleted.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An old file placed in the server temp directory is deleted after a single unauthenticated HTTP request to `/deleteSystemdPrivate.php`.",
+  "actual_observed_result": "The Docker reproduction created `/tmp/evohunt-old-temp-file.txt`, invoked `deleteSystemdPrivate.php` over HTTP, observed the script print `delete 13 bytes /tmp/evohunt-old-temp-file.txt`, and verified that the file no longer existed afterward.",
+  "verification_method": "The reproduction creates a known temp file with an old timestamp, invokes the endpoint over HTTP, and checks that the file no longer exists afterward.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container log showing the endpoint enumerated temp files and reported deletion of the staged file."
+  ],
+  "limitations_or_blockers": [
+    "None."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/deleteSystemdPrivate.php",
+      "reproduction/run_inside.sh"
+    ]
+  }
+}

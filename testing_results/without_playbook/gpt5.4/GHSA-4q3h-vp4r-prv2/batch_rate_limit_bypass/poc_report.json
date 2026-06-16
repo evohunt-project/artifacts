@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "rate_limit_bypass",
+  "summary": "The reproduction starts a Parse Server instance with a route-specific `/requestPasswordReset` limiter, proves that direct requests are throttled, and then shows that equivalent inner requests sent through `/batch` still succeed.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The configured route limiter should block repeated direct password-reset requests from the same source, but equivalent batched subrequests will bypass that protection and trigger additional reset actions.",
+  "actual_observed_result": "Running `./reproduction/run.sh` started a local Parse Server instance with a `/requestPasswordReset` limiter, returned HTTP 200 for the first direct reset request, returned HTTP 429 for the second direct reset request, and then returned HTTP 200 from `/batch` with two successful inner `/requestPasswordReset` results. The reproduction's e-mail adapter observed three total reset sends, proving that the two batched subrequests bypassed the configured limiter.",
+  "verification_method": "The PoC checks that a second direct `POST /requestPasswordReset` returns HTTP 429 while a later `POST /batch` containing two inner `/requestPasswordReset` operations returns two success results and increments the password-reset send counter.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The PoC logged `direct_second_status: 429`, confirming the configured direct route limiter was active.",
+    "The PoC logged `batch_status: 200` with two `success` results for inner `/requestPasswordReset` subrequests.",
+    "The PoC logged `password_reset_email_count: 3`, showing that two additional reset actions were executed through `/batch` after the direct limiter had already fired."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/package.json",
+      "reproduction/poc.js"
+    ]
+  }
+}

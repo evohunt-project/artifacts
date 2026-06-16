@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:52:37.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5da36541",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-qmwh-9m9c-h36m/GHSA-qmwh-9m9c-h36m.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "metadata_write_exiftool_argument_injection",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5da36541/metadata_write_exiftool_argument_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5da36541/metadata_write_exiftool_argument_injection/vulnerability_report.json",
+      "title": "ExifTool argument injection in metadata write permits out-of-bounds file creation",
+      "vulnerability_type": "argument_injection_file_write",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding reaches the same metadata write route, but its demonstrated bug is newline injection in a metadata value that splits ExifTool stdin into extra arguments. The advisory's root cause is different: case-sensitive deletion of metadata keys and omission of the dangerous pseudo-tags HardLink and SymLink.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code/root cause. The only qualifying finding demonstrates newline-based argument injection through an ExifTool metadata value, not the advisory's case-insensitive FileName/Directory key bypass or the missing HardLink/SymLink blocklist entries.",
+    "evidence": [
+      "The advisory describes pkg/modules/exiftool/exiftool.go deleting only the exact-case keys FileName and Directory and omitting HardLink and SymLink, which ExifTool still honors case-insensitively.",
+      "The qualifying finding report describes attacker-controlled newline characters in a metadata value injecting additional ExifTool arguments through the line-oriented stdin protocol.",
+      "The bundled reproduction payload is {\"Title\":\"poc\\n-Directory=/home/gotenberg\\n-FileName=evohunt-proof.pdf\"}, so the demonstrated exploit depends on value-level newline injection rather than bypassing metadata key filtering with alternate casings or omitted pseudo-tags."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5da36541/metadata_write_exiftool_argument_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5da36541/metadata_write_exiftool_argument_injection/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_5da36541/metadata_write_exiftool_argument_injection/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

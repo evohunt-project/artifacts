@@ -1,0 +1,29 @@
+{
+  "status": "failed",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The canonical Docker-based reproduction bundle was generated, but the local attempt to execute `./reproduction/run.sh` failed before verification because the host environment did not provide the `docker` CLI required by the bundle.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should prove that the WebSocket JSON-RPC listener ignores the configured `max-open-connections` boundary by accepting multiple concurrent upgrades beyond a configured cap of `1`, and it should emit `EVOHUNT_WEBSOCKET_CAP_BYPASS_CONFIRMED`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `https://github.com/cosmos/evm` and checked out commit `4ab7ba4e033caca10c5fe8fe91445f1fcf9ea347`, but the run then failed at the image-build step with `docker: command not found`, so the containerized verification and proof marker were not observed through the canonical entrypoint.",
+  "verification_method": "The helper copies the pinned repository into a temporary writable workspace, injects a package-local WebSocket test that sets `json-rpc.max-open-connections=1`, starts the real WebSocket server implementation, and verifies that three WebSocket upgrades succeed anyway. The helper then requires both the passing test output and the explicit proof marker.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The canonical run reached the host-side clone and checkout steps for upstream commit `4ab7ba4e033caca10c5fe8fe91445f1fcf9ea347`."
+  ],
+  "limitations_or_blockers": [
+    "The current host environment does not provide the `docker` CLI required by `./reproduction/run.sh`, so the container build and verification stages could not execute here.",
+    "A separate focused upstream validation of the helper test succeeded outside the canonical Docker entrypoint, but that does not satisfy the session rule for claiming reproduction success."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout read-only into the helper container at /target-repo.",
+    "pinned_commit_or_ref": "4ab7ba4e033caca10c5fe8fe91445f1fcf9ea347",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/evohunt_ws_cap_test.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

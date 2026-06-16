@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:55:40.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bfd5aae1",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-gwhv-j974-6fxm/GHSA-gwhv-j974-6fxm.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "query_builder_comment_sql_injection",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bfd5aae1/query_builder_comment_sql_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bfd5aae1/query_builder_comment_sql_injection/vulnerability_report.json",
+      "title": "QueryBuilder comments are concatenated into SQL without the documented restrictions",
+      "vulnerability_type": "sql_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause and code path: this finding exploits unsanitized comment concatenation in `QueryBuilder.comment()`/`hintComment()` and `NativeQueryBuilder`, not the advisory's duck-typed raw-fragment handling on ORM write APIs.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "serialize_populate_hidden_field_exposure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bfd5aae1/serialize_populate_hidden_field_exposure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bfd5aae1/serialize_populate_hidden_field_exposure/vulnerability_report.json",
+      "title": "serialize() with populate '*' re-exposes hidden entity fields",
+      "vulnerability_type": "sensitive_data_exposure",
+      "advisory_match": false,
+      "advisory_match_reason": "Different root cause and code path: this finding is a serializer visibility bypass in `EntitySerializer.isVisible()`, not raw SQL fragment interpretation in `assign`, `nativeUpdate`, `nativeInsert`, or `create` plus `flush`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "Neither qualifying finding identifies the advisory-described root cause. The advisory is about attacker-controlled objects being mistaken for internal raw SQL fragments on ORM write APIs, while the session findings target query-comment concatenation and serializer hidden-field exposure.",
+    "evidence": [
+      "The advisory JSON describes SQL injection when specially crafted objects are interpreted as raw SQL query fragments during `wrap(entity).assign(userInput)` plus `em.flush()`, `em.nativeUpdate()`, `em.nativeInsert()`, or `em.create()` plus `em.flush()`.",
+      "In the checked-out vulnerable source, `packages/core/src/utils/RawQueryFragment.ts` still recognizes raw fragments via the duck-typed `__raw` marker, and write-path code in `packages/core/src/drivers/DatabaseDriver.ts`, `packages/core/src/EntityManager.ts`, and `packages/sql/src/AbstractSqlDriver.ts` is the advisory-relevant surface.",
+      "The session's SQL injection finding instead targets `packages/sql/src/query/QueryBuilder.ts` and `packages/sql/src/query/NativeQueryBuilder.ts` comment handling, and the other qualifying finding targets `packages/core/src/serialization/EntitySerializer.ts` visibility logic."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bfd5aae1/query_builder_comment_sql_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bfd5aae1/query_builder_comment_sql_injection/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bfd5aae1/query_builder_comment_sql_injection/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bfd5aae1/serialize_populate_hidden_field_exposure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bfd5aae1/serialize_populate_hidden_field_exposure/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bfd5aae1/serialize_populate_hidden_field_exposure/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

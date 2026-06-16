@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The Docker-based reproduction clones changedetection.io 0.54.6, restores a crafted backup, and confirms that the preview route discloses the datastore secret through an attacker-controlled restored history path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the restore workflow accept a crafted watch backup whose restored history entry points at a local file, and a follow-up preview request should return the contents of that file.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 0da8dfb09a0c4165a4cef1f077159c15ba564135, built the reproduction image, restored a crafted backup, and produced a successful preview response that contained the datastore secret. The verification helper observed the expected proof string EVOHUNT_PROOF_SECRET_LEAK.",
+  "verification_method": "The run script executes exploit.py inside the reproduction container and then verify.sh checks for the exact proof string emitted only after the preview response contains the same datastore secret that the exploit previously read from secret.txt. This distinguishes a real local-file disclosure from a generic restore success or unrelated application error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction output reported preview_contains_secret=true with preview_status=200 and restore_status=200.",
+    "The restored watch history mapped timestamp 1700000000 to the attacker-selected local file path /tmp/evohunt-restore-6iseekfm/secret.txt during the observed run.",
+    "The verification helper observed the expected proof string EVOHUNT_PROOF_SECRET_LEAK."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0da8dfb09a0c4165a4cef1f077159c15ba564135",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unbounded_recursion_dos",
+  "summary": "The reproduction installs the pinned ONNX 1.22.0 source snapshot, verifies that plain structural checking accepts a self-recursive model-local function, and then confirms that running shape inference on the same model crashes a subprocess with a segmentation fault.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print `CHECK_MODEL_PASSED`, report a child return code of `-11` or `139`, and end with `POC_SUCCESS local_function_shape_inference_recursion`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the bundled source snapshot, built the Docker image, installed ONNX 1.22.0 from the pinned commit, printed `CHECK_MODEL_PASSED`, then the child shape-inference subprocess exited with `CHILD_RETURNCODE -11`, `CHILD_STDERR_HEAD <empty>`, and the wrapper emitted `POC_SUCCESS local_function_shape_inference_recursion`.",
+  "verification_method": "The helper script first proves that `onnx.checker.check_model(model)` accepts the crafted model, then runs `onnx.shape_inference.infer_shapes(model)` in a subprocess. The run only passes if the child exits with a segmentation-fault style code (`-11` or `139`), which distinguishes the real unbounded-recursion crash from a normal validation rejection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`CHECK_MODEL_PASSED` showed that plain structural validation accepted the crafted recursive model.",
+    "`CHILD_RETURNCODE -11` proved that the separate shape-inference subprocess crashed rather than rejecting the model cleanly.",
+    "`CHILD_STDERR_HEAD <empty>` recorded that the crash signal in this container run was the exit code itself, not a user-space exception message.",
+    "`POC_SUCCESS local_function_shape_inference_recursion` was emitted only after the crash return code matched the expected segmentation-fault oracle."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the bundled target repository snapshot on the host, checks out the pinned synthetic commit for the analyzed source tree, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b04fc166f2b61479e123327181287dd80b7f91a9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_in_container.sh",
+      "reproduction/poc_local_function_cycle.py",
+      "reproduction/target.bundle"
+    ]
+  }
+}

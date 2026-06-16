@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:03:07.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be2d1c3",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-wccx-j62j-r448/GHSA-wccx-j62j-r448.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "mailcap_findmatch_build_bypass_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be2d1c3/mailcap_findmatch_build_bypass_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be2d1c3/mailcap_findmatch_build_bypass_rce/vulnerability_report.json",
+      "title": "Safe-loader bypass via mailcap state gadget permits command execution",
+      "vulnerability_type": "pickle_safety_bypass_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is a hook-coverage bug in `run_hook()` and `always_check_safety()` that leaves `pickle.loads`, `_pickle.loads`, and `_pickle.load` unpatched. This finding instead relies on `check_safety()` misclassifying a malicious payload as `LIKELY_SAFE` through the `mailcap.findmatch` and `NormalDist` gadget path before `loader.load()` or a hook-protected `pickle.load()` deserializes it.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's missing-hook root cause. The advisory is about unprotected `pickle.loads` and `_pickle` entry points in `run_hook()`, while the session's qualifying finding is a separate `check_safety()` classification bypass that still succeeds even on entry points the hook does wrap.",
+    "evidence": [
+      "The advisory JSON states that `run_hook()` patches `pickle.load`, `pickle.Unpickler`, and `_pickle.Unpickler`, but does not patch `pickle.loads`, `_pickle.load`, or `_pickle.loads`.",
+      "The qualifying finding report attributes exploitation to `check_safety()` treating `mailcap` and `statistics` imports as safe, excluding the relevant `__setstate__` path from generic call scrutiny, and then having `loader.load()` unpickle the original bytes after a `LIKELY_SAFE` verdict.",
+      "The finding's cited code locations center on `fickling/fickle.py` and `fickling/loader.py`; its mention of `fickling/hook.py:32` is only as one downstream entry point that consumes the misclassified payload, not as the advisory's missing-entrypoint bug."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be2d1c3/mailcap_findmatch_build_bypass_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be2d1c3/mailcap_findmatch_build_bypass_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be2d1c3/mailcap_findmatch_build_bypass_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:30:03.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_99679a28",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-69v7-xpr6-6gjm/GHSA-69v7-xpr6-6gjm.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "table_from_reentry_segfault",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_99679a28/table_from_reentry_segfault",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_99679a28/table_from_reentry_segfault/vulnerability_report.json",
+      "title": "Same-runtime table_from() re-entry causes fatal interpreter crash",
+      "vulnerability_type": "memory_corruption",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding identifies a same-runtime `LuaRuntime.table_from()` / `py_to_lua_table()` stack-corruption crash during re-entry through `_LuaObject.__call__()`, not the advisory's incomplete `attribute_filter` enforcement in the builtins-backed `getattr` / `setattr` mediation path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described sandbox-escape root cause. The only final qualifying finding is a separate denial-of-service bug in `LuaRuntime.table_from()` re-entry, so no advisory-specific PoC execution was permitted or needed.",
+    "evidence": [
+      "The advisory describes incomplete `attribute_filter` enforcement when Lua code reaches Python builtins `getattr` or `setattr`, allowing traversal through attributes like `__class__`, `__mro__`, and `__subclasses__()` toward arbitrary command execution.",
+      "The local Lupa source tree places that advisory-specific mediation logic in `getattr_for_lua()` and `setattr_for_lua()` in `lupa/_lupa.pyx`, alongside builtins registration in `init_python_lib()` when `register_builtins=True`.",
+      "`.judge/input_manifest.json` lists exactly one final `qualifying_vuln` finding: `table_from_reentry_segfault`.",
+      "That finding's report and reproduction concern `LuaRuntime.table_from()` re-entry corrupting shared Lua stack state through `_LuaObject.__call__()` and crashing the interpreter, which is a different function path and a different root cause from the advisory's builtins-based `attribute_filter` bypass.",
+      "`artifacts/component_family_checklist.md` separately cleared the `Python attribute mediation and sandbox boundary` family instead of accepting a builtins-assisted `attribute_filter` bypass finding."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_99679a28/table_from_reentry_segfault",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_99679a28/table_from_reentry_segfault/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_99679a28/table_from_reentry_segfault/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

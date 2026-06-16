@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The reproduction installs Fickling v0.1.6 in a clean container, creates a one-byte `STOP` pickle, and confirms that the default CLI path, `--trace`, and `--check-safety` each abort with the expected uncaught stack-underflow traceback.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should print `EVOHUNT_STOP_OPCODE_UNDERFLOW_SUCCESS` after the helper observes the expected uncaught `IndexError` text for all three shipped CLI modes.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `8249522c7180c69436516ff81bff394f62298c0c`, built the container image, created the one-byte payload, and observed the expected `Opcode Stop` / `attempted to pop from an empty stack` traceback text in default, trace, and safety-check CLI invocations before printing the success marker.",
+  "verification_method": "The helper script installs the pinned source tree, writes `b'.'` to a temporary payload file, runs the three CLI modes under subprocess control, and verifies that each one exits non-zero with the exact stack-underflow traceback rather than a handled parse rejection.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`python -m fickling bad.pkl` exited non-zero with `Opcode Stop` and `attempted to pop from an empty stack` in stderr.",
+    "`python -m fickling --trace bad.pkl` exited non-zero with the same stack-underflow traceback.",
+    "`python -m fickling --check-safety bad.pkl` exited non-zero with the same stack-underflow traceback.",
+    "The helper printed `EVOHUNT_STOP_OPCODE_UNDERFLOW_SUCCESS`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the upstream target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8249522c7180c69436516ff81bff394f62298c0c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.py"
+    ]
+  }
+}

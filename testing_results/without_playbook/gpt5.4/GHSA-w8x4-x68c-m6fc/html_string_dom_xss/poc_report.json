@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "dom_xss",
+  "summary": "The browser-based reproduction confirms that attacker-controlled HTML passed to `html2pdf().from(..., 'string')` reaches live DOM insertion and executes an inline `onerror` handler.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should flip a proof marker in the page by executing attacker-controlled JavaScript from the supplied HTML string.",
+  "actual_observed_result": "The reproduction printed `{\"triggered\":true,\"status\":\"triggered\",\"marker\":\"yes\"}`, confirming that the payload executed and modified the page state in the vulnerable origin.",
+  "verification_method": "The run script serves a self-contained PoC page, drives a headless browser to load it, and asserts that a DOM marker and status text were changed by the payload itself rather than by unrelated page code.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The browser automation output reported `triggered: true`.",
+    "The page status text changed from `not-triggered` to `triggered`.",
+    "The payload set `document.body[data-pwned=yes]`, which the verifier read back."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/check_dom_xss.js",
+      "reproduction/http-root/poc_dom_xss.html",
+      "reproduction/http-root/html2pdf.bundle.js"
+    ]
+  }
+}

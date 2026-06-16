@@ -1,0 +1,28 @@
+{
+  "status": "failed",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction bundle pins Traefik v2.11.48 and verifies the missing ForwardAuth size bound by comparing the shipped unlimited path against a bounded configuration. The host in this session lacked Docker, so ./reproduction/run.sh failed during environment preflight even though the bundled helper logic was validated directly with Go.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction bundle should print UNBOUNDED_FORWARD_AUTH_CONFIRMED after showing that the default ForwardAuth path returns the full 8 MiB auth-response body while a bounded maxResponseBodySize=1024 configuration rejects the same large body without forwarding it.",
+  "actual_observed_result": "Executing ./reproduction/run.sh in this session failed before container execution because the host did not have a Docker CLI/daemon available. Separately, the same helper code was executed directly with Go against both the local source snapshot and upstream Traefik v2.11.48 and emitted UNBOUNDED_FORWARD_AUTH_CONFIRMED.",
+  "verification_method": "The helper runs two repository-grounded ForwardAuth cases against the pinned target source tree: an unbounded default case and a bounded control case. Verification succeeds only if the unbounded case forwards the full 8 MiB auth body and the bounded case returns 401 with no large forwarded body, then emits the exact proof string UNBOUNDED_FORWARD_AUTH_CONFIRMED.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "run.sh preflight failed because docker was not installed or not available on PATH on the host used for this session."
+  ],
+  "limitations_or_blockers": [
+    "The current session environment does not provide a Docker CLI/daemon, so the required Docker-based run.sh workflow could not be completed end to end here."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2c436f3c239932f9eb8afab57fc2668d86880e35",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/forwardauth_unbounded_harness.go"
+    ]
+  }
+}

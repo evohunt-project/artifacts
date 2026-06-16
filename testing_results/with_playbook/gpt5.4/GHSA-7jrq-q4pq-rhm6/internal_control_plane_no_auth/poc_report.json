@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker reproduction confirms that an unauthenticated client can use the internal control-plane RPC service to create a term, become leader for shard 0, and delete the shard's persistent state.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that an unauthenticated internal gRPC client can invoke NewTerm, BecomeLeader, and DeleteShard, after which GetStatus fails because the node is no longer a member and the shard's WAL and DB directories are removed from disk.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Oxia at 599f30a2f68dccb099b0edd5b7c85dfc64eed638, built the reproduction image, and passed TestUnauthenticatedInternalRPCCanDeleteShard. The run logs showed unauthenticated NewTerm and BecomeLeader requests followed by 'Deleting shard', and the test verified that GetStatus failed and both shard directories no longer existed.",
+  "verification_method": "The bundled Go test starts a real dataserver with its public and internal listeners, connects to the internal listener without credentials, issues NewTerm and BecomeLeader, confirms the shard reached LEADER state, calls DeleteShard, and then verifies both that GetStatus returns an error and that the shard's WAL and DB paths were deleted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction run emitted '=== RUN   TestUnauthenticatedInternalRPCCanDeleteShard' followed by '--- PASS: TestUnauthenticatedInternalRPCCanDeleteShard'.",
+    "Server logs from the run showed 'Received NewTerm request', 'Received BecomeLeader request', and 'Deleting shard'.",
+    "The test oracle confirmed that shard 0 was no longer a member and that both on-disk shard directories had been removed after the unauthorized DeleteShard call."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "599f30a2f68dccb099b0edd5b7c85dfc64eed638",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/go.mod",
+      "reproduction/go.sum",
+      "reproduction/internal_control_plane_test.go",
+      "reproduction/run-test.sh"
+    ]
+  }
+}

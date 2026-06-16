@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_information_disclosure",
+  "summary": "The Docker reproduction starts the vulnerable Sliver HTTP listener, creates a staged payload containing an embedded secret, brute-forces the 65,537-value stage ID space over unauthenticated HTTP, and recovers the exact staged payload.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should recover a staged implant payload over unauthenticated HTTP and reveal the embedded secret that was stored in that payload.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Sliver at `80c752a422d962b9dee82a70962c9a8718f4f2a9`, built the reproduction container, started the vulnerable HTTP listener, brute-forced the staged resource ID, and printed `EXPECTED_IMPLANT_ID=43885`, `RECOVERED_IMPLANT_ID=43885`, `RECOVERED_SECRET=AGE-SECRET-KEY-1H84MLAP4CFGVZ803RQPNTX6GJHQ63A7KSWCRYNXD0SZEGFGHUF7QRSKZLH`, and `EVOHUNT_STAGER_DISCLOSURE_CONFIRMED`.",
+  "verification_method": "The helper program creates a staged payload containing the marker `EVOHUNT_STAGE_SECRET:` plus the generated implant `PeerPrivateKey`, then performs unauthenticated GET requests for every candidate ID in `0..65536`. The run passes only if the recovered body contains the marker, the recovered body exactly matches the stored stage payload, and the recovered ID matches the expected staged `ImplantID`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `EXPECTED_IMPLANT_ID=43885`.",
+    "The run printed `RECOVERED_IMPLANT_ID=43885`.",
+    "The run printed `RECOVERED_SECRET=AGE-SECRET-KEY-1H84MLAP4CFGVZ803RQPNTX6GJHQ63A7KSWCRYNXD0SZEGFGHUF7QRSKZLH`.",
+    "The run printed `EVOHUNT_STAGER_DISCLOSURE_CONFIRMED` after verifying exact payload equality."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "80c752a422d962b9dee82a70962c9a8718f4f2a9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/inside-container.sh",
+      "reproduction/harness/go.mod",
+      "reproduction/harness/main.go"
+    ]
+  }
+}

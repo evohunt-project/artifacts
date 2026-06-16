@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "Denial of Service",
+  "summary": "A 12-byte malformed RIFF/WEBP buffer triggers an uncaught TypeError in the bundled WebP decoder.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should abort image decoding with a deterministic exception, demonstrating a low-complexity denial of service condition for WebP parsing.",
+  "actual_observed_result": "Running the reproduction produced TypeError: Cannot read properties of undefined (reading 'src_off') from repo/src/libs/WebPDecoder.js:5426.",
+  "verification_method": "The helper script imports the target repo's WebPDecoder directly, feeds it the minimal malformed RIFF/WEBP payload, and treats the specific TypeError on frames[0] dereference as the success oracle.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/observed.txt"
+  ],
+  "limitations_or_blockers": [
+    "The included PoC exercises the bundled decoder directly rather than the fully bundled dist entrypoint, because the local dist build requires external runtime dependencies that are not installed in this dry-run session."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc.mjs",
+      "reproduction/observed.txt"
+    ]
+  }
+}

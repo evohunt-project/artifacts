@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "detection_bypass_false_negative",
+  "summary": "The Docker-based reproduction clones the pinned vulnerable picklescan revision, generates a malicious object-array `.npy`, confirms direct file detection, confirms the directory-scan false negative, and verifies command execution when the skipped file is loaded with NumPy.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that direct file scanning detects the malicious `.npy`, directory scanning silently skips it, and loading the same file with `numpy.load(..., allow_pickle=True)` executes the embedded command.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned picklescan `9f8b998c3b119037d97029d4ee4dc45ae4a439b0`, built the Docker image, and produced a result object with `direct_scanned_files=1`, `direct_issues_count=1`, `directory_scanned_files=0`, `directory_issues_count=0`, `proof_exists=true`, followed by the `EVOHUNT_REPRO_SUCCESS` marker.",
+  "verification_method": "The helper script generates a malicious object-array `.npy`, runs both `scan_file_path()` and `scan_directory_path()`, then loads the same file with `numpy.load(..., allow_pickle=True)`. Verification passes only if the direct file scan flags the dangerous `system` global, the directory scan reports zero scanned files and zero issues, and the proof file created by the embedded command exists.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container emitted a JSON result showing `direct_scanned_files=1`, `direct_issues_count=1`, `directory_scanned_files=0`, `directory_issues_count=0`, and `proof_exists=true`.",
+    "The direct scan reported a dangerous `posix.system` global on Linux, confirming that the malicious `.npy` would have been detected on the direct file path.",
+    "The run printed `EVOHUNT_REPRO_SUCCESS` and `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "9f8b998c3b119037d97029d4ee4dc45ae4a439b0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.py"
+    ]
+  }
+}

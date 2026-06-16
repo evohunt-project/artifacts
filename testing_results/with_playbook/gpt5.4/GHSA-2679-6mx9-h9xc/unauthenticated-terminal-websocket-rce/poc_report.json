@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle starts an auth-enabled marimo edit-mode Starlette server from the pinned vulnerable commit, confirms the main notebook WebSocket rejects unauthenticated access, and then demonstrates that the unauthenticated terminal WebSocket still executes shell commands.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that unauthenticated access to `/ws` is rejected while unauthenticated access to `/terminal/ws` returns the execution-only proof string `AUTH_BYPASS_13` from a PTY-backed shell.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned marimo commit, built the Docker image, installed the target inside the container, showed unauthenticated `/ws` was rejected, and then showed unauthenticated `/terminal/ws` executed `echo AUTH_BYPASS_$(expr 6 + 7)` and returned the proof string `AUTH_BYPASS_13` from the PTY-backed shell.",
+  "verification_method": "The verifier uses a differential oracle: unauthenticated `/ws?session_id=unauth-test` must be rejected, but unauthenticated `/terminal/ws` must still execute `echo AUTH_BYPASS_$(expr 6 + 7)` and emit `AUTH_BYPASS_13`, a string that appears only after shell evaluation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `[evohunt] unauthenticated /ws correctly rejected`, confirming the main authenticated notebook WebSocket remained protected.",
+    "The reproduction printed `[evohunt] unauthenticated /terminal/ws executed shell command` and emitted the execution-only proof string `AUTH_BYPASS_13` from the PTY-backed shell.",
+    "The host-side run completed with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "f0fa872399a5f5c2ada747e5d0befe9b131e01fd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:56:54.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3adc8487",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-825q-w924-xhgx/GHSA-825q-w924-xhgx.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "dynamic_node_parameters_ssrf",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3adc8487/dynamic_node_parameters_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3adc8487/dynamic_node_parameters_ssrf/vulnerability_report.json",
+      "title": "Authenticated dynamic node parameter resolution allows arbitrary server-side HTTP requests",
+      "vulnerability_type": "server_side_request_forgery",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an authenticated SSRF in `POST /rest/dynamic-node-parameters/options` via attacker-controlled `loadOptions.routing.request` merged into `RoutingNode` request options, while the advisory fixes webhook HTML-response CSP enforcement in `packages/core/src/html-sandbox.ts` for malformed `Content-Type` values.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's webhook-response CSP sandbox bug. The advisory patch trims `Content-Type` before HTML detection in `packages/core/src/html-sandbox.ts`, whereas the session's qualifying finding is a separate SSRF in dynamic node parameter resolution.",
+    "evidence": [
+      "GHSA-825q-w924-xhgx describes stored XSS caused by webhook responses failing to receive the intended sandbox CSP when HTML `Content-Type` handling is incorrect.",
+      "Advisory fix commits `ced34c0f93ab4c759a56065965986094d8ef7323` and `e8cf4d6bb3af94dc296cbb67bc3dd20e9b508ac9` change `packages/core/src/html-sandbox.ts` from `contentType.toLowerCase()` to `contentType.trim().toLowerCase()` and add tests for leading/trailing spaces.",
+      "The only final `qualifying_vuln` finding in `.judge/input_manifest.json` is `dynamic_node_parameters_ssrf`, which targets `POST /rest/dynamic-node-parameters/options` and `packages/core/src/execution-engine/routing-node.ts`, not webhook response rendering or CSP enforcement."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3adc8487/dynamic_node_parameters_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3adc8487/dynamic_node_parameters_ssrf/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3adc8487/dynamic_node_parameters_ssrf/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

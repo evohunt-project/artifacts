@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_read",
+  "summary": "The Docker-based reproduction clones the vulnerable upstream `0.54.3` source, builds the target image, restores a crafted backup ZIP, and verifies that the preview route renders content from an attacker-selected filesystem path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should restore an attacker-crafted watch whose `history.txt` points at `/app/changedetection.py` and then make `/preview/<uuid>?version=1` render the proof line `import changedetectionio` from that file.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `b984426666a6f3ea9fa9645ea05992567a72427e`, built the target and helper images, restored the crafted ZIP, and observed a `200` preview response containing the proof line `import changedetectionio` from `/app/changedetection.py`.",
+  "verification_method": "The helper waits for the restore page, extracts the CSRF token, uploads the crafted ZIP, then polls the preview URL until it receives HTTP 200 containing the exact proof substring `import changedetectionio` from `/app/changedetection.py`. This distinguishes the exploit from a generic startup issue, failed restore, or unrelated error page.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The helper printed a successful restore/preview chain for a freshly generated watch UUID.",
+    "The preview request returned HTTP 200 after the crafted restore completed.",
+    "The preview HTML contained the proof line `import changedetectionio`, demonstrating that the application opened `/app/changedetection.py` as an imported history snapshot."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out tag `0.54.3`, verifies the pinned commit hash, builds the vulnerable target image from that checkout, and mounts the checkout into the helper container at `/target-repo`.",
+    "pinned_commit_or_ref": "b984426666a6f3ea9fa9645ea05992567a72427e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

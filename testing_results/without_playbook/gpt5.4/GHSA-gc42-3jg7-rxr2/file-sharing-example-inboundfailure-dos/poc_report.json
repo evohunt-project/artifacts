@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "panic_dos",
+  "summary": "The reproduction confirms that a remote peer can request a file from the file-sharing example and then disconnect, causing the provider to panic on an unhandled request-response InboundFailure event.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the provider example to panic in examples/file-sharing/src/network.rs after libp2p_request_response reports InboundFailure { error: ConnectionClosed } for the attacker-controlled request.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned rust-libp2p at v0.56.0 / 70082df7e6181722630eabc5de5373733aac9a21, built the vulnerable file-sharing example and exploit helper, launched the provider, sent a matching request, and then dropped the attacker connection. The provider log showed a panic at examples/file-sharing/src/network.rs:330:18 with BehaviourEvent::InboundFailure { error: ConnectionClosed }, followed by process termination.",
+  "verification_method": "The verifier launches the provider, triggers the malicious request, waits for the provider to exit, and then checks that the provider log contains both a panic in examples/file-sharing/src/network.rs and the InboundFailure { ... error: ConnectionClosed } payload. This distinguishes the vulnerability from a generic startup failure or unrelated crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Provider log contained: thread 'tokio-runtime-worker' panicked at examples/file-sharing/src/network.rs:330:18.",
+    "The panic payload included Behaviour(BehaviourEvent: InboundFailure { ..., error: ConnectionClosed }).",
+    "The provider process exited after the malicious request-and-disconnect sequence, and the verifier reported SUCCESS."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.56.0 (70082df7e6181722630eabc5de5373733aac9a21)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit-client.Cargo.toml",
+      "reproduction/exploit-client.rs"
+    ]
+  }
+}

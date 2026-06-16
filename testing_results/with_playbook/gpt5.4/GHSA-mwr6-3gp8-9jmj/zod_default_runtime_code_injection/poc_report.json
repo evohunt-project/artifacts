@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_dynamic_evaluation",
+  "summary": "The final Docker-based rerun cloned Orval at the pinned vulnerable commit, built the workspace from source, generated zod output from a malicious OpenAPI schema default, and observed the proof string during import of the generated module.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The generated zod module should contain an attacker-injected top-level statement and emit `__EVOHUNT_POC__` when the module is imported.",
+  "actual_observed_result": "Running ./reproduction/run.sh generated a file containing `export const getEvilResponseDefault = \"\"; console.log(\"__EVOHUNT_POC__\"); const __evohunt = \"\";` and then printed `__EVOHUNT_POC__` when the generated module was executed through tsx.",
+  "verification_method": "The containerized verifier checks that the generated file contains the injected proof statement and then imports the generated module with tsx, requiring the exact `__EVOHUNT_POC__` marker on stdout before declaring success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final generated file snippet contained the injected top-level statement in the exported default constant initializer.",
+    "The import of the generated module printed the exact proof string `__EVOHUNT_POC__`.",
+    "The final run completed through the self-contained ./reproduction/run.sh bundle against the pinned source checkout."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b8189efe3858a8d6e4bae1e41d3fb6b14c1bd55d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/malicious-openapi.yaml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

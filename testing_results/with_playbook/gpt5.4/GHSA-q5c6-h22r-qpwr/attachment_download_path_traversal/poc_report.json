@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_file_read",
+  "summary": "The reproduction seeds a file under the sibling `nc/profilePics/` root, starts the vulnerable NocoDB service from a fresh upstream clone, and proves that the unauthenticated `/download/...` route serves that file through a traversal payload.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should return `200 OK` for `/download/../profilePics/evohunt-proof.txt` and disclose the exact proof body `EVOHUNT_TRAVERSAL_PROOF` from outside the intended `nc/uploads/` root.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `34f15348ec03593ac2ed4dc18d8992c0a37bc6fa`, built the reproduction image, started the vulnerable service, and printed a verified `200` response plus the body `EVOHUNT_TRAVERSAL_PROOF` for the traversal request.",
+  "verification_method": "The container copies the checked-out repository to a writable workspace, installs dependencies, builds `nocodb-sdk`, starts the backend, and requests `http://127.0.0.1:8080/download/../profilePics/evohunt-proof.txt` with `curl --path-as-is`. Verification requires both HTTP status `200` and an exact body match with the seeded proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] verified 200 response for /download/../profilePics/evohunt-proof.txt",
+    "[evohunt] proof body: EVOHUNT_TRAVERSAL_PROOF",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [
+    "The reproduction seeds a file under `packages/nocodb/nc/profilePics/` to demonstrate unauthorized cross-root disclosure without depending on pre-existing user data."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "34f15348ec03593ac2ed4dc18d8992c0a37bc6fa",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that a normal fragment-arguments document rewrites successfully while a self-recursive fragment-arguments document hangs until the verification timeout kills it.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show the normal fragment-arguments control case succeed and the recursive query hang until the verifier's timeout terminates it, proving a parser-stage denial-of-service condition.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `graphql-hive/envelop` at `0434fbdf9e6a33a64f5cb5fe34662ea4815647eb`, installed dependencies, built the core package outputs, executed the harness, and emitted `EVOHUNT_FRAGMENT_ARGUMENTS_RECURSIVE_DOS_CONFIRMED` after the recursive rewrite stalled until the 2-second timeout.",
+  "verification_method": "The verification helper first runs a non-recursive control query and requires it to complete successfully. It then runs the recursive query in a child process with a 2-second timeout and only passes when the child is terminated with `SIGTERM` and an `ETIMEDOUT` error, distinguishing the vulnerable hang from a normal parser rejection or unrelated crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The control fragment-arguments rewrite completed successfully before the exploit case.",
+    "The exploit case reached the expected timeout-based hang condition inside the verification helper.",
+    "The run emitted `EVOHUNT_FRAGMENT_ARGUMENTS_RECURSIVE_DOS_CONFIRMED` and exited successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0434fbdf9e6a33a64f5cb5fe34662ea4815647eb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify_fragment_arguments_recursive_dos.js"
+    ]
+  }
+}

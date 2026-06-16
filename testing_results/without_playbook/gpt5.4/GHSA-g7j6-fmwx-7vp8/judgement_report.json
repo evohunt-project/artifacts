@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:48:36.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_09365561",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-g7j6-fmwx-7vp8/GHSA-g7j6-fmwx-7vp8.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "elementsearchcontroller-blind-sqli",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_09365561/elementsearchcontroller-blind-sqli",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_09365561/elementsearchcontroller-blind-sqli/vulnerability_report.json",
+      "title": "ElementSearchController blind SQL injection permits low-privilege database exfiltration",
+      "vulnerability_type": "blind_sql_injection",
+      "advisory_match": true,
+      "advisory_match_reason": "Same controller and root cause as the advisory: `ElementSearchController::actionSearch()` applies attacker-supplied `criteria` to the element query without the `ElementHelper::cleanseQueryCriteria()` guard added in the patch.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "elementsearchcontroller-blind-sqli",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_09365561/elementsearchcontroller-blind-sqli",
+      "status": "qualifying_vuln",
+      "title": "ElementSearchController blind SQL injection permits low-privilege database exfiltration",
+      "vulnerability_type": "blind_sql_injection"
+    },
+    "reason": "The selected finding identifies the advisory’s exact vulnerable controller and missing guard, and the judge-side copied PoC proved the advisory impact by extracting the randomly generated admin username from the database using a non-admin control-panel account.",
+    "evidence": [
+      "The advisory describes authenticated blind SQL injection in `ElementSearchController::actionSearch()` because the controller was missing the same criteria-stripping protection previously added elsewhere.",
+      "At vulnerable ref `32a54bd54eeaf906f96e0569358a9372a3c942f6`, `ElementSearchController::actionSearch()` accepts request `criteria` and calls `Craft::configure($query, Component::cleanseConfig($criteria));` without cleansing unsupported query attributes first.",
+      "Patch commit `e1a3dd669ae31491b86ad996e88a1d30d33d9a42` adds `ElementHelper::cleanseQueryCriteria($criteria)` immediately before `Craft::configure(...)`, matching the advisory’s missing-guard root cause.",
+      "Judge-side PoC log `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_09365561/.judge/poc_runs/elementsearchcontroller-blind-sqli/run.log` shows `Granted accessCp to attacker01`, fourteen recovered characters, `EVOHUNT_SUCCESS recovered admin username: victim8abe4fa3`, and proof JSON with `baseline_result_count` 2 and `false_result_count` 0."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "elementsearchcontroller-blind-sqli",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_09365561/elementsearchcontroller-blind-sqli",
+      "executed": true,
+      "command": "bash ./run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_09365561/.judge/poc_runs/elementsearchcontroller-blind-sqli/finding_copy/reproduction",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_09365561/.judge/poc_runs/elementsearchcontroller-blind-sqli/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_09365561/.judge/poc_runs/elementsearchcontroller-blind-sqli/poc_execution.json",
+      "observed_effect": "The copied PoC created a non-admin `accessCp` user, sent injected `criteria[where]` predicates to the element search endpoint, and recovered the full random admin username `victim8abe4fa3` from the database as a blind boolean oracle.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

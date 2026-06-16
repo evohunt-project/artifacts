@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_override_dos",
+  "summary": "The reproduction clones the vulnerable protobuf.js revision, installs runtime dependencies inside the container, creates a reflected message from a JSON-parsed payload with an own __proto__ property, and verifies that verify/toObject both fail with the expected TypeError.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a crafted properties object replaces a reflected message instance's prototype and causes both Type.verify and Type.toObject to fail with TypeError: m.hasOwnProperty is not a function.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned protobufjs/protobuf.js at f05e3c3bdd0b3c2cddbf8540bb5bd4d394a693ad, installed 12 runtime packages inside the container, and then printed the expected verifier and toObject TypeError lines followed by EVOHUNT_POC_SUCCESS.",
+  "verification_method": "The helper script asserts that the created message has no own enumerable properties, that its prototype was replaced by attacker-controlled state, and that both verify and toObject throw the exact expected TypeError.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] verify threw expected TypeError: m.hasOwnProperty is not a function",
+    "[evohunt] toObject threw expected TypeError: m.hasOwnProperty is not a function",
+    "[evohunt] attacker-controlled prototype keys: [\"hasOwnProperty\",\"name\"]",
+    "EVOHUNT_POC_SUCCESS"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "f05e3c3bdd0b3c2cddbf8540bb5bd4d394a693ad",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

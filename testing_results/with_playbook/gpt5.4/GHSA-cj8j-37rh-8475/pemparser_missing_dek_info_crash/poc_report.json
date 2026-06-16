@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "uncaught_exception_dos",
+  "summary": "The reproduction bundle builds the required Bouncy Castle jars, compiles a small harness, and proves that a malformed encrypted PEM without `DEK-Info` makes `PEMParser.readObject()` throw an uncaught `NullPointerException`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause `PEMParser.readObject()` to throw an uncaught `NullPointerException` when it receives an encrypted legacy PEM key block that omits the required `DEK-Info` header.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned upstream `bc-java` at commit `d716d7716a452bad283323aefd88ff21eba8deef`, built the required jars inside the container, compiled the harness, and printed `EVOHUNT_SUCCESS` together with the expected `NullPointerException` escaping from `org.bouncycastle.openssl.PEMParser$KeyPairParser.parseObject`.",
+  "verification_method": "The container-side verifier clones the mounted repository into a writable workspace, builds `bccore`, `bcprov`, `bcutil`, and `bcpkix`, compiles a Java harness against those jars, and only exits successfully if the harness observes a `NullPointerException` rooted in `org.bouncycastle.openssl.PEMParser$KeyPairParser.parseObject` and prints the exact `EVOHUNT_SUCCESS` marker.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `EVOHUNT_SUCCESS: observed NullPointerException from PEMParser when Proc-Type marks an encrypted key but DEK-Info is missing`.",
+    "The observed stack trace includes `java.util.StringTokenizer.<init>` followed by `org.bouncycastle.openssl.PEMParser$KeyPairParser.parseObject`, `org.bouncycastle.openssl.PEMParser.readObject`, and `PemParserCrashHarness.main`.",
+    "The container-side Gradle build completed successfully before the harness ran, ruling out a generic setup or compilation failure."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "d716d7716a452bad283323aefd88ff21eba8deef",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/PemParserCrashHarness.java"
+    ]
+  }
+}

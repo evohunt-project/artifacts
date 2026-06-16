@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:16:07.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3bc96a4e",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-jpcj-7wfg-mqxv/GHSA-jpcj-7wfg-mqxv.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated_streamable_http_file_read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3bc96a4e/unauthenticated_streamable_http_file_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3bc96a4e/unauthenticated_streamable_http_file_read/vulnerability_report.json",
+      "title": "Unauthenticated streamable-HTTP transport exposes arbitrary local file read",
+      "vulnerability_type": "unauthenticated_arbitrary_file_read",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory targets unsanitized execution of user-supplied Stata do-file content in the `stata_do` path (`src/stata_mcp/core/stata/stata_do/do.py`), while this finding covers unauthenticated exposure of the separate `read_file` MCP tool over HTTP in `src/stata_mcp/mcp_servers.py`. The sink, missing guard, and demonstrated impact are different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only final qualifying finding is a localhost HTTP `read_file` exposure that discloses arbitrary readable files. The advisory and its upstream fix are about missing validation of attacker-controlled Stata do-file content before `stata_do` executes it, which can lead to OS command execution via Stata shell-escape directives. No final qualifying finding identifies that do-file execution root cause.",
+    "evidence": [
+      "The advisory summary/details describe insufficient validation of user-supplied Stata do-file content leading to command execution.",
+      "Upstream fix commit `52413ce15cc9f4377fab437b7c4a2da57314e2bb` adds a do-file content validation guard in `src/stata_mcp/core/stata/stata_do/do.py` before execution.",
+      "Upstream issue `#20` identifies the affected component as `stata_do` and the exploit chain as `write_dofile`/`stata_do` to `StataDo.execute_dofile`, with Stata shell-escape directives such as `!cmd` and `shell cmd`.",
+      "The final finding report instead points to `src/stata_mcp/cli/_cli.py` and `src/stata_mcp/mcp_servers.py`, and its PoC proves unauthenticated local file disclosure through `read_file`, not do-file command execution."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3bc96a4e/unauthenticated_streamable_http_file_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3bc96a4e/unauthenticated_streamable_http_file_read/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3bc96a4e/unauthenticated_streamable_http_file_read/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

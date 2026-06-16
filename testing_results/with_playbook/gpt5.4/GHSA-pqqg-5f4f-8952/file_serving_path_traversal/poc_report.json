@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The bundled reproduction cloned the vulnerable FacturaScripts commit, staged two proof files, started the application under Docker, and confirmed both a `/Core/Assets/*` path breakout and a `/MyFiles/Public/*` token-bypass read.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should read a repo-root JSON proof file through `/Core/Assets/../../evohunt-secret.json` and a private `MyFiles` JSON proof file through `/MyFiles/Public/%2e%2e/2026/06/123.json` without any `myft` token.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `3d97ab4acf5037979fc653ef5e32f4e853a468f4`, staged the proof files, built the reproduction image, and emitted `CORE_ASSETS_BREAKOUT_OK`, `MYFILES_TOKEN_BYPASS_OK`, and `EVOHUNT_PROOF_OK` before exiting successfully.",
+  "verification_method": "The container helper copies the pinned repository into a temporary workspace, restores the bundled `vendor/` tree, launches the PHP built-in server, and issues the two malicious HTTP requests with `CURLOPT_PATH_AS_IS`. Verification passes only when both responses are HTTP 200 and exactly match the staged proof strings.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted `CORE_ASSETS_BREAKOUT_OK` after reading the repo-root proof file through `/Core/Assets/../../evohunt-secret.json`.",
+    "The run emitted `MYFILES_TOKEN_BYPASS_OK` after reading the private `MyFiles/2026/06/123.json` proof file through `/MyFiles/Public/%2e%2e/2026/06/123.json` without a token.",
+    "The run emitted the final success marker `EVOHUNT_PROOF_OK` and `./reproduction/run.sh` exited with status 0."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, writes the minimal config and proof files into that checkout, and mounts it read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "3d97ab4acf5037979fc653ef5e32f4e853a468f4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.php",
+      "reproduction/verify.sh",
+      "reproduction/vendor.tar.gz"
+    ]
+  }
+}

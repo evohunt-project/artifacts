@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The packaged reproduction bundle cloned upstream commit `5eb316c12c2a2eff9cbcc595611bf33c13be773f`, created an unauthenticated subscription-data callback registration, then triggered the vulnerable callback worker and observed the expected fatal nil-pointer crash.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated caller can register a subscription that leads the UDR callback worker to terminate the process with a nil-pointer panic, demonstrating remote denial of service.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the Docker bundle, cloned the pinned upstream commit, observed `201 Created` for the unauthenticated subscription create request, then captured `panic: runtime error: invalid memory address or nil pointer dereference` with a stack frame at `internal/sbi/processor/callback.go:98`; the wrapper emitted `EVOHUNT_CALLBACK_PANIC_CONFIRMED`.",
+  "verification_method": "The reproduction helper starts the vulnerable server locally, creates the attacker-controlled subscription over HTTP, invokes `SendOnDataChangeNotify`, and the wrapper accepts success only when the process exits non-zero and the log contains both the nil-pointer panic text and the `callback.go:98` stack frame.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "UDR server log line for unauthenticated `POST /nudr-dr/v2/subscription-data/subs-to-notify` with status `201`.",
+    "Fatal log and stack trace containing `panic: runtime error: invalid memory address or nil pointer dereference`.",
+    "Stack frame at `internal/sbi/processor/callback.go:98`.",
+    "Bundle success marker `EVOHUNT_CALLBACK_PANIC_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5eb316c12c2a2eff9cbcc595611bf33c13be773f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/evohunt_callback_panic.go"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The reproduction clones the vulnerable UDM snapshot, starts minimal NRF and UDR stubs plus an attacker callback sink, registers one AMF context with an attacker-chosen `deregCallbackUri`, replaces that context with a second registration, and verifies that UDM POSTs the deregistration payload to the attacker-controlled URL.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "After two AMF registration requests for the same UE, the first registration's attacker-controlled `deregCallbackUri` should receive an outbound POST carrying the UDM-generated deregistration notification body.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the bundled vulnerable repository snapshot, built the reproduction image, launched UDM with minimal NRF/UDR support, sent the two AMF registration requests, and produced `POC_SUCCESS` after the callback sink recorded a POST to `/ssrf-proof` with `{\"deregReason\":\"UE_REGISTRATION_AREA_CHANGE\",\"accessType\":\"3GPP_ACCESS\"}`.",
+  "verification_method": "The container-side harness records all requests received by the attacker callback sink into `ssrf_events.json` and exits successfully only if that file contains a POST to `/ssrf-proof` with the expected deregistration body. This distinguishes the SSRF from a generic startup success or unrelated UDM log entry.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The callback sink event log contains a POST request to `/ssrf-proof`.",
+    "The recorded request body is `{\"deregReason\":\"UE_REGISTRATION_AREA_CHANGE\",\"accessType\":\"3GPP_ACCESS\"}`.",
+    "The harness prints `POC_SUCCESS` only after confirming the expected event log entry."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the packaged vulnerable Git bundle on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "3dcafa6bb75790470dfdced0a3b15ef254b9c2e0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_repro.sh",
+      "reproduction/ssrf_lab.go",
+      "reproduction/udm-http-config.yaml",
+      "reproduction/amf_registration_1.json",
+      "reproduction/amf_registration_2.json",
+      "reproduction/source/udm.bundle"
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:51:34.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_4bff3e54",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-5w5r-mf82-595p/GHSA-5w5r-mf82-595p.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "rpc_return_answerid_remote_panic",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_4bff3e54/rpc_return_answerid_remote_panic",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_4bff3e54/rpc_return_answerid_remote_panic/vulnerability_report.json",
+      "title": "Unchecked Return.answerId causes remote panic in Cap'n Proto RPC receiver",
+      "vulnerability_type": "remote_dos_panic",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a separate `capnp-rpc` Return-handler bounds-check panic (`questions.slots[answer_id]`) rather than the advisory's unchecked safe constructors in `capnp` that can build arbitrary words or schemas and trigger UB.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's unsafe-constructor root cause in `capnp` (`constant::Reader::get` via unchecked root access, or `StructSchema::new`/`RawStructSchema::new` via unchecked encoded schema access).",
+    "evidence": [
+      "The advisory JSON names `constant::Reader::get` and `StructSchema::new` as the vulnerable safe APIs and describes UB from `PointerReader::get_root_unchecked` and unchecked schema construction.",
+      "Patch `7b981f4c75a975c80444cd38729bcdf12bf3eabf` adds `unsafe constant::Reader::new(...)`, showing the fix is to stop safe construction of unchecked constant readers.",
+      "Patch `e3aeec213e6d1b30a182bf61682a370f20d8a02c` makes `RawStructSchema::new(...)` unsafe and updates generated schema call sites, tying the advisory to unchecked schema construction in `capnp`.",
+      "`rpc_return_answerid_remote_panic` instead targets `capnp-rpc/src/rpc.rs` direct indexing on `questions.slots[answer_id]`, which is a separate denial-of-service bug and not the advisory-described unchecked safe-constructor UB in `capnp`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_4bff3e54/rpc_return_answerid_remote_panic",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_4bff3e54/rpc_return_answerid_remote_panic/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_4bff3e54/rpc_return_answerid_remote_panic/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

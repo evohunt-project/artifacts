@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:11:35.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_56a2cf29",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-wvxv-4j8q-4wjq/GHSA-wvxv-4j8q-4wjq.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "cors_rest_api_cross_origin_info_disclosure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_56a2cf29/cors_rest_api_cross_origin_info_disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_56a2cf29/cors_rest_api_cross_origin_info_disclosure/vulnerability_report.json",
+      "title": "Permissive CORS on the unauthenticated REST API allows cross-origin disclosure of process telemetry",
+      "vulnerability_type": "cors_information_disclosure",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding reaches the same no-password REST router branch in glances_restful_api.py and the same sensitive /api/4/processlist and /api/4/all disclosure path described by the advisory; the CORS condition is additional delivery logic, not a different root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "cors_rest_api_cross_origin_info_disclosure",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_56a2cf29/cors_rest_api_cross_origin_info_disclosure",
+      "status": "qualifying_vuln",
+      "title": "Permissive CORS on the unauthenticated REST API allows cross-origin disclosure of process telemetry",
+      "vulnerability_type": "cors_information_disclosure"
+    },
+    "reason": "The selected finding identifies the advisory's actual missing-authentication root cause on the Glances REST API and the copied PoC reproduced unauthorized disclosure of live process telemetry from /api/4/processlist.",
+    "evidence": [
+      "The advisory JSON describes the same no-password initialization and unauthenticated APIRouter branch in glances/outputs/glances_restful_api.py that the finding cites, along with exposure of process cmdline data from the REST API.",
+      "The finding report ties its exploit path to the unauthenticated /api/4/processlist and /api/4/all endpoints and cites the same router branch in glances_restful_api.py rather than a separate sink.",
+      "The copied PoC run at /Users/lumi/ziyue/EvoHunt-DryRun/advisory_56a2cf29/.judge/poc_runs/cors_rest_api_cross_origin_info_disclosure/run.log shows a successful unauthenticated read of /api/4/processlist with process_count=3, leaked_username=root, and leaked_cmdline=/tmp/glances-venv/bin/python -m glances -w --disable-webui --disable-autodiscover -p 61280."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "cors_rest_api_cross_origin_info_disclosure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_56a2cf29/cors_rest_api_cross_origin_info_disclosure",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_56a2cf29/.judge/poc_runs/cors_rest_api_cross_origin_info_disclosure/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_56a2cf29/.judge/poc_runs/cors_rest_api_cross_origin_info_disclosure/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_56a2cf29/.judge/poc_runs/cors_rest_api_cross_origin_info_disclosure/poc_execution.json",
+      "observed_effect": "The copied PoC cloned vulnerable commit 1f5aead12c368a477fb89647da30c610105de3ca, started Glances in web mode without a password, and retrieved a non-empty /api/4/processlist response containing username and cmdline fields; run.log records access_control_allow_origin=*, leaked_username=root, and the returned Glances process command line.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

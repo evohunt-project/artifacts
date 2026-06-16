@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The reproduction builds FrankenPHP from the pinned vulnerable commit, configures a worker outside the public root without a `match` rule, and proves that traversal-only paths dispatch that worker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A traversal-style request path should execute the outside-public worker and emit `secret-worker:1` / `secret-worker:2`, while the canonical public path should return `public-index` and the non-traversal sibling path should not reach the worker.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `711d03256eddfbf168d48c222909f23d1c5384b1`, built the vulnerable FrankenPHP binary from source, and emitted `EVOHUNT_PROOF canonical=public-index traversal=secret-worker:1 encoded=secret-worker:2`.",
+  "verification_method": "The container-side `verify.sh` helper asserts that the canonical path returns `public-index`, both traversal payloads return the outside-root worker proof strings in sequence, and the non-traversal sibling path does not produce a `secret-worker:*` response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Pinned-source build completed successfully against commit `711d03256eddfbf168d48c222909f23d1c5384b1`.",
+    "The final run printed `EVOHUNT_PROOF canonical=public-index traversal=secret-worker:1 encoded=secret-worker:2`.",
+    "The negative control `/secret/secret-worker.php` was rejected as a public-root file lookup rather than executing the outside-root worker."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the reproduction image, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "711d03256eddfbf168d48c222909f23d1c5384b1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/build_and_reproduce.sh",
+      "reproduction/verify.sh",
+      "reproduction/Caddyfile",
+      "reproduction/public/index.php",
+      "reproduction/secret/secret-worker.php"
+    ]
+  }
+}

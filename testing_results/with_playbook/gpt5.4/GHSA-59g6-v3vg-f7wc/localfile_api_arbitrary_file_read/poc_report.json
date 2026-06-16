@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_read",
+  "summary": "The Docker-based reproduction confirms that the pinned CocoIndex commit exposes LocalFile-backed source data over the HTTP API without enforcing the configured source-root boundary, allowing `/etc/passwd` to be read through the data endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start the vulnerable HTTP server with a LocalFile source rooted at `/app/files`, query `/cocoindex/api/flows/LocalFileReadValidation/data` with `key=/etc/passwd`, and receive `/etc/passwd` content despite that file being outside the configured source root.",
+  "actual_observed_result": "On 2026-06-05, `./reproduction/run.sh` cloned commit `0ca7d58f0da0b0437dc004acebf22767911b11a7`, launched the reproduction image, started the server, queried the data endpoint with `key=/etc/passwd`, and observed a JSON row keyed by `/etc/passwd` whose content began with `root:x:0:0:`.",
+  "verification_method": "The container-side verifier waits for `/healthz`, requests the LocalFile data endpoint with `field=documents` and `key=/etc/passwd`, and then checks the response body for the exact proof string `root:x:0:0:`. This distinguishes a real out-of-root file read from startup failures, missing files, or unrelated endpoint behavior.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `[evohunt] leaked /etc/passwd via /cocoindex/api/flows/LocalFileReadValidation/data`.",
+    "The response JSON contained a row for `/etc/passwd` with content beginning `root:x:0:0:root:/root:/bin/bash`.",
+    "The verifier finished with `[evohunt] SUCCESS: arbitrary file read reproduced`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, copies the checkout into the image build context, and mounts the checked-out tree into the container at runtime.",
+    "pinned_commit_or_ref": "0ca7d58f0da0b0437dc004acebf22767911b11a7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/launch_server.py",
+      "reproduction/legacy-package/pyproject.toml",
+      "reproduction/legacy-package/python/cocoindex/__init__.py"
+    ]
+  }
+}

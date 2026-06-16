@@ -1,0 +1,32 @@
+{
+  "status": "failed",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle is complete and a standalone repository-grounded proof test succeeded, but the Dockerized rerun on this host did not finish because the local Docker runtime stalled during the image-build stage after cloning and checking out the pinned vulnerable commit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction bundle should build the reproduction image, execute the injected proof test against the pinned OpenMeetings checkout, and emit `EVOHUNT_PROOF_VERIFIED` after a low-privilege user enumerates `secret-room-root` and `nested-secret-note` through `/openmeetings/services/file/room`.",
+  "actual_observed_result": "Executing `./reproduction/run.sh` successfully cloned and checked out commit `41677b22f9ba4236ac890332da823821065a5ca8`, then entered the host `docker build` stage and emitted only the legacy-builder deprecation banner before stalling. An earlier run reached the same container stage but failed immediately because the host Docker configuration referenced a missing `docker-credential-desktop` helper.",
+  "verification_method": "The bundle's `verify.sh` helper expects the container run to emit the fixed proof line `EVOHUNT_PROOF: low-privilege user enumerated secret-room-root and nested-secret-note via /openmeetings/services/file/room` and then confirms that the generated surefire XML for `TestEvoHuntRoomFileEnumeration` reports `tests=\"1\"`, `failures=\"0\"`, and `errors=\"0\"` before printing `EVOHUNT_PROOF_VERIFIED`.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The host-side reproduction script cloned the upstream OpenMeetings repository and checked out pinned commit `41677b22f9ba4236ac890332da823821065a5ca8` before starting the Docker build stage.",
+    "The current reproduction attempt reached `docker build -t evohunt-advisory-b23a6490-room-file-webservice-enumeration ...` and produced only the legacy-builder deprecation banner before hanging on this host.",
+    "A separate disposable-copy validation run of the same proof logic succeeded with `Tests run: 1, Failures: 0, Errors: 0, Skipped: 0` for `TestRoomFileEnumerationByRoomId`."
+  ],
+  "limitations_or_blockers": [
+    "The local Docker runtime in this session did not complete container build or run operations reliably under the active host setup, so `./reproduction/run.sh` could not reach the in-container proof stage.",
+    "Because the expected `EVOHUNT_PROOF_VERIFIED` signal was not observed from the Docker bundle, this report does not claim end-to-end reproduction success."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "41677b22f9ba4236ac890332da823821065a5ca8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/TestEvoHuntRoomFileEnumeration.java",
+      "reproduction/run-proof.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

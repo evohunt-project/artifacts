@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The Docker-based reproduction confirms that attacker-controlled action output reaches shellAfterCompleted and is executed by sh -c after the main exec action completes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause a crafted action argument to survive the direct exec path, reach shellAfterCompleted, and create /tmp/evohunt_rce_marker inside the container as proof of arbitrary shell execution.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit b2096d4a8d598e862be793e7c58b0e869f4ab23b, built the reproduction image, started OliveTin, triggered the action, and printed EVOHUNT_RCE_CONFIRMED marker=/tmp/evohunt_rce_marker response={\"executionTrackingId\":\"f9a62199-e9df-4854-996c-67cd28a74243\"}.",
+  "verification_method": "The verifier uses a safe direct exec action that only echoes the payload during the main execution stage, then checks for creation of /tmp/evohunt_rce_marker. Because the marker command appears only in shellAfterCompleted, the marker file distinguishes real post-hook command execution from a normal action run, parser error, or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed EVOHUNT_RCE_CONFIRMED with the generated executionTrackingId from the target.",
+    "The verification helper observed /tmp/evohunt_rce_marker after the crafted payload was submitted.",
+    "OliveTin became ready and accepted the StartAction request before the marker check, ruling out a false positive from a broken startup path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b2096d4a8d598e862be793e7c58b0e869f4ab23b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/config.yaml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

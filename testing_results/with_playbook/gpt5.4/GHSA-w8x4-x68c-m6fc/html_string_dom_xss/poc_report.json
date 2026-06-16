@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "output_injection_xss",
+  "summary": "The Docker-based reproduction confirms that documented HTML-string input executes active HTML in the exporting page origin during render staging before PDF capture.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should show that literal script tags are stripped but script-free active HTML still executes an attacker-controlled event handler in the exporter page origin.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned html2pdf.js at 69eb04e5110b743b00511b316e2fe276986b55fd, built the reproduction image, opened the harness in headless Chromium, and produced the expected proof result with scriptTagExecuted=false, activeHtmlExecuted=true, proofAttribute=active-html-fired, plus the marker EVOHUNT_PROOF: active-html-fired.",
+  "verification_method": "The Playwright-driven harness feeds two HTML-string payloads into Worker.from(..., 'string') and succeeds only if the script-tag payload stays inert while the image onload payload flips the expected proof flag and body attribute. This distinguishes real active-HTML execution from a generic load failure or unrelated browser error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container run printed {\"scriptTagExecuted\": false, \"activeHtmlExecuted\": true, \"proofAttribute\": \"active-html-fired\"}.",
+    "Container run printed EVOHUNT_PROOF: active-html-fired."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "69eb04e5110b743b00511b316e2fe276986b55fd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/harness.html",
+      "reproduction/verify.mjs"
+    ]
+  }
+}

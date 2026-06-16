@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "origin_and_url_boundary_mismatches",
+  "summary": "The Docker-based reproduction confirms that attacker-controlled OpenAPI path parameters can rewrite the downstream request target and leak configured client headers to an attacker-selected host.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make an OpenAPI-backed tool send its request to the attacker listener instead of the configured trusted origin and expose the configured Authorization and X-Api-Key headers on that attacker-directed request.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned FastMCP at bafd5419fabbd30415c3b782e778ba971f8019e7, built the reproduction image, and printed the expected `EVOHUNT_PROOF` and `EVOHUNT_NOTE` messages after the attacker listener received the rewritten request with the configured Authorization and X-Api-Key headers.",
+  "verification_method": "The bundled verify.py starts trusted and attacker HTTP listeners, uses the repository's OpenAPITool and RequestDirector against the mounted target checkout, asserts that the trusted listener receives no request, asserts that the attacker listener receives exactly one `/pwn/details` request with leaked Authorization and X-Api-Key headers, and separately checks the same-origin `../../admin/export` path escape.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included `EVOHUNT_PROOF: OpenAPITool sent the rewritten request to the attacker listener and leaked configured Authorization and X-Api-Key headers.`",
+    "Container output included `EVOHUNT_NOTE: same-origin path traversal also rewrites /users/{id} with ../../admin/export to /admin/export.`",
+    "The host-side run script finished with `[evohunt] SUCCESS: attacker-controlled host received the rewritten request and leaked headers`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host into a session-local temporary directory, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "bafd5419fabbd30415c3b782e778ba971f8019e7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/requirements.txt",
+      "reproduction/verify.py"
+    ]
+  }
+}

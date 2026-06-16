@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction starts Langflow 1.7.1 with the checked-out source shadowing the packaged modules, requests `/api/v1/auto_login` without credentials, receives a bearer token, and uses that token to access `/api/v1/config` while an unauthenticated call to `/api/v1/validate/code` still fails.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an unauthenticated request to `/api/v1/auto_login` returns a bearer token that can immediately access a protected API endpoint.",
+  "actual_observed_result": "Running ./reproduction/run.sh produced `EVOHUNT_AUTO_LOGIN_STATUS=200`, `EVOHUNT_CONFIG_STATUS=200`, `EVOHUNT_VALIDATE_NOAUTH_STATUS=403`, and `EVOHUNT_PROOF=auto_login_bootstrap_confirmed`.",
+  "verification_method": "The helper waits for the real Langflow server to start, calls `/api/v1/auto_login` with no credentials, extracts the returned JWT, and confirms that the JWT opens `/api/v1/config` while a normal protected route (`/api/v1/validate/code`) still rejects unauthenticated access with 403.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container printed `EVOHUNT_AUTO_LOGIN_STATUS=200` and returned a JSON body containing an access token.",
+    "The container printed `EVOHUNT_CONFIG_STATUS=200`, proving the minted bearer token was accepted by a protected route.",
+    "The container printed `EVOHUNT_VALIDATE_NOAUTH_STATUS=403`, showing the proof is a bootstrap bypass and not a blanket no-auth API configuration."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at tag 1.7.1, verifies the exact pinned commit, and mounts that checkout into the container at /target-repo so the helper can shadow the packaged modules with the checked-out source.",
+    "pinned_commit_or_ref": "47ce5bf27e688e4cfbc48a745c24a72bac6b62d7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_auto_login.py"
+    ]
+  }
+}

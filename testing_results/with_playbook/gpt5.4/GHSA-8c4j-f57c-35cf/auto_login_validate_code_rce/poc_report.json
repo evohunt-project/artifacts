@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that Langflow 1.5.1's default auto-login posture exposes /api/v1/validate/code to unauthenticated callers and that the validation path executes definition-time Python payloads in the server process.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow an unauthenticated request to /api/v1/validate/code to create /tmp/evohunt_validate_code_proof.txt inside the Langflow container with the expected proof string.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Langflow 1.5.1 at commit 4a7564af4a8e326dc98c798d11c274d4ee65281d, built the reproduction image, launched the backend, submitted the unauthenticated validate/code payload, received HTTP 200 with {\"imports\":{\"errors\":[]},\"function\":{\"errors\":[]}}, and printed EVOHUNT_VALIDATE_CODE_RCE_OK after confirming the proof file contents.",
+  "verification_method": "The helper starts Langflow, posts an unauthenticated JSON payload to /api/v1/validate/code, requires an HTTP 200 response, and then checks that /tmp/evohunt_validate_code_proof.txt exists and exactly equals EVOHUNT_VALIDATE_CODE_RCE.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The target returned HTTP 200 and the validation response body {\"imports\":{\"errors\":[]},\"function\":{\"errors\":[]}} for the unauthenticated exploit request.",
+    "The helper printed the exact proof file contents EVOHUNT_VALIDATE_CODE_RCE.",
+    "The final success signal EVOHUNT_VALIDATE_CODE_RCE_OK was emitted by the packaged reproduction bundle."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "4a7564af4a8e326dc98c798d11c274d4ee65281d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_entry.sh"
+    ]
+  }
+}

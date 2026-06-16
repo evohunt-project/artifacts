@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:18:45.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dfe05870",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-5jx8-q4cp-rhh6/GHSA-5jx8-q4cp-rhh6.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "stale-bundle-dsa-signature-validation-bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dfe05870/stale-bundle-dsa-signature-validation-bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dfe05870/stale-bundle-dsa-signature-validation-bypass/vulnerability_report.json",
+      "title": "Shipped bundle omits DSA public-key validation and accepts forged signatures",
+      "vulnerability_type": "unsafe_cryptographic_usage",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a verification-side stale-bundle bug in DSA public-parameter validation and forged-signature acceptance, while the advisory fixes signing-side RNG bound checks in `getRandomBigIntegerZeroToMax` and `getRandomBigIntegerMinToMax` that bias DSA nonces and enable private-key recovery.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's RNG range-check bug in `src/crypto-1.1.js` that biases DSA signing nonces and enables private-key recovery.",
+    "evidence": [
+      "The advisory patch changes only the RNG helper logic in `src/crypto-1.1.js`: `getRandomBigIntegerZeroToMax` now accepts candidates only when `biMax.compareTo(biRand) >= 0`, and `getRandomBigIntegerMinToMax` now throws whenever `biMin.compareTo(biMax) > 0`.",
+      "The only qualifying finding report and PoC describe forged-signature acceptance in verification entrypoints (`X509.verifySignature`, `KJUR.asn1.csr.CSRUtil.verifySignature`, and direct `KJUR.crypto.DSA` verification) caused by missing DSA public-parameter validation in the shipped bundle.",
+      "The finding reproduction calls `x.verifySignature(pubkey)`, `key.setPublicHex(...)`, and `CSRUtil.verifySignature(...)`; it does not exercise DSA signing, nonce generation, or the advisory's `getRandomBigIntegerZeroToMax`/`getRandomBigIntegerMinToMax` path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dfe05870/stale-bundle-dsa-signature-validation-bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dfe05870/stale-bundle-dsa-signature-validation-bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dfe05870/stale-bundle-dsa-signature-validation-bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

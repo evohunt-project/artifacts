@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction clones jsrsasign 11.1.0, proves that `ASN1HEX.checkStrictDER` safely rejects the crafted payload, and then shows that the default `ASN1HEX.parse` path hard-terminates on the same 6-byte DER input.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A tiny DER payload with a huge claimed length should terminate the parser process on the default `ASN1HEX.parse` path rather than producing a safe parse error.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the Docker image, cloned commit `58bb24192f501927014b67911bbde8ef27532319`, printed `checkStrictDER=Error: value of L too long than hex: idx=undefined`, then showed `parse_exit=137` for `payload_hex=30847fffffff` before emitting the success marker.",
+  "verification_method": "The verification helper first confirms that `checkStrictDER` safely rejects the payload, then runs `ASN1HEX.parse` on the same bytes and requires the pinned payload markers plus a hard non-zero termination status (`137` in the constrained Docker rerun; host-side testing also showed fatal process termination).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "checkStrictDER=Error: value of L too long than hex: idx=undefined",
+    "parse_exit=137",
+    "payload_hex=30847fffffff",
+    "payload_bytes=6",
+    "EVOHUNT_SUCCESS: tiny DER input aborts ASN1HEX.parse while checkStrictDER rejects it safely"
+  ],
+  "limitations_or_blockers": [
+    "In the constrained Docker rerun the parser died with exit status 137 rather than the host-side V8 fatal-size string, but both environments showed hard process termination on the same 6-byte payload."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "58bb24192f501927014b67911bbde8ef27532319",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

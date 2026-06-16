@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "incomplete_cleanup_dos",
+  "summary": "The Docker-based reproduction confirms that a malformed multipart upload can return a Multer parsing error while still leaving an attacker-written orphan file in the upload directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should receive the expected multipart parsing error and still leave at least one attacker-controlled orphan file on disk, demonstrating a disk-exhaustion primitive.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 2c8cd23ac30bf8ab915eeb5f8d18a4381ed53708, packed and installed multer@2.0.2 inside the container, returned {\"error\":\"MISSING_FIELD_NAME\"}, and emitted EVOHUNT_ORPHAN_FILE=967919a0d8409c84c60b90c17bac8188 with EVOHUNT_ORPHAN_COUNT=1.",
+  "verification_method": "The verifier starts a minimal Express app that uses the vulnerable Multer build with disk storage and an asynchronous fileFilter callback, sends one valid file part followed by a malformed part without a field name, waits for the 400 response, and then checks the upload directory. The run is only treated as successful if the directory still contains at least one orphan file after the error response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The target returned HTTP 400 with body {\"error\":\"MISSING_FIELD_NAME\"}.",
+    "The verifier observed EVOHUNT_ORPHAN_FILE=967919a0d8409c84c60b90c17bac8188.",
+    "The verifier observed EVOHUNT_ORPHAN_COUNT=1 after the error response."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2c8cd23ac30bf8ab915eeb5f8d18a4381ed53708",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The reproduction starts Glances with planted SNMP secrets and confirms that an unauthenticated GET /api/4/args returns both secret-bearing CLI values.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should expose the planted SNMP community and SNMP auth values in the unauthenticated /api/4/args JSON response.",
+  "actual_observed_result": "Running ./reproduction/run.sh printed POC_SUCCESS after the unauthenticated /api/4/args response returned snmp_community=EVOHUNT_SNMP_COMMUNITY_56a2cf29 and snmp_auth=EVOHUNT_SNMP_AUTH_56a2cf29 from the vulnerable Glances instance.",
+  "verification_method": "The exploit helper launches Glances with planted secret values, fetches /api/4/args without authentication, and fails closed unless both secret strings are present in the JSON response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed the exact POC_SUCCESS line confirming that both planted secrets were returned by GET /api/4/args.",
+    "The helper only reports success after HTTP 200 from /api/4/args and exact equality checks on both leaked secret fields."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the bundled target-repo git bundle on the host, checks out the pinned vulnerable snapshot commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "de444bfa7a0a1cb9900577d07c76d3ed777ad57d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/target-repo.bundle"
+    ]
+  }
+}

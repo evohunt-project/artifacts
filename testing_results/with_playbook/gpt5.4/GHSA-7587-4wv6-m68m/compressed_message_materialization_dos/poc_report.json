@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction bundle clones the pinned rPGP v0.18.0 source, mounts it into a containerized harness, and checks that a 4,983-byte compressed OpenPGP message forces 4,294,967,284 bytes of full-buffer materialization with multi-gigabyte RSS growth.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the streaming path remains bounded while the full-buffer materialization path either materializes the full 4,294,967,284-byte plaintext with multi-gigabyte RSS growth or is OOM-killed while attempting that materialization.",
+  "actual_observed_result": "Running `./reproduction/run.sh` against the pinned v0.18.0 checkout produced `STREAM_OK bytes=4096 maxrss_kb=7040`, then the materialization call was killed by the container runtime and the verifier reported `MATERIALIZE_OOM exit=137` followed by `VERIFY_OK materialize_path_oom_after_stream`.",
+  "verification_method": "The verifier first builds the helper once, confirms the same fixture can be streamed through the documented path with `STREAM_OK bytes=4096`, and then executes the full-buffer `materialize` mode. It treats either exact 4,294,967,284-byte materialization with high RSS or an exit-137 kill during the materialization step as the security signal, which distinguishes the missing size bound from clone/build failures or parser-only errors.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`STREAM_OK bytes=4096 maxrss_kb=7040`",
+    "`MATERIALIZE_OOM exit=137`",
+    "`VERIFY_OK materialize_path_oom_after_stream`"
+  ],
+  "limitations_or_blockers": [
+    "On this host the container runtime killed the materialization process before it could print the final byte count, so the successful proof signal is the verified exit-137 availability failure rather than a completed multi-gigabyte allocation line."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "24b8cc906d8358a5591510655e1081e2b034d5c6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Cargo.toml",
+      "reproduction/main.rs",
+      "reproduction/verify.sh",
+      "reproduction/4gb-packet.asc"
+    ]
+  }
+}

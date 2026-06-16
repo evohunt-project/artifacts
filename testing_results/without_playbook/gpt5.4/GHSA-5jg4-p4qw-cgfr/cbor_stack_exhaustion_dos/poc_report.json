@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stack_exhaustion_dos",
+  "summary": "The Docker-based reproduction clones the pinned vulnerable StableLib commit, builds `@stablelib/cbor`, feeds it a 12,000-level nested CBOR array, and confirms that decoding aborts with `RangeError: Maximum call stack size exceeded` before printing the proof marker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause vulnerable CBOR decoding to recurse until the JavaScript runtime throws `RangeError: Maximum call stack size exceeded`, proving that attacker-controlled input can crash the decode path through stack exhaustion.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `0f153a63b7552a0e8721f640984113e419015026`, built the CBOR dependency chain in Docker, executed the crafted nested-array payload, emitted a Node stack trace containing `RangeError: Maximum call stack size exceeded`, and finished with `EVOHUNT_PROOF: stack exhaustion confirmed` plus `[+] Verification succeeded`.",
+  "verification_method": "The host-side runner launches the containerized build-and-trigger flow, then requires the run to emit the exact proof marker `EVOHUNT_PROOF: stack exhaustion confirmed` after the exploit process exits on an uncaught `RangeError: Maximum call stack size exceeded`. This distinguishes the targeted stack-exhaustion condition from unrelated build, clone, or runtime failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit run printed `Decoding nested CBOR payload: depth=12000 bytes=12001` immediately before failure.",
+    "Node emitted an uncaught `RangeError: Maximum call stack size exceeded` stack trace with recursive frames in `packages/cbor/lib/cbor.js` and `packages/bytereader/lib/bytereader.js`.",
+    "The container helper printed `EVOHUNT_PROOF: stack exhaustion confirmed`.",
+    "The host runner printed `[+] Verification succeeded`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0f153a63b7552a0e8721f640984113e419015026",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_repro.sh",
+      "reproduction/trigger_stack_exhaustion.mjs"
+    ]
+  }
+}

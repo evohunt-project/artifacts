@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "regular_expression_dos",
+  "summary": "The Docker-based reproduction confirms that a body-driven `_ClientVersion` value containing 100000 dashes triggers multi-second pre-auth request latency in Parse Server 8.6.24 before normal login processing completes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make an otherwise ordinary unauthenticated `POST /login` request take multiple seconds when `_ClientVersion` is set to a long run of dashes, while a benign control request on the same route remains near-instant.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `efd0ac639b8fb5ad19eaf50b44c4502ecc15be25`, built the reproduction image, started a `mongo:7` sidecar, and measured 4.521 ms for the benign control request versus 5253.385 ms for the adversarial request. The helper then emitted `EVOHUNT_SUCCESS: adversarial _ClientVersion caused 5253.385ms processing time versus 4.521ms for the benign control`.",
+  "verification_method": "The helper performs paired unauthenticated `POST /login` requests against a live Parse Server instance started from the pinned vulnerable source. It compares a benign request to an adversarial request that differs only by a 100000-character `_ClientVersion` value, and it requires both a slowdown ratio of at least 20x and an absolute delta of at least 1500 ms to distinguish regex-driven event-loop blocking from ordinary request overhead.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed a timing JSON object with `benignMs: 4.521101`, `adversarialMs: 5253.384951`, and `ratio: 1161.97027029478`.",
+    "The reproduction printed the success signal `EVOHUNT_SUCCESS: adversarial _ClientVersion caused 5253.385ms processing time versus 4.521ms for the benign control`.",
+    "The outer runner printed `[evohunt] SUCCESS: reproduction completed and verified` after the helper exited successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, starts a MongoDB sidecar container, and mounts the checked-out tree into the reproduction container at /target-repo.",
+    "pinned_commit_or_ref": "efd0ac639b8fb5ad19eaf50b44c4502ecc15be25",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_redos.js",
+      "reproduction/run_probe.js"
+    ]
+  }
+}

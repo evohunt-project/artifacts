@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:19:59.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9ed7b996",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-m2cq-xjgm-f668/GHSA-m2cq-xjgm-f668.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "sync_server_admin_users_enumeration",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9ed7b996/sync_server_admin_users_enumeration",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9ed7b996/sync_server_admin_users_enumeration/vulnerability_report.json",
+      "title": "Authenticated low-privilege users can enumerate all sync-server users via /admin/users/",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding concerns authenticated enumeration in `packages/sync-server/src/app-admin.js` on `GET /admin/users/`, not the advisory's missing authentication on the SimpleFIN and PluggyAI bank-sync endpoints in `app-simplefin.js` and `app-pluggyai.js`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "sync_server_upload_path_traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9ed7b996/sync_server_upload_path_traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9ed7b996/sync_server_upload_path_traversal/vulnerability_report.json",
+      "title": "Path traversal in /sync/upload-user-file writes outside the user-files root",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a low-privilege authenticated path traversal in `packages/sync-server/src/app-sync.ts` and `src/util/paths.js`; it does not involve the advisory's unauthenticated SimpleFIN/PluggyAI handlers or the same missing-session-middleware root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final `qualifying_vuln` finding identifies the advisory's missing authentication on the SimpleFIN or PluggyAI integration endpoints, so no advisory-matched qualifying finding is available for tiering or PoC execution.",
+    "evidence": [
+      "The advisory describes unauthenticated `POST /simplefin/*` and `POST /pluggyai/*` access caused by missing session middleware in `packages/sync-server/src/app-simplefin/app-simplefin.js` and `packages/sync-server/src/app-pluggyai/app-pluggyai.js`.",
+      "The qualifying finding `sync_server_admin_users_enumeration` instead covers authenticated disclosure from `GET /admin/users/` in `packages/sync-server/src/app-admin.js` after `validateSessionMiddleware`, with a missing admin-only authorization check rather than missing authentication.",
+      "The qualifying finding `sync_server_upload_path_traversal` covers authenticated path traversal in `POST /sync/upload-user-file` and `getPathForUserFile()`; it is a different endpoint family, code path, and root-cause mechanism.",
+      "The session does contain `simplefin_pluggyai_missing_auth`, which matches the advisory root cause, but its final status is `non_qualifying_vuln`, so it is contextual evidence only and cannot satisfy the requirement for a qualifying advisory-matched finding."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9ed7b996/sync_server_admin_users_enumeration",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9ed7b996/sync_server_admin_users_enumeration/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9ed7b996/sync_server_admin_users_enumeration/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9ed7b996/sync_server_upload_path_traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9ed7b996/sync_server_upload_path_traversal/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9ed7b996/sync_server_upload_path_traversal/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that ZooKeeper's embedded AdminServer accepts an unauthenticated HTTP request to `GET /commands/sysp` and returns secret-bearing JVM system properties.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should start the vulnerable AdminServer surface and show that an unauthenticated HTTP request can read the configured `zookeeper.ssl.keyStore.password` value from the `sysp` response.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned ZooKeeper revision, built the server in the container, started it with a secret-bearing JVM property, and observed `GET /commands/sysp` returning `\"zookeeper.ssl.keyStore.password\" : \"evohunt-admin-leak-secret\"` without authentication.",
+  "verification_method": "The verification helper waits for the AdminServer listener, requests `GET /commands/sysp`, and greps the JSON response for the exact leaked property line. That check distinguishes a real unauthorized disclosure from a startup failure, unrelated HTTP response, or non-secret diagnostic output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The successful run printed `[evohunt] requesting unauthenticated system properties` before issuing the HTTP request to the embedded AdminServer.",
+    "The verifier matched the exact proof line `\"zookeeper.ssl.keyStore.password\" : \"evohunt-admin-leak-secret\",` in the `sysp` JSON response.",
+    "The run completed with `[evohunt] SUCCESS: reproduction completed and verified`, confirming the exploit path and the verification oracle both succeeded."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "a3916d5780283a125a1e998b7be93a2cba14aa20",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

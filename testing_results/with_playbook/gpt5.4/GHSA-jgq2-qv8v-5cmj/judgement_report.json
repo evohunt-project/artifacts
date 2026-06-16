@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:14:41.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dc52eb41",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-jgq2-qv8v-5cmj/GHSA-jgq2-qv8v-5cmj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "fail_open_sbi_authorization",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dc52eb41/fail_open_sbi_authorization",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dc52eb41/fail_open_sbi_authorization/vulnerability_report.json",
+      "title": "Fail-open SBI authorization exposes `/nudr-dr` routes to unauthenticated callers",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is rooted in router-level authorization fail-open behavior for the `/nudr-dr` group and was validated on `POST /nudr-dr/v2/subscription-data/subs-to-notify`. The advisory instead targets `HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdPut`, where an invalid `influenceId` still reaches the Traffic Influence Subscription write procedure because the handler does not return after sending `404`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "subscription_data_callback_panic_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dc52eb41/subscription_data_callback_panic_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dc52eb41/subscription_data_callback_panic_dos/vulnerability_report.json",
+      "title": "Subscription-data notification callback construction crashes the UDR process",
+      "vulnerability_type": "availability_panics_and_validation_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a nil-pointer dereference in `internal/sbi/processor/callback.go` after storing a subscription-data callback registration, leading to process termination. The advisory is a different root cause in the `application-data/influenceData/{influenceId}/{subscriptionId}` PUT handler: a missing `return` after `404` allows an invalid-path request to create or overwrite a Traffic Influence Subscription.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "Neither qualifying finding identifies the advisory's vulnerable code or root cause. The advisory is the missing `return` in `HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdPut` for `/nudr-dr/v2/application-data/influenceData/{influenceId}/{subscriptionId}`; the accepted findings instead cover router-level authorization fail-open behavior on `/nudr-dr` routes and a separate nil-pointer panic in `SendOnDataChangeNotify()`.",
+    "evidence": [
+      "The advisory JSON names `HandleApplicationDataInfluenceDataSubsToNotifySubscriptionIdPut` in `internal/sbi/api_datarepository.go` as the root cause and describes the invalid `influenceId` check that sends `404` but does not return.",
+      "In the vulnerable source snapshot, `internal/sbi/api_datarepository.go` still calls `ApplicationDataInfluenceDataSubsToNotifySubscriptionIdPutProcedure` after `c.String(http.StatusNotFound, \"404 page not found\")` when `influenceId != \"subs-to-notify\"`.",
+      "The `fail_open_sbi_authorization` finding is anchored in `internal/sbi/server.go`, `internal/util/router_auth_check.go`, `internal/context/context.go`, and NRF-driven `OAuth2Required` state, and its validated PoC uses `POST /nudr-dr/v2/subscription-data/subs-to-notify`, not the advisory's `application-data/influenceData` PUT path.",
+      "The `subscription_data_callback_panic_dos` finding is anchored in `internal/sbi/processor/callback.go` and terminates the process with a nil-pointer dereference after a subscription-data callback registration; it does not depend on the advisory's invalid-path influence-data write branch."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dc52eb41/fail_open_sbi_authorization",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dc52eb41/fail_open_sbi_authorization/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dc52eb41/fail_open_sbi_authorization/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dc52eb41/subscription_data_callback_panic_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dc52eb41/subscription_data_callback_panic_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_dc52eb41/subscription_data_callback_panic_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

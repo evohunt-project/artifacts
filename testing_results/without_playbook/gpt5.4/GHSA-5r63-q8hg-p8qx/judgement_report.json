@@ -1,0 +1,118 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:52:10.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-5r63-q8hg-p8qx/GHSA-5r63-q8hg-p8qx.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "api_unauthenticated_upload_arbitrary_file_write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/api_unauthenticated_upload_arbitrary_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/api_unauthenticated_upload_arbitrary_file_write/vulnerability_report.json",
+      "title": "Unauthenticated upload permits arbitrary file write and destination traversal",
+      "vulnerability_type": "arbitrary_file_write",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is about project import accepting attacker-controlled project scripts and later executing them without sandboxing. This finding is a separate `/api/upload` arbitrary-write and traversal bug and does not involve imported `scripts[]`, project import, or the advisory RCE path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "electron_log_xss_to_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/electron_log_xss_to_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/electron_log_xss_to_rce/vulnerability_report.json",
+      "title": "Network-injected log content is rendered as HTML in an Electron renderer with Node integration, enabling XSS-to-RCE",
+      "vulnerability_type": "xss_to_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a log-view `[innerHTML]` sink in the Electron client reached through request logging. It does not use project import or the imported-project script storage and execution path described by the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "electron_malicious_project_svg_xss_to_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/electron_malicious_project_svg_xss_to_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/electron_malicious_project_svg_xss_to_rce/vulnerability_report.json",
+      "title": "Attacker-controlled project `svgcontent` is injected into an unsafe Electron renderer, enabling local XSS-to-RCE",
+      "vulnerability_type": "stored_xss_to_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding concerns `view.svgcontent` being injected with `innerHTML` in the Electron client. The advisory root cause is imported-project `scripts[]` being accepted through `server/api/projects/index.js` and executed unsandboxed, which is a different source-to-sink path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's imported-project script execution root cause. The advisory describes project import storing attacker-controlled `scripts[]` and later executing `script.code` without sandboxing; the surviving qualifying findings cover `/api/upload` traversal and Electron HTML injection instead.",
+    "evidence": [
+      "The GHSA/CVE description says project import allows RCE because imported project files contain user-supplied scripts that are not sanitized or sandboxed.",
+      "`server/api/projects/index.js` imports project bodies through `POST /api/project` by passing `req.body` into `runtime.project.setProject(req.body)` and restarting the runtime.",
+      "`server/runtime/project/index.js` persists attacker-controlled `scripts[]` entries from imported projects, and `server/runtime/scripts/msm.js` later turns `script.code` into JavaScript functions and compiles them with `Module._compile`.",
+      "None of the three final qualifying findings references `POST /api/project`, imported `scripts[]`, or `server/runtime/scripts/msm.js`; the closest accepted finding instead targets `view.svgcontent` DOM injection in `client/src/app/fuxa-view/fuxa-view.component.ts`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/api_unauthenticated_upload_arbitrary_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/api_unauthenticated_upload_arbitrary_file_write/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/api_unauthenticated_upload_arbitrary_file_write/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/electron_log_xss_to_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/electron_log_xss_to_rce/vulnerability_report.json",
+      "poc_report_path": null,
+      "poc_report_status": "missing"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/electron_malicious_project_svg_xss_to_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cf1344fe/electron_malicious_project_svg_xss_to_rce/vulnerability_report.json",
+      "poc_report_path": null,
+      "poc_report_status": "missing"
+    }
+  ]
+}

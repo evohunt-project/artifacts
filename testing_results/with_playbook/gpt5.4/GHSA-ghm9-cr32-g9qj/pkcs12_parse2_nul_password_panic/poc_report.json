@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Dockerized reproduction compiles a small helper against the pinned vulnerable rust-openssl checkout, confirms that a normal wrong password returns `Err`, and then triggers the expected `Pkcs12Ref::parse2` panic with an interior-NUL password.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a normal wrong PKCS#12 password is handled as an error, but an interior-NUL password causes a panic in `openssl/src/pkcs12.rs` and aborts the helper process.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `78efb65c7866c46a18298384efe06eb05f07c9b8`, built the Docker image, compiled the helper against `/target-repo`, printed `ascii_password_result_is_err=true`, and then panicked at `/target-repo/openssl/src/pkcs12.rs:52:54` with `NulError(...)`. The verification script recognized that signal and reported success.",
+  "verification_method": "The container-side `verify.sh` runs the helper with `cargo run --locked --offline`, requires a non-zero exit, and greps the captured output for `ascii_password_result_is_err=true`, the `called \\`Result::unwrap()\\` on an \\`Err\\` value: NulError` panic text, and the exact `pkcs12.rs:52:54` location.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The helper printed `ascii_password_result_is_err=true` before the crash.",
+    "The process panicked at `/target-repo/openssl/src/pkcs12.rs:52:54`.",
+    "The panic message contained `called `Result::unwrap()` on an `Err` value: NulError(3, [98, 97, 100, 0, 112, 97, 115, 115])`.",
+    "`verify.sh` printed `[evohunt] verification passed: wrong ASCII password returned an error and an interior-NUL password triggered the expected panic`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "78efb65c7866c46a18298384efe06eb05f07c9b8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/panic_harness/Cargo.toml",
+      "reproduction/panic_harness/Cargo.lock",
+      "reproduction/panic_harness/.cargo/config.toml",
+      "reproduction/panic_harness/src/main.rs",
+      "reproduction/panic_harness/vendor"
+    ]
+  }
+}

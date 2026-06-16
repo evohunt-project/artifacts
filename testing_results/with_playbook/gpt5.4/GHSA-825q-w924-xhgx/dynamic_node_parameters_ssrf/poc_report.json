@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction creates a fresh vulnerable n8n instance, provisions a low-privilege member, triggers `POST /rest/dynamic-node-parameters/options` with attacker-controlled routing data, and verifies that the server-side request response from the proof service is reflected back to the attacker.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should let an authenticated member steer a server-side HTTP request to the proof service and receive the proof service response body back from `/rest/dynamic-node-parameters/options`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned `n8n` revision, built the helper image, started `n8nio/n8n:1.123.1` plus an isolated proof server, created an owner and member, and as the member called `/rest/dynamic-node-parameters/options`. The API returned `[{\"name\":\"ssrf-proof\",\"value\":\"ssrf-proof\",\"path\":\"/proof\"}]`, and the run completed with `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The verifier provisions the target from a clean state, triggers the vulnerable route with attacker-controlled `loadOptions.routing.request` data, and asserts that the reflected API response contains the exact proof token and path served by the isolated proof container. This distinguishes real SSRF from a startup failure, a local mock, or a generic transport error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The mounted target repository inside the verifier resolved to commit `027bf3f929103abd74311a4a8ccfcebaa0973915` before exploitation.",
+    "The member-triggered `POST /rest/dynamic-node-parameters/options` call returned `[{\"name\":\"ssrf-proof\",\"value\":\"ssrf-proof\",\"path\":\"/proof\"}]`.",
+    "The final run output ended with `[evohunt] SUCCESS: SSRF reflected the proof server response` and `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [
+    "The first run pulls the pinned `n8nio/n8n:1.123.1` image and helper base image if they are not already cached locally."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "027bf3f929103abd74311a4a8ccfcebaa0973915",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/proof_server.py",
+      "reproduction/verify.py"
+    ]
+  }
+}

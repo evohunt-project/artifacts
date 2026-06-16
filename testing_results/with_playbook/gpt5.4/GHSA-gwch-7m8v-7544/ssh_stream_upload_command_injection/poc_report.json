@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The reproduction uploads a file through the vulnerable SSH stream helper with a shell-metacharacter file_name and confirms command execution on the target side.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The vulnerable upload helper should execute an attacker-controlled shell suffix from file_name while attempting a snippet upload over SSH.",
+  "actual_observed_result": "Running ./reproduction/run.sh produced EVOHUNT_SSH_UPLOAD_COMMAND_INJECTION_CONFIRMED after NodeStreamUpload returned an error about the literal injected path while the injected command had already created /tmp/evohunt_ssh_upload_pwned.",
+  "verification_method": "The verification helper runs the real SSH stream-upload path against a live SSH server, then checks for the injected marker file /tmp/evohunt_ssh_upload_pwned. This distinguishes command execution from a generic transfer or startup failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_SSH_UPLOAD_COMMAND_INJECTION_CONFIRMED",
+    "NodeStreamUpload returned an error for the literal injected path after the injected command had already executed.",
+    "The marker file /tmp/evohunt_ssh_upload_pwned existed on the target side after the run."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "62a78c3e338d42c90cb1120765477bb0f6f6a0b6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/verify.sh",
+      "reproduction/sshd_config",
+      "reproduction/go.mod"
+    ]
+  }
+}

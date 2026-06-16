@@ -1,0 +1,72 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:23:42.150Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0a25d0cd",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-353c-v8x9-v7c3/GHSA-353c-v8x9-v7c3.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "http_stream_unbounded_request_body_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0a25d0cd/http_stream_unbounded_request_body_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0a25d0cd/http_stream_unbounded_request_body_dos/vulnerability_report.json",
+      "title": "HTTP Stream maxMessageSize is unenforced, enabling oversized request memory exhaustion",
+      "vulnerability_type": "memory_exhaustion_dos",
+      "advisory_match": true,
+      "advisory_match_reason": "The advisory and finding both identify the same root cause in HttpStreamTransport.readRequestBody() in src/transports/http/server.ts: attacker-controlled HTTP body chunks are concatenated without enforcing maxMessageSize before JSON parsing.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier2",
+    "target_match": "match",
+    "runtime_evidence": "bug_activation",
+    "selected_finding": {
+      "folder_name": "http_stream_unbounded_request_body_dos",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0a25d0cd/http_stream_unbounded_request_body_dos",
+      "status": "qualifying_vuln",
+      "title": "HTTP Stream maxMessageSize is unenforced, enabling oversized request memory exhaustion",
+      "vulnerability_type": "memory_exhaustion_dos"
+    },
+    "reason": "The sole final qualifying finding matches the advisory exactly on component, file, function, and missing size-limit check. A fresh copied-workspace PoC run showed the vulnerable oversized-body buffering path was activated and caused attacker-driven RSS growth, but it did not demonstrate a definitive crash, hang, or comparable end-to-end availability loss in this environment.",
+    "evidence": [
+      "The advisory names src/transports/http/server.ts readRequestBody() as the vulnerable code, and the finding describes the same HttpStreamTransport.readRequestBody() path and the same missing maxMessageSize enforcement before JSON parsing.",
+      "The copied PoC run under .judge used the finding's pinned vulnerable commit and sent an 8,388,683-byte POST while the transport was configured with maxMessageSize=1024.",
+      "The runtime log shows the oversized request was not rejected with 413; the server returned a normal 400 JSON-RPC error instead, which confirms the body was read through the vulnerable path.",
+      "The same run recorded server RSS growth from 85,438,464 bytes to 112,463,872 bytes, a delta of 27,025,408 bytes caused by the oversized attacker-controlled body."
+    ],
+    "blockers_to_higher_tier": [
+      "The copied PoC demonstrated request acceptance and memory growth but did not produce a crash, hang, or other clearly observed end-to-end denial of service signal."
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "http_stream_unbounded_request_body_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0a25d0cd/http_stream_unbounded_request_body_dos",
+      "executed": true,
+      "command": "bash run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0a25d0cd/.judge/poc_runs/http_stream_unbounded_request_body_dos/workspace/reproduction",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0a25d0cd/.judge/poc_runs/http_stream_unbounded_request_body_dos/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_0a25d0cd/.judge/poc_runs/http_stream_unbounded_request_body_dos/poc_execution.json",
+      "observed_effect": "The copied PoC accepted an 8,388,683-byte POST despite maxMessageSize=1024, returned HTTP 400 instead of 413, and increased server RSS from 85,438,464 bytes to 112,463,872 bytes while processing the request.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

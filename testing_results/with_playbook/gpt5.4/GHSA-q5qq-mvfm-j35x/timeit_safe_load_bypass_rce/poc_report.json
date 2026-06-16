@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_dynamic_evaluation",
+  "summary": "The Docker-based reproduction confirms that Fickling classifies a crafted `timeit.timeit` pickle as `LIKELY_SAFE` and then executes attacker-controlled code when `fickling.loads()` replays the pickle.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show `check_safety` returning `LIKELY_SAFE` for the crafted pickle and then produce the proof string `EVOHUNT_TIMEIT_SAFE_LOAD_BYPASS` from attacker-controlled code executed during `fickling.loads()`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `trailofbits/fickling` at commit `8249522c7180c69436516ff81bff394f62298c0c`, built the Docker image, reported `check_safety severity: LIKELY_SAFE`, executed `fickling.loads()` on the crafted pickle, and printed the expected proof file contents `EVOHUNT_TIMEIT_SAFE_LOAD_BYPASS`.",
+  "verification_method": "The verification helper builds the malicious pickle with Fickling's own opcode classes, asserts that `check_safety()` returns `LIKELY_SAFE`, runs `fickling.loads()` against the same bytes, and then checks for the exact proof string written by the attacker-controlled `timeit` statement. This distinguishes a real safe-load bypass from a parser failure, false positive, or unrelated import error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included `[evohunt] check_safety severity: LIKELY_SAFE` for the crafted pickle.",
+    "Container output showed `fickling.loads()` returning a benign-looking dictionary that included the measured `proof` timing value.",
+    "Container output printed `[evohunt] proof file contents: EVOHUNT_TIMEIT_SAFE_LOAD_BYPASS` before exiting successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8249522c7180c69436516ff81bff394f62298c0c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

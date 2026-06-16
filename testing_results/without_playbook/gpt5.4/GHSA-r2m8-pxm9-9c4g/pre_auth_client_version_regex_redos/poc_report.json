@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "regular_expression_dos",
+  "summary": "The Docker-based reproduction starts Parse Server 8.6.31, sends an unauthenticated large-body control request and then a malicious _ClientVersion request, and confirms that only the malicious request stalls concurrent /parse/health responses.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A crafted unauthenticated request carrying a large dash-only _ClientVersion should trigger regex backtracking in pre-auth request handling and significantly delay an unrelated concurrent /parse/health request.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Parse Server 8.6.31, started the server with MongoDB, and measured baseline /parse/health latency at 14.9 ms. A control POST /parse/noop request with a similarly large non-_ClientVersion body delayed /parse/health by only 1.3 ms, while the malicious POST /parse/noop request with _ClientVersion='-' repeated 80000 times returned 404 after 2757.2 ms and delayed the concurrent /parse/health request to 2653.6 ms. A follow-up health check recovered to 1.9 ms.",
+  "verification_method": "The probe compares concurrent /parse/health latency during a large-body control request versus a malicious _ClientVersion request to distinguish regex backtracking from generic JSON parsing, network transfer, or server startup delays. The run only passes when the malicious request causes a much larger stall and the server promptly recovers afterward.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline /parse/health latency: 14.9 ms.",
+    "Control large-body request: attack_status=404, attack_ms=7.1, concurrent health_ms=1.3.",
+    "Malicious _ClientVersion request: attack_status=404, attack_ms=2757.2, concurrent health_ms=2653.6.",
+    "Recovery /parse/health latency after the attack: 1.9 ms."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "44d6ff4d4f0562f3845cf0a5b5434be1afa5aadd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/probe.js",
+      "reproduction/verify.sh",
+      "reproduction/wait_for_health.js"
+    ]
+  }
+}

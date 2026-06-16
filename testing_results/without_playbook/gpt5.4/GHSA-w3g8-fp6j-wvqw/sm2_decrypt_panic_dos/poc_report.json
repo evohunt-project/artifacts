@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The reproduction builds a tiny Rust harness against the local `sm2` crate and triggers both attacker-controlled panic paths in `DecryptingKey::decrypt`: short ciphertext and invalid affine-point ciphertext.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The process should panic before returning `Err`, demonstrating denial of service when malformed ciphertext reaches SM2 decryption.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the local harness and triggered both expected panics: a `mid > len` panic at `sm2/src/pke/decrypting.rs:166` for short ciphertext and a `CtOption::unwrap()` panic while decoding an invalid SEC1 point.",
+  "verification_method": "The reproduction expects non-zero exit status and matches panic stderr against the specific failure signatures for the unchecked `split_at` and `unwrap()` paths.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/short.stderr",
+    "reproduction/invalid-point.stderr"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc/Cargo.lock",
+      "reproduction/poc/Cargo.toml",
+      "reproduction/poc/src/main.rs"
+    ]
+  }
+}

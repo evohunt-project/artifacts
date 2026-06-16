@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:13:30.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_34016004",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-8x4m-qw58-3pcx/GHSA-8x4m-qw58-3pcx.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "proxy_free_route_method_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_34016004/proxy_free_route_method_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_34016004/proxy_free_route_method_bypass/vulnerability_report.json",
+      "title": "Proxy method boundary bypass forwards attacker POST requests through free GET routes",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": true,
+      "advisory_match_reason": "The advisory explicitly includes bypassing payment on free routes via method-mismatch fallback, and this finding identifies the same POST-with-Authorization path-only fallback in `src/proxy/Proxy.ts` that 0.4.8 fixed by excluding free routes from `Route.matchPath()`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:L/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "proxy_free_route_method_bypass",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_34016004/proxy_free_route_method_bypass",
+      "status": "qualifying_vuln",
+      "title": "Proxy method boundary bypass forwards attacker POST requests through free GET routes",
+      "vulnerability_type": "broken_access_control"
+    },
+    "reason": "The selected finding is the advisory's free-route method-mismatch fallback bug. In vulnerable `mppx@0.4.7`, a POST carrying any Authorization header can miss method-aware route matching, fall back to path-only matching, and still be proxied upstream when the matched route is free. The copied PoC reproduced that end-to-end and showed the upstream receiving an authenticated POST under the proxy's Stripe credential.",
+    "evidence": [
+      "The advisory details explicitly list \"Bypassing payment on free routes via method-mismatch fallback\" among the fixed 0.4.8 issues.",
+      "In `mppx@0.4.7`, `src/proxy/Proxy.ts` falls back from `Route.match()` to `Route.matchPath(service.routes, upstreamPath)` for any POST with an Authorization header, and `src/proxy/internal/Route.ts` ignores the HTTP method during that fallback.",
+      "The 0.4.8 fix in commit `20f3fe4` changes the fallback to `Route.matchPath(..., (endpoint) => endpoint !== true)` and adds a regression test named `POST to unregistered method does not fall back to free GET route`, which is the same root-cause boundary described by the finding.",
+      "The copied PoC run log shows `response_status=200`, `upstream_method=POST`, `upstream_path=/v1/customers/cus_123`, `upstream_auth=Basic c2stdGVzdDo=`, `upstream_body=email=attacker%40example.com`, and `EVOHUNT_SUCCESS proxy free-route method bypass reproduced`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "proxy_free_route_method_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_34016004/proxy_free_route_method_bypass",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_34016004/.judge/poc_runs/proxy_free_route_method_bypass",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_34016004/.judge/poc_runs/proxy_free_route_method_bypass/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_34016004/.judge/poc_runs/proxy_free_route_method_bypass/poc_execution.json",
+      "observed_effect": "The copied PoC returned `response_status=200` for `POST /stripe/v1/customers/cus_123`, and the upstream observer logged `upstream_method=POST`, `upstream_auth=Basic c2stdGVzdDo=`, and `upstream_body=email=attacker%40example.com`, proving that a route configured free as GET accepted and forwarded an authenticated POST under the proxy's credential.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:47:30.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_79e08a11",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-ggxw-g3cp-mgf8/GHSA-ggxw-g3cp-mgf8.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "default_auth_admin_api_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_79e08a11/default_auth_admin_api_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_79e08a11/default_auth_admin_api_rce/vulnerability_report.json",
+      "title": "Default-disabled authentication exposes the admin API and permits unauthenticated plugin-based code execution",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding relies on `secureEnabled` being off and exploits unauthenticated HTTP admin routes (`/api/users`, `/api/upload`, `/api/plugins`) to reach plugin loading, while the advisory fixes missing authorization for WebSocket device-tag writes and device enable toggles in `server/runtime/index.js` even when security is enabled.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's unauthenticated WebSocket write authorization flaw in `server/runtime/index.js`; the only real qualifying finding is a separate default-auth-disabled HTTP admin API exposure that uses upload and plugin endpoints for RCE.",
+    "evidence": [
+      "The advisory summary states the issue is unauthenticated remote device tag modification via WebSockets and explicitly says it affects deployments even with `runtime.settings.secureEnabled=true`.",
+      "The advisory patch `eb2d8a20964ce7acaa0f442a181390a5f726a1ae` changes `server/runtime/index.js` to track socket authentication state and adds `isSocketWriteAuthorized()` guards before `DEVICE_VALUES` `set` operations and `DEVICE_ENABLE` requests.",
+      "The session's only final qualifying finding, `default_auth_admin_api_rce`, instead cites `server/settings.default.js`, `server/api/apikeys/verify-api-or-token.js`, `server/api/index.js`, and the HTTP routes `/api/users`, `/api/upload`, and `/api/plugins`, with an exploit path that depends on `secureEnabled` being off by default."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_79e08a11/default_auth_admin_api_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_79e08a11/default_auth_admin_api_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_79e08a11/default_auth_admin_api_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

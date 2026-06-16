@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that a crafted ProgramArtifact bytecode payload can force unbounded gzip expansion during artifact parsing and terminate the consumer with an OOM-style failure.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should parse the bundled malicious artifact under a 192 MB container memory cap and trigger an OOM-style termination in the artifact parser before normal validation completes.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned noir repository, built the reproduction image, compiled the harness against the pinned source, and then produced '/app/verify.sh: line 5: 7 Killed ...' followed by '[evohunt] observed expected OOM-style termination while parsing malicious artifact' and '[evohunt] SUCCESS: reproduction completed and verified'.",
+  "verification_method": "The run script first compiles a minimal harness against the pinned vulnerable source and then runs that harness inside Docker with a 192 MB memory cap against the bundled malicious artifact. The verifier accepts only the expected OOM-style kill signal and rejects ordinary parse errors or unrelated failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final delivered bundle ./reproduction/run.sh completed successfully from the session-root finding directory.",
+    "The verifier observed '/app/verify.sh: line 5: 7 Killed ...' while the harness parsed reproduction/bytecode-bomb.json.",
+    "The verifier then emitted '[evohunt] observed expected OOM-style termination while parsing malicious artifact'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "99bb8b5cf33d7669adbdef096b12d80f30b4c0c9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/build_harness.sh",
+      "reproduction/verify.sh",
+      "reproduction/bytecode-bomb.json",
+      "reproduction/harness/Cargo.toml",
+      "reproduction/harness/src/main.rs"
+    ]
+  }
+}

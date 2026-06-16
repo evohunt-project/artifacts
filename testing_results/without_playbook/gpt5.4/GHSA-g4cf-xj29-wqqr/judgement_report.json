@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:45:29.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_49bd4678",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-g4cf-xj29-wqqr/GHSA-g4cf-xj29-wqqr.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "client_version_regex_redos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_49bd4678/client_version_regex_redos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_49bd4678/client_version_regex_redos/vulnerability_report.json",
+      "title": "Pre-authentication client version parsing regex allows low-cost request blocking",
+      "vulnerability_type": "redos_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a pre-auth request-parsing regex stall in `handleParseHeaders` and `ClientSDK.fromString`; the advisory fixes `findUsersWithAuthData` in `src/Auth.js` to skip database lookups for unconfigured auth providers, so the vulnerable code and root cause differ.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "graphql_schema_suggestion_disclosure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_49bd4678/graphql_schema_suggestion_disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_49bd4678/graphql_schema_suggestion_disclosure/vulnerability_report.json",
+      "title": "GraphQL validation suggestions disclose schema metadata to unauthenticated callers",
+      "vulnerability_type": "graphql_schema_disclosure",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is GraphQL validation-error suggestion leakage in `ParseGraphQLServer`; the advisory fixes the auth-provider lookup path in `src/Auth.js`, so this is a different component, endpoint, and root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory root cause: Parse Server's `src/Auth.js` queried the user database for unconfigured auth providers before rejecting them, and the patch adds an early validator check to prevent those unindexed lookups.",
+    "evidence": [
+      "Advisory commits `40eb442e02672986730007d0a1edb22c1c4bd357` and `fbac847499e57f243315c5fc7135be1d58bb8e54` modify `src/Auth.js` `findUsersWithAuthData` to return early when `getValidatorForProvider(provider)` has no validator, preventing database `find` calls for unconfigured providers.",
+      "`client_version_regex_redos` reports regex backtracking in `repo/src/ClientSDK.js` and `repo/src/middlewares.js` during header/body parsing before authentication, not the advisory's auth-provider lookup path.",
+      "`graphql_schema_suggestion_disclosure` reports Apollo validation suggestion leakage in `repo/src/GraphQL/ParseGraphQLServer.js`, not the advisory's unconfigured-provider database query behavior."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_49bd4678/client_version_regex_redos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_49bd4678/client_version_regex_redos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_49bd4678/client_version_regex_redos/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_49bd4678/graphql_schema_suggestion_disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_49bd4678/graphql_schema_suggestion_disclosure/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_49bd4678/graphql_schema_suggestion_disclosure/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

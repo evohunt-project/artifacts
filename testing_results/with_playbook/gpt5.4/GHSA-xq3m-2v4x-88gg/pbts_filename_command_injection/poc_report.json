@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The reproduction clones the pinned repository revision, installs the CLI dependencies, creates a maliciously named JavaScript file, runs `pbts *.js`, and verifies that command substitution creates a marker file before JSDoc processes the input.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause `pbts` to execute the command substitution embedded in the attacker-controlled filename and create the marker file in the proof workspace.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned upstream tag `protobufjs-v8.0.0`, built the reproduction container, installed the CLI dependencies, and produced `EVOHUNT_SUCCESS: command substitution in filename executed before JSDoc processing` during a normal `pbts *.js` run.",
+  "verification_method": "The helper script creates a malicious filename, runs the normal `pbts *.js` flow, and checks both for the attacker-created marker file and for the expected `.js` path error showing that command substitution stripped the filename content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The containerized verification step emitted `EVOHUNT_SUCCESS: command substitution in filename executed before JSDoc processing`.",
+    "The host `run.sh` completed successfully and printed `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "933e8750dcd000c16a621a7344a4beaa034c4019",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

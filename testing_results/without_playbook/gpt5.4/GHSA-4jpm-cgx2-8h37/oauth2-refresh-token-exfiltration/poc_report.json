@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that Flowise's public OAuth2 refresh route can be invoked with a known credential UUID to obtain a fresh access token and overwrite the stored credential state without authenticating the caller.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause an unauthenticated POST to `/api/v1/oauth2-credential/refresh/:credentialId` to return a fresh OAuth token set and update the stored credential with the rotated token values.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Flowise at `378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97`, built the target, started Flowise, seeded an encrypted OAuth credential, and then an unauthenticated POST to `/api/v1/oauth2-credential/refresh/11111111-1111-4111-8111-111111111111` returned `attacker-visible-access-token` and `rotated-refresh-token`. The helper then decrypted the updated credential row and confirmed that those rotated token values were persisted in Flowise's database.",
+  "verification_method": "The helper script seeds one encrypted credential, starts a controlled OAuth token endpoint, invokes the public refresh route, checks the HTTP response for the expected token strings, verifies that the outbound refresh request used the stored `seed-refresh` token, and decrypts the updated database row to confirm that the rotated token material was written back.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The refresh response JSON contained `\"access_token\":\"attacker-visible-access-token\"` and `\"refresh_token\":\"rotated-refresh-token\"`.",
+    "The controlled OAuth endpoint log showed a refresh-grant request containing `grant_type=refresh_token` and `refresh_token=seed-refresh`.",
+    "Decrypting the updated credential row showed `\"refresh_token\":\"rotated-refresh-token\"` and `\"access_token\":\"attacker-visible-access-token\"` in persisted Flowise credential data."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/oauth_stub.js",
+      "reproduction/decrypt_credential.js"
+    ]
+  }
+}

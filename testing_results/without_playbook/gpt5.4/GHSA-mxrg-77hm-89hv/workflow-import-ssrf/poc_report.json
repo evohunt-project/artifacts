@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that a low-privileged n8n member can use `/rest/workflows/from-url` to make the server fetch loopback-only workflow-shaped JSON and reflect the internal proof string back in the HTTP response.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the attacker cannot directly reach the victim's loopback proof service, but a low-privileged member can still make the n8n server fetch that loopback-only URL through `/rest/workflows/from-url` and return the embedded proof string.",
+  "actual_observed_result": "Running `./reproduction/run.sh` from the final `workflow-import-ssrf/` folder cloned `n8n@2.14.0`, launched `n8nio/n8n:2.14.0`, bootstrapped an owner, invited and authenticated a low-privileged member, confirmed direct access to `http://victim:17777/proof` failed from the attacker container, and then received a `/rest/workflows/from-url` response containing `{\"meta\":{\"proof\":\"INTERNAL_ONLY_PROOF_STRING\"}}`.",
+  "verification_method": "The helper verifies that the mounted `/target-repo` checkout matches `n8n@2.14.0` and still contains the vulnerable `axios.get(query.url)` code path, confirms the attacker container cannot reach the proof service directly, and then requires the exact `INTERNAL_ONLY_PROOF_STRING` to be reflected in the workflow import response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `[evohunt] direct access to the victim loopback proof server failed as expected` before triggering the SSRF.",
+    "The reproduction established a low-privileged invited member session and used that session's personal project ID when calling `/rest/workflows/from-url`.",
+    "The reproduction printed a returned workflow object containing `\"meta\": {\"proof\": \"INTERNAL_ONLY_PROOF_STRING\"}` after the vulnerable request completed."
+  ],
+  "limitations_or_blockers": [
+    "Victim startup logs include non-blocking warnings about the internal Python task runner and the deprecated `N8N_RUNNERS_ENABLED` environment variable, but the service starts normally and the SSRF reproduction still succeeds."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at the pinned tag, mounts that checkout read-only at /target-repo for source verification, builds the helper image, and runs the pinned victim image on an isolated Docker network.",
+    "pinned_commit_or_ref": "n8n@2.14.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit_and_verify.py",
+      "reproduction/internal_proof_server.js"
+    ]
+  }
+}

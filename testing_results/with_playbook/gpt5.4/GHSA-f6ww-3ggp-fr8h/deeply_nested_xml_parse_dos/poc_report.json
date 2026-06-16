@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that a deeply nested XML document reaches the default post-parse normalization path and crashes the Node process with a call-stack exhaustion RangeError.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should feed a deeply nested XML document into DOMParser.parseFromString and trigger RangeError: Maximum call stack size exceeded from repeated Element.normalize frames on the default parser path.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 9fb2667c25ea4e9c290498e0d911904b1ef6f336, built the reproduction image, mounted the cloned checkout, and printed '[evohunt] parsing nested XML depth=10000 bytes=70000' followed by 'RangeError: Maximum call stack size exceeded' with repeated '/target-repo/lib/dom.js' Element.normalize frames. The verifier then printed '[evohunt] verification confirmed stack exhaustion on the default parse path' and run.sh exited successfully.",
+  "verification_method": "The verifier runs the exploit without catching the exception and requires a non-zero Node failure plus the exact RangeError message and Element.normalize stack frames. This distinguishes the vulnerability from an unrelated startup failure or mount problem.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The cloned target at commit 9fb2667c25ea4e9c290498e0d911904b1ef6f336 threw RangeError: Maximum call stack size exceeded while parsing a 10,000-level nested XML document.",
+    "The stack trace contained repeated Element.normalize frames under /target-repo/lib/dom.js, tying the failure to the recursive normalization path.",
+    "The verifier printed the expected success marker after matching the crash signature."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "9fb2667c25ea4e9c290498e0d911904b1ef6f336",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

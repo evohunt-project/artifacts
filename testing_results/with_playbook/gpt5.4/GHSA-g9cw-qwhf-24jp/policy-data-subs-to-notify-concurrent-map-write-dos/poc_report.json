@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The reproduction clones the vulnerable upstream revision, injects a module-local stress test for the real `policy-data/subs-to-notify` Gin route, and reliably crashes the target with `fatal error: concurrent map writes` in `PolicyDataSubsToNotifyPostProcedure`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Concurrent POST requests to `POST /nudr-dr/v2/policy-data/subs-to-notify` should terminate the vulnerable process with Go's `fatal error: concurrent map writes` message.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `free5gc/udr` at commit `8a1d3c63be99d378806d771f086ff32f1867da99`, built the helper image, copied the PoC test into the checkout, and observed `fatal error: concurrent map writes` with stack frames in `PolicyDataSubsToNotifyPostProcedure` and `HandlePolicyDataSubsToNotifyPost`.",
+  "verification_method": "The container copies the PoC test into `internal/sbi`, runs `go test ./internal/sbi -run TestPolicyDataSubsConcurrentCrash -count=1`, and accepts the run only if the command exits non-zero and the captured output contains both `fatal error: concurrent map writes` and `PolicyDataSubsToNotifyPostProcedure`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The captured run output contains `fatal error: concurrent map writes`.",
+    "The crash stack includes `internal/sbi/processor.(*Processor).PolicyDataSubsToNotifyPostProcedure`.",
+    "The crash stack includes `internal/sbi.(*Server).HandlePolicyDataSubsToNotifyPost`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8a1d3c63be99d378806d771f086ff32f1867da99",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc_concurrent_policy_subs_test.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

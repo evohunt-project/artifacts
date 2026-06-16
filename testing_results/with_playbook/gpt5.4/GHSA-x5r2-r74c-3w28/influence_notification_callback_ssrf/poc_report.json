@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The reproduction bundle clones the pinned source snapshot, starts Mongo plus a minimal UDR harness, registers an influence-data subscription with `notificationUri` set to `http://127.0.0.1:7777/proof`, and then triggers an influence-data update that causes the UDR process to POST to that loopback-only proof endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proof server that listens only on `127.0.0.1:7777` inside the UDR container should receive a callback POST when the influence-data notification path is triggered.",
+  "actual_observed_result": "Running `./reproduction/run.sh` printed a proof JSON showing `method` `POST`, `path` `/proof`, and a body containing the influence-data notification for `evohunt-ssrf`, then printed `EVOHUNT_SSRF_PROOF_CONFIRMED`.",
+  "verification_method": "The run script waits for `proof.json`, then verifies that it contains `\"path\": \"/proof\"` and the `trafficInfluData` notification body emitted by the vulnerable callback path. This distinguishes a real server-side callback from startup noise or an unrelated network request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The proof file recorded `method` `POST` and `path` `/proof`.",
+    "The proof file recorded `User-Agent` `OpenAPI-Generator/1.0.0/go` from the generated UDR callback client.",
+    "The proof file body contained `[{\"resUri\":\"http://127.0.0.1:8000/nudr-dr/v2/application-data/influenceData/evohunt-ssrf\",\"trafficInfluData\":{\"dnn\":\"internet\"}}]`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the bundled `reproduction/udr.bundle` repository snapshot on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "a459a7eb0afa51f8b840e6caee50b00840687dfe",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/evohunt_harness.go",
+      "reproduction/udr.bundle"
+    ]
+  }
+}
+

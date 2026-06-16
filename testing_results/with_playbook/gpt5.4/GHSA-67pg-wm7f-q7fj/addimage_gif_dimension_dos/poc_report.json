@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction clones jsPDF v4.1.0, builds the shipped Node bundle, and shows that a 34-byte crafted GIF drives addImage into a decoder-side allocation failure.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should route a crafted GIF through processGIF89A and produce a process-terminating decoder allocation failure, evidenced by either a V8 invalid-size abort or a RangeError allocation failure in GifReader.decodeAndBlitFrameRGBA.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 02273814bf0222eda02944f9a14128811f3b5a33, built the shipped Node bundle, triggered the crafted GIF, and printed \"[evohunt] PROOF: gif-decoder-allocation-failure\" followed by \"RangeError: Array buffer allocation failed\" with stack frames in GifReader.decodeAndBlitFrameRGBA and jsPDFAPI.processGIF89A.",
+  "verification_method": "reproduction/verify.sh treats the run as successful only when the trigger exits non-zero and the captured log contains either \"Fatal JavaScript invalid size error\" or \"RangeError: Array buffer allocation failed\" together with decoder stack frames for decodeAndBlitFrameRGBA or processGIF89A.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run output contained \"[evohunt] PROOF: gif-decoder-allocation-failure\".",
+    "The captured Node error was \"RangeError: Array buffer allocation failed\".",
+    "The stack trace showed the vulnerable path through GifReader.decodeAndBlitFrameRGBA, jsPDFAPI.processGIF89A, and jsPDFAPI.addImage."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "02273814bf0222eda02944f9a14128811f3b5a33",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/package-lock.v4.1.0.json",
+      "reproduction/trigger_gif_crash.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:49:51.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3d49198a",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-qffp-2rhf-9h96/GHSA-qffp-2rhf-9h96.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "dotdot_create_arbitrary_file_read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3d49198a/dotdot_create_arbitrary_file_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3d49198a/dotdot_create_arbitrary_file_read/vulnerability_report.json",
+      "title": "Default create/update/replace allow out-of-root archive reads via ../ paths",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is an extraction-time hardlink path traversal in `tar.x()`/`Unpack` caused by checking `..` before `stripAbsolutePath()` on drive-relative link targets. This finding is an archive-creation issue in `create`/`update`/`replace`, `Pack.add()`, and `WriteEntry` that reads `../` source paths outside `cwd`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "selective_filter_deep_path_stack_overflow",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3d49198a/selective_filter_deep_path_stack_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3d49198a/selective_filter_deep_path_stack_overflow/vulnerability_report.json",
+      "title": "Selective list/extract file filters crash on deeply nested archive entry paths",
+      "vulnerability_type": "availability_panics_and_validation_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory patch changes `src/unpack.ts` link-target sanitization for drive-relative hardlinks and symlinks. This finding is a separate denial-of-service bug in `filesFilter().mapHas()` recursion during selective list/extract on deeply nested entry paths, before `maxDepth` handling.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "Neither qualifying finding identifies the advisory's vulnerable code or root cause. The advisory is a drive-relative hardlink/symlink path traversal in extraction (`tar.x()`/`Unpack`) caused by stripping the absolute root after the `..` check; the session findings cover a separate archive-creation out-of-root read and a separate selective-filter stack-overflow denial of service.",
+    "evidence": [
+      "The advisory patch `7bc755dd85e623c0279e08eb3784909e6d7e4b9f` moves `stripAbsolutePath()` ahead of `..` sanitization in `src/unpack.ts`, specifically for extracted link targets such as `C:../target.txt`.",
+      "`dotdot_create_arbitrary_file_read` affects `tar.create()`/`tar.update()`/`tar.replace()`, `Pack.add()`, and `WriteEntry` during archive creation and demonstrates out-of-root file reads, not extraction-time hardlink overwrite behavior.",
+      "`selective_filter_deep_path_stack_overflow` affects selective `list`/`extract` filtering through recursive `filesFilter().mapHas()` path walking and reproduces a `RangeError`, not the advisory's drive-relative link-target traversal."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3d49198a/dotdot_create_arbitrary_file_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3d49198a/dotdot_create_arbitrary_file_read/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3d49198a/dotdot_create_arbitrary_file_read/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3d49198a/selective_filter_deep_path_stack_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3d49198a/selective_filter_deep_path_stack_overflow/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_3d49198a/selective_filter_deep_path_stack_overflow/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

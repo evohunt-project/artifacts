@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "integer_overflow_oob_write",
+  "summary": "The Docker-based reproduction confirms that a crafted PSD reaches Pillow's vulnerable tile-decoding path and fatally crashes the Python process while loading the malicious layer.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The vulnerable Python subprocess should print progress through 'seeked current frame 2' and then terminate with a fatal memory-safety signal before it can print 'loaded crafted layer frame'.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 3bf614e4b8615d0ce1d5039efaf6db447fe7c468, built the reproduction image, and verify.sh observed 'open start', 'opened PsdImageFile PSD (10, 10) 2', 'loaded frame0', and 'seeked current frame 2' before the vulnerable subprocess died with python_exit=139. The helper then printed that verification passed and the wrapper reported reproduction success.",
+  "verification_method": "verify.sh copies the mounted vulnerable checkout into a writable temp directory, installs Pillow from that copy, runs trigger_psd_crash.py against the bundled PSD, requires the expected pre-crash markers, requires that 'loaded crafted layer frame' never appears, and accepts only a fatal crash exit code (134, 138, or 139).",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output includes 'open start', 'opened PsdImageFile PSD (10, 10) 2', 'loaded frame0', and 'seeked current frame 2'.",
+    "The vulnerable Python subprocess terminated with python_exit=139 before 'loaded crafted layer frame' was printed.",
+    "verify.sh emitted '[evohunt] verification passed: crafted PSD caused a fatal crash after the layer seek (python_exit=139)'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "3bf614e4b8615d0ce1d5039efaf6db447fe7c468",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/trigger_psd_crash.py",
+      "reproduction/psd-oob-write-overflow.psd"
+    ]
+  }
+}

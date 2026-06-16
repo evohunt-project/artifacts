@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:14:29.695Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_692d0267",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-rwp9-5g7q-73q3/GHSA-rwp9-5g7q-73q3.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "jwt_auth_whitelist_path_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_692d0267/jwt_auth_whitelist_path_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_692d0267/jwt_auth_whitelist_path_bypass/vulnerability_report.json",
+      "title": "JWT auth whitelist path traversal bypass exposes protected flag and export APIs",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same JWT middleware whitelist bug as the advisory: pre-fix pkg/config/middleware.go accepts attacker-controlled req.URL.Path values with strings.HasPrefix before downstream path normalization, so /api/v1/health/../... bypasses auth and reaches protected flag and export handlers. Upstream fix fe83dc87 replaces that prefix check with util.HasSafePrefix.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "jwt_auth_whitelist_path_bypass",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_692d0267/jwt_auth_whitelist_path_bypass",
+      "status": "qualifying_vuln",
+      "title": "JWT auth whitelist path traversal bypass exposes protected flag and export APIs",
+      "vulnerability_type": "broken_access_control"
+    },
+    "reason": "The selected finding matches the advisory-described HTTP middleware path-normalization auth bypass, and the copied PoC reproduced end-to-end unauthorized access to protected flag and export endpoints on the pinned vulnerable commit while direct canonical routes remained protected.",
+    "evidence": [
+      "The advisory describes improper path-normalization handling in OpenFlagr's HTTP middleware whitelist; the finding describes the same raw-path prefix whitelist bypass using /api/v1/health/../... to skip JWT verification and then reach protected handlers after normalization.",
+      "At vulnerable commit 2dc5d1495e73737b6273a10514c83f34907a7294, pkg/config/middleware.go whitelists JWT prefix paths with strings.HasPrefix(req.URL.Path, p); upstream fix fe83dc87aa404a57554aa5839ac450f55c203570 replaces that check with util.HasSafePrefix.",
+      "/Users/lumi/ziyue/EvoHunt-Run/advisory_692d0267/.judge/poc_runs/jwt_auth_whitelist_path_bypass/run.log shows direct /api/v1/flags status 401 and direct /api/v1/export/eval_cache/json status 401, but bypassed /api/v1/health/../flags status 200 and bypassed /api/v1/health/../export/eval_cache/json status 200 without any token.",
+      "/Users/lumi/ziyue/EvoHunt-Run/advisory_692d0267/.judge/poc_runs/jwt_auth_whitelist_path_bypass/run.log also shows bypassed flag creation status 200 and EVOHUNT_JWT_BYPASS_CONFIRMED, proving unauthorized protected action execution and protected data exposure through the advisory root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "jwt_auth_whitelist_path_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_692d0267/jwt_auth_whitelist_path_bypass",
+      "executed": true,
+      "command": "bash reproduction/run_host.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_692d0267/.judge/poc_runs/jwt_auth_whitelist_path_bypass/workspace/jwt_auth_whitelist_path_bypass",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_692d0267/.judge/poc_runs/jwt_auth_whitelist_path_bypass/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_692d0267/.judge/poc_runs/jwt_auth_whitelist_path_bypass/poc_execution.json",
+      "observed_effect": "With JWT auth enabled on the pinned vulnerable commit, direct requests to /api/v1/flags and /api/v1/export/eval_cache/json returned 401, while unauthenticated curl --path-as-is requests to /api/v1/health/../flags and /api/v1/health/../export/eval_cache/json returned 200; the bypassed POST created jwt-bypass-flag and the bypassed export path exposed data including that created flag.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

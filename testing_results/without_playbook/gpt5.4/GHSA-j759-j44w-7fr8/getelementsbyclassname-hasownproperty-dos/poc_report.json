@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_dos",
+  "summary": "The reproduction bundle is prepared to demonstrate that attacker-controlled class tokens in @xmldom/xmldom 0.8.12 crash Document.getElementsByClassName with an uncaught TypeError.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should clone the vulnerable 0.8.12 source, invoke getElementsByClassName('secondary') on a document containing class=\"hasOwnProperty secondary\", and observe a non-zero Node.js exit with TypeError: current.hasOwnProperty is not a function.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned https://github.com/xmldom/xmldom.git at commit 189cb78a83e81e1515880988a399e863a8be85ac, built the Docker image, executed the helper against a mounted vulnerable checkout, and observed a non-zero Node.js exit with TypeError: current.hasOwnProperty is not a function from Document.getElementsByClassName after parsing <item class=\"hasOwnProperty secondary\"/>.",
+  "verification_method": "The container runs the exploit helper, expects a non-zero Node.js exit, and verifies the captured output contains the exact TypeError text plus the getElementsByClassName stack frame.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The helper printed [evohunt] parsing crafted XML document and [evohunt] invoking fixed selector: secondary before the failure.",
+    "Node.js exited non-zero with TypeError: current.hasOwnProperty is not a function.",
+    "The stack trace included /target-repo/lib/dom.js and Document.getElementsByClassName.",
+    "verify.sh printed [evohunt] verification passed: observed uncaught TypeError in getElementsByClassName."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "189cb78a83e81e1515880988a399e863a8be85ac",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

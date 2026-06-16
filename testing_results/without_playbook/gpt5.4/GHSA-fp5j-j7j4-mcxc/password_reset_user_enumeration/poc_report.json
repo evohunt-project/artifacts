@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "user_enumeration",
+  "summary": "The Docker-based reproduction installs Craft CMS 4.17.3, requests an anonymous CSRF token, and confirms that the default password-reset flow returns a success response for an existing account and an explicit failure for a nonexistent account.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated attacker should be able to distinguish real accounts from nonexistent ones by comparing the HTTP status and JSON message returned by the password-reset endpoint.",
+  "actual_observed_result": "Running ./reproduction/run.sh completed the containerized setup and emitted the final proof signal [evohunt] SUCCESS existing=200:Password reset email sent. missing=400:Invalid username or email., confirming that the default password-reset flow reveals whether the submitted account exists.",
+  "verification_method": "The reproduction script clones the pinned Craft CMS commit, installs the application in Docker, obtains a guest CSRF token from the anonymous session-info endpoint, submits password-reset requests for a real username and a nonexistent username, and checks that the responses differ as 200 Password reset email sent. versus 400 Invalid username or email.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction run emitted [evohunt] SUCCESS existing=200:Password reset email sent. missing=400:Invalid username or email..",
+    "The existing-user request returned 200 with {\"message\":\"Password reset email sent.\"}.",
+    "The nonexistent-user request returned 400 with {\"errors\":[\"Invalid username or email.\"],\"message\":\"Invalid username or email.\"}."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "17bf79c1dbc249b6c79d585eba1414838dc43521",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

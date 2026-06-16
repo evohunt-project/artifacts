@@ -1,0 +1,102 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:09:23.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-5458-7hh9-v7p4/GHSA-5458-7hh9-v7p4.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "archive_extraction_prefix_path_traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b/archive_extraction_prefix_path_traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b/archive_extraction_prefix_path_traversal/vulnerability_report.json",
+      "title": "ZIP plugin extraction allows sibling-prefix path traversal outside the intended plugin directory",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": true,
+      "advisory_match_reason": "It identifies the same vulnerable code and mechanism as the advisory: zip entry names reach `org.pf4j.util.Unzip.extract()`, which used a canonical-path `String.startsWith` containment check that can be bypassed via sibling-prefix paths during ZIP extraction.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "delete_plugin_outside_roots",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b/delete_plugin_outside_roots",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b/delete_plugin_outside_roots/vulnerability_report.json",
+      "title": "deletePlugin deletes plugin directories outside configured plugin roots",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": false,
+      "advisory_match_reason": "This is a different root cause and code path. It depends on `loadPlugin(Path)` storing an out-of-root path and `deletePlugin(String)` later deleting it, while the advisory is specifically about zip-entry traversal in `org.pf4j.util.Unzip.extract()`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "archive_extraction_prefix_path_traversal",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b/archive_extraction_prefix_path_traversal",
+      "status": "qualifying_vuln",
+      "title": "ZIP plugin extraction allows sibling-prefix path traversal outside the intended plugin directory",
+      "vulnerability_type": "path_traversal"
+    },
+    "reason": "The selected finding matches the advisory because it reaches the same vulnerable `Unzip.extract()` code and the same sibling-prefix `startsWith` bypass fixed by advisory commit `20c2f80089d1ea779e22c2de5f109a0bce4e1b14`. A fresh copied-workspace PoC run then demonstrated the advisory impact by writing a ZIP entry outside the intended extraction directory.",
+    "evidence": [
+      "The advisory JSON states that PF4J before `20c2f80` has a path traversal vulnerability in the `extract()` function of `Unzip.java` due to improper handling of zip entry names.",
+      "The fix patch for `20c2f80089d1ea779e22c2de5f109a0bce4e1b14` replaces `String.startsWith()` canonical-path validation in `pf4j/src/main/java/org/pf4j/util/Unzip.java` with normalized `Path` containment checks and explicitly mentions sibling-prefix bypasses in issues `#618` and `#623`.",
+      "`archive_extraction_prefix_path_traversal/vulnerability_report.json` identifies `repo/pf4j/src/main/java/org/pf4j/util/Unzip.java:78` and describes the same source-to-sink path `DefaultPluginRepository.getPluginPaths() -> FileUtils.expandIfZip() -> Unzip.extract()`.",
+      "`.judge/poc_runs/archive_extraction_prefix_path_traversal/run.log` shows `escaped file exists: true`, `escaped content: archive-prefix-bypass`, and `SUCCESS: archive extraction wrote outside the intended plugin directory` after building the pinned vulnerable commit."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "archive_extraction_prefix_path_traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b/archive_extraction_prefix_path_traversal",
+      "executed": true,
+      "command": "git clone https://github.com/pf4j/pf4j.git workspace/target-repo && git checkout 2ed63d16c4610779eb36f54c2e2df572a94ea2b7 && mvn -q -f workspace/target-repo/pom.xml -pl pf4j -am -DskipTests test-compile dependency:build-classpath && javac reproduction/Pf4jArchiveExtractionHarness.java && java Pf4jArchiveExtractionHarness",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b/.judge/poc_runs/archive_extraction_prefix_path_traversal/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b/.judge/poc_runs/archive_extraction_prefix_path_traversal/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b/.judge/poc_runs/archive_extraction_prefix_path_traversal/poc_execution.json",
+      "observed_effect": "The copied PoC built PF4J at commit `2ed63d16c4610779eb36f54c2e2df572a94ea2b7`, expanded `plugin-poc.zip`, reported `escaped file exists: true`, and printed `SUCCESS: archive extraction wrote outside the intended plugin directory`, confirming an out-of-root sibling-prefix write through the vulnerable ZIP extraction path.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b/delete_plugin_outside_roots",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b/delete_plugin_outside_roots/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b8163f6b/delete_plugin_outside_roots/poc_report.json",
+      "poc_report_status": "failed"
+    }
+  ]
+}

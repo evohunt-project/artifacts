@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction clones oRPC v1.13.5, mounts it into a Node container, and runs a helper that shows the default fetch RPC handler blocks GET but still executes a non-GET procedure through HEAD.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The helper should show that the default StrictGetMethodPlugin rejects `GET` for a non-GET procedure but still allows `HEAD` to execute the same mutation.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned oRPC v1.13.5, built the reproduction image, installed the workspace dependencies in the container, and printed `EVOHUNT_HEAD_BYPASS_CONFIRMED` after `GET /mutate?data={}` returned `405` without mutating state but `HEAD /mutate` returned `200` and incremented the mutation counter once.",
+  "verification_method": "The helper constructs a real fetch `RPCHandler`, confirms `GET` returns `405` without mutating state, then confirms `HEAD` returns `200` and increments a mutation counter.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container run printed `EVOHUNT_HEAD_BYPASS_CONFIRMED`.",
+    "The helper confirmed that the default fetch RPCHandler rejected the `GET` request with status `405`.",
+    "The helper confirmed that the `HEAD` request returned `200` and executed the non-GET mutation exactly once."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "44a1a1ee9b7f7c12eaeb3ed385a99929ffd27ee7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run-repro.sh",
+      "reproduction/verify-head-bypass.ts"
+    ]
+  }
+}

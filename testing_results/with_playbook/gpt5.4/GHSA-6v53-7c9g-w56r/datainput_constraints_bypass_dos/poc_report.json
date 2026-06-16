@@ -1,0 +1,36 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirmed that the DataInput parser bypasses configured depth, document-length, and name-length constraints, and that deep nesting through the DataInput surface reaches OutOfMemoryError while the standard InputStream parser rejects the same payload.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show the standard InputStream parser rejecting configured depth, document-length, and name-length violations while the DataInput parser accepts them, and should show a deeply nested DataInput payload triggering OutOfMemoryError under a 256 MB heap.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 22815c439ec1769a60f43c2b971d0cc31f382536, built the reproduction image, confirmed InputStream rejection plus DataInput acceptance for depth, document-length, and name-length checks, confirmed token-count stayed enforced on both paths, and reproduced OutOfMemoryError on ten million nested arrays through the DataInput parser.",
+  "verification_method": "reproduction/verify.sh compiles the target source tree directly, runs ConstraintBypassHarness and DeepNestingOomHarness, and verifies the exact accepted/rejected/OOM status lines with grep.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "inputstream-depth=rejected",
+    "datainput-depth=accepted",
+    "inputstream-doclen=rejected",
+    "datainput-doclen=accepted",
+    "inputstream-name=rejected",
+    "datainput-name=accepted",
+    "inputstream-token=rejected",
+    "datainput-token=rejected",
+    "oom-inputstream=rejected",
+    "oom-datainput=oom"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "22815c439ec1769a60f43c2b971d0cc31f382536",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/ConstraintBypassHarness.java",
+      "reproduction/DeepNestingOomHarness.java"
+    ]
+  }
+}

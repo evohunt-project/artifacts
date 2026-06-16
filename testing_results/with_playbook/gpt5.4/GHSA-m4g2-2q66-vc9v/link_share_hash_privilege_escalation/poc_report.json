@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction shows that a read-only link-share token can list sibling share hashes, exchange a disclosed admin share hash for a stronger JWT, and then use that escalated token to update the victim project.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A read-only link-share holder should be forbidden from updating the project directly, but after disclosing a sibling admin share hash through the share-listing route, the same attacker should be able to mint the admin share token and successfully update the project title.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Vikunja at commit 3ba5192b1bd0607998bdaf9259d795fb14530384, built the helper image, and executed the proof test. The run emitted the expected warning for the direct read-only update attempt, then the test passed and verify.sh printed LINK_SHARE_HASH_ESCALATION_CONFIRMED followed by the run-level SUCCESS marker.",
+  "verification_method": "The helper test creates a read-only share and an admin share on the same victim project, exercises the share-listing and share-auth routes, and then distinguishes the real exploit from false positives by checking that the read-only token is denied while the escalated token succeeds on the project update path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "go test -mod=mod -run TestReadOnlyShareCanEscalateViaSiblingHashDisclosure exited successfully inside the reproduction container.",
+    "The test output includes the expected warning for the direct read-only update attempt and then completes with PASS.",
+    "verify.sh printed LINK_SHARE_HASH_ESCALATION_CONFIRMED and run.sh printed the final SUCCESS marker."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "3ba5192b1bd0607998bdaf9259d795fb14530384",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/go.mod",
+      "reproduction/go.sum",
+      "reproduction/common_test.go",
+      "reproduction/linkshare_hash_escalation_test.go"
+    ]
+  }
+}

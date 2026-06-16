@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction clones Langflow v1.7.3 at the pinned vulnerable commit and proves that `/api/v1/files/images/{flow_id}/{file_name}` is readable without owner authorization while the sibling `/api/v1/files/download/{flow_id}/{file_name}` still enforces flow ownership.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an unauthenticated caller and a different authenticated user can both fetch a victim's uploaded image from `/api/v1/files/images/...`, while the same different user is rejected by the protected `/api/v1/files/download/...` route for the identical file.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `dbe777ecaa51042f84c6f31629d59a6596835fd2`, built the reproduction image, and emitted `{\"status\": \"success\", \"unauth_image_status\": 200, \"attacker_image_status\": 200, \"attacker_download_status\": 404, \"attacker_image_content_type\": \"image/png\"}` before the wrapper reported `SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The run script clones the pinned upstream repository on the host, mounts it at `/target-repo`, and invokes `reproduction/verify.sh`. The verifier copies that checkout into a writable workspace, installs the pinned dependencies with `uv`, runs `reproduction/exploit.py`, and fails closed unless the exploit prints a JSON object with `\"status\": \"success\"` after confirming both unauthorized image reads succeed and the protected download route still denies the cross-user request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit uploaded a PNG into a victim-owned flow and reported `unauth_image_status: 200` for an unauthenticated read of that stored file.",
+    "The exploit reported `attacker_image_status: 200` and `attacker_image_content_type: image/png` for a different authenticated user reading the same stored image.",
+    "The exploit reported `attacker_download_status: 404` and `{\"detail\":\"Flow not found\"}` for the sibling owner-gated `/files/download/...` route, confirming the image route bypasses an existing authorization boundary rather than reflecting a broad test harness misconfiguration."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh creates a temporary workspace under the session directory, shallow-fetches the pinned vulnerable commit from the upstream Langflow repository on the host, and mounts that checked-out tree into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "dbe777ecaa51042f84c6f31629d59a6596835fd2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

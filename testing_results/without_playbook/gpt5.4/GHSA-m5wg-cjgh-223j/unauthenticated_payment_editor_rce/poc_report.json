@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_write_rce",
+  "summary": "The Docker-based reproduction provisions a fresh Laravel host app, mounts the vulnerable package checkout, overwrites the published `key_model.php` helper through the unauthenticated editor endpoint, and confirms attacker-controlled PHP execution when the documented `/pay/click/1/1000` route loads the modified file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that an unauthenticated request can replace a published Payment helper with attacker-controlled PHP and then trigger that PHP through a normal payment route, producing the exact proof string `EVOHUNT-491ec345-ARBITRARY-PHP` inside the target application.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `2c5fa0515bdb01b403bf3cacf419afca2738d05b`, built the reproduction image, stood up a temporary Laravel application inside the container, received a success response from `/payment/api/editable/update`, requested `/pay/click/1/1000`, and observed `storage/app/evohunt-proof.txt` containing the exact proof string `EVOHUNT-491ec345-ARBITRARY-PHP`.",
+  "verification_method": "The verification script confirms that the editor update endpoint returned `responseStatus=success`, the `/pay/click/1/1000` response contained the expected Click payment form URL `https://my.click.uz/pay/`, and the injected `key_model.php` created `storage/app/evohunt-proof.txt` with the exact proof string. This distinguishes attacker-controlled PHP execution from a generic HTTP success, startup issue, or unrelated file creation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The temporary Laravel host app contained `storage/app/evohunt-proof.txt` with the exact contents `EVOHUNT-491ec345-ARBITRARY-PHP` after the `/pay/click/1/1000` request.",
+    "The editor overwrite request to `/payment/api/editable/update` returned a success JSON response before the trigger request was sent.",
+    "The trigger response contained the Click redirect form URL `https://my.click.uz/pay/`, showing that the normal payment path continued after the injected PHP executed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2c5fa0515bdb01b403bf3cacf419afca2738d05b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/host-routes.php",
+      "reproduction/payload_key_model.php",
+      "reproduction/setup_host_app.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

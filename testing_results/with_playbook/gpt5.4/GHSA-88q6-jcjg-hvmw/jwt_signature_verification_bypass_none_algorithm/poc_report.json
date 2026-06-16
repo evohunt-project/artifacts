@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "jwt_signature_verification_bypass",
+  "summary": "The Docker-based reproduction confirms that a forged unsigned JWT with `alg:none` is accepted by the library even when a trusted ES256 public key is supplied for verification.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an attacker-chosen unsigned JWT is accepted as valid while a tampered normally signed JWT is still rejected, isolating the issue to the `alg:none` verification bypass.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the upstream repository at pinned commit `f77adcffb85fc9dc4f3aa5059e4777f5a7bf35d6`, built the Docker image, and printed `FORGED_ACCEPTED attacker true` followed by `SIGNED_TAMPER_REJECTED JWTError`.",
+  "verification_method": "The verification helper checks that `/target-repo` is on the pinned vulnerable commit, runs the Swift reproduction harness inside Docker, and requires both proof strings. The forged-token acceptance confirms the bypass, and the tampered-signed-token rejection shows the result is not caused by a generic signature-verification failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "FORGED_ACCEPTED attacker true",
+    "SIGNED_TAMPER_REJECTED JWTError"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "f77adcffb85fc9dc4f3aa5059e4777f5a7bf35d6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Package.swift",
+      "reproduction/main.swift",
+      "reproduction/verify.sh"
+    ]
+  }
+}

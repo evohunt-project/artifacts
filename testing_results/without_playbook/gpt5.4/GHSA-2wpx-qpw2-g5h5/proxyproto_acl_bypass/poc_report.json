@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "proxyproto_ip_spoofing_acl_bypass",
+  "summary": "The reproduction shows that a normal TCP client is blocked by acl, but the same client can disclose a protected TXT record after prepending a forged PROXY header that claims a trusted source IP.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A direct query to the protected zone should be refused, while the same query with a spoofed PROXY header should bypass acl and return the protected TXT record \"evohunt-secret\".",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned CoreDNS v1.14.3 at commit 17fceec6d93fd1dde5ba6888c363f131ff6d647f, built the server inside the reproduction container, and verified that a plain TCP query returned rcode 5 (REFUSED) but a query with a forged PROXY header claiming 127.0.0.1 returned the TXT record \"evohunt-secret\".",
+  "verification_method": "The reproduction script compares two live TCP queries against the same server instance: one without a PROXY header and one with a spoofed PROXY header. Verification passes only if the unproxied query is refused and the proxied query returns the protected TXT value.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unproxied query output contained rcode 5 and no TXT answer.",
+    "The spoofed-PROXY query output contained rcode 0 and the TXT answer \"evohunt-secret\".",
+    "Server logs showed the blocked request using the real container IP and the successful request using the forged 127.0.0.1 source address."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "17fceec6d93fd1dde5ba6888c363f131ff6d647f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/query_with_optional_proxy.py",
+      "reproduction/Corefile",
+      "reproduction/db.example.org"
+    ]
+  }
+}

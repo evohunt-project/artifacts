@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:43:56.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ff8b5e7f",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-rf6f-7fwh-wjgh/GHSA-rf6f-7fwh-wjgh.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "go_parse_out_of_bounds_panic",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ff8b5e7f/go_parse_out_of_bounds_panic",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ff8b5e7f/go_parse_out_of_bounds_panic/vulnerability_report.json",
+      "title": "Go flatted parser panics on out-of-range reference indexes",
+      "vulnerability_type": "input_validation_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is a JavaScript prototype-pollution flaw in `parse()` (`esm/index.js` / `cjs/index.js`) where the attacker-controlled string `\"__proto__\"` is used as an array index. This finding is a separate Go-only out-of-range panic in `golang/pkg/flatted/flatted.go` caused by unchecked numeric indexes, so it does not identify the advisory's vulnerable code or root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding reaches the advisory's vulnerable JavaScript `parse()` path or its `__proto__`-based prototype-pollution root cause; the only final qualifying finding is a distinct Go parser panic.",
+    "evidence": [
+      "The advisory describes `const tmp = input[value];` in `esm/index.js:29` and `cjs/index.js`, where attacker-controlled `\"__proto__\"` resolves through the Array prototype chain and leaks a live `Array.prototype` reference.",
+      "The session's only final qualifying finding targets `golang/pkg/flatted/flatted.go:229` and `golang/pkg/flatted/flatted.go:239`, where unchecked `strconv.Atoi` results are used as slice indexes and trigger `panic: runtime error: index out of range`.",
+      "The finding's demonstrated payload is `[{\"a\":\"999\"}]`, which exercises numeric out-of-bounds indexing in the Go port, not the advisory's `\"__proto__\"` lookup in the JavaScript parser."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ff8b5e7f/go_parse_out_of_bounds_panic",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ff8b5e7f/go_parse_out_of_bounds_panic/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_ff8b5e7f/go_parse_out_of_bounds_panic/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The reproduction clones the pinned vulnerable commit, installs pinned Composer dependencies, starts the PHP application, and verifies unauthenticated file reads through both vulnerable static-file routes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should return `EVOHUNT_PRIVATE_FILE` from a token-protected `MyFiles` path and should also read the repository `README.md` from outside `/MyFiles/Public/`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `73ff3c7810a1123dff1655cf31927dd6a428eb2a`, built the reproduction image, and returned `200 OK` for `/MyFiles/Public/%2e%2e/secret.txt`, `/Core/Assets/../../MyFiles/secret.txt`, and `/MyFiles/Public/%2e%2e/%2e%2e/README.md`. The first two responses contained the exact marker `EVOHUNT_PRIVATE_FILE`, and the third contained the expected README text `Open Source ERP & Accounting Software`.",
+  "verification_method": "The verifier uses `curl --path-as-is` to request `/MyFiles/Public/%2e%2e/secret.txt`, `/Core/Assets/../../MyFiles/secret.txt`, and `/MyFiles/Public/%2e%2e/%2e%2e/README.md`, then checks for the exact `EVOHUNT_PRIVATE_FILE` marker and a known README string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The Myfiles route returned `200 OK` and the body `EVOHUNT_PRIVATE_FILE` without a `myft` token.",
+    "The Files route returned `200 OK` and the body `EVOHUNT_PRIVATE_FILE` for `/Core/Assets/../../MyFiles/secret.txt`.",
+    "The escaped Myfiles route returned `200 OK` and the repository README marker `Open Source ERP & Accounting Software`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "73ff3c7810a1123dff1655cf31927dd6a428eb2a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/config.php",
+      "reproduction/composer.lock"
+    ]
+  }
+}

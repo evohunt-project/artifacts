@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that Traefik's default forwarded-header trust lets a plain HTTP client spoof backend security metadata and flip a downstream authorization decision.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The default Traefik target should deny `/admin` without spoofing but grant it when the client only spoofs trusted forwarded headers; the secure comparison target should continue denying the same spoofed request and rewrite the forwarded metadata.",
+  "actual_observed_result": "Running `./reproduction/run.sh` produced `default_admin_baseline=403`, `default_admin_spoofed=200`, `default_headers_spoofed={\"x_forwarded_for\": \"172.18.0.4\", \"x_forwarded_host\": \"attacker.example\", \"x_forwarded_port\": \"443\", \"x_forwarded_proto\": \"https\", \"x_real_ip\": \"6.6.6.6\"}`, `secure_admin_spoofed=403`, and `secure_headers_spoofed={\"x_forwarded_for\": \"172.18.0.4\", \"x_forwarded_host\": \"traefik-secure\", \"x_forwarded_port\": \"80\", \"x_forwarded_proto\": \"http\", \"x_real_ip\": \"172.18.0.4\"}` before printing `FORWARDED_HEADER_TRUST_REPRODUCED`.",
+  "verification_method": "The helper backend only grants `/admin` when it receives `X-Forwarded-Proto: https`. The verification script exercises both the vulnerable default target and a secure comparison target with `ForwardedHeaders.Insecure=false`, proving the authorization flip comes from Traefik's default forwarded-header trust rather than from backend behavior alone.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "default_admin_baseline=403",
+    "default_admin_spoofed=200",
+    "default_headers_spoofed={\"x_forwarded_for\": \"172.18.0.4\", \"x_forwarded_host\": \"attacker.example\", \"x_forwarded_port\": \"443\", \"x_forwarded_proto\": \"https\", \"x_real_ip\": \"6.6.6.6\"}",
+    "secure_admin_spoofed=403",
+    "secure_headers_spoofed={\"x_forwarded_for\": \"172.18.0.4\", \"x_forwarded_host\": \"traefik-secure\", \"x_forwarded_port\": \"80\", \"x_forwarded_proto\": \"http\", \"x_real_ip\": \"172.18.0.4\"}",
+    "FORWARDED_HEADER_TRUST_REPRODUCED"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the helper verification image, starts pinned vulnerable Traefik release containers, and mounts the checked-out repository into the helper container.",
+    "pinned_commit_or_ref": "bf650d7623bfb2bd3f0653364d8f0b4fc97782b6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/backend_server.py",
+      "reproduction/verify.py",
+      "reproduction/traefik_dynamic.toml",
+      "reproduction/traefik_static_default.toml",
+      "reproduction/traefik_static_secure.toml"
+    ]
+  }
+}

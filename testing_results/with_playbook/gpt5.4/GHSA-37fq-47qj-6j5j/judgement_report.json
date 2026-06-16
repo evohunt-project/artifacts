@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:45:21.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c8cf5b35",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-37fq-47qj-6j5j/GHSA-37fq-47qj-6j5j.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "syndication_mapping_php_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c8cf5b35/syndication_mapping_php_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c8cf5b35/syndication_mapping_php_rce/vulnerability_report.json",
+      "title": "Admin syndication mapping fetch writes attacker-controlled PHP into web-reachable files/ and enables code execution",
+      "vulnerability_type": "stored_file_write_rce",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is a stored/blind XSS in the BazaR form title field (`bf_titre`) rendered on the `/?BazaR&vue=consulter` path, while this finding targets admin-triggered syndication enclosure download in `tools/syndication/actions/SyndicationAction.php` that writes a `.php` file under `files/` for server-side code execution.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only qualifying finding is a syndication-based server-side file-write/RCE chain and does not identify the advisory's BazaR title-field stored XSS root cause.",
+    "evidence": [
+      "The advisory describes persistent blind XSS in the BazaR form title field, triggered when `/?BazaR&vue=consulter` renders stored attacker input.",
+      "The repo snapshot renders the BazaR title field with `{{ value|raw }}` in `tools/bazar/templates/fields/title.twig`, which is the advisory's affected component family.",
+      "The session finding instead traces attacker-controlled feed data through `tools/syndication/actions/SyndicationAction.php` into `downloadFile()`, preserving a `.php` basename under `files/`.",
+      "The finding's PoC report verifies `GET /files/<sha1>_shell.php?proof=1` returning `EVOHUNT_PWNED`, which proves PHP execution from a dropped file rather than JavaScript execution from a stored title field."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c8cf5b35/syndication_mapping_php_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c8cf5b35/syndication_mapping_php_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_c8cf5b35/syndication_mapping_php_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

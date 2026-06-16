@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "memory_corruption_out_of_bounds_write",
+  "summary": "The Docker-based reproduction clones rust-openssl 0.10.77, builds a minimal safe-Rust harness against the vulnerable `openssl::md_ctx::MdCtxRef::digest_final` API, and shows that a 1-byte output buffer is accepted while adjacent canary bytes are overwritten.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should call `MdCtxRef::digest_final` with SHA-512 and a 1-byte output slice, return `written=64`, and print `EVOHUNT_PROOF canary_corrupted=true written=64`, proving adjacent memory corruption from safe Rust.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `8222dbeddfebd0ab3bfe71b943b7ba53382adc23`, built the helper container, executed the harness, and printed `written=64`, `first_corruption_index=Some(0)`, `canary_prefix=[f0, 6e, a1, d4, 55, 7b, f7, 3d, 9e, b5, 40, 0f, 48, f6, 9d, 84]`, `EVOHUNT_PROOF canary_corrupted=true written=64`, followed by `VERIFICATION PASSED: observed digest_final canary corruption proof.`",
+  "verification_method": "The host-side run script checks the container output for the exact proof string `EVOHUNT_PROOF canary_corrupted=true written=64`. The harness only emits that string after observing a changed canary directly adjacent to the undersized output buffer in a `#[repr(C)]` struct.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The harness reported `written=64` even though the caller only provided a 1-byte output slice.",
+    "The harness reported `first_corruption_index=Some(0)`, showing the first canary byte was overwritten immediately after the 1-byte buffer.",
+    "The run printed `EVOHUNT_PROOF canary_corrupted=true written=64` and then `VERIFICATION PASSED: observed digest_final canary corruption proof.`"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8222dbeddfebd0ab3bfe71b943b7ba53382adc23",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Cargo.toml",
+      "reproduction/main.rs",
+      "reproduction/run-container.sh"
+    ]
+  }
+}

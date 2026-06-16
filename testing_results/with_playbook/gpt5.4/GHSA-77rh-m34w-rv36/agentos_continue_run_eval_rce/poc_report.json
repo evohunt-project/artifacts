@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_dynamic_evaluation",
+  "summary": "The reproduction bundle creates a paused AgentOS HITL run, continues it once with a benign schema and once with a malicious `field_type` expression, and confirms that only the malicious continuation causes server-side Python evaluation to create the proof file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The malicious continue-run request should execute the attacker-supplied Python expression inside the AgentOS process and create `/tmp/evohunt-continue-run-eval-proof.txt` inside the container, while a benign continuation should not create that file.",
+  "actual_observed_result": "Executed `./reproduction/run.sh` successfully. The container printed `benign continuation status=200`, then `malicious continuation status=200`, then `EVOHUNT_PROOF: continue-run unsafe eval created the proof file`, followed by `SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The verification script exercises the real FastAPI continue-run route with `TestClient`, first using a benign `field_type` and then a malicious expression. It fails unless the benign request leaves the proof path absent and the malicious request creates the proof file with the expected contents.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verification script prints a benign continuation status and then prints an EVOHUNT proof line only after the malicious continue-run request.",
+    "The malicious request creates `/tmp/evohunt-continue-run-eval-proof.txt` with the exact contents `evohunt-rce` inside the container."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "d667f085b3392f9c66719caca364ef3cc73a3f7b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

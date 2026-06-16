@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication",
+  "summary": "The reproduction clones the upstream elFinder source, enables the documented sample connector, seeds a secret file, and proves that an unauthenticated client can obtain the public session and CSRF token from cmd=open&init=1 and then use them to list, download, upload, and delete files through the connector API.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should demonstrate that no authentication is required to enumerate the file root, download an existing file, upload attacker-controlled content, and delete an existing file through the connector endpoint.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 242ed857c0bcbad3ec56b9c823726ec14ba709e0, served the renamed sample connector, obtained a session cookie and CSRF token from the public cmd=open&init=1 response, listed secret.txt, downloaded top-secret via cmd=file, uploaded owned.txt containing attacker-write, deleted secret.txt via cmd=rm, and printed the success signal from the verification script.",
+  "verification_method": "The verification helper starts a local PHP server inside the container, opens an unauthenticated session against the connector, captures the returned CSRF token and cookie, checks that the returned file hash resolves to the seeded secret contents, verifies the uploaded file bytes exactly, and confirms that the deleted file no longer appears in a fresh directory listing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The initial cmd=open&init=1 response contains a file entry for secret.txt, its elFinder hash, and a CSRF token for the unauthenticated session.",
+    "The unauthenticated cmd=file request returns the exact secret payload top-secret.",
+    "The unauthenticated cmd=upload request returns an added entry for owned.txt, and a follow-up cmd=file request returns attacker-write.",
+    "The unauthenticated cmd=rm request succeeds, and a subsequent cmd=open listing no longer contains secret.txt.",
+    "The container prints [evohunt] SUCCESS: unauthenticated connector access confirmed after all checks pass."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "242ed857c0bcbad3ec56b9c823726ec14ba709e0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

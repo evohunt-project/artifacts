@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:01:01.542Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_549ae84c",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-w8x4-x68c-m6fc/GHSA-w8x4-x68c-m6fc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "html_string_dom_xss",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_549ae84c/html_string_dom_xss",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_549ae84c/html_string_dom_xss/vulnerability_report.json",
+      "title": "Attacker-controlled HTML string input triggers DOM XSS during PDF rendering",
+      "vulnerability_type": "dom_xss",
+      "advisory_match": true,
+      "advisory_match_reason": "Same vulnerable text-source path and same root cause as the advisory: `html2pdf().from(src, 'string')` feeds attacker-controlled HTML into `innerHTML`, strips only literal `<script>` tags, and later appends the resulting DOM into `document.body`; the advisory fix replaces that incomplete sanitization with DOMPurify.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "html_string_dom_xss",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_549ae84c/html_string_dom_xss",
+      "status": "qualifying_vuln",
+      "title": "Attacker-controlled HTML string input triggers DOM XSS during PDF rendering",
+      "vulnerability_type": "dom_xss"
+    },
+    "reason": "The selected finding identifies the advisory's exact vulnerable code path for HTML string sources, and the copied PoC achieved end-to-end JavaScript execution in the vulnerable page origin during rendering.",
+    "evidence": [
+      "The advisory states that html2pdf.js is vulnerable when given a text source rather than an element, and fix commit `988826e336035b39a8608182d7b73c0e3cd78c7b` replaces ad hoc `<script>` stripping in `src/utils.js` with `DOMPurify.sanitize(opt.innerHTML)`.",
+      "The shipped reproduction bundle preserves the same vulnerable flow: `createElement()` assigns attacker-controlled `innerHTML`, removes only `<script>` tags, and `toContainer()` appends the resulting DOM into `document.body`.",
+      "A fresh run from `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_549ae84c/.judge/poc_runs/html_string_dom_xss/run.log` printed `{\"triggered\":true,\"status\":\"triggered\",\"marker\":\"yes\"}`, which shows the inline `onerror` payload executed in-origin and changed live DOM state."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "html_string_dom_xss",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_549ae84c/html_string_dom_xss",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_549ae84c/.judge/poc_runs/html_string_dom_xss/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_549ae84c/.judge/poc_runs/html_string_dom_xss/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_549ae84c/.judge/poc_runs/html_string_dom_xss/poc_execution.json",
+      "observed_effect": "The copied browser-based PoC completed successfully and printed `{\"triggered\":true,\"status\":\"triggered\",\"marker\":\"yes\"}` after loading the page, proving that attacker-controlled HTML supplied through the string source executed JavaScript and modified the live DOM in the vulnerable origin.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

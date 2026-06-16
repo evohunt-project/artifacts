@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:19:46.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_69b35ac7",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-xq3m-2v4x-88gg/GHSA-xq3m-2v4x-88gg.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "type_generateconstructor_proto_override_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_69b35ac7/type_generateconstructor_proto_override_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_69b35ac7/type_generateconstructor_proto_override_dos/vulnerability_report.json",
+      "title": "Reflected message constructors still allow __proto__ replacement and verifier/toObject crashes",
+      "vulnerability_type": "prototype_override_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a separate __proto__-assignment denial-of-service bug in Type.create/generated constructors and later verify/toObject calls. GHSA-xq3m-2v4x-88gg is the descriptor-loading code-generation RCE fixed by sanitizing reflected type names in Type(name) before codegen.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory root cause. The advisory is protobufjs descriptor-driven runtime code execution caused by unsanitized reflected type names reaching generated JavaScript during schema loading. The only final qualifying finding in the run manifest, `type_generateconstructor_proto_override_dos`, is a separate prototype-replacement denial of service that crashes verify/toObject rather than reaching the advisory's descriptor-loading code-generation path.",
+    "evidence": [
+      "The advisory patch on both fixed branches adds `name = name.replace(/\\W/g, \"\")` in `src/type.js` before reflected type names are used by runtime code generation.",
+      "The advisory JSON states exploitation requires loading attacker-controlled protobuf definitions or JSON descriptors through protobufjs reflection APIs and then reaching the generated-code path.",
+      "The `type_generateconstructor_proto_override_dos` report and PoC instead use `Type.create` with an own `__proto__` property to replace a message instance prototype and then trigger `TypeError: m.hasOwnProperty is not a function` in verify/toObject.",
+      "That finding's described sink is the generated constructor assignment path and the later verifier/converter `m.hasOwnProperty(...)` calls, not advisory-matched code execution through malicious descriptor-controlled type names."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_69b35ac7/type_generateconstructor_proto_override_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_69b35ac7/type_generateconstructor_proto_override_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_69b35ac7/type_generateconstructor_proto_override_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

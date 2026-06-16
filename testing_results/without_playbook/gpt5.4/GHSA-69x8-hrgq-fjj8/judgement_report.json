@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:00:24.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1f6b1c10",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-69x8-hrgq-fjj8/GHSA-69x8-hrgq-fjj8.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "low_privileged_mcp_stdio_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1f6b1c10/low_privileged_mcp_stdio_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1f6b1c10/low_privileged_mcp_stdio_rce/vulnerability_report.json",
+      "title": "Low-privileged MCP test endpoints allow arbitrary stdio process execution",
+      "vulnerability_type": "authenticated_remote_code_execution",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets `/mcp-rest/test/*` building an attacker-controlled stdio transport into `stdio_client()`, while the advisory is a password-hash disclosure plus `/v2/login` pass-the-hash authentication flaw.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the GHSA-69x8-hrgq-fjj8 root cause. The advisory is the LiteLLM password chain: hashes exposed from `/user/info`, `/user/update`, and `/spend/users`, combined with `/v2/login` accepting a stored SHA-256 hash as a valid password. The only manifest-backed qualifying finding instead describes MCP stdio process execution.",
+    "evidence": [
+      "The advisory summary and source diff center on password storage and login verification: `litellm/proxy/auth/login_utils.py` replaced the old raw-or-hash comparison with `verify_password()`, and the fixed tree strips `password` from `/user/info`, `/user/update`, and `/spend/users` responses.",
+      "The only qualifying finding in `.judge/input_manifest.json` is `low_privileged_mcp_stdio_rce`.",
+      "That finding is rooted in `/mcp-rest/test/tools/list` and `/mcp-rest/test/connection`, where attacker-controlled `command`, `args`, and `env` flow through `_execute_with_mcp_client()` into `StdioServerParameters` and `stdio_client()` for local process execution."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1f6b1c10/low_privileged_mcp_stdio_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1f6b1c10/low_privileged_mcp_stdio_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_1f6b1c10/low_privileged_mcp_stdio_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

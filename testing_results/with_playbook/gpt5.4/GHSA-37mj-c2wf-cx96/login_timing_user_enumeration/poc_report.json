@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "user_enumeration_timing_side_channel",
+  "summary": "The Docker-based reproduction confirms that failed `/login` requests for an existing account take materially longer than failed requests for a nonexistent account, exposing a remotely measurable username-enumeration timing side channel.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show a clear timing gap between nonexistent-user and existing-user failed `/login` requests and print the `[evohunt] TIMING_ENUMERATION_CONFIRMED` success signal.",
+  "actual_observed_result": "Running `./reproduction/run.sh` from the final finding folder cloned parse-server at `372a6cc6134c17e4869090a9043b086ddfdcc526`, started Mongo and the vulnerable server, and measured `missingMedian=1.840953ms`, `existingMedian=43.260612ms`, `missingAverage=2.1429766ms`, `existingAverage=43.8485882ms`, `medianGap=41.419659ms`, and `averageGap=41.7056116ms` before printing `[evohunt] TIMING_ENUMERATION_CONFIRMED missing_median_ms=1.84 existing_median_ms=43.26 median_gap_ms=41.42`.",
+  "verification_method": "The helper signs up a fresh account, sends 15 failed `/login` requests for a missing username and 15 for the real username with a wrong password, and only passes if both the median and average timing gaps exceed 20ms.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed the structured timing summary with a 41.419659ms median gap and a 41.7056116ms average gap.",
+    "The verification helper emitted `[evohunt] TIMING_ENUMERATION_CONFIRMED ...`, which is only reached when both gap thresholds are satisfied.",
+    "The reproduction exercised the real vulnerable `/login` path on the pinned upstream commit instead of a mocked handler."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "372a6cc6134c17e4869090a9043b086ddfdcc526",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/measure_login_timing.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

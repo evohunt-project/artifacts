@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:17:08.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bb621ba5",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-jp7c-wj6q-3qf2/GHSA-jp7c-wj6q-3qf2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "repo_upload_symlink_arbitrary_file_write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bb621ba5/repo_upload_symlink_arbitrary_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bb621ba5/repo_upload_symlink_arbitrary_file_write/vulnerability_report.json",
+      "title": "Upload finalization follows symlink parents and writes outside the repository root",
+      "vulnerability_type": "unsafe_file_upload_and_write",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes wiki page update deletion in `updateWikiPage` using unsanitized `old_title` in `os.Remove(path.Join(localPath, oldTitle+\".md\"))`. This finding instead describes the repository upload finalization path following attacker-committed parent symlinks after backslash-to-slash filename normalization, producing an arbitrary file write in a different component, entrypoint, and sink.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable wiki delete path or an equivalent root cause. The session's only qualifying finding is an upload-flow symlink-parent arbitrary write, while the advisory is an authenticated wiki-page update file deletion caused by unsanitized `old_title` reaching `os.Remove` in `internal/database/wiki.go`.",
+    "evidence": [
+      "The advisory JSON identifies `updateWikiPage` in `internal/database/wiki.go` and the root cause as unsanitized `old_title` being used in `os.Remove(path.Join(localPath, oldTitle+\".md\"))` during wiki page update.",
+      "The session input manifest lists exactly one final `qualifying_vuln` finding: `repo_upload_symlink_arbitrary_file_write`.",
+      "That finding's report ties the bug to `POST /:username/:reponame/upload-file` and `POST /:username/:reponame/_upload/*`, where upload finalization normalizes backslashes and fails to reject parent-directory symlinks before copying attacker-controlled file content.",
+      "The finding's exploit path and reproduced effect are arbitrary file write via a committed `pivot -> /tmp` symlink and uploaded filename `pivot\\\\evohunt_owned.txt`, not wiki rename/update deletion via `old_title` and not an `os.Remove` sink."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bb621ba5/repo_upload_symlink_arbitrary_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bb621ba5/repo_upload_symlink_arbitrary_file_write/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bb621ba5/repo_upload_symlink_arbitrary_file_write/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

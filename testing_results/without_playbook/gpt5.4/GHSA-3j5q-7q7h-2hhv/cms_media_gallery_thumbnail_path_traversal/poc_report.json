@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_file_disclosure",
+  "summary": "The Docker-based reproduction confirms that a low-privilege `cms/media_gallery` user can traverse out of `media/wysiwyg` through `thumbnailAction()` and retrieve a resized copy of `media/dhl/logo.jpg`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an authenticated low-privilege media-gallery user can request an encoded `../dhl/logo.jpg` path and receive the corresponding image bytes from outside `media/wysiwyg`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned OpenMage `v20.17.0`, built the reproduction image, provisioned the low-privilege `gallery` user, and returned `Response status: 200`, `Response content-type: image/jpeg`, and matching expected and observed SHA-256 `66035193d804a7363e136a586b3eeb59c4ffa30952077c3ad080ff5bcfda98eb`, followed by the `EVOHUNT_SUCCESS` proof string.",
+  "verification_method": "The verifier logs in as the low-privilege `gallery` user, prepares a writable thumbnail path by creating a `wysiwyg` subfolder and uploading a seed image, requests the traversal payload `Li4vZGhsL2xvZ28uanBn`, computes the controller-equivalent expected thumbnail response for `/workspace/openmage/media/dhl/logo.jpg`, and checks for HTTP 200, `image/jpeg`, and an exact SHA-256 match.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run reported `Storage root: /workspace/openmage/media/wysiwyg` and `Resolved target: /workspace/openmage/media/dhl/logo.jpg`.",
+    "The run reported `Traversal payload: Li4vZGhsL2xvZ28uanBn` and `Preparation folder id: Ly93eXNpd3ln` after low-privilege media-gallery preparation.",
+    "The verifier observed `Expected sha256: 66035193d804a7363e136a586b3eeb59c4ffa30952077c3ad080ff5bcfda98eb` and `Observed sha256: 66035193d804a7363e136a586b3eeb59c4ffa30952077c3ad080ff5bcfda98eb`.",
+    "The run emitted `EVOHUNT_SUCCESS: low-privilege cms/media_gallery access created traversal-compatible thumbnail state and disclosed an image outside media/wysiwyg via thumbnailAction`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v20.17.0 (f4dd542b878613b9f40f39e9d7e862dec085defd)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_entrypoint.sh",
+      "reproduction/configure_magento.php",
+      "reproduction/create_media_gallery_user.php",
+      "reproduction/router.php",
+      "reproduction/verify_traversal.php"
+    ]
+  }
+}

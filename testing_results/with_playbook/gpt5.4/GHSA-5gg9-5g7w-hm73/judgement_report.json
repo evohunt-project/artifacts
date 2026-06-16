@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:13:20Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_da38f58a",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-5gg9-5g7w-hm73/GHSA-5gg9-5g7w-hm73.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "proxy_auth_expired_token_reuse",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_da38f58a/proxy_auth_expired_token_reuse",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_da38f58a/proxy_auth_expired_token_reuse/vulnerability_report.json",
+      "title": "Expired proxy-auth JWTs remain valid and renewable on protected routes when custom logout is enabled",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets expired proxy-auth JWT acceptance in the `withUser` and `/api/renew` flow when proxy auth and a custom logout page are enabled. The advisory targets a different root cause: unauthenticated `POST /api/signup` creates new users with `defaults.perm.admin=true` because `signupHandler` applies `settings.Defaults` to the new user without stripping admin privileges.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described signup-to-admin root cause. The only qualifying finding is a separate proxy-auth expired-token acceptance bug in `http/auth.go` and `/api/renew`, not the advisory's `signupHandler` plus `settings.Defaults.Apply` privilege-assignment flaw.",
+    "evidence": [
+      "The advisory describes an unauthenticated `POST /api/signup` path where `signupHandler` applies `d.settings.Defaults` to a new user and can preserve `perm.admin=true`, granting administrator privileges to self-registered accounts.",
+      "The only qualifying finding report describes a different attack path: an attacker reuses an already issued low-privilege proxy-auth JWT after expiry, and the vulnerable operations are the proxy-auth expiry check and token renewal flow.",
+      "The session manifest lists only `/Users/lumi/ziyue/EvoHunt-Run/advisory_da38f58a/proxy_auth_expired_token_reuse` as a final `qualifying_vuln` finding, so there is no qualifying finding covering the advisory's signup/default-permissions code path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_da38f58a/proxy_auth_expired_token_reuse",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_da38f58a/proxy_auth_expired_token_reuse/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_da38f58a/proxy_auth_expired_token_reuse/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

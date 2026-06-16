@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control_arbitrary_file_read",
+  "summary": "The reproduction bundle clones the pinned vulnerable snapshot, bootstraps a minimal OpenSTAManager state, logs in with a record-scoped shared token, and downloads an attachment from a different record by supplying file_id=2 to view.php.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A token that should only access module 1 record 1 should still be able to retrieve an unrelated attachment and reveal the proof string stolen-record-999.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the reproduction image, cloned the bundled repo snapshot at commit 1b717c4d36129a0f796555899915099a463cc280, bootstrapped the minimal database, authenticated with scope-token-123, and received HTTP 200 with filename=\"stolen.txt\" and body stolen-record-999 from /view.php?file_id=2&download=1.",
+  "verification_method": "The container first verifies the shared token redirects only to /editor.php?id_module=1&id_record=1, then requests view.php with file_id=2 and checks for both the stolen.txt download header and the exact body string stolen-record-999.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "stdout from ./reproduction/run.sh contained LOGIN_HEADERS_START with Location: /editor.php?id_module=1&id_record=1.",
+    "stdout from ./reproduction/run.sh contained DOWNLOAD_HEADERS_START with HTTP/1.1 200 OK and Content-disposition: attachment; filename=\"stolen.txt\".",
+    "stdout from ./reproduction/run.sh contained DOWNLOAD_BODY_START followed by stolen-record-999.",
+    "stdout from ./reproduction/run.sh ended with EVOHUNT_SUCCESS scoped token downloaded out-of-scope attachment stolen.txt with body stolen-record-999."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository from the bundled local git snapshot, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "1b717c4d36129a0f796555899915099a463cc280",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/bootstrap_minimal.php",
+      "reproduction/config.inc.php",
+      "reproduction/reproduce.sh"
+    ]
+  }
+}

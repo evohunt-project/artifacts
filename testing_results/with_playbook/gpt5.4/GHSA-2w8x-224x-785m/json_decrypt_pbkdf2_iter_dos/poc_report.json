@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that the default password-based sjcl.decrypt helper performs attacker-controlled PBKDF2 work before rejecting the forged ciphertext, causing a small envelope to exceed the verification timeout.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A baseline decrypt should finish quickly, while a forged JSON envelope with an attacker-raised PBKDF2 iteration count should keep sjcl.decrypt busy long enough to exceed the 5-second verification timeout.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 2a6ed4a22449334de2dd9b4e960af679e0e87303, built the reproduction container, decrypted the baseline envelope successfully in 38 ms, and then hit the 5000 ms timeout with the forged high-iter envelope. The verification harness printed EVOHUNT_POC_CONFIRMED.",
+  "verification_method": "The verification harness runs the same pinned sjcl.decrypt helper twice against the mounted upstream checkout: a baseline envelope must decrypt successfully within 2 seconds, and a forged envelope with iter=10000000 must still be running after 5 seconds. This distinguishes attacker-controlled PBKDF2 work from a generic startup, parsing, or keying failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[baseline] {\"mode\":\"baseline\",\"code\":0,\"signal\":null,\"timedOut\":false,\"elapsedMs\":38,\"stdout\":\"{\\\"mode\\\":\\\"baseline\\\",\\\"elapsed_ms\\\":0,\\\"result\\\":\\\"hello\\\"}\",\"stderr\":\"\"}",
+    "[exploit] {\"mode\":\"exploit\",\"code\":null,\"signal\":\"SIGKILL\",\"timedOut\":true,\"elapsedMs\":5006,\"stdout\":\"\",\"stderr\":\"\"}",
+    "EVOHUNT_POC_CONFIRMED: attacker-controlled iter keeps sjcl.decrypt busy in PBKDF2 long enough to exceed the verification timeout."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2a6ed4a22449334de2dd9b4e960af679e0e87303",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/attempt_decrypt.js",
+      "reproduction/verify.js"
+    ]
+  }
+}

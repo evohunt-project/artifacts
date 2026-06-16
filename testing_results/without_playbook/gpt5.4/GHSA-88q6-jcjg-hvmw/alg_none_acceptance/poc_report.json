@@ -1,0 +1,24 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "signature_verification_bypass",
+  "summary": "The reproduction builds a small Swift executable against the local jose-swift checkout and confirms that JWT.verify accepts a compact alg:none token with no verification key.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The public verification API should return a verified JWT object for an attacker-crafted unsigned token and expose the forged claims.",
+  "actual_observed_result": "Running the reproduction printed the VERIFIED_UNSIGNED_JWT success marker and returned attacker-controlled claims from an unsigned token.",
+  "verification_method": "The run script executes the bundled Swift PoC and fails unless the process prints the VERIFIED_UNSIGNED_JWT marker emitted only after JWT.verify succeeds and the forged claims are decoded.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The PoC printed VERIFIED_UNSIGNED_JWT after calling JWT.verify on an unsigned compact token.",
+    "The decoded payload preserved attacker-controlled values for sub=admin and role=superuser."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc/Package.swift",
+      "reproduction/poc/Sources/alg-none-poc/main.swift"
+    ]
+  }
+}

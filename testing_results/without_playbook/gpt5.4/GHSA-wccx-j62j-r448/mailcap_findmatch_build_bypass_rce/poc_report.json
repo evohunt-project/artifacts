@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "pickle_safety_bypass_rce",
+  "summary": "The Docker reproduction confirms that Fickling rates the malicious pickle as `LIKELY_SAFE` and still executes attacker-controlled shell through both `fickling.loads()` and the global `pickle.load()` hook.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should show that `check_safety()` returns `LIKELY_SAFE` for the crafted payload while the payload still writes the exact proof string `EVOHUNT_MAILCAP_NORMALDIST_RCE_CONFIRMED` via an attacker-controlled shell command.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Fickling at commit `a870060d5660206a352f960806702475c7757147`, built the container, mounted the checked-out repository, reported `check_safety` severity `LIKELY_SAFE`, then executed the payload successfully through both `fickling.loads()` and hook-protected `pickle.load()`. The run verified the exact proof string `EVOHUNT_MAILCAP_NORMALDIST_RCE_CONFIRMED`.",
+  "verification_method": "The verification helper constructs the malicious pickle, runs `check_safety()` to assert the incorrect `LIKELY_SAFE` verdict, then deserializes the same bytes through `fickling.loads()` and through `pickle.load()` after `hook.run_hook()`. It treats the exploit as successful only if the exact proof file contents match `EVOHUNT_MAILCAP_NORMALDIST_RCE_CONFIRMED`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output reported `[evohunt] check_safety severity: LIKELY_SAFE` for the malicious payload.",
+    "Container output reported successful deserialization through both `fickling.loads()` and hook-protected `pickle.load()`.",
+    "The verification helper confirmed the exact proof string `EVOHUNT_MAILCAP_NORMALDIST_RCE_CONFIRMED` after deserialization."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "a870060d5660206a352f960806702475c7757147",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

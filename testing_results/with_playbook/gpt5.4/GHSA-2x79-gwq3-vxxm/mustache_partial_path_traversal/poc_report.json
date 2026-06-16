@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_arbitrary_file_read",
+  "summary": "The reproduction clones facil.io `0.7.6`, compiles a small harness against the shipped Mustache parser, and demonstrates that `{{> ../evohunt-secret.txt}}` reads and renders a file placed outside the template root.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The harness should render the contents of a file outside the intended template root and emit the exact proof string `EV0HUNT_SECRET_PROOF`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `512a354dbd31e1895647df852d1565f9d408ed91`, built the container, compiled the harness against the mounted repository, and printed `EV0HUNT_SECRET_PROOF` from a file located outside `/tmp/evohunt-templates`.",
+  "verification_method": "The host `run.sh` captures the container output and verifies that the exact proof string `EV0HUNT_SECRET_PROOF` appears, which distinguishes successful out-of-root file inclusion from a missing partial, parser failure, or unrelated file read.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container stdout contained `EV0HUNT_SECRET_PROOF`.",
+    "The host verifier printed `VERIFICATION: proof string observed` after checking the output."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "512a354dbd31e1895647df852d1565f9d408ed91",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/mustache_traversal_harness.c",
+      "reproduction/run_inside_container.sh"
+    ]
+  }
+}

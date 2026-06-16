@@ -1,0 +1,34 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The packaged reproduction proves that an unauthenticated `/ws` client can forge a voice update, make Linkdave connect to an attacker-controlled fake voice gateway, perform the follow-on UDP discovery step, and then receive `VoiceConnect` from the vulnerable node.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause Linkdave to accept an unauthenticated `OpVoiceUpdate`, dial the attacker-controlled `wss://fake-voice:9443` endpoint, send a UDP discovery packet to the fake voice server, and then acknowledge the forged session with `VoiceConnect` and the proof string `VOICE_ENDPOINT_SSRF_CONFIRMED`.",
+  "actual_observed_result": "Executing `./reproduction/run.sh` cloned the pinned vulnerable commit, built the target and reproduction images, and produced the expected sequence: `target issued unauthenticated session id ...`, `received Identify ...`, `received UDP discovery packet ...`, `received SelectProtocol ...`, `received VoiceConnect for attacker-controlled endpoint`, and `VOICE_ENDPOINT_SSRF_CONFIRMED`.",
+  "verification_method": "The helper container acts as both the attacker and the fake Discord voice infrastructure. It exits successfully only if it receives the outbound `Identify` frame and the UDP discovery packet from Linkdave and if the attacker-side WebSocket receives `VoiceConnect`, then emits `VOICE_ENDPOINT_SSRF_CONFIRMED`. Any missing step causes a non-zero exit.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `target issued unauthenticated session id ...`, confirming `/ws` accepted an unauthenticated client and created a session.",
+    "The fake voice gateway printed `received Identify ...`, confirming Linkdave opened the attacker-directed WSS connection and sent the expected voice identify payload.",
+    "The fake UDP listener printed `received UDP discovery packet ...`, confirming the forged voice gateway could steer the follow-on UDP connection.",
+    "The attacker-side client printed `received VoiceConnect for attacker-controlled endpoint` and `VOICE_ENDPOINT_SSRF_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the public Linkdave repository on the host, checks out pinned vulnerable commit `53a274ceaff593b7929ce00c44ba02574943109b`, builds the target image plus a derived image that trusts the bundled fake voice CA, and mounts the checked-out repository into the reproduction container at `/target-repo`.",
+    "pinned_commit_or_ref": "53a274ceaff593b7929ce00c44ba02574943109b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/target-with-ca.Dockerfile",
+      "reproduction/fake-voice-ca.crt",
+      "reproduction/fake-voice-server.crt",
+      "reproduction/fake-voice-server.key",
+      "reproduction/go.mod",
+      "reproduction/go.sum"
+    ]
+  }
+}

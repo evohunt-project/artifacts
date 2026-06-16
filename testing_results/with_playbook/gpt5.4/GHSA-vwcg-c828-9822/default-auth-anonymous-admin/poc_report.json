@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction starts FUXA v1.2.9 in its default posture and creates a new administrator account through `POST /api/users` without sending any credential.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated request to an admin-documented API route should succeed and the created administrator account should appear in the returned `/api/users` list.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned FUXA v1.2.9, started the server, posted a new admin user to `/api/users` without any token, and then received HTTP 200 from `/api/users` with the attacker-created `evohunt` account present in the response body.",
+  "verification_method": "The container waits for `/api/version`, sends an unauthenticated `POST /api/users`, then fetches `/api/users` and checks for HTTP 200 plus the exact `\"username\":\"evohunt\"` marker. This distinguishes real anonymous admin access from a startup failure or a rejected request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The server responded to `POST /api/users` without any `x-access-token` header.",
+    "The follow-up `GET /api/users` returned HTTP 200.",
+    "The returned user list contained the attacker-created `evohunt` administrator record."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "19c2471833e410eea235b81857ddcfde7b3851a0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

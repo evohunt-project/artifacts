@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_object_level_authorization",
+  "summary": "The Docker-based reproduction confirms that a technician can read another technician's intervention/session details and create a new session on the victim intervention through the shipped app-v1 API.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that technician `evotecha` only sees their own intervention/session in list views, can still fetch foreign detail IDs, and can create a new session row on victim intervention `2`, ending with the proof string `EVOHUNT_BOLA_CONFIRMED`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `devcode-it/openstamanager` at commit `230d95e30d2c7cbe4777c5c47f57a0dccb6b37f6`, installed the application, seeded two technicians plus interventions `1` and `2`, logged in as `evotecha`, observed list access only to intervention/session `1`, fetched foreign detail records for intervention/session `2`, created session `3` on victim intervention `2`, and printed `EVOHUNT_BOLA_CONFIRMED`.",
+  "verification_method": "The helper container seeds a known dataset, logs in as the low-privilege technician, checks that normal list endpoints only expose the technician's own records, then performs direct foreign-ID reads and a forged session creation. The run passes only if the foreign reads succeed, the created database row is linked to victim intervention `2` with technician `2`, the victim session count increases from `1` to `2`, and the proof string is emitted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The seeded runtime reported `own_intervento_id=1` and `victim_intervento_id=2`.",
+    "The exploit phase reported `interventi_ids_before_write=[\"1\"]` and `sessioni_ids_before_write=[\"1\"]`, confirming the low-privilege baseline view.",
+    "The exploit phase reported `victim_intervento_detail_id=\"2\"` and `victim_session_detail_id=\"2\"`, confirming unauthorized foreign detail reads.",
+    "The exploit phase reported `created_session_id=\"3\"`, `created_session_row={\"idintervento\":\"2\",\"idtecnico\":\"2\"}`, `victim_session_count_before_write=1`, and `victim_session_count_after_write=2`.",
+    "The run ended with the expected proof string `EVOHUNT_BOLA_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "230d95e30d2c7cbe4777c5c47f57a0dccb6b37f6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/execute.sh",
+      "reproduction/update_step.php",
+      "reproduction/seed_runtime.php",
+      "reproduction/api_poc.php"
+    ]
+  }
+}

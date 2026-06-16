@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:05:44.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_91791600",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-hjh7-r5w8-5872/GHSA-hjh7-r5w8-5872.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "publish_reader_workspace_file_read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_91791600/publish_reader_workspace_file_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_91791600/publish_reader_workspace_file_read/vulnerability_report.json",
+      "title": "Publish-service reader can read arbitrary workspace files through getFile",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a publish-reader authorization and file-scope bug in POST /api/file/getFile, while the advisory is a double-URL-decoding path traversal in /export/ handled by serveExport(). They reach different endpoints, different code, and different root causes.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's serveExport() double-decode path traversal root cause. The only qualifying finding is a separate publish-service reader file-read issue in /api/file/getFile.",
+    "evidence": [
+      "The advisory describes kernel/server/serve.go serveExport() trimming /export/, then calling url.PathUnescape() on the already-decoded path before filepath.Join(exportBaseDir, decodedPath), enabling double-encoded ../ traversal.",
+      "The upstream fix for GHSA-hjh7-r5w8-5872 adds gulu.File.IsSubPath(exportBaseDir, fullPath) inside serveExport() and also extends sensitive-path blocking for .db and .log files, confirming the vulnerable code path is the /export/ handler.",
+      "The accepted qualifying finding instead routes through publish service authentication, RoleReader acceptance, POST /api/file/getFile, and CheckAbsPathAccessableByPublishAccess(), which is a different endpoint family and a different missing-authorization boundary."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_91791600/publish_reader_workspace_file_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_91791600/publish_reader_workspace_file_read/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_91791600/publish_reader_workspace_file_read/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

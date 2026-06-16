@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:08:06.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_121b233f",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-wvhq-wp8g-c7vq/GHSA-wvhq-wp8g-c7vq.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "public_chatflow_oauth2_token_exfiltration",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_121b233f/public_chatflow_oauth2_token_exfiltration",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_121b233f/public_chatflow_oauth2_token_exfiltration/vulnerability_report.json",
+      "title": "Public chatflow metadata and unauthenticated OAuth2 refresh expose third-party access tokens",
+      "vulnerability_type": "oauth_token_exfiltration",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding depends on `/api/v1/public-chatflows` and `/api/v1/oauth2-credential/refresh` being explicitly whitelisted and on `getSinglePublicChatflow` returning raw chatflow metadata. The advisory instead targets the non-whitelisted `/api/v1/**` middleware branch in `packages/server/src/index.ts` where an authenticated tenant can spoof `x-request-from: internal` to reach internal admin routes through `verifyToken`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's authenticated authorization bypass in the `/api/v1` middleware. The only qualifying finding is a separate unauthenticated whitelist and metadata disclosure chain that leaks OAuth tokens.",
+    "evidence": [
+      "The advisory describes `/api/v1` middleware in `packages/server/src/index.ts` trusting `x-request-from: internal` and calling `verifyToken` for non-whitelisted routes before downstream routers run.",
+      "`/Users/lumi/ziyue/EvoHunt-DryRun/advisory_121b233f/artifacts/flowise-3.0.12/packages/server/src/index.ts:226` shows the whitelist check, and `:229-230` shows the spoofable header branch used by the advisory.",
+      "`/Users/lumi/ziyue/EvoHunt-DryRun/advisory_121b233f/artifacts/flowise-3.0.12/packages/server/src/utils/constants.ts:9` and `:43` explicitly whitelist `/api/v1/public-chatflows` and `/api/v1/oauth2-credential/refresh`, so the qualifying finding reaches its endpoints without using the advisory branch.",
+      "`/Users/lumi/ziyue/EvoHunt-DryRun/advisory_121b233f/artifacts/flowise-3.0.12/packages/server/src/controllers/chatflows/index.ts:218-220` returns the full public chatflow object, and `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_121b233f/artifacts/flowise-3.0.12/packages/server/src/routes/oauth2/index.ts:307-402` refreshes any credential by UUID and returns `tokenInfo`, which is a distinct root cause from the spoofed-header authorization bypass."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_121b233f/public_chatflow_oauth2_token_exfiltration",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_121b233f/public_chatflow_oauth2_token_exfiltration/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_121b233f/public_chatflow_oauth2_token_exfiltration/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

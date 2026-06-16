@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_dynamic_evaluation",
+  "summary": "The reproduction confirms that Langroid's default safe-eval path accepts a callback-bearing dataframe expression and reaches command execution through `VectorStore.compute_from_docs()` without enabling `full_eval`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should accept the crafted expression under `full_eval=false`, invoke `subprocess.run` through a pandas callback, create `/tmp/evohunt-eval-proof`, and emit `SUCCESS_SIGNAL: VECTORSTORE_SANITIZER_BYPASS_RCE`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned tag `0.59.31`, built the Docker image, installed the target repo in the container, printed the accepted sanitized expression, created `/tmp/evohunt-eval-proof` containing `EVOHUNT_EVAL_PWNED`, and emitted `SUCCESS_SIGNAL: VECTORSTORE_SANITIZER_BYPASS_RCE`.",
+  "verification_method": "The helper script first verifies that `sanitize_command()` returns the payload unchanged, then calls `VectorStore.compute_from_docs()` with `full_eval=false`, checks that `/tmp/evohunt-eval-proof` was created with the exact attacker-controlled contents, and only then prints the success signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed the exact callback-bearing expression after `sanitize_command()` accepted it.",
+    "The exploit created `/tmp/evohunt-eval-proof` inside the container with contents `EVOHUNT_EVAL_PWNED`.",
+    "The run emitted `SUCCESS_SIGNAL: VECTORSTORE_SANITIZER_BYPASS_RCE` after verifying the proof file contents."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0.59.31",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}
+

@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:22:30.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cf1344fe",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-5r63-q8hg-p8qx/GHSA-5r63-q8hg-p8qx.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "guest-socket-webapi-ssrf",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cf1344fe/guest-socket-webapi-ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cf1344fe/guest-socket-webapi-ssrf/vulnerability_report.json",
+      "title": "Guest socket WebAPI test event permits arbitrary server-side requests and response disclosure",
+      "vulnerability_type": "server_side_request_forgery",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is project-import RCE caused by unsandboxed user-supplied scripts in imported project data. This finding instead targets the guest Socket.IO `device-webapi-request` SSRF path in `server/runtime/index.js` and `server/runtime/devices/httprequest/index.js`, with no imported project or script-execution root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unauth-upload-destination-traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cf1344fe/unauth-upload-destination-traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cf1344fe/unauth-upload-destination-traversal/vulnerability_report.json",
+      "title": "Unauthenticated upload destination traversal writes attacker-controlled files into the web root",
+      "vulnerability_type": "unsafe_file_upload_and_write",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory describes project-import RCE via malicious script content inside imported projects. This finding is a distinct `/api/upload` destination-traversal file-write bug; although it touches `server/api/projects/index.js`, the vulnerable branch is the upload path-building logic rather than project import or imported script execution.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described project-import RCE path. The session's qualifying findings are a guest Socket.IO SSRF and an unauthenticated upload destination traversal, both separate from the imported-script execution root cause described by CVE-2025-69983.",
+    "evidence": [
+      "The advisory JSON and CVE record describe RCE via project import because imported project files can contain user-supplied scripts that are not sanitized or sandboxed before later execution.",
+      "In FUXA v1.2.7, `server/api/projects/index.js` exposes `POST /api/project` for project import/update, while `server/runtime/scripts/msm.js` compiles project script bodies from `script.code` with `Module._compile` and exposes privileged system functions through `global[...]`; that is the advisory-shaped import/script execution mechanism.",
+      "The `guest-socket-webapi-ssrf` finding instead reaches `socket.on(DEVICE_WEBAPI_REQUEST)` in `server/runtime/index.js`, calls `devices.getRequestResult`, performs `axios.get(property.address)`, and emits the fetched body back to clients. That is an SSRF root cause, not imported-script execution.",
+      "The `unauth-upload-destination-traversal` finding instead reaches `POST /api/upload` in `server/api/projects/index.js`, resolves attacker-controlled `destination` into a filesystem path, and writes with `fs.writeFileSync`. Sharing the same file as the advisory reference does not make it the same vulnerable endpoint or root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cf1344fe/guest-socket-webapi-ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cf1344fe/guest-socket-webapi-ssrf/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cf1344fe/guest-socket-webapi-ssrf/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cf1344fe/unauth-upload-destination-traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cf1344fe/unauth-upload-destination-traversal/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cf1344fe/unauth-upload-destination-traversal/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

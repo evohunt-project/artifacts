@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle creates a low-privilege WebDAV-capable user, adds a deny rule for /secret, confirms the normal raw API returns 403, and then reads the same denied file through WebDAV.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The bundled helper should emit WEBDAV_ACCESS_BYPASS_CONFIRMED after /api/raw denies access but the WebDAV GET still returns the protected secret.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned vulnerable commit, built the reproduction image, created a low-privilege WebDAV-capable user, added a deny rule for /secret, observed HTTP 403 from /api/raw, and still read the protected file through WebDAV before emitting WEBDAV_ACCESS_BYPASS_CONFIRMED.",
+  "verification_method": "Inside the container, validate.sh creates a low-privilege user with WebDAV-capable permissions, adds a deny rule for /secret, verifies /api/raw returns 403 for /secret/file.txt, then performs a WebDAV GET for the same path and exits successfully only if the proof string is returned.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction run observed raw_status=403 with the message access denied to path /secret/file.txt from the normal raw API.",
+    "The reproduction run then fetched /dav/evohunt-webdav-source/secret/file.txt and received the protected proof content EVOHUNT_WEBDAV_BYPASS_CONFIRMED.",
+    "The reproduction run emitted WEBDAV_ACCESS_BYPASS_CONFIRMED."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the upstream repository on the host from the v1.2.2-stable ref, checks out commit 09713b32a5f6e369a5197319749a12b8e7fd5f2b, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "09713b32a5f6e369a5197319749a12b8e7fd5f2b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/config.yaml",
+      "reproduction/validate.sh"
+    ]
+  }
+}

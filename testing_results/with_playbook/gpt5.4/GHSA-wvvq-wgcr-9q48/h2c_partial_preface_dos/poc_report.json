@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that Traefik's h2c server keeps hijacked cleartext connections open while partial HTTP/2 client prefaces are held by the attacker, and only releases them after the attacker disconnects.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that five partial h2c client prefaces become five live hijacked connections with zero corresponding close events until the attacker closes those sockets.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Traefik at commit `bf650d7623bfb2bd3f0653364d8f0b4fc97782b6`, built the reproduction image, and produced the expected proof lines `hijacked_delta=5 closed_delta=0` and `SUCCESS partial h2c prefaces hold hijacked connections until the attacker closes them`.",
+  "verification_method": "The verifier runs a small harness against the repository's `h2c.Server` primitive with the same zero read/write timeout posture used on Traefik's cleartext listener path, then checks that held partial prefaces increase the hijacked-connection count while the close count stays at zero until the attacker closes the sockets.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `hijacked_delta=5 closed_delta=0`, showing that five attacker-held partial prefaces remained hijacked without any matching close events.",
+    "The run printed `SUCCESS partial h2c prefaces hold hijacked connections until the attacker closes them`, confirming the expected proof oracle.",
+    "The host-side run script completed successfully from the final folder layout and printed `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "bf650d7623bfb2bd3f0653364d8f0b4fc97782b6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/main.go",
+      "reproduction/verify.sh",
+      "reproduction/deps/go.mod",
+      "reproduction/deps/go.sum"
+    ]
+  }
+}

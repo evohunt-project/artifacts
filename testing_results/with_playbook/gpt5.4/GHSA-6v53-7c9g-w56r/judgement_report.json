@@ -1,0 +1,102 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:38:12.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-6v53-7c9g-w56r/GHSA-6v53-7c9g-w56r.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "datainput_constraints_bypass_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1/datainput_constraints_bypass_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1/datainput_constraints_bypass_dos/vulnerability_report.json",
+      "title": "DataInput parser bypasses configured stream-read constraints and permits denial of service",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same UTF8DataInputJsonParser maxNestingDepth bypass on createParser(..., DataInput) that the advisory and fix describe, including the direct createChild*Context calls that skipped the validated nesting-depth helper.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "async_final_chunk_doclen_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1/async_final_chunk_doclen_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1/async_final_chunk_doclen_bypass/vulnerability_report.json",
+      "title": "Non-blocking JSON parsers miss the final maxDocumentLength check and accept oversized input",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding concerns async parser maxDocumentLength enforcement on the final feedInput() chunk, which is a different parser family and a different missing check from the advisory's UTF8DataInputJsonParser nesting-depth bypass.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "datainput_constraints_bypass_dos",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1/datainput_constraints_bypass_dos",
+      "status": "qualifying_vuln",
+      "title": "DataInput parser bypasses configured stream-read constraints and permits denial of service",
+      "vulnerability_type": "resource_exhaustion_dos"
+    },
+    "reason": "The selected finding matches the GHSA's root cause because it targets the same DataInput-backed UTF8DataInputJsonParser branch where maxNestingDepth validation was skipped, and the copied PoC reproduced the advisory's denial-of-service effect.",
+    "evidence": [
+      "The advisory summary names UTF8DataInputJsonParser, parsing from java.io.DataInput, and bypass of maxNestingDepth; the finding names the same parser surface and same missing guard.",
+      "The upstream fix referenced by the advisory changes UTF8DataInputJsonParser to call createChildArrayContext()/createChildObjectContext() instead of writing directly to _streamReadContext.createChild*Context(), which is the exact branch the finding cites.",
+      "The copied PoC run log shows inputstream-depth=rejected and datainput-depth=accepted under maxNestingDepth=100, proving the advisory-described vulnerable logic was activated only on the DataInput path.",
+      "The same run log shows oom-inputstream=rejected and oom-datainput=oom, demonstrating the advisory-described resource-exhaustion consequence from excessive nesting."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "datainput_constraints_bypass_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1/datainput_constraints_bypass_dos",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1/.judge/poc_runs/datainput_constraints_bypass_dos/datainput_constraints_bypass_dos",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1/.judge/poc_runs/datainput_constraints_bypass_dos/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1/.judge/poc_runs/datainput_constraints_bypass_dos/poc_execution.json",
+      "observed_effect": "The copied PoC accepted over-depth JSON only on the DataInput parser and then produced oom-datainput=oom under a 256 MB heap while the InputStream parser rejected the same nested payload.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1/async_final_chunk_doclen_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1/async_final_chunk_doclen_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_9b9decb1/async_final_chunk_doclen_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

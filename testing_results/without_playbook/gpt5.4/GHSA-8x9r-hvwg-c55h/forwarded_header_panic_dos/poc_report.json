@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "header_parsing_panic_dos",
+  "summary": "The reproduction bundle starts the vulnerable server and sends a malformed Forwarded header to verify that the request reaches the panic-recovery path and returns HTTP 500.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make an unauthenticated POST request with 'Forwarded: host' return HTTP 500 and produce a recovered panic stack trace rooted in RequestBaseURL.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned upstream commit 65401de0190674e63a1cf2479dcf91d0741d5cc9, built the reproduction image, started the server, sent POST /api/extensionquery with 'Forwarded: host', received HTTP 500 with detail 'Application recovered from a panic', and logged a recovered panic stack trace containing RequestBaseURL.",
+  "verification_method": "The verification helper starts the server, sends the malformed request, asserts that the HTTP status is 500, checks that the response body contains 'Application recovered from a panic', and confirms that the server log contains the recovered-panic marker and a RequestBaseURL stack frame.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction emitted '[evohunt] observed HTTP status: 500'.",
+    "The response body contained '{\"message\":\"An internal server error occurred.\",\"detail\":\"Application recovered from a panic\",...}'.",
+    "The server log excerpt included 'panic serving http request (recovered)'.",
+    "The server log excerpt included a RequestBaseURL stack frame from api/httpapi/httpapi.go."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "65401de0190674e63a1cf2479dcf91d0741d5cc9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

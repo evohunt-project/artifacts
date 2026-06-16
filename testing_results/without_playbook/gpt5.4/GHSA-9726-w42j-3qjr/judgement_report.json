@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:22:50.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6580c6cf",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-9726-w42j-3qjr/GHSA-9726-w42j-3qjr.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "bulk_scan_npy_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6580c6cf/bulk_scan_npy_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6580c6cf/bulk_scan_npy_bypass/vulnerability_report.json",
+      "title": "Bulk directory and Hugging Face scans skip malicious .npy payloads",
+      "vulnerability_type": "detection_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory fixes missing dangerous-global classification for `_io.FileIO` and `urllib.request.urlopen` during pickle scanning, but this finding is a separate `.npy` extension-filter bypass in `scan_huggingface_model()` and `scan_directory_path()` that prevents `scan_numpy()` from running.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "A",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's vulnerable code or root cause.",
+    "evidence": [
+      "The GHSA-9726-w42j-3qjr patch adds `_io` `FileIO` at `scanner.py:128` and `urllib.request` at `scanner.py:185` to `_unsafe_globals`, showing that the advisory root cause was incomplete dangerous-global detection during pickle scanning.",
+      "The same patch adds regression checks at `tests/test_scanner.py:396-397` for `io_FileIO.pkl` and `urllib_request_urlopen.pkl`, matching the advisory's arbitrary file-read and SSRF chain.",
+      "The only final qualifying finding instead points to `scanner.py:568-569` and `scanner.py:586-590`, where `.npy` files are filtered out of `scan_huggingface_model()` and `scan_directory_path()` before `scan_numpy()` can inspect embedded pickle content."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6580c6cf/bulk_scan_npy_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6580c6cf/bulk_scan_npy_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6580c6cf/bulk_scan_npy_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

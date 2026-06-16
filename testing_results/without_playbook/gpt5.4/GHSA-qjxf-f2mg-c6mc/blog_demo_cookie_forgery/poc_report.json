@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "auth_bypass_secure_cookie_forgery",
+  "summary": "The Docker-based reproduction confirms that the bundled blog demo accepts a forged `blogdemo_user` cookie signed with the shipped placeholder secret and then allows unauthorized post creation as author 1.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should let an unauthenticated attacker forge the demo's signed session cookie, bypass compose authentication, and create the proof post `forged-post` without knowing the victim author's password.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Tornado at commit `63d4df4eefa6750bb14efa1ebffe67b8c54fbad4`, started PostgreSQL and the blog demo, forged a valid `blogdemo_user` cookie, submitted `POST /compose`, and printed `EVOHUNT_FORGED_COOKIE_POST_CREATED` after the unauthorized `forged-post` entry was confirmed in PostgreSQL.",
+  "verification_method": "The helper creates a baseline author through `POST /auth/create`, forges the Tornado signed cookie with the public placeholder secret, submits `POST /compose` with that forged cookie, and then queries PostgreSQL directly to verify that the `entries` table contains the attacker-created row. The run only succeeds when the exact proof row exists and the success signal is emitted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted the forged cookie value and the success signal `EVOHUNT_FORGED_COOKIE_POST_CREATED`.",
+    "The forged request redirected to `/entry/forged-post`, showing that the authenticated compose flow accepted the attacker session.",
+    "A direct PostgreSQL query from the verification helper confirmed that the persisted row was `(title='forged-post', markdown='forged by evohunt')`."
+  ],
+  "limitations_or_blockers": [
+    "The upstream `v6.5.4` blog templates contain rendering bugs unrelated to this finding, so the verification path avoids browser-rendered forms and proves the exploit through direct authenticated POST requests plus a database-side integrity check."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "63d4df4eefa6750bb14efa1ebffe67b8c54fbad4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

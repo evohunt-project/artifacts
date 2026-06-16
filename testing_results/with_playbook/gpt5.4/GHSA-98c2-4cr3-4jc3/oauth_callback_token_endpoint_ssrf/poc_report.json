@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction clones n8n@2.14.0, creates a generic OAuth2 credential whose token endpoint points at a localhost-only HTTP server, drives the OAuth auth and callback flow, and verifies that the callback error renderer receives the localhost response body.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should force the server-side OAuth token exchange to contact a localhost-only endpoint and reflect the localhost response body into the OAuth callback error context as the proof signal EVOHUNT_PROOF:EVOHUNT_LOCALHOST_ONLY_SECRET.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned n8n@2.14.0 at commit 2374f40ec36795904b4011fb81018da818a76ee8, built the reproduction image, executed the targeted Jest validation, logged EVOHUNT_PROOF:EVOHUNT_LOCALHOST_ONLY_SECRET from the callback flow, and completed with '[evohunt] verification succeeded: callback reflected the localhost-only response body'.",
+  "verification_method": "The host run script clones the pinned vulnerable ref and mounts it into the container. Inside the container, verify.sh installs the workspace, starts a local Postgres instance, injects a targeted integration test, drives POST /rest/credentials -> GET /rest/oauth2-credential/auth -> GET /rest/oauth2-credential/callback, stubs Response.render, and asserts that the oauth-error-callback render context contains the localhost-only proof string rather than a generic transport failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "artifacts/oauth_run.log contains 'EVOHUNT_PROOF:EVOHUNT_LOCALHOST_ONLY_SECRET' during the callback test.",
+    "The targeted Jest suite passed: 'PASS test/integration/oauth_callback_ssrf_validation.evohunt.test.ts'.",
+    "The final run output reported '[evohunt] verification succeeded: callback reflected the localhost-only response body'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2374f40ec36795904b4011fb81018da818a76ee8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/jest.evohunt.oauth.config.cjs",
+      "reproduction/oauth_callback_ssrf_validation.evohunt.test.ts",
+      "reproduction/verify.sh"
+    ]
+  }
+}

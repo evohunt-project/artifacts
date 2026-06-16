@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction confirms that the GraphQL asset upload path sends an outbound request to the attacker-chosen URL before the resolver rejects the resolved IP as invalid.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause Craft's GraphQL asset upload resolver to issue an HTTP GET to the proof server and then throw the expected invalid-IP error once the post-request IP validation runs.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Craft CMS at commit `42cef196d68dd8d48ceaab89b2c9e2edd2cecbe8`, built the reproduction image, and produced `TARGET_URL=http://ssrf.evohunt.test:18080/proof.jpg`, `EXCEPTION=GraphQL\\\\Error\\\\UserError`, `MESSAGE=http://ssrf.evohunt.test:18080/proof.jpg resolves to an invalid IP address.`, and `SSRF_PROOF_REQUEST_OBSERVED`.",
+  "verification_method": "The host run script captures container output and requires the exact `SSRF_PROOF_REQUEST_OBSERVED` marker. Inside the container, the harness calls the real `craft\\gql\\resolvers\\mutations\\Asset::handleUpload()` path against a loopback-backed proof server and then checks the proof log for `GET /proof.jpg`, which distinguishes a real outbound request from a generic validation failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included `TARGET_URL=http://ssrf.evohunt.test:18080/proof.jpg`.",
+    "Container output included `EXCEPTION=GraphQL\\\\Error\\\\UserError`.",
+    "Container output included `MESSAGE=http://ssrf.evohunt.test:18080/proof.jpg resolves to an invalid IP address.`.",
+    "Container output included `SSRF_PROOF_REQUEST_OBSERVED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "42cef196d68dd8d48ceaab89b2c9e2edd2cecbe8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/execute_poc.sh",
+      "reproduction/poc_harness.php",
+      "reproduction/proof_server.py"
+    ]
+  }
+}

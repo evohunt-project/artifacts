@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "session_expiry_bypass",
+  "summary": "The Docker-based reproduction clones Parse Server tag 8.6.27, starts MongoDB, and verifies that an expired session token is still accepted from cache until eviction; it also verifies that extendSessionOnUse=true renews the expired session.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that an expired session token still authenticates a protected route until the cache entry expires, and that with extendSessionOnUse=true the expired session is renewed in storage.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the helper image, cloned Parse Server tag 8.6.27, installed dependencies, built the target, and then observed default.after_expiry_status=200, default.after_cache_ttl_status=400, default.after_cache_ttl_code=209, extend.after_expiry_status=200, extend.extended_forward=true, followed by the success marker \"expired session token remained valid after DB expiry and extendSessionOnUse renewed it from the stale cache path\".",
+  "verification_method": "The helper creates a user, primes the session cache with /users/me, waits beyond the stored _Session.expiresAt timestamp, calls /users/me again expecting HTTP 200 before cache eviction, waits past cacheTTL expecting Parse error 209, then reruns with extendSessionOnUse=true and verifies that _Session.expiresAt moves forward.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed default.before_expires_at=2026-06-05T13:53:09.145Z and default.after_expiry_status=200.",
+    "The run then printed default.after_cache_ttl_status=400 and default.after_cache_ttl_code=209, showing the token stopped working only after the cache entry aged out.",
+    "The extendSessionOnUse scenario printed extend.before_expires_at=2026-06-05T13:53:20.801Z, extend.after_expiry_status=200, extend.after_expires_at=2026-06-05T13:53:23.316Z, and extend.extended_forward=true.",
+    "The run ended with [evohunt] SUCCESS: expired session token remained valid after DB expiry and extendSessionOnUse renewed it from the stale cache path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8.6.27 (7edb8fcb67d47b2bcd12dac9c4c7ca261876770e)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js"
+    ]
+  }
+}

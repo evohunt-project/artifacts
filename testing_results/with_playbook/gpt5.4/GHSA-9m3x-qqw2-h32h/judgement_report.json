@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:19:08.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0233ceca",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-9m3x-qqw2-h32h/GHSA-9m3x-qqw2-h32h.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "legacy_tar_pytorch_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0233ceca/legacy_tar_pytorch_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0233ceca/legacy_tar_pytorch_bypass/vulnerability_report.json",
+      "title": "Legacy tar-based PyTorch .pt files bypass picklescan and scan as clean",
+      "vulnerability_type": "scanner_false_negative",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is in the legacy tar `.pt` path and fallback logic in `scan_pytorch()` and `scan_bytes()`, while the advisory fixes missing dangerous-global detection for obfuscated `builtins.eval` reconstructed via `getattr` and cloudpickle helpers in `_unsafe_globals`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "H",
+          "SI": "H",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:L/VA:N/SC:H/SI:H/SA:H"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory root cause. The only qualifying finding is a legacy PyTorch tar-scanning bypass, whereas GHSA-9m3x-qqw2-h32h concerns obfuscated `builtins.eval` execution hidden behind `getattr` and cloudpickle callable reconstruction that the scanner failed to mark as dangerous.",
+    "evidence": [
+      "The advisory summary and patch identify missing detection of obfuscated `builtins.eval` calls; PR #59 adds dangerous-global coverage for `cloudpickle.cloudpickle` helper functions and `types.CodeType` in `src/picklescan/scanner.py`.",
+      "The qualifying finding cites `src/picklescan/scanner.py:512`, `:523`, `:529`, `:541`, and `:560` and describes a different mechanism: the legacy tar `.pt` branch is unimplemented, then `scan_bytes()` falls back to scanning the outer tar container as a generic pickle.",
+      "The reproduced PoC for the finding shows a clean scan of a crafted legacy `.pt` followed by code execution only when the embedded pickle member is separately unpickled; it does not activate or depend on the advisory's cloudpickle and `getattr(builtins, \"eval\")` path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0233ceca/legacy_tar_pytorch_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0233ceca/legacy_tar_pytorch_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0233ceca/legacy_tar_pytorch_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

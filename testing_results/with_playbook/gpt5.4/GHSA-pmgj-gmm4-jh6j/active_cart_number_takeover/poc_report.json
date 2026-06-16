@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction clones Commerce 5.5.2, boots a MySQL sidecar, and runs a custom Codeception test that anonymously mutates a credentialed victim cart using only the victim cart number.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The proof should show that an anonymous request supplying a victim cart number reaches the victim's incomplete cart, returns victim-linked cart data in the JSON response, and persists attacker-chosen line-item changes.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `fb12a9fde8927af50198ea5f190d20753a8510d5`, built the reproduction image, started a MySQL sidecar, and executed a custom Codeception test that passed with `OK (1 test, 11 assertions)` followed by `CART_NUMBER_TAKEOVER_PROOF_PASSED`.",
+  "verification_method": "The custom proof test first creates a credentialed victim cart, then clears the session and replays `update-cart` anonymously with the victim cart number. It asserts that the response exposes the victim cart number, customer ID, and email, and then verifies in the database that the victim cart's quantity changed to the attacker-selected value.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Codeception reported `OK (1 test, 11 assertions)` for `CartNumberTakeoverProofTest`.",
+    "The reproduction emitted the explicit success marker `CART_NUMBER_TAKEOVER_PROOF_PASSED`.",
+    "The proof test verified both response-level evidence and persisted database state for the victim cart mutation."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, starts a MySQL sidecar, and mounts the checked-out repository into the verifier container.",
+    "pinned_commit_or_ref": "fb12a9fde8927af50198ea5f190d20753a8510d5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/CartNumberTakeoverProofTest.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

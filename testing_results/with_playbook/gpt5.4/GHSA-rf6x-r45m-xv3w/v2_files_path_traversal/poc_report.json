@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_arbitrary_file_write",
+  "summary": "The packaged reproduction confirms that a normal user can traverse out of the v2 user-file directory and plant a publicly readable file.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should upload a file through POST /api/v2/files using a ../ filename and then retrieve the planted file unauthenticated through the public profile-picture reader.",
+  "actual_observed_result": "Running ./reproduction/run.sh completed successfully and printed EVOHUNT_SUCCESS with a stored path containing ../profile_pictures/Space/... and a matching public fetch path under profile_pictures/Space/.",
+  "verification_method": "The helper starts Langflow 1.7.1, creates and activates a normal user, logs in as that user, uploads ../profile_pictures/Space/<proof>.svg through POST /api/v2/files, then fetches GET /api/v1/files/profile_pictures/Space/<proof>.svg and checks for the attacker-controlled SVG body.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The upload response path preserved ../profile_pictures/Space/ in the stored path.",
+    "The unauthenticated profile-picture fetch returned the attacker-controlled SVG content.",
+    "The run printed EVOHUNT_SUCCESS: v2_files_path_traversal."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "47ce5bf27e688e4cfbc48a745c24a72bac6b62d7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

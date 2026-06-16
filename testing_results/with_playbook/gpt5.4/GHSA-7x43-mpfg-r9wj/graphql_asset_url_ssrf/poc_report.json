@@ -1,0 +1,32 @@
+{
+  "status": "failed",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction reaches the low-privilege GraphQL asset-save mutation and receives a successful response containing the attacker-chosen filename, but the current Craft test-harness flow aborts afterward with a project-config drift exception before the saved localhost-sourced file can be recovered and verified.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause Craft CMS to fetch `http://internal.test:8888/ssrf-proof.txt` from a localhost-only HTTP service and persist `EVOHUNT-SSRF-PROOF` as the contents of the created asset.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Craft CMS 4.16.17, built the reproduction image, created a low-privilege GraphQL bearer token, and executed the asset-save mutation successfully enough to return HTTP 200 plus the requested filename `evohunt-ssrf-proof.txt`. After the request, the Codeception harness terminated with `StaleResourceException: The loaded project config is out-of-date.`, and the shell-side verifier could not recover the saved file from the checked-out repository state.",
+  "verification_method": "The reproduction uses a localhost-only HTTP server inside the container, sends the GraphQL asset-save mutation against `/?action=graphql/api` with a low-privilege bearer token, and then searches the checked-out asset storage for `evohunt-ssrf-proof.txt` to confirm that its bytes equal `EVOHUNT-SSRF-PROOF`.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The GraphQL request completed with HTTP 200.",
+    "The GraphQL response included the attacker-chosen filename `evohunt-ssrf-proof.txt`.",
+    "The run consistently terminated after the request with `StaleResourceException: The loaded project config is out-of-date.`"
+  ],
+  "limitations_or_blockers": [
+    "Craft's Codeception/test-harness flow aborts after the GraphQL request with a project-config drift exception.",
+    "The shell-side verifier did not recover a persisted `evohunt-ssrf-proof.txt` file from the checked-out repository state after the failing run, so the expected localhost-content proof signal was not observed."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b5f17cd3246cf10034a914464964757b0b84bcd3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_inside.sh",
+      "reproduction/EvohuntSsrfCest.php",
+      "reproduction/ssrf-proof.txt"
+    ]
+  }
+}

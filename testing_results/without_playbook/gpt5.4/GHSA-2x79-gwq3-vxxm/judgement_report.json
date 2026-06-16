@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:18:53.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_90f22980",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-2x79-gwq3-vxxm/GHSA-2x79-gwq3-vxxm.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "websocket_fragmentation_message_limit_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_90f22980/websocket_fragmentation_message_limit_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_90f22980/websocket_fragmentation_message_limit_bypass/vulnerability_report.json",
+      "title": "WebSocket fragmentation bypasses ws_max_msg_size and enables memory-exhaustion DoS",
+      "vulnerability_type": "websocket_resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory fixes a zero-progress numeric parse loop in `lib/facil/fiobj/fio_json_parser.h` (`fio_json_parse` on bare `i`/`I` JSON tokens). This finding instead targets websocket frame reassembly and `ws_max_msg_size` enforcement in `lib/facil/http/websockets.c`, so the vulnerable code, input type, and root cause are different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described `fio_json_parse` infinite loop on bare `i`/`I` JSON tokens. The session's only qualifying finding is a separate websocket fragmentation and buffering issue.",
+    "evidence": [
+      "The advisory summary, details, and patch all point to `lib/facil/fiobj/fio_json_parser.h`, where the fix adds `tmp == pos` checks in the numeral parsing path to reject zero-consumption parses and stop the infinite loop on inputs like `[i`.",
+      "The only qualifying finding in `.judge/input_manifest.json` is `websocket_fragmentation_message_limit_bypass`, whose report and reproduction center on `http_upgrade2ws`, `ws_max_msg_size`, fragmented websocket frames, and buffering in `websocket_on_unwrapped`.",
+      "The bundled verifier sends websocket upgrade requests and fragmented websocket frames, checks for `received=1536`, and measures RSS growth; it does not exercise JSON entry points such as `fiobj_json2obj`, `fiobj_hash_update_json`, or `fio_json_parse`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_90f22980/websocket_fragmentation_message_limit_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_90f22980/websocket_fragmentation_message_limit_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_90f22980/websocket_fragmentation_message_limit_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

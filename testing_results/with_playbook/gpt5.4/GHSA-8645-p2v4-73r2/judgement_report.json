@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:01:37.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bf387e08",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-8645-p2v4-73r2/GHSA-8645-p2v4-73r2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "multipart_chunk_quota_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bf387e08/multipart_chunk_quota_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bf387e08/multipart_chunk_quota_bypass/vulnerability_report.json",
+      "title": "Multipart incremental-read quota bypass allows oversized requests to evade Wisp body and file limits",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same vulnerable `multipart_body` and `multipart_headers` continuation branches as the advisory, where cross-chunk multipart parsing recurses without decrementing `max_body_size` or `max_files_size` quotas.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "multipart_chunk_quota_bypass",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bf387e08/multipart_chunk_quota_bypass",
+      "status": "qualifying_vuln",
+      "title": "Multipart incremental-read quota bypass allows oversized requests to evade Wisp body and file limits",
+      "vulnerability_type": "resource_exhaustion_dos"
+    },
+    "reason": "The selected finding matches the advisory's exact root cause in Wisp multipart parsing, and the copied PoC reproduced end-to-end acceptance of oversized multipart field and file data past configured quotas, which is the advisory-described uncontrolled resource-allocation behavior.",
+    "evidence": [
+      "In `artifacts/validation_wisp_v221/src/wisp.gleam`, `multipart_body` recurses from `http.MoreRequiredForBody` at line 1172 and `multipart_headers` recurses from `http.MoreRequiredForHeaders` at line 1237 without decrementing quotas.",
+      "The fixed `v2.2.2` snapshot adds `decrement_quota(quota, size_read)` in the `MoreRequiredForBody` branch and `decrement_body_quota(quotas, size_read)` in the `MoreRequiredForHeaders` branch, matching the advisory's patch description.",
+      "The copied PoC run at `/Users/lumi/ziyue/EvoHunt-Run/advisory_bf387e08/.judge/poc_runs/multipart_chunk_quota_bypass/run.log` printed `BODY_LIMIT_BYPASSED value_len=200 limit=120` and `FILE_LIMIT_BYPASSED file_len=200 limit=120`, proving that multipart field and file content larger than the configured limits were accepted instead of rejected with `413 Content too large`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "multipart_chunk_quota_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bf387e08/multipart_chunk_quota_bypass",
+      "executed": true,
+      "command": "./reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bf387e08/.judge/poc_runs/multipart_chunk_quota_bypass/finding_copy",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bf387e08/.judge/poc_runs/multipart_chunk_quota_bypass/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_bf387e08/.judge/poc_runs/multipart_chunk_quota_bypass/poc_execution.json",
+      "observed_effect": "The copied PoC accepted a 200-byte multipart field and a 200-byte multipart file despite 120-byte configured limits, printing `BODY_LIMIT_BYPASSED value_len=200 limit=120`, `FILE_LIMIT_BYPASSED file_len=200 limit=120`, and `VERIFICATION_PASSED multipart chunk quota bypass reproduced`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

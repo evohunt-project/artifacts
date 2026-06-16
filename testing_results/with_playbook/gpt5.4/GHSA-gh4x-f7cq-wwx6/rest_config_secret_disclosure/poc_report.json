@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction confirms that Glances started in web mode without API authentication exposes raw secret-bearing configuration data through /api/4/config and per-item config endpoints.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should start the vulnerable Glances web API without authentication and prove that an unauthenticated caller can retrieve crafted secret values from /api/4/config and /api/4/config/{section}/{item}.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit e6bce5bc7c72dc79c6fddd29303fed620b55d77c, built the Docker image, started Glances with a secret-bearing config, and printed EVOHUNT_SECRET_LEAK_CONFIRMED after verifying exact values for outputs.jwt_secret_key, outputs.ssl_keyfile_password, passwords.default, influxdb2.token, influxdb2.password, and ip.public_password.",
+  "verification_method": "reproduction/verify.py waits for the local REST server, requests /api/4/config plus per-item /api/4/config/{section}/{item} endpoints, and asserts the responses contain exact expected secret values rather than a generic startup success or unrelated API response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "./reproduction/run.sh printed EVOHUNT_SECRET_LEAK_CONFIRMED from the containerized verification step.",
+    "The verification helper emitted JSON evidence listing the leaked config sections and exact secret items proven readable over the REST API.",
+    "Successful per-item fetches for outputs.jwt_secret_key, outputs.ssl_keyfile_password, passwords.default, influxdb2.token, influxdb2.password, and ip.public_password demonstrated direct secret disclosure."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host into a temporary workspace under the finding directory, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "e6bce5bc7c72dc79c6fddd29303fed620b55d77c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/glances-secret-leak.conf",
+      "reproduction/requirements-web-pinned.txt",
+      "reproduction/verify.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

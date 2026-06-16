@@ -1,0 +1,71 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:39:34.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b8163f6b",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-5458-7hh9-v7p4/GHSA-5458-7hh9-v7p4.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "pf4j_zip_slip_arbitrary_file_write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b8163f6b/pf4j_zip_slip_arbitrary_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b8163f6b/pf4j_zip_slip_arbitrary_file_write/vulnerability_report.json",
+      "title": "PF4J ZIP plugin extraction permits Zip Slip arbitrary file write",
+      "vulnerability_type": "zip_slip_arbitrary_file_write",
+      "advisory_match": true,
+      "advisory_match_reason": "It identifies the same vulnerable code and guard as the advisory: `org.pf4j.util.Unzip.extract()` accepts attacker-controlled zip entry names and validates them with a raw canonical-path string prefix check instead of normalized path-component validation, allowing escaped sibling writes with matching prefixes.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "pf4j_zip_slip_arbitrary_file_write",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b8163f6b/pf4j_zip_slip_arbitrary_file_write",
+      "status": "qualifying_vuln",
+      "title": "PF4J ZIP plugin extraction permits Zip Slip arbitrary file write",
+      "vulnerability_type": "zip_slip_arbitrary_file_write"
+    },
+    "reason": "The accepted PF4J finding matches the advisory root cause in `Unzip.extract()`, and the copied `.judge` PoC demonstrated the advisory impact by writing attacker-controlled content to `/tmp/pf4j-zipslip/plugins/victim_escape/payload.txt` outside the intended extraction directory `/tmp/pf4j-zipslip/plugins/victim`.",
+    "evidence": [
+      "The advisory JSON describes a path traversal or Zip Slip in `extract()` of `Unzip.java` caused by improper handling of zip entry names and missing normalization/validation.",
+      "The finding report at `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b8163f6b/pf4j_zip_slip_arbitrary_file_write/vulnerability_report.json` points to the same sink and explains that `Unzip.extract()` uses `file.getCanonicalPath().startsWith(destination.getCanonicalPath())` before writing the entry.",
+      "The upstream fix in commit `20c2f80089d1ea779e22c2de5f109a0bce4e1b14` replaces the string-prefix guard with normalized `Path.startsWith()` validation and adds sibling-prefix bypass tests, which aligns with the finding's described root cause.",
+      "The copied PoC execution log at `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b8163f6b/.judge/poc_runs/pf4j_zip_slip_arbitrary_file_write/run.log` shows `malicious entry: ../victim_escape/payload.txt`, `escaped path: /tmp/pf4j-zipslip/plugins/victim_escape/payload.txt`, `outside destination: true`, and `verification passed`.",
+      "The copied PoC adaptation note at `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b8163f6b/.judge/poc_runs/pf4j_zip_slip_arbitrary_file_write/adaptation_notes.txt` records the `.judge`-local change used to avoid the bundle's incidental `mkdirs(..)` failure while exercising the same advisory-fixed sibling-prefix bug."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "pf4j_zip_slip_arbitrary_file_write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b8163f6b/pf4j_zip_slip_arbitrary_file_write",
+      "executed": true,
+      "command": "set -o pipefail; bash reproduction/run.sh 2>&1 | tee /Users/lumi/ziyue/EvoHunt-DryRun/advisory_b8163f6b/.judge/poc_runs/pf4j_zip_slip_arbitrary_file_write/run.log",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b8163f6b/.judge/poc_runs/pf4j_zip_slip_arbitrary_file_write/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b8163f6b/.judge/poc_runs/pf4j_zip_slip_arbitrary_file_write/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b8163f6b/.judge/poc_runs/pf4j_zip_slip_arbitrary_file_write/poc_execution.json",
+      "observed_effect": "The copied PoC built and ran the Java harness, and the log shows a crafted `../victim_escape/payload.txt` entry produced `/tmp/pf4j-zipslip/plugins/victim_escape/payload.txt` outside `/tmp/pf4j-zipslip/plugins/victim` with the proof string `EVOHUNT_ZIP_SLIP_PROOF`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

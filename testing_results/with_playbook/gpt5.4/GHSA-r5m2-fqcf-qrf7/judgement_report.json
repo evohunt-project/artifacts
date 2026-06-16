@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:00:24.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_796bda46",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-r5m2-fqcf-qrf7/GHSA-r5m2-fqcf-qrf7.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated_upload_arbitrary_file_write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_796bda46/unauthenticated_upload_arbitrary_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_796bda46/unauthenticated_upload_arbitrary_file_write/vulnerability_report.json",
+      "title": "Unauthenticated upload endpoint allows arbitrary file writes into live server directories",
+      "vulnerability_type": "unsafe_file_upload_and_write",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is the insecure default `secureEnabled` configuration in `server/settings.default.js`, which disables authentication globally after installation. This finding instead identifies a route-level flaw: `POST /api/upload` omits `secureFnc` entirely and writes attacker-controlled bytes into live directories, so it is a different vulnerable code path and root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's root cause. The advisory describes authentication being disabled by default through the commented-out `secureEnabled` settings path, while the only qualifying finding is a distinct unauthenticated file-write sink in `/api/upload` that lacks its own auth middleware.",
+    "evidence": [
+      "The advisory JSON ties the vulnerability to `server/settings.default.js`, where `secureEnabled` is commented out by default.",
+      "In the vulnerable source, `server/api/index.js` initializes auth from `runtime.settings.secureEnabled` and `verifyGroups` returns admin privileges when security is disabled, which is the advisory's global auth-bypass mechanism.",
+      "The qualifying finding is centered on `server/api/projects/index.js` `POST /api/upload`, which has no `secureFnc` middleware and directly calls `fs.writeFileSync` on attacker-chosen destinations.",
+      "Because `/api/upload` is reachable due to a missing route guard and unsafe write sink rather than the insecure default auth bootstrap, it is an open-world finding rather than the target advisory."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_796bda46/unauthenticated_upload_arbitrary_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_796bda46/unauthenticated_upload_arbitrary_file_write/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_796bda46/unauthenticated_upload_arbitrary_file_write/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

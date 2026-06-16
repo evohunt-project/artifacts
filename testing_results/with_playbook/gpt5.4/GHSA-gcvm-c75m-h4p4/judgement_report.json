@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:44:34.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_01cc35b8",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-gcvm-c75m-h4p4/GHSA-gcvm-c75m-h4p4.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "networktest_upload_limit_bypass_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_01cc35b8/networktest_upload_limit_bypass_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_01cc35b8/networktest_upload_limit_bypass_dos/vulnerability_report.json",
+      "title": "Public NetTest upload endpoint trusts claimed size and permits oversized request-body exhaustion",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory root cause is `UserWebService.login` exposing credentials through `GET /user/login` query parameters, while this finding concerns `NetTestWebService.upload` and `RateLimitRequestFilter` trusting the `size` query parameter and then reading the upload body to EOF. The endpoint, vulnerable code, and bug mechanism are different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described vulnerable code or root cause. The only final qualifying finding is a NetTest upload size-trust availability issue, not the advisory's REST login endpoint using GET with credential-bearing query strings.",
+    "evidence": [
+      "The advisory describes a REST login endpoint that used HTTP GET with username and password passed as query parameters.",
+      "In upstream tag `8.0.0`, `openmeetings-webservice/src/main/java/org/apache/openmeetings/webservice/UserWebService.java` implements `@GET @Path(\"/login\")` and reads `user` and `pass` via `@QueryParam`.",
+      "The `8.0.0..9.0.0` diff changes that endpoint to `@POST` with `@FormParam`, confirming the advisory root cause and fix boundary.",
+      "The only final qualifying finding instead targets `openmeetings-webservice/src/main/java/org/apache/openmeetings/webservice/NetTestWebService.java` plus `util/RateLimitRequestFilter.java`, where upload-size enforcement trusts the attacker-supplied `size` query parameter and reads the request body to EOF."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_01cc35b8/networktest_upload_limit_bypass_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_01cc35b8/networktest_upload_limit_bypass_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_01cc35b8/networktest_upload_limit_bypass_dos/poc_report.json",
+      "poc_report_status": "failed"
+    }
+  ]
+}

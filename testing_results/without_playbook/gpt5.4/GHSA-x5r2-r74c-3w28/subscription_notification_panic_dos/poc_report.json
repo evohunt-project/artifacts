@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "nil_pointer_dos",
+  "summary": "The Docker-based reproduction clones the pinned vulnerable UDR commit, registers an attacker-controlled subscription, updates the corresponding AMF registration document, and verifies that the notification path crashes UDR with a fatal nil-pointer dereference.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should terminate UDR during subscription notification handling and emit a nil-pointer crash whose stack includes internal/sbi/processor/callback.go:98.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned free5gc/udr at 520347872056ad7e2393a5fdf75a0451220190f6, built the reproduction image, completed the subscription-registration and AMF-registration requests, and then reported an expected fatal nil-pointer dereference with stack frame /target-repo/internal/sbi/processor/callback.go:98 before exiting successfully.",
+  "verification_method": "verify.sh starts MongoDB, a fake NRF, and a proof listener, launches the pinned vulnerable UDR build, triggers the notification path, then verifies that the UDR process died, udr.log contains 'invalid memory address or nil pointer dereference', udr.log contains 'internal/sbi/processor/callback.go:98', and the proof listener did not receive a callback before the crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final run completed the subscription-registration, AMF-document creation, and patch-trigger steps without curl failure.",
+    "The run emitted '[evohunt] observed expected fatal nil-pointer dereference:' followed by 'panic: runtime error: invalid memory address or nil pointer dereference'.",
+    "The observed stack trace included '/target-repo/internal/sbi/processor/callback.go:98'.",
+    "The host run script exited with '[evohunt] SUCCESS: reproduced fatal notification panic'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host into a session-local temporary workspace, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "520347872056ad7e2393a5fdf75a0451220190f6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/udrcfg.yaml",
+      "reproduction/h2c_helper.go",
+      "reproduction/go.mod",
+      "reproduction/go.sum"
+    ]
+  }
+}

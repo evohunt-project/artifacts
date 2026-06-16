@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sql_injection",
+  "summary": "The reproduction installs Dolibarr 8.0.4, provisions a non-admin accounting user, logs in over HTTP, and uses a crafted `rowid` to disable every VAT dictionary row.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privileged authenticated user can turn the VAT dictionary disable action into a mass update so that all `llx_c_tva` rows become inactive.",
+  "actual_observed_result": "Running `./reproduction/run.sh` produced `EVOHUNT_SQLI_PROOF rows_before=182 rows_after=0 payload=' OR 'a'='a`, confirming that all active VAT rows were disabled from a low-privileged session.",
+  "verification_method": "The helper script provisions a non-admin `auditor` account with `accounting->chartofaccount`, logs in through Dolibarr's HTTP interface, triggers the vulnerable request, and compares `SELECT COUNT(*) FROM llx_c_tva WHERE active = 1` before and after exploitation through MariaDB.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_SQLI_PROOF rows_before=182 rows_after=0 payload=' OR 'a'='a"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "730f5d1ad423477ca564652cd3357d978892981b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/bootstrap_instance.php",
+      "reproduction/exploit.py"
+    ]
+  }
+}

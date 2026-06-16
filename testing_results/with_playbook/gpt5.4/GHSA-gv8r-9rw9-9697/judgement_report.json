@@ -1,0 +1,57 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:53:09.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7a8615d7",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-gv8r-9rw9-9697/GHSA-gv8r-9rw9-9697.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "forwarded_header_trust_spoofing",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7a8615d7/forwarded_header_trust_spoofing",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7a8615d7/forwarded_header_trust_spoofing/vulnerability_report.json",
+      "title": "Default forwarded-header trust lets network attackers spoof downstream client identity",
+      "vulnerability_type": "proxy_header_trust_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a default X-Forwarded-* trust flaw in forwarded-header rewriting and backend proxying, while the advisory root cause is an HTTP/3 TLS client-auth bypass during session resumption in the TLS stack. The vulnerable code paths, security check, and exploit mechanism do not overlap.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described HTTP/3 TLS client-auth bypass root cause. The only final qualifying finding concerns default trust of attacker-supplied forwarded headers and downstream identity spoofing, which is a different subsystem and a different missing security boundary.",
+    "evidence": [
+      "The advisory summary is \"Traefik affected by TLS ClientAuth Bypass on HTTP/3,\" which points to HTTP/3/TLS authentication handling rather than header forwarding behavior.",
+      "CVE-2025-68121 describes a session-resumption flaw in crypto/tls where mutating ClientCAs or RootCAs between the initial and resumed handshake can let a resumed handshake succeed when it should fail.",
+      "The upstream v3.6.8 release diff includes HTTP/3 and TLS fixes such as a quic-go HTTP/3 bump and TLS certificate-verification changes, reinforcing that the advisory lives in the HTTP/3/TLS path.",
+      "The only final qualifying finding is rooted in configuration/configuration.go, configuration/entrypoints.go, server/header_rewriter.go, and server/server_configuration.go, where Traefik preserves attacker-supplied X-Forwarded-* headers by default.",
+      "That finding's exploit path is spoofed forwarded headers influencing a downstream access-control decision; it does not involve HTTP/3, TLS client authentication, session resumption, ClientCAs, RootCAs, or an equivalent vulnerable control flow."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7a8615d7/forwarded_header_trust_spoofing",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7a8615d7/forwarded_header_trust_spoofing/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7a8615d7/forwarded_header_trust_spoofing/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

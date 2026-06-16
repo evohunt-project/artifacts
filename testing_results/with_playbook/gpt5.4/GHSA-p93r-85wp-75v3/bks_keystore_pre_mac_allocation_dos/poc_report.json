@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction compiles the vulnerable `BcKeyStoreSpi` implementation from the pinned `r1rv82` source tree and confirms that a crafted 8-byte BKS store triggers an `OutOfMemoryError` before integrity verification.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the BKS load path to print `EXPECTED_OOME: java.lang.OutOfMemoryError: Requested array size exceeds VM limit`, proving that attacker-controlled outer keystore metadata can crash the parser before MAC validation.",
+  "actual_observed_result": "Running `./reproduction/run.sh` shallow-cloned `bc-java` at `r1rv82`, built the pinned Alpine/OpenJDK reproduction image, compiled the minimal `BcKeyStoreSpi.Std` harness inside the container, and printed `EXPECTED_OOME: java.lang.OutOfMemoryError: Requested array size exceeds VM limit` before exiting successfully.",
+  "verification_method": "The container helper compiles the minimal harness against the pinned source tree and fails closed unless stdout contains the exact `EXPECTED_OOME:` proof string emitted only when `BcKeyStoreSpi.engineLoad(...)` reaches the unchecked `saltLength` allocation path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The build-and-run pipeline completed through `./reproduction/run.sh`.",
+    "Container output contained `EXPECTED_OOME: java.lang.OutOfMemoryError: Requested array size exceeds VM limit`.",
+    "The script printed `[evohunt] SUCCESS: reproduction completed and verified` after the proof string was observed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "r1rv82",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/TriggerBksLoad.java",
+      "reproduction/alpine-minirootfs-3.23.4-aarch64.tar.gz"
+    ]
+  }
+}

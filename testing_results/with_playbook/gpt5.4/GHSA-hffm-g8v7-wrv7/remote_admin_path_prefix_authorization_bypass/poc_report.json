@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle clones Caddy at the pinned vulnerable commit, injects a package-local mTLS test harness, and verifies that a certificate scoped to `/config/.../tenant1` can read the sibling object at `/config/.../tenant10`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should emit `BYPASS_READ=tenant10-secret`, proving that the remote admin path authorizer accepted an unauthorized sibling config path because it only performed raw prefix matching.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `caddyserver/caddy`, checked out commit `c653e7d61a24ce854d3ff6410dc8ea19ffd04131`, built the reproduction image, and ran the mTLS test harness. The harness observed a 403 for `/config/apps/http/servers/other`, then successfully read `/config/apps/http/servers/tenant10` with proof string `BYPASS_READ=tenant10-secret`.",
+  "verification_method": "The container copies a package-local test into the cloned repository, runs `go test -run TestRemoteAdminPathPrefixAuthorizationBypass -count=1 -v`, and then verifies both the `PASS` marker and the exact proof string `BYPASS_READ=tenant10-secret` in the test output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/last_run.log contains `BYPASS_READ=tenant10-secret` from the package-local test harness.",
+    "reproduction/last_run.log shows the admin handler returned a 403 for `/config/apps/http/servers/other`, confirming the harness only bypassed the prefix-collision sibling path.",
+    "The run completed with `[evohunt] SUCCESS: reproduction completed and verified` after `go test` reported `PASS`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "c653e7d61a24ce854d3ff6410dc8ea19ffd04131",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/admin_prefix_auth_test.go",
+      "reproduction/repro.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

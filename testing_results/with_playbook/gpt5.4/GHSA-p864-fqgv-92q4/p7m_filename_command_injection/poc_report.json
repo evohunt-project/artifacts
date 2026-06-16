@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "command_injection",
+  "summary": "The reproduction clones the vulnerable OpenSTAManager ref, starts a compatible app and MySQL stack, overlays the vulnerable import files from the cloned ref, materializes a crafted .p7m filename in the plugin import directory, invokes the real vulnerable decodeP7M sink inside the app container, and verifies that the filename payload creates /var/www/html/EVOHUNT_RCE.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the vulnerable OpenSTAManager import code process a malicious .p7m filename and execute the injected shell command, leaving the proof file /var/www/html/EVOHUNT_RCE in the app container.",
+  "actual_observed_result": "Running ./reproduction/run.sh completed the installer, overlaid the vulnerable PHP files from ref 5ff39df9be26ee52f5a1f100754884072bbf82df, created the crafted .p7m file in the Importazione FE directory, invoked the vulnerable decodeP7M sink inside the running app container, and verified that /var/www/html/EVOHUNT_RCE existed in the target app container.",
+  "verification_method": "The host-side run script uses the helper image to create the malicious .p7m file, copies it into the real Importazione FE directory inside the running app container, invokes the vulnerable decodeP7M code path with php in the target container, and verifies the exact proof file with docker exec.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The app container contains /var/www/html/EVOHUNT_RCE after decodeP7M processes the crafted filename.",
+    "The Importazione FE directory contains the crafted .p7m filename used to trigger the sink."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out commit 5ff39df9be26ee52f5a1f100754884072bbf82df, and copies the vulnerable PHP files from the cloned ref into the running app container before triggering the sink.",
+    "pinned_commit_or_ref": "5ff39df9be26ee52f5a1f100754884072bbf82df",
+    "target_repo_mount_path": null,
+    "helper_files": [
+      "reproduction/make_payload.py",
+      "reproduction/trigger_import.php"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass",
+  "summary": "The Docker-based reproduction confirms that a generic contextualizer response cached from an `X-Role: admin` request is incorrectly reused for an `X-Role: user` request within the default 10-second TTL, producing an authorization bypass.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a request with user-controlled contextualizer input can prime a cached allow result that a later request with different input reuses, causing the later request to be authorized when it should be denied.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Heimdall `v0.17.13`, built the reproduction image, and printed `admin_code=200`, `user_code_within_ttl=200`, `user_code_after_ttl=403`, `contextualizer_backend_calls=2`, `context-request role='admin'`, `context-request role='user'`, and `EVOHUNT_SUCCESS: stale generic contextualizer cache entry reused across request-derived identities`.",
+  "verification_method": "The verification helper starts a fake contextualizer that only returns `allow=true` for `X-Role: admin`, starts Heimdall with a policy that forwards `X-Role` into a generic contextualizer and authorizes from the contextualizer output, then checks that the first admin request returns `200`, the second user request within the cache TTL also returns `200`, the same user request after an 11-second wait returns `403`, and only two backend contextualizer calls occurred total.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The first request returned `admin_code=200` after priming the cache with `X-Role: admin`.",
+    "The second request returned `user_code_within_ttl=200` even though the helper contextualizer only authorizes `X-Role: admin`.",
+    "After waiting past the default cache TTL, the same user request returned `user_code_after_ttl=403`.",
+    "The contextualizer backend log showed exactly two calls: `context-request role='admin'` and `context-request role='user'`, proving the in-TTL user request reused the stale cached admin response instead of reaching the backend."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host under the user's home directory, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "v0.17.13",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/config.yaml",
+      "reproduction/fake_context_server.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

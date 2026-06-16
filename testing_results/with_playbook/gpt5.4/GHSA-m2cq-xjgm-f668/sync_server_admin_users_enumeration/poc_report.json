@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle seeds a disposable sync-server database, authenticates as a BASIC user, and verifies that mounted `GET /admin/users/` returns the global user list while sibling file-sharing mutations remain blocked.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a BASIC authenticated user receives HTTP 200 plus multiple user records from mounted `GET /admin/users/`, including another user's admin metadata.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `actualbudget/actual` at commit `0d6742664b7a5f111013bc6392bf3fda5e2c8a7c`, built the verifier image, and showed that a BASIC authenticated user received HTTP 200 plus the `admin`, `user`, and `third` records from mounted `GET /admin/users/` while `GET /access/users`, `POST /access`, `DELETE /access`, and `POST /access/transfer-ownership/` all still returned `file-denied`.",
+  "verification_method": "The helper script imports the live `app-admin.js` handler from the pinned vulnerable repository, seeds a minimal SQLite account database, issues the low-privilege request through SuperTest, and fails unless the response contains other users while the sibling mutation endpoints still return `file-denied`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output showed `GET 200 /users` for the BASIC session and printed the returned `admin`, `user`, and `third` records from the mounted `GET /admin/users/` path.",
+    "Container output showed `GET 400 /access/users?fileId=shared-file`, `POST 400 /access`, `DELETE 400 /access?fileId=shared-file`, and `POST 400 /access/transfer-ownership/` for the same BASIC session.",
+    "The verifier emitted `[evohunt] SUCCESS: low-privileged user enumerated all users via GET /users while sibling sharing mutations stayed blocked`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0d6742664b7a5f111013bc6392bf3fda5e2c8a7c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/package.json",
+      "reproduction/runner.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

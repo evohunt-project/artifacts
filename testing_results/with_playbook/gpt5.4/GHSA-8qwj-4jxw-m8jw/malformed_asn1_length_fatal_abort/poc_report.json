@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction confirms that a tiny malformed ASN.1 length field causes fatal V8 aborts in multiple shipped parser entrypoints, including X509.readCertPEM and KEYUTIL.parsePBES2.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A malformed ASN.1 payload should be rejected safely, but instead the targeted parser entrypoints should terminate with the fatal V8 invalid-size error that proves process-level denial of service.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 58bb24192f501927014b67911bbde8ef27532319, built the reproduction container, and executed two child Node processes against the shipped bundle. Both X509.readCertPEM and KEYUTIL.parsePBES2 terminated with SIGTRAP and the exact fatal V8 'Fatal JavaScript invalid size error' signature, after which the helper emitted EVOHUNT_FATAL_ASN1_ABORT_CONFIRMED.",
+  "verification_method": "The helper runs each vulnerable parser entrypoint in a child Node process and requires both runs to exit abnormally while stderr contains the exact fatal V8 invalid-size signature. This distinguishes the real process-abort condition from a catchable parser exception or ordinary validation failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output showed 'case: X509.readCertPEM' followed by SIGTRAP and the fatal V8 invalid-size abort classification.",
+    "Container output showed 'case: KEYUTIL.parsePBES2' followed by SIGTRAP and the fatal V8 invalid-size abort classification.",
+    "The helper emitted the proof string 'EVOHUNT_FATAL_ASN1_ABORT_CONFIRMED'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "58bb24192f501927014b67911bbde8ef27532319",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

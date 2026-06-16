@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:26:51.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b9d64e20",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-25fp-8w8p-mx36/GHSA-25fp-8w8p-mx36.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "scoped-token-arbitrary-attachment-read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b9d64e20/scoped-token-arbitrary-attachment-read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b9d64e20/scoped-token-arbitrary-attachment-read/vulnerability_report.json",
+      "title": "Scoped shared token can download arbitrary attachments by file_id",
+      "vulnerability_type": "broken_access_control_arbitrary_file_read",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a missing authorization check in view.php attachment download handling, while the advisory root cause is OS command injection in src/Util/XML.php::decodeP7M() reached from .p7m invoice import paths.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable decodeP7M() command-injection path. The only qualifying finding is a separate scoped-token attachment read in view.php.",
+    "evidence": [
+      "The advisory describes src/Util/XML.php:100, where decodeP7M() passes the attacker-influenced $file path into exec('openssl smime -verify -noverify -in \"'.$file.'\" -inform DER -out \"'.$output_file.'\"').",
+      "The advisory entrypoints are the invoice import .p7m flows in plugins/importFE_ZIP/actions.php:125-126 and plugins/importFE/src/FatturaElettronica.php:55-56, which route attacker-controlled filenames into XML::decodeP7M().",
+      "The only qualifying EvoHunt finding instead targets view.php:23-38, where a shared-token session can request arbitrary file_id values and receive attachment bytes without record-scope enforcement.",
+      "That qualifying finding demonstrates cross-record attachment disclosure, not ZIP import, P7M processing, shell metacharacter injection, or command execution."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b9d64e20/scoped-token-arbitrary-attachment-read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b9d64e20/scoped-token-arbitrary-attachment-read/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b9d64e20/scoped-token-arbitrary-attachment-read/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:22:34.674Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb9cd6d1",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-94c7-g2fj-7682/GHSA-94c7-g2fj-7682.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "bazaar_plugin_uninstall_path_traversal_delete",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb9cd6d1/bazaar_plugin_uninstall_path_traversal_delete",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb9cd6d1/bazaar_plugin_uninstall_path_traversal_delete/vulnerability_report.json",
+      "title": "Bazaar plugin uninstall path traversal permits arbitrary workspace deletion",
+      "vulnerability_type": "path_traversal_arbitrary_delete",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets `POST /api/bazaar/uninstallBazaarPlugin` deleting attacker-chosen paths via `os.RemoveAll`, while the advisory targets `POST /api/file/globalCopyFiles` copying attacker-supplied source files into the workspace because source paths are not confined to the workspace. Same repository, but different endpoint, sink, and root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "H",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable `globalCopyFiles` file-copy logic or its missing source-path confinement. The only qualifying finding is a separate bazaar uninstall traversal that reaches `os.RemoveAll` and causes deletion, not arbitrary file read.",
+    "evidence": [
+      "The advisory describes `POST /api/file/globalCopyFiles` in `kernel/api/file.go`, where attacker-controlled `srcs` are copied into the workspace without confinement to authorized workspace paths.",
+      "The only final `qualifying_vuln` finding instead describes `POST /api/bazaar/uninstallBazaarPlugin` in `kernel/api/bazaar.go` forwarding attacker-controlled `packageName` into `model.UninstallBazaarPlugin` and ultimately `os.RemoveAll`.",
+      "The finding's PoC report demonstrates deletion of `temp/victim-delete-me`; it does not demonstrate copying external files into the workspace or reading them back through the file retrieval API."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb9cd6d1/bazaar_plugin_uninstall_path_traversal_delete",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb9cd6d1/bazaar_plugin_uninstall_path_traversal_delete/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb9cd6d1/bazaar_plugin_uninstall_path_traversal_delete/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

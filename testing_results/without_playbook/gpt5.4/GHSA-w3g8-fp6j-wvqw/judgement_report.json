@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:59:34.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d7e79010",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-w3g8-fp6j-wvqw/GHSA-w3g8-fp6j-wvqw.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "sm2_decrypt_panic_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d7e79010/sm2_decrypt_panic_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d7e79010/sm2_decrypt_panic_dos/vulnerability_report.json",
+      "title": "SM2 decryption panics on malformed attacker-controlled ciphertext",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a malformed-ciphertext panic in `sm2::pke::DecryptingKey::decrypt` and `decrypt_der` under `sm2/src/pke/decrypting.rs`, whereas the advisory is a low-entropy ephemeral nonce bug in `sm2::pke::EncryptingKey::encrypt` under `sm2/src/pke/encrypting.rs` that enables ciphertext-only plaintext recovery.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's root cause: SM2 encryption in `sm2/src/pke/encrypting.rs` generating `k` with only 32 bits of entropy by passing `N_BYTES` to `next_k` as a bit length.",
+    "evidence": [
+      "The run manifest under `.judge/input_manifest.json` lists exactly one final `qualifying_vuln` finding: `sm2_decrypt_panic_dos`.",
+      "The advisory JSON ties the vulnerability to `sm2/src/pke/encrypting.rs`, where `N_BYTES` is 32 bytes but is consumed as a 32-bit length by `next_k`, collapsing the SM2 encryption nonce search space.",
+      "The sole qualifying finding, `sm2_decrypt_panic_dos`, instead targets panic paths in `sm2::pke::DecryptingKey::decrypt` and `decrypt_der` under `sm2/src/pke/decrypting.rs`, and its PoC evidence is limited to malformed-ciphertext panics."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d7e79010/sm2_decrypt_panic_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d7e79010/sm2_decrypt_panic_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d7e79010/sm2_decrypt_panic_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

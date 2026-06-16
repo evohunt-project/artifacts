@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle initializes OpenSTAManager, overlays the pinned vulnerable v2.9.8 source tree, seeds a low-privilege user plus an out-of-scope attachment, and verifies that the low-privilege session can download that attachment directly by file_id.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should let the low-privilege client session fetch the secret-proof attachment bytes from /view.php using only the attacker-chosen file_id.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned v2.9.8 checkout, built the helper image, initialized the database, overlaid the vulnerable source, seeded the low-privilege client plus a victim attachment, and then printed VERIFICATION_PASSED after the client session downloaded SECRET-ATTACHMENT-PROOF from /view.php?file_id=1&download=1.",
+  "verification_method": "The verification helper logs in as the low-privilege client account, downloads /view.php?file_id=1&download=1, and requires both the expected attachment headers and the exact proof string SECRET-ATTACHMENT-PROOF in the response body.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The generated run printed: VERIFICATION_PASSED: low-priv client downloaded out-of-scope attachment and observed SECRET-ATTACHMENT-PROOF.",
+    "The verification helper required both HTTP 200 with the attachment disposition header for secret-proof.txt and the exact proof string in the response body.",
+    "The reproduction flow cloned and checked out pinned ref 5ff39df9be26ee52f5a1f100754884072bbf82df before executing the exploit path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5ff39df9be26ee52f5a1f100754884072bbf82df",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/bootstrap_and_seed.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

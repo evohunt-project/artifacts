@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that the pinned StableLib snapshot throws `RangeError: Maximum call stack size exceeded` when decoding a small deeply nested CBOR payload on the default decode path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should decode a valid nested CBOR payload and exhaust the JavaScript call stack, proving an attacker-controlled availability failure on the default decoder path.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned StableLib at commit 0f153a6, built the CBOR package in Docker, and printed `EVOHUNT_CBOR_STACK_EXHAUSTION_POC_OK` after decoding a 5,001-byte payload with 5,000 nested one-element arrays triggered `RangeError: Maximum call stack size exceeded`.",
+  "verification_method": "The containerized verifier builds the exact nested payload, invokes the exported `decode()` helper, and succeeds only if decoding throws `RangeError` with the expected stack-exhaustion message. The host run script then requires the proof string to appear in the run log.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/run.log contains `EVOHUNT_CBOR_STACK_EXHAUSTION_POC_OK`.",
+    "The run log records `depth: 5000` and `payload_length: 5001`.",
+    "The run log records `RangeError: Maximum call stack size exceeded`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the StableLib repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0f153a6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/verify_cbor.mjs"
+    ]
+  }
+}

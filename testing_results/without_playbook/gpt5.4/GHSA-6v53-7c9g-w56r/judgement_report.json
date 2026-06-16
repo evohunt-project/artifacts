@@ -1,0 +1,72 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:06:46.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9b9decb1",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-6v53-7c9g-w56r/GHSA-6v53-7c9g-w56r.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "datainput_nesting_depth_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9b9decb1/datainput_nesting_depth_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9b9decb1/datainput_nesting_depth_bypass/vulnerability_report.json",
+      "title": "DataInput parser bypasses configured nesting-depth limits",
+      "vulnerability_type": "parser_constraint_bypass_dos",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same DataInput-specific missing maxNestingDepth enforcement in UTF8DataInputJsonParser that GHSA-6v53-7c9g-w56r describes and the 3.1.0 fix corrects.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier2",
+    "target_match": "match",
+    "runtime_evidence": "bug_activation",
+    "selected_finding": {
+      "folder_name": "datainput_nesting_depth_bypass",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9b9decb1/datainput_nesting_depth_bypass",
+      "status": "qualifying_vuln",
+      "title": "DataInput parser bypasses configured nesting-depth limits",
+      "vulnerability_type": "parser_constraint_bypass_dos"
+    },
+    "reason": "The selected finding matches the advisory root cause, and the copied PoC activated that exact DataInput nesting-depth bypass at runtime, but the run did not show the advisory's final denial-of-service consequence.",
+    "evidence": [
+      "The advisory describes a maxNestingDepth constraint bypass in UTF8DataInputJsonParser when parsing from java.io.DataInput, leading to potential resource exhaustion via excessive nesting.",
+      "The finding traces the vulnerable path through JsonFactory.createParser(ObjectReadContext, DataInput) into UTF8DataInputJsonParser, where child contexts are created directly instead of through the checked helper methods.",
+      "Comparing vulnerable tag jackson-core-3.0.4 with fixed tag jackson-core-3.1.0 shows the fix replaces direct _streamReadContext.createChildArrayContext/createChildObjectContext calls with createChildArrayContext/createChildObjectContext and adds DataInput-specific deep-nesting regression coverage.",
+      "The copied PoC run log contains `EVOHUNT_DATainput_NESTING_BYPASS_CONFIRMED depth=5000 configured_max=100`, showing attacker-controlled DataInput content exceeded the configured nesting limit without a StreamConstraintsException."
+    ],
+    "blockers_to_higher_tier": [
+      "The executed PoC proved the DataInput nesting-depth bypass but did not produce a StackOverflowError, crash, hang, or other runtime artifact establishing the advisory's final denial-of-service effect."
+    ]
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "datainput_nesting_depth_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9b9decb1/datainput_nesting_depth_bypass",
+      "executed": true,
+      "command": "bash datainput_nesting_depth_bypass/reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9b9decb1/.judge/poc_runs/datainput_nesting_depth_bypass/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9b9decb1/.judge/poc_runs/datainput_nesting_depth_bypass/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_9b9decb1/.judge/poc_runs/datainput_nesting_depth_bypass/poc_execution.json",
+      "observed_effect": "The copied Docker-based PoC built vulnerable jackson-core 3.0.4 and parsed a 5000-level nested array through the DataInput parser with maxNestingDepth set to 100, logging `EVOHUNT_DATainput_NESTING_BYPASS_CONFIRMED depth=5000 configured_max=100` instead of throwing StreamConstraintsException.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

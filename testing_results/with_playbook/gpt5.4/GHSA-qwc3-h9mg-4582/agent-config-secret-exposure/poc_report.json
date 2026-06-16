@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction confirms that a read-only dashboard user can log in and recover the configured AI agent API key from `/parse-dashboard-config.json`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should authenticate as a read-only dashboard user and show that `/parse-dashboard-config.json` contains `agent.models[0].apiKey`, proving server-side AI provider credentials are exposed to low-privileged clients.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned vulnerable commit, built the reproduction image, started the dashboard, verified that unauthenticated access to `/parse-dashboard-config.json` returned `401`, then logged in as the read-only user and observed `agent.models[0].apiKey = \"sk-live-evohunt-proof\"` in the JSON response. The run printed `EVOHUNT_POC_SUCCESS: read-only dashboard user received agent.models[0].apiKey from /parse-dashboard-config.json`.",
+  "verification_method": "The container-side verification checks two independent conditions: unauthenticated bootstrap access returns `401`, and the authenticated bootstrap JSON includes the expected leaked API key while returning the read-only master key for the scoped app. This distinguishes a real secret disclosure from a generic login failure or unrelated response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed a JSON verification block showing `unauthenticatedStatus = 401`, `leakedApiKey = \"sk-live-evohunt-proof\"`, and `returnedMasterKey = \"read-only-master\"`.",
+    "The run printed the success signal `EVOHUNT_POC_SUCCESS: read-only dashboard user received agent.models[0].apiKey from /parse-dashboard-config.json`.",
+    "The final response body printed by the run contains `agent.models[0].apiKey` in the authenticated `/parse-dashboard-config.json` response."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8a34c2f0d6af5ad11793f49b9427dad4b26f1b81",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

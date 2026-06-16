@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:41:22.019Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_89802ee1",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-p9xr-7p9p-gpqx/GHSA-p9xr-7p9p-gpqx.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "router_prototype_path_500_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_89802ee1/router_prototype_path_500_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_89802ee1/router_prototype_path_500_dos/vulnerability_report.json",
+      "title": "Prototype-named REST paths trigger 500 errors in the transport router",
+      "vulnerability_type": "availability_panics_and_validation_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a REST router inherited-property lookup bug in packages/transport-commons/src/routing/router.ts. It does not involve Socket.IO service method id arguments or the MongoDB adapter getObjectId()/_id query path described by the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "socket_mongo_constructor_query_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_89802ee1/socket_mongo_constructor_query_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_89802ee1/socket_mongo_constructor_query_bypass/vulnerability_report.json",
+      "title": "Socket query constructor-property bypass smuggles Mongo operators",
+      "vulnerability_type": "query_operator_smuggling",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding reaches packages/adapter-commons/src/query.ts through find() params.query and bypasses recursive query validation with an own constructor property. The advisory is a different root cause where a Socket.IO caller supplies an object as the first id argument to get/patch/update/remove and that object reaches packages/mongodb/src/adapter.ts getObjectId() unchanged.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory root cause. The advisory is specific to an attacker-controlled Socket.IO id argument for get/patch/update/remove flowing into MongoDB _id matching through getObjectId(); the qualifying findings instead cover a REST router 500 path bug and a separate params.query sanitizer bypass on find().",
+    "evidence": [
+      "The advisory states that Socket.IO clients can send arbitrary JavaScript objects as the id argument to get, patch, update, and remove, and that these objects flow through the MongoDB adapter into the query as operators.",
+      "In the vulnerable Feathers source, packages/transport-commons/src/socket/utils.ts remaps only the params position into params.query, while packages/mongodb/src/adapter.ts appends { _id: this.getObjectId(id) } and getObjectId() returns non-ObjectId objects unchanged.",
+      "router_prototype_path_500_dos is limited to inherited-property resolution in REST path lookup and never reaches MongoDB id handling.",
+      "socket_mongo_constructor_query_bypass targets packages/adapter-commons/src/query.ts by smuggling $where through find() params.query; its demonstrated source-to-sink path is distinct from the advisory's untyped service id argument path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_89802ee1/router_prototype_path_500_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_89802ee1/router_prototype_path_500_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_89802ee1/router_prototype_path_500_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_89802ee1/socket_mongo_constructor_query_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_89802ee1/socket_mongo_constructor_query_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_89802ee1/socket_mongo_constructor_query_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

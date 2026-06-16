@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass_information_disclosure",
+  "summary": "The Docker-based reproduction confirms that an unauthenticated caller can retrieve private chatflow configuration and sanitized flowData through GET /api/v1/public-chatbotConfig/:id even when the target chatflow is not public.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create a non-public chatflow, confirm that GET /api/v1/public-chatflows/:id rejects anonymous access, and then show that GET /api/v1/public-chatbotConfig/:id still returns 200 with leaked flowData containing TOPSECRET_PROMPT.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Flowise at commit 378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97, built the reproduction image, installed dependencies, built flowise-components and the server package, started Flowise on port 3001, and then the exploit script observed public-chatflows return 401 while public-chatbotConfig returned 200 and exposed TOPSECRET_PROMPT for the private chatflow bf5dbe98-fa64-4c60-8ae8-2f849711ba73.",
+  "verification_method": "The verification helper registers a user, authenticates, creates a private chatflow containing a distinctive secret value, checks that the intended public-chatflows endpoint blocks anonymous access, and then checks that the vulnerable public-chatbotConfig endpoint leaks the same secret in the returned flowData.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] public-chatflows returned 401 for the private chatflow, confirming the target is non-public",
+    "[evohunt] public-chatbotConfig returned 200 and exposed flowData containing TOPSECRET_PROMPT",
+    "[evohunt] SUCCESS: leaked private chatflow configuration for bf5dbe98-fa64-4c60-8ae8-2f849711ba73",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "378d3ec3bd2d4157d6aa694bbc5ffa50c4159b97",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

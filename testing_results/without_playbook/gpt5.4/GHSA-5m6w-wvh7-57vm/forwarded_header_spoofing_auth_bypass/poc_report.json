@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "forwarded_header_spoofing",
+  "summary": "The reproduction builds a repo-backed proxy harness that derives Traefik's default `ForwardedHeaders.Insecure=true` setting, forwards requests through `server.NewHeaderRewriter`, and confirms that a spoofed `X-Forwarded-For` value becomes the backend's trusted client identity.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A baseline request to `/admin` should be denied, while a request carrying `X-Forwarded-For: 198.51.100.42` should reach the backend with that attacker-controlled client identity and return the protected proof secret.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `8b33c54f0849ef2cb549517b7147a412075dfab6`, built the reproduction image, denied the baseline `/admin` request with backend-observed `client_ip=127.0.0.1`, and then accepted the spoofed request with backend-observed `client_ip=198.51.100.42`, returning `EVOHUNT-HEADER-SPOOFING-PROOF`.",
+  "verification_method": "The verification script starts a backend that authorizes only a specific left-most forwarded client IP, then launches a proxy harness that calls `configuration.SetEffectiveConfiguration` and `server.NewHeaderRewriter` from the cloned repo. It asserts that the baseline request gets HTTP 403, the spoofed request gets HTTP 200, the backend records the spoofed left-most client IP, and the protected proof secret is returned.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline response body: `{\\\"path\\\": \\\"/admin\\\", \\\"x_forwarded_for\\\": \\\"127.0.0.1\\\", \\\"client_ip\\\": \\\"127.0.0.1\\\", \\\"authorized\\\": false}`.",
+    "Spoofed response body: `{\\\"path\\\": \\\"/admin\\\", \\\"x_forwarded_for\\\": \\\"198.51.100.42, 127.0.0.1\\\", \\\"client_ip\\\": \\\"198.51.100.42\\\", \\\"authorized\\\": true, \\\"secret\\\": \\\"EVOHUNT-HEADER-SPOOFING-PROOF\\\"}`.",
+    "Verification output ended with `[evohunt] SUCCESS: spoofed X-Forwarded-For reached backend authorization logic` and `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "8b33c54f0849ef2cb549517b7147a412075dfab6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/backend.py",
+      "reproduction/proxy_harness.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

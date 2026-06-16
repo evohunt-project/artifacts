@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction clones the pinned repository revision, installs dependencies inside a container, decodes a deeply nested unknown-group payload, and verifies that the runtime fails with `RangeError: Maximum call stack size exceeded`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the normal `decode()` path to recurse through unknown groups until Node throws `RangeError: Maximum call stack size exceeded`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned upstream tag `protobufjs-v8.0.0`, built the reproduction container, installed the repository dependencies inside the container, and produced `EVOHUNT_SUCCESS: RangeError: Maximum call stack size exceeded` when decoding the nested unknown-group payload.",
+  "verification_method": "The helper script decodes a wire-valid payload of nested unknown groups and checks for the exact `RangeError: Maximum call stack size exceeded` proof string rather than a generic parse error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The containerized verification step emitted `EVOHUNT_SUCCESS: RangeError: Maximum call stack size exceeded`.",
+    "The host `run.sh` completed successfully and printed `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "933e8750dcd000c16a621a7344a4beaa034c4019",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

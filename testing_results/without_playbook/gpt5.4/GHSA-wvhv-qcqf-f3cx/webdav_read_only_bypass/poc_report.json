@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "webdav_read_only_bypass",
+  "summary": "The reproduction confirms that read-only mode blocks uploads on the main HTTP listener but is bypassed on the WebDAV listener, which accepts an unauthenticated `PUT` and writes attacker-controlled content into the served directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show the normal HTTP upload path returning `403` under read-only mode while the WebDAV listener still returns `201` for an unauthenticated `PUT` and creates attacker-controlled content in the served webroot.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `d6c70a7414391fbd4d53e47a2b6f4646ad808520`, built the reproduction image, compiled `goshs` in the container, started it with `-ro -w`, observed `HTTP PUT status: 403`, observed `WebDAV PUT status: 201`, and verified that `webdav-write.txt` contained `webdav-bypass`.",
+  "verification_method": "`reproduction/verify.sh` waits for both listeners, performs one HTTP `PUT` against the main listener and one WebDAV `PUT` against the WebDAV listener, then checks the response codes and reads the created file from disk. This distinguishes a true read-only bypass from a startup failure or a uniformly enforced upload restriction.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "HTTP PUT status: 403",
+    "WebDAV PUT status: 201",
+    "Created file content: webdav-bypass",
+    "goshs logs recorded a `403` for `PUT /http-blocked.txt` on the main listener and a successful `PUT /webdav-write.txt` on the WebDAV listener."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "d6c70a7414391fbd4d53e47a2b6f4646ad808520",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

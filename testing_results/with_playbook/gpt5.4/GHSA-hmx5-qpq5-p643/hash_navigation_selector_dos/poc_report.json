@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panics_and_validation_mismatches",
+  "summary": "The Docker-based reproduction confirms that Swiper initializes normally with a benign hash and then crashes on the shipped `hashNavigation` path when a malicious fragment such as `#\\` is supplied.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a benign `#slide1` fragment initializes Swiper successfully and that a malicious `#\\` fragment causes an uncaught selector `SyntaxError` during `hashNavigation` initialization.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Swiper at `70c48c16f99affa29236ac13b16a37f43da38ae0`, built the reproduction image, confirmed `[evohunt] benign hash initialized Swiper successfully`, and then reproduced `[evohunt] proof: malicious hash `#\\\\` triggered a selector SyntaxError` followed by the browser-style `SyntaxError: ... is not a valid selector` message.",
+  "verification_method": "The verification helper copies the pinned source tree from `/target-repo`, instantiates the real `Swiper` constructor with the real `HashNavigation` module under `jsdom`, first checks a benign control case, and then requires the malicious fragment to raise a `SyntaxError` containing the selector-parser failure text.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] benign hash initialized Swiper successfully",
+    "[evohunt] proof: malicious hash `#\\\\` triggered a selector SyntaxError",
+    "[evohunt] observed error: SyntaxError: '.swiper-slide,,data-hash,,,\\\",,,swiper-slide[data-hash=\"\\\"]' is not a valid selector",
+    "[evohunt] verification passed"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "70c48c16f99affa29236ac13b16a37f43da38ae0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.mjs"
+    ]
+  }
+}

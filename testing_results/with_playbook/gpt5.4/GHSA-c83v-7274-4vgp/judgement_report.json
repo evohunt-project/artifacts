@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:23:12.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e5182ac1",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-c83v-7274-4vgp/GHSA-c83v-7274-4vgp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "local_http_api_unauthenticated_pty_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e5182ac1/local_http_api_unauthenticated_pty_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e5182ac1/local_http_api_unauthenticated_pty_rce/vulnerability_report.json",
+      "title": "Unauthenticated local HTTP API permits PTY command execution",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets missing authentication on the loopback `/pty` control-plane endpoint, while the advisory targets the web UI `?url=` override plus unsanitized markdown-to-HTML rendering that yields same-origin XSS on `localhost:4096` before `/pty` is reached.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable web UI code path. The advisory requires attacker-controlled remote session content to be rendered into the localhost origin through `packages/app/src/app.tsx` server URL override behavior and unsanitized HTML insertion in `packages/ui/src/components/markdown.tsx`, whereas the qualifying finding is a separate localhost API authentication issue.",
+    "evidence": [
+      "The advisory describes a malicious website using `?url=` to make the localhost UI load attacker-controlled session data, then gaining same-origin JavaScript execution because markdown-rendered HTML is inserted into the DOM without sanitization.",
+      "`packages/app/src/app.tsx` reads `new URLSearchParams(document.location.search).get(\"url\")` and uses it as the default server URL for the web UI.",
+      "`packages/ui/src/components/markdown.tsx` renders parsed markdown with `innerHTML={html.latest}`, which is the advisory's XSS-enabling sink.",
+      "The qualifying finding instead cites `packages/opencode/src/server/server.ts` and `packages/opencode/src/pty/index.ts` for unauthenticated loopback access to `/pty`, without identifying the advisory's remote-session loading path or the markdown/XSS root cause."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e5182ac1/local_http_api_unauthenticated_pty_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e5182ac1/local_http_api_unauthenticated_pty_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e5182ac1/local_http_api_unauthenticated_pty_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

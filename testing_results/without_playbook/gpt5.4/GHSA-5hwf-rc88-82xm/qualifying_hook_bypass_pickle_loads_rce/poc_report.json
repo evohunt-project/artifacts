@@ -1,0 +1,20 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization protection bypass leading to arbitrary code execution",
+  "summary": "After enabling Fickling's global hook, a malicious pickle still executed through `pickle.loads()` while the equivalent `pickle.load()` path was blocked.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The malicious pickle should bypass the advertised safety hook and execute an OS command, creating a marker file from attacker-controlled pickle bytes.",
+  "actual_observed_result": "The reproduction created `reproduction/payload_executed.txt` via `pickle.loads()` and confirmed that `pickle.load()` on the same payload raised `UnsafeFileError` instead of executing.",
+  "verification_method": "The script first checks that the malicious payload can create a marker file when passed to `pickle.loads()` after `hook.run_hook()`. It then replays the same payload through `pickle.load(io.BytesIO(...))` and requires an `UnsafeFileError` with no marker file creation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/payload_executed.txt"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": []
+  }
+}

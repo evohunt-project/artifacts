@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:57:11.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8541592",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-h3hw-29fv-2x75/GHSA-h3hw-29fv-2x75.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "fragment_arguments_recursive_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8541592/fragment_arguments_recursive_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8541592/fragment_arguments_recursive_dos/vulnerability_report.json",
+      "title": "Recursive fragment-arguments rewrite causes pre-validation denial of service",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets the `useFragmentArguments` parse-rewrite loop in `packages/plugins/fragment-arguments/src/*`, not the `graphql-modules` singleton-provider context race fixed by replacing the old `useGraphQLModules` context/controller lifecycle.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "response_cache_private_alias_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8541592/response_cache_private_alias_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8541592/response_cache_private_alias_bypass/vulnerability_report.json",
+      "title": "Aliased PRIVATE fields bypass the no-session response-cache guard",
+      "vulnerability_type": "cache_partition_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is an alias-sensitive cache-guard flaw in `packages/plugins/response-cache/src/plugin.ts`; it does not involve `@ExecutionContext()`, concurrent request context bleed, or the `useGraphQLModules` execution/subscription binding bug from the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No manifest-listed qualifying finding identifies the advisory's vulnerable code or root cause. GHSA-h3hw-29fv-2x75 is a race in `@envelop/graphql-modules` where `useGraphQLModules(application)` misbinds singleton-provider `@ExecutionContext()` across concurrent requests; the final qualifying findings in this run instead cover a fragment-arguments parse-loop DoS and a response-cache alias bypass.",
+    "evidence": [
+      "The advisory patch `ab49fa259a51d976c437e084114e070b99720ba9` changes `packages/plugins/graphql-modules/src/index.ts`, removing the old `onContextBuilding`/controller cleanup flow and switching `useGraphQLModules` to `app.createExecution()` and `app.createSubscription()` to bind context to async execution.",
+      "`fragment_arguments_recursive_dos` cites `packages/plugins/fragment-arguments/src/index.ts`, `packages/plugins/fragment-arguments/src/utils.ts`, and `packages/core/src/orchestrator.ts`; its root cause is recursive AST rewriting before validation, not request-context propagation.",
+      "`response_cache_private_alias_bypass` cites `packages/plugins/response-cache/src/plugin.ts`; its root cause is alias-sensitive `PRIVATE` cache classification on the no-session path, not mixed `@ExecutionContext()` state across parallel requests."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8541592/fragment_arguments_recursive_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8541592/fragment_arguments_recursive_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8541592/fragment_arguments_recursive_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8541592/response_cache_private_alias_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8541592/response_cache_private_alias_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e8541592/response_cache_private_alias_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

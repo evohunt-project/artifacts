@@ -1,0 +1,118 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:04:27.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-8g7p-jf3g-gxcp/GHSA-8g7p-jf3g-gxcp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "asn1hex_parse_stack_exhaustion",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/asn1hex_parse_stack_exhaustion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/asn1hex_parse_stack_exhaustion/vulnerability_report.json",
+      "title": "Tiny DER input with a huge claimed length aborts ASN1HEX parser entrypoints",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets ASN.1 length handling in `ASN1HEX.parse` and related parser helpers, not the advisory's infinite loop in `BigInteger.modInverse`/`bnModInverse` in `ext/jsbn2.js` on zero or negative inputs.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "jws_verify_null_deref_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/jws_verify_null_deref_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/jws_verify_null_deref_dos/vulnerability_report.json",
+      "title": "Malformed JWS/JWT input causes uncaught exceptions in verification APIs",
+      "vulnerability_type": "availability_panics_and_validation_mismatches",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a null-dereference exception path in `JWS.verify` and `JWS.verifyJWT`; it does not reach the advisory's `bnModInverse` infinite-loop logic or depend on zero/negative modular inverse inputs.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "rsa_non_hex_signature_acceptance",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/rsa_non_hex_signature_acceptance",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/rsa_non_hex_signature_acceptance/vulnerability_report.json",
+      "title": "RSA verification helpers accept malformed non-hex signature strings as valid",
+      "vulnerability_type": "signature_validation_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding concerns non-hex acceptance in `BigInteger.fromString`/`parseBigInt` during RSA signature verification, which is a different code path and root cause than the advisory's infinite loop in `bnModInverse` within `ext/jsbn2.js`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "None of the qualifying findings identify the advisory-described vulnerable code or root cause. The advisory is specific to an infinite loop in `BigInteger.modInverse`/`bnModInverse` in `ext/jsbn2.js` when given zero or negative inputs, while the session findings cover ASN.1 parser length handling, JWS null dereferences, and malformed RSA signature parsing.",
+    "evidence": [
+      "The advisory JSON attributes CVE-2026-4598 to `bnModInverse` in `ext/jsbn2.js` when `BigInteger.modInverse` receives zero or negative inputs.",
+      "`asn1hex_parse_stack_exhaustion` points to `repo/src/asn1hex-1.1.js` and parser consumers, with no `modInverse` or `bnModInverse` involvement.",
+      "`jws_verify_null_deref_dos` points to `repo/src/jws-3.3.js` null dereferences in `JWS.verify` and `JWS.verifyJWT`, not modular inverse logic.",
+      "`rsa_non_hex_signature_acceptance` points to `repo/src/rsasign-1.2.js`, `repo/ext/rsa.js`, and `repo/ext/jsbn.js` non-hex parsing behavior, which is distinct from the advisory's zero/negative-input infinite loop in `ext/jsbn2.js`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/asn1hex_parse_stack_exhaustion",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/asn1hex_parse_stack_exhaustion/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/asn1hex_parse_stack_exhaustion/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/jws_verify_null_deref_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/jws_verify_null_deref_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/jws_verify_null_deref_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/rsa_non_hex_signature_acceptance",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/rsa_non_hex_signature_acceptance/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_38e878ee/rsa_non_hex_signature_acceptance/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "stack_exhaustion_dos",
+  "summary": "The reproduction invokes the vulnerable setIn() implementation with a 20000-element attacker-controlled path and reliably triggers RangeError: Maximum call stack size exceeded.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should force unbounded recursive descent on attacker-controlled path input until the JavaScript runtime exhausts the call stack and throws RangeError, demonstrating denial of service potential.",
+  "actual_observed_result": "The reproduction emitted a JSON record showing depth 20000 and the error RangeError: Maximum call stack size exceeded, and the oracle script accepted the result.",
+  "verification_method": "run.sh captures the Node process output into reproduction/last_run.log and then check_oracle.sh requires both the RangeError type and the exact Maximum call stack size exceeded message to distinguish stack exhaustion from unrelated failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/last_run.log contains the JSON record for the failing invocation.",
+    "The oracle script verified that the observed failure was a stack exhaustion RangeError from the vulnerable recursive path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/prove_dos.js",
+      "reproduction/check_oracle.sh",
+      "reproduction/target/index.js"
+    ]
+  }
+}

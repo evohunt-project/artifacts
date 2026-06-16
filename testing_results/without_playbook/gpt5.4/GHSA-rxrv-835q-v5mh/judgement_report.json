@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:51:28.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_784471ad",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-rxrv-835q-v5mh/GHSA-rxrv-835q-v5mh.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "call_user_func_array_eval_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_784471ad/call_user_func_array_eval_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_784471ad/call_user_func_array_eval_rce/vulnerability_report.json",
+      "title": "call_user_func_array() allows code injection through array callback method names",
+      "vulnerability_type": "runtime_code_execution",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets `src/php/funchand/call_user_func_array.js` and its `eval(cb[0] + \"['\" + cb[1] + \"']\")` injection path, not `src/php/strings/parse_str.js` and the advisory's `String.prototype.includes` blacklist bypass that enables prototype pollution.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "generated_test_header_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_784471ad/generated_test_header_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_784471ad/generated_test_header_rce/vulnerability_report.json",
+      "title": "Generated tests execute attacker-controlled header example lines",
+      "vulnerability_type": "build_time_code_execution",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets `src/_util/util.ts` test-generation logic that emits header comment lines into Vitest files, not `src/php/strings/parse_str.js` and the advisory's `constructor[prototype]` prototype-pollution bypass through overridden `String.prototype.includes`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "A",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's vulnerable `parse_str` code path or its root cause: a prototype-pollution guard bypass caused by trusting `String.prototype.includes` on attacker-influenced keys.",
+    "evidence": [
+      "The advisory describes `src/php/strings/parse_str.js` lines 77-79, where `key.includes('__proto__') || key.includes('constructor') || key.includes('prototype')` can be bypassed after overriding `String.prototype.includes`, allowing `constructor[prototype][...]` input to pollute `Object.prototype`.",
+      "`call_user_func_array_eval_rce` instead reports eval-based code injection in `src/php/funchand/call_user_func_array.js` via attacker-controlled array callback method names.",
+      "`generated_test_header_rce` instead reports build-time code execution in `src/_util/util.ts` when header comment lines are copied into generated Vitest files.",
+      "The preserved session history only shows a simpler `parse_str('x[__proto__][polluted]=1&safe=ok', ...)` check returning `{} clean`; no final finding or reproduced PoC exercises the advisory's `String.prototype.includes` bypass or demonstrates `Object.prototype` pollution through `constructor[prototype]` input."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_784471ad/call_user_func_array_eval_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_784471ad/call_user_func_array_eval_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_784471ad/call_user_func_array_eval_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_784471ad/generated_test_header_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_784471ad/generated_test_header_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_784471ad/generated_test_header_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

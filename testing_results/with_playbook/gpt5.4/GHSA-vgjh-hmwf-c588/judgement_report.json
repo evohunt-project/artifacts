@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:22:56.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_72e36318",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-vgjh-hmwf-c588/GHSA-vgjh-hmwf-c588.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "session_expiry_cache_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_72e36318/session_expiry_cache_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_72e36318/session_expiry_cache_bypass/vulnerability_report.json",
+      "title": "Expired session tokens remain usable during the auth cache TTL",
+      "vulnerability_type": "session_token_expiry_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a stale-authentication flaw in `Auth.getAuthForSessionToken()` that returns a cached user without rechecking `_Session.expiresAt`, while the advisory is a token-type NoSQL injection in password-reset and resend-verification flows that reaches `_perishable_token` or `_email_verify_token` Mongo lookups.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The run's only final qualifying finding is a session-auth cache expiry bypass, not the advisory's unauthenticated token-field NoSQL injection in password reset and email verification resend handling.",
+    "evidence": [
+      "The advisory summary and details describe unauthenticated MongoDB operator injection through the `token` field in password reset and email verification resend endpoints, leading to password reset or email verification token extraction.",
+      "In Parse Server 8.6.13 `src/Routers/UsersRouter.js`, lines 455-468 read `req.body?.token` and use it directly in the `_perishable_token` query for `handleResetRequest()`; 8.6.14 adds a `token must be a string` guard before that query.",
+      "In Parse Server 8.6.13 `src/Routers/PagesRouter.js`, lines 108-123 pass raw `req.body?.token` into `userController.resendVerificationEmail()`; 8.6.14 changes that path to coerce non-string tokens before the `_email_verify_token` lookup path is reached.",
+      "The only in-scope qualifying finding instead reports `repo/src/Auth.js:135`, `repo/src/Auth.js:179`, and `repo/src/middlewares.js:349`, with an exploit path where a low-privilege session token remains accepted from cache after `_Session.expiresAt` has passed."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_72e36318/session_expiry_cache_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_72e36318/session_expiry_cache_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_72e36318/session_expiry_cache_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

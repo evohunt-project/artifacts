@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction confirms that the legacy multipart stack accepts and preserves a 5MiB text field with no size cap before handing it to service code.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should send a multipart/form-data request with a 5MiB text field that the legacy BentoML stack accepts intact and delivers to the handler instead of rejecting based on size.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned BentoML at 73c4dbead99be6515fa25fcd91e348ac30f5c22e, built the reproduction image, sent a multipart/form-data POST /measure request with total length 5243096, and observed a 200 response in 27.502ms. The handler returned {\"label\": \"evohunt\", \"size\": 5242880}, and the proof token EVOHUNT_LEGACY_MULTIPART_UNBOUNDED_FIELD_DOS_CONFIRMED was emitted.",
+  "verification_method": "verify.py launches a minimal legacy Bento service on the pinned checkout, submits a multipart request whose note field is exactly 5 * 1024 * 1024 bytes, asserts that the handler receives the full value length, and verify.sh requires the exact proof token in the run output.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "BentoML logged POST /measure with multipart/form-data, request length 5243096, status 200, and 27.502ms processing time.",
+    "The service response contained size 5242880, proving the full 5MiB text field reached user code.",
+    "The run output ended with EVOHUNT_LEGACY_MULTIPART_UNBOUNDED_FIELD_DOS_CONFIRMED and the host script reported reproduction success."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "73c4dbead99be6515fa25fcd91e348ac30f5c22e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/service.py",
+      "reproduction/verify.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

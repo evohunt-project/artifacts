@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "input_validation_dos",
+  "summary": "The Docker-based reproduction clones flatted at commit `2a02dce7c641dec31194c67663f9b0b12e62da20`, runs the Go `-d` unflatten path with a crafted out-of-range reference, and confirms that the parser panics instead of returning a normal error.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the Go parser to dereference an out-of-range flatted reference and terminate with `panic: runtime error: index out of range [999] with length 1` from `golang/pkg/flatted/flatted.go:239`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the repository, checked out commit `2a02dce7c641dec31194c67663f9b0b12e62da20`, built the Docker image, and produced `panic: runtime error: index out of range [999] with length 1` with a stack trace through `/target-repo/golang/pkg/flatted/flatted.go:239`, followed by `[evohunt] verification confirmed the out-of-range panic`.",
+  "verification_method": "The containerized verifier runs `go run . -d /app/payload.json` against the mounted checkout, requires the command to fail, and matches the panic string, the `flatted.loop` frame, and the exact `flatted.go:239` location to distinguish the vulnerability from an unrelated build or runtime failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted `panic: runtime error: index out of range [999] with length 1`.",
+    "The stack trace included `github.com/WebReflection/flatted/golang/pkg/flatted.loop` and `/target-repo/golang/pkg/flatted/flatted.go:239`.",
+    "The verifier printed `[evohunt] verification confirmed the out-of-range panic` and the wrapper script printed `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2a02dce7c641dec31194c67663f9b0b12e62da20",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/payload.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

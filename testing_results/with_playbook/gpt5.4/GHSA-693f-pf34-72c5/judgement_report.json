@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:30:14.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_74d12f41",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-693f-pf34-72c5/GHSA-693f-pf34-72c5.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "code_tools_symlink_escape",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_74d12f41/code_tools_symlink_escape",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_74d12f41/code_tools_symlink_escape/vulnerability_report.json",
+      "title": "Workspace-scoped code tools follow attacker-planted symlinks outside the workspace",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets `praisonai.code` workspace containment via `is_path_within_directory()` and symlink following, not `praisonaiagents.tools.FileTools._validate_path()` or the advisory's `normpath()`-then-`'..'` logic.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "mcp_rules_path_traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_74d12f41/mcp_rules_path_traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_74d12f41/mcp_rules_path_traversal/vulnerability_report.json",
+      "title": "MCP CLI rules tools allow arbitrary local file read, overwrite, and delete via path traversal",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a separate MCP rules-tool path traversal in `praisonai.mcp_server.adapters.cli_tools`, not the advisory's `praisonaiagents.tools.file_tools.FileTools._validate_path()` guard failure.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "Neither qualifying finding identifies the advisory-described vulnerable code or root cause. The advisory is about `praisonaiagents.tools.file_tools.FileTools._validate_path()` collapsing `..` with `os.path.normpath()` before checking for traversal, while the two session findings target different components and different guards.",
+    "evidence": [
+      "The advisory JSON names `src/praisonai-agents/praisonaiagents/tools/file_tools.py` and describes `_validate_path()` checking for `'..'` only after `os.path.normpath()` has already collapsed traversal segments.",
+      "`code_tools_symlink_escape` instead targets `praisonai.code` helpers that rely on `is_path_within_directory()` with `os.path.abspath()` prefix checks and a symlink-following breakout under a configured workspace boundary.",
+      "`mcp_rules_path_traversal` instead targets `praisonai.mcp_server.adapters.cli_tools` rules helpers that join or interpolate attacker-controlled `rule_name` values into `~/.praison/rules` without canonicalization or containment checks.",
+      "Neither finding report, PoC report, or session artifact ties exploitation to `FileTools._validate_path()`, its `normpath()`-then-check bug, or the advisory's `praisonaiagents.tools.file_tools` source-to-sink path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_74d12f41/code_tools_symlink_escape",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_74d12f41/code_tools_symlink_escape/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_74d12f41/code_tools_symlink_escape/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_74d12f41/mcp_rules_path_traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_74d12f41/mcp_rules_path_traversal/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_74d12f41/mcp_rules_path_traversal/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:41:45.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e458dfaf",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-ph9w-r52h-28p7/GHSA-ph9w-r52h-28p7.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "default_auto_login_superuser_token_issuance",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e458dfaf/default_auto_login_superuser_token_issuance",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e458dfaf/default_auto_login_superuser_token_issuance/vulnerability_report.json",
+      "title": "Default auto_login bootstrap endpoint issues superuser bearer tokens without authentication",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is rooted in unauthenticated token issuance through `GET /api/v1/auto_login` in `src/backend/base/langflow/api/v1/login.py`, not the advisory's path traversal and arbitrary file-read logic in `download_profile_picture` within `src/backend/base/langflow/api/v1/files.py`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No finalized qualifying finding identifies the advisory's vulnerable code or root cause. The advisory is a path traversal and arbitrary file read in `GET /api/v1/files/profile_pictures/{folder_name}/{file_name}` (`download_profile_picture` in `src/backend/base/langflow/api/v1/files.py`), while the assessed qualifying finding is an unrelated unauthenticated superuser-token issuance path at `GET /api/v1/auto_login`.",
+    "evidence": [
+      "The advisory JSON describes `download_profile_picture` in `src/backend/base/langflow/api/v1/files.py` constructing filesystem paths from attacker-controlled `folder_name` and `file_name`, enabling traversal outside the profile pictures directory and arbitrary file reads.",
+      "`.judge/input_manifest.json` enumerates `default_auto_login_superuser_token_issuance` as the finalized qualifying finding for this run.",
+      "The qualifying finding's `vulnerability_report.json` and `poc_report.json` concern `GET /api/v1/auto_login` in `src/backend/base/langflow/api/v1/login.py`, where a default `AUTO_LOGIN=True` configuration issues a superuser bearer token that successfully opens `/api/v1/config`.",
+      "The qualifying finding does not reference, exercise, or depend on the advisory's `profile_pictures` file-serving path, attacker-controlled file path components, or filesystem containment checks."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e458dfaf/default_auto_login_superuser_token_issuance",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e458dfaf/default_auto_login_superuser_token_issuance/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e458dfaf/default_auto_login_superuser_token_issuance/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

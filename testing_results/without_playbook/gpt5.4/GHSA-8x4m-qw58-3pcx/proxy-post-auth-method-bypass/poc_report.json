@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "proxy_method_bypass",
+  "summary": "The Docker-based reproduction confirms that a POST to a GET-only free proxy route is rejected without Authorization but is forwarded upstream and succeeds when any Authorization header is present.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A POST to a GET-only free proxy route should be rejected with 404, but the vulnerable build forwards the same POST upstream and returns the upstream success response when any Authorization header is present.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 539c5607a2b0abedf1125bc9f1604d4b16d85ef7, built the reproduction image, and observed noAuthStatus=404, withAuthStatus=201, upstreamPostCount=1, and the success signal EVOHUNT_PROXY_METHOD_BYPASS_CONFIRMED.",
+  "verification_method": "The helper harness sends the same POST twice: once without Authorization and once with an arbitrary Authorization header. It verifies that the first request is rejected with 404 while the second is forwarded upstream and causes a single counted mutation.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The unauthenticated POST to /api/v1beta/cachedContents returned 404.",
+    "The same POST with Authorization: x returned 201 and the upstream response body confirmed created=true.",
+    "The harness recorded upstreamPostCount=1 and printed EVOHUNT_PROXY_METHOD_BYPASS_CONFIRMED."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "539c5607a2b0abedf1125bc9f1604d4b16d85ef7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/proxy-method-bypass-verify.mjs"
+    ]
+  }
+}

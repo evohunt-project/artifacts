@@ -1,0 +1,23 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_arbitrary_delete",
+  "summary": "The reproduction built the kernel, booted it against a disposable workspace, authenticated with the access auth code, and deleted a chosen workspace directory by sending `packageName=../../temp/victim-delete-me` to the bazaar uninstall endpoint.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The request should cause the server to call `os.RemoveAll` on a path outside `data/plugins`, deleting the attacker-chosen workspace directory `temp/victim-delete-me`.",
+  "actual_observed_result": "The marker file under `temp/victim-delete-me` disappeared after the uninstall request, and the kernel log recorded plugin reload handling for `../../temp/victim-delete-me`.",
+  "verification_method": "The run script creates a marker file in a target directory, sends the crafted uninstall request, and then checks whether the marker file and its parent directory were removed. The proof distinguishes path traversal from a generic HTTP failure by verifying deletion of the selected filesystem target.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The target directory `temp/victim-delete-me` was present before the request and missing afterwards.",
+    "The kernel log included `reload plugins ... uninstalls=[../../temp/victim-delete-me]` after the crafted request."
+  ],
+  "limitations_or_blockers": [
+    "The endpoint may spend extra time rebuilding the bazaar package list before returning, so the reproduction validates the filesystem effect rather than requiring a fast HTTP response."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": []
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control_idor",
+  "summary": "The Docker-based reproduction creates a normal public booking, then reuses the same unauthenticated booking endpoint with that booking's numeric ID and verifies that the reschedule view now exposes attacker-controlled customer data for the same appointment.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that an unauthenticated POST to `booking/register` can update an existing appointment record and return the victim appointment hash.",
+  "actual_observed_result": "Running `./reproduction/run.sh` from the final session-root finding folder installed Easy!Appointments v1.5.2, created a victim booking, overwrote the same appointment through the public booking route, and printed `EVOHUNT_PROOF public booking overwrite confirmed: appointment_id=1 appointment_hash=K7HPGdL5SlT2 customer_email=attacker@example.org`.",
+  "verification_method": "The helper first books a legitimate public slot, then submits a second unauthenticated `booking/register` request with `post_data[appointment][id]` set to the first booking ID. Verification passes only if `booking/reschedule/{appointment_hash}` returns the same appointment ID and the customer email has changed to `attacker@example.org`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed the proof string `EVOHUNT_PROOF public booking overwrite confirmed: appointment_id=1 appointment_hash=K7HPGdL5SlT2 customer_email=attacker@example.org`.",
+    "The verification step confirmed that the returned appointment hash opened the same appointment ID after the overwrite.",
+    "The customer email shown by the self-service reschedule page changed from the victim address to `attacker@example.org`, proving record mutation rather than a generic startup or parsing failure."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at tag `1.5.2`, verifies the pinned vulnerable commit, and mounts that checkout into the helper container at `/target-repo` while Docker Compose serves the checked-out application.",
+    "pinned_commit_or_ref": "48d32686b0f40fc782c2bdf1bde4baafa4dbeea4 (tag 1.5.2)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/target-config.php",
+      "reproduction/target-docker-compose.yml"
+    ]
+  }
+}

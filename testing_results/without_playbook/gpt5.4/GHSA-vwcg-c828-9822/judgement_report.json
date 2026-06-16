@@ -1,0 +1,102 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:00:17.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-vwcg-c828-9822/GHSA-vwcg-c828-9822.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "001_unauthenticated_arbitrary_file_write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf/001_unauthenticated_arbitrary_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf/001_unauthenticated_arbitrary_file_write/vulnerability_report.json",
+      "title": "Unauthenticated upload endpoint allows arbitrary file write outside the intended resource directory",
+      "vulnerability_type": "arbitrary_file_write",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets the unauthenticated upload path in `POST /api/upload`; the advisory is the heartbeat refresh JWT-minting auth bypass in `server/api/index.js` and `server/api/jwt-helper.js`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "002_low_privilege_admin_token_forgery",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf/002_low_privilege_admin_token_forgery",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf/002_low_privilege_admin_token_forgery/vulnerability_report.json",
+      "title": "Low-privilege users can mint admin-identity tokens through the heartbeat refresh path",
+      "vulnerability_type": "privilege_escalation",
+      "advisory_match": true,
+      "advisory_match_reason": "It identifies the same vulnerable `POST /api/heartbeat` refresh path and `jwt-helper.js` trust of attacker-controlled `x-auth-user` that the advisory patch removes; the vulnerable code also falls back to a guest token when no JWT is supplied, making the advisory's unauthenticated variant reachable on the same root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "002_low_privilege_admin_token_forgery",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf/002_low_privilege_admin_token_forgery",
+      "status": "qualifying_vuln",
+      "title": "Low-privilege users can mint admin-identity tokens through the heartbeat refresh path",
+      "vulnerability_type": "privilege_escalation"
+    },
+    "reason": "Finding `002_low_privilege_admin_token_forgery` matches the advisory's heartbeat token-refresh auth bypass, and the copied runtime harness demonstrated unauthenticated minting of an `admin` JWT that was then accepted as admin on a protected follow-up authorization path.",
+    "evidence": [
+      "Advisory fix commit `fe82348d160904d0013b9a3e267d50158f5c7afb` changes the same vulnerable files named by the finding, `server/api/index.js` and `server/api/jwt-helper.js`, by requiring an authenticated request for heartbeat refresh and by stopping token minting from `x-auth-user`.",
+      "In vulnerable v1.2.9, `verifyToken()` substitutes `getGuestToken()` when `x-access-token` is absent, and `/api/heartbeat` refreshes any request with `req.body.params` by calling `getNewToken(req.headers)`.",
+      "`/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf/.judge/poc_runs/002_low_privilege_admin_token_forgery/heartbeat_exploit_result.json` shows an unauthenticated request with `x-auth-user={\"user\":\"admin\",\"groups\":\"guest\"}` received `message: \"tokenRefresh\"` and a minted JWT whose payload contains `id: \"admin\"`.",
+      "The same runtime artifact shows the forged JWT was accepted on a follow-up protected request, resolved `userId` to `admin`, and produced admin permission `-1`, so `haveAdminPermission()` returned `true`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "002_low_privilege_admin_token_forgery",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf/002_low_privilege_admin_token_forgery",
+      "executed": true,
+      "command": "bash -lc 'npm install --no-save jsonwebtoken > ../run.log 2>&1 && node heartbeat_poc.js >> ../run.log 2>&1'",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf/.judge/poc_runs/002_low_privilege_admin_token_forgery/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf/.judge/poc_runs/002_low_privilege_admin_token_forgery/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf/.judge/poc_runs/002_low_privilege_admin_token_forgery/poc_execution.json",
+      "observed_effect": "The copied harness used the vulnerable heartbeat refresh logic to return `message: \"tokenRefresh\"` for an unauthenticated request, minted a JWT with payload `id=admin`, and then showed a follow-up protected request resolving admin permission `-1` from the forged token.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf/001_unauthenticated_arbitrary_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cfdd2caf/001_unauthenticated_arbitrary_file_write/vulnerability_report.json",
+      "poc_report_path": null,
+      "poc_report_status": "missing"
+    }
+  ]
+}

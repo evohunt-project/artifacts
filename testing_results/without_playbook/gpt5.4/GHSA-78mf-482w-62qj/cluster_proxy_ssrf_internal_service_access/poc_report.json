@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction clones Nginx UI v2.3.4, builds the vulnerable binary, creates a low-privilege user, registers an attacker-controlled cluster node that points at a loopback-only HTTP service, and confirms that a proxied API request returns the internal-only sentinel.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow a low-privilege authenticated user to force the server to proxy an API request to a loopback-only HTTP service and return the sentinel body `INTERNAL-ONLY-SECRET`.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned upstream commit, built the vulnerable service in the container, completed first-run installation, logged in as a secondary low-privilege user, created a malicious node pointing at http://127.0.0.1:18081, and then retrieved `INTERNAL-ONLY-SECRET` through GET /api/settings with X-Node-ID=1.",
+  "verification_method": "The helper launches a dedicated HTTP server bound only to 127.0.0.1:18081 inside the container and checks that the proxied response body contains the exact sentinel `INTERNAL-ONLY-SECRET`. Because that service is reachable only from the local host namespace, the sentinel proves server-side request forwarding rather than a generic login or API success path.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container log shows successful installation and authenticated logins for both the initial and secondary users.",
+    "The run created the malicious cluster node and then issued GET /api/settings with X-Node-ID=1.",
+    "The final container output printed `EVOHUNT_PROOF: INTERNAL-ONLY-SECRET`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "20412b5b54f9e0473d5fbd10a964f4f3035c5521",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go"
+    ]
+  }
+}

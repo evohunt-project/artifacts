@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authenticated_disk_exhaustion",
+  "summary": "The Docker-based reproduction authenticated as a crackstation-only operator, created a quota-compliant crack-file record, and then exceeded the server's configured crack-file quota by repeatedly uploading the same chunk number while the server continued to report only the original metadata size.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should let a low-privilege crackstation operator store more crack-file bytes on disk than the configured quota allows by reusing the same chunk number across multiple successful CrackFileChunkUpload calls.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned Sliver commit, built the reproduction container, and printed reported_usage=1024, configured_quota=2048, chunk_files=4, and actual_bytes=4096 before emitting the success marker. This shows the server accepted four duplicate chunk uploads, wrote 4096 bytes of chunk data, and still reported only the original 1024-byte file size toward quota.",
+  "verification_method": "The in-container harness starts the real Sliver multiplayer gRPC listener, authenticates with a crackstation-only operator certificate and bearer token, calls CrackFileCreate once with a 1024-byte declared size under a 2048-byte quota, then calls CrackFileChunkUpload four times with the same chunk number N=1. Verification passes only if all RPCs succeed, the server-reported CurrentDiskUsage remains 1024, the configured quota remains 2048, and actual bytes stored under ~/.sliver/crack/chunks exceed the quota.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reported_usage=1024",
+    "configured_quota=2048",
+    "chunk_files=4",
+    "actual_bytes=4096",
+    "EVOHUNT_SUCCESS crackstation chunk upload bypass exceeded quota with duplicate chunk numbers"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, adds the minimal placeholder asset files needed for Sliver's compile-time embed patterns, copies the exploit helper into the temporary checkout, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "d9b6f41940cca89745adbe44f5e5ffc704e8a13a",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

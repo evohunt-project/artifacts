@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:09:46.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5dbab726",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-7jrq-q4pq-rhm6/GHSA-7jrq-q4pq-rhm6.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "default_unauthenticated_public_service_access",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5dbab726/default_unauthenticated_public_service_access",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5dbab726/default_unauthenticated_public_service_access/vulnerability_report.json",
+      "title": "Default public Oxia service permits unauthenticated read and write access",
+      "vulnerability_type": "missing_authentication",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns missing authentication on the public gRPC dataserver startup path, while the advisory concerns CA bundle parsing in common/security/tls.go::trustedCertPool() during TLS certificate-chain validation.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's TLS CA bundle parsing flaw. The session's only real qualifying finding is a separate unauthenticated public-service exposure in Oxia's gRPC dataserver startup and RPC authentication path.",
+    "evidence": [
+      "GHSA-7jrq-q4pq-rhm6 describes common/security/tls.go::trustedCertPool() decoding only the first PEM block from trustedCaFile and silently accepting empty or invalid CA pools.",
+      "The upstream fix from v0.16.1 to v0.16.2 changes trustedCertPool() to iterate over all PEM blocks, accept only CERTIFICATE blocks, and return an error when no valid certificates are found.",
+      "default_unauthenticated_public_service_access/vulnerability_report.json instead traces exploitation through cmd/standalone/cmd.go, cmd/server/cmd.go, oxiad/common/rpc/auth/authentication.go, oxiad/common/rpc/grpc_server.go, and oxiad/dataserver/public_rpc_server.go.",
+      "That finding's demonstrated impact is unauthenticated read and write access on the public gRPC service, not failed mTLS certificate-chain validation for multi-certificate PEM bundles."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5dbab726/default_unauthenticated_public_service_access",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5dbab726/default_unauthenticated_public_service_access/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5dbab726/default_unauthenticated_public_service_access/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

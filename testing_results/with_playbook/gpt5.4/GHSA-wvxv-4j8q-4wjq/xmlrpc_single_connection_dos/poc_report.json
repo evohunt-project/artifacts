@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction confirms that one partial /RPC2 request can monopolize the single-threaded XML-RPC listener and make a concurrent normal call time out until the attacker socket closes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make a concurrent XML-RPC init call time out while a partial /RPC2 request is held open, then succeed immediately after the blocker closes.",
+  "actual_observed_result": "Running ./reproduction/run.sh printed POC_SUCCESS after the helper opened one partial /RPC2 request, observed a concurrent init call time out, released the blocking socket, and then observed the same init call succeed.",
+  "verification_method": "The exploit helper starts the XML-RPC service, opens one incomplete /RPC2 request, issues a second normal XML-RPC init call with a short timeout, and fails closed unless the second call times out before the blocker is closed and succeeds afterward.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed the exact POC_SUCCESS line confirming timeout-while-blocked and success-after-release behavior.",
+    "The helper only reports success when both halves of the oracle hold: the concurrent call must stall first and recover after the blocking socket closes."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the bundled target-repo git bundle on the host, checks out the pinned vulnerable snapshot commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "de444bfa7a0a1cb9900577d07c76d3ed777ad57d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/target-repo.bundle"
+    ]
+  }
+}

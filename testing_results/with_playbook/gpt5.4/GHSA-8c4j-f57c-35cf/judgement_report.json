@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:03:37.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b4171cbf",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-8c4j-f57c-35cf/GHSA-8c4j-f57c-35cf.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "auto_login_validate_code_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b4171cbf/auto_login_validate_code_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b4171cbf/auto_login_validate_code_rce/vulnerability_report.json",
+      "title": "Default AUTO_LOGIN auth bypass re-exposes unauthenticated code execution on /api/v1/validate/code",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets the default `api_key_security()` auto-login fallback and `/api/v1/validate/code` execution sink, not the advisory's `_read_flow` ownership check on `GET/PATCH/DELETE /api/v1/flow/{flow_id}`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "profile_pictures_secret_key_read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b4171cbf/profile_pictures_secret_key_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b4171cbf/profile_pictures_secret_key_read/vulnerability_report.json",
+      "title": "Profile pictures route traverses into config_dir and leaks the JWT secret key",
+      "vulnerability_type": "path_traversal",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets unauthenticated path traversal in `download_profile_picture()` and `LocalStorageService.get_file()` on `/api/v1/files/profile_pictures/{folder_name}/{file_name}`, not the advisory's authenticated `_read_flow` ownership bug.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable `_read_flow` helper or the missing `Flow.user_id == user_id` ownership filter on `GET/PATCH/DELETE /api/v1/flow/{flow_id}`.",
+    "evidence": [
+      "The advisory JSON describes an authenticated IDOR in `_read_flow` at `src/backend/base/langflow/api/v1/flows.py` affecting `GET/PATCH/DELETE /api/v1/flow/{flow_id}` when the query omits an ownership filter.",
+      "`auto_login_validate_code_rce` instead documents unauthenticated access via `api_key_security()` to `POST /api/v1/validate/code`, with code execution in `validate_code()`.",
+      "`profile_pictures_secret_key_read` instead documents unauthenticated path traversal in `GET /api/v1/files/profile_pictures/{folder_name}/{file_name}` through `download_profile_picture()` and `LocalStorageService.get_file()`.",
+      "The session's final finding set in `.judge/input_manifest.json` and `logs/execution_history.jsonl` contains only those two qualifying findings, and `artifacts/component_family_checklist.md` places them in the auth and file-serving families rather than the advisory's flow-ownership family."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b4171cbf/auto_login_validate_code_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b4171cbf/auto_login_validate_code_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b4171cbf/auto_login_validate_code_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b4171cbf/profile_pictures_secret_key_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b4171cbf/profile_pictures_secret_key_read/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_b4171cbf/profile_pictures_secret_key_read/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

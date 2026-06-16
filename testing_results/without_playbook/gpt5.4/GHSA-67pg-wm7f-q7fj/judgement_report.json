@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:58:26.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cebcada2",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-67pg-wm7f-q7fj/GHSA-67pg-wm7f-q7fj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "gif_dimension_memory_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cebcada2/gif_dimension_memory_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cebcada2/gif_dimension_memory_dos/vulnerability_report.json",
+      "title": "Crafted GIF frame dimensions trigger unbounded decoder allocation and process exhaustion",
+      "vulnerability_type": "denial_of_service",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same root cause as the advisory: `processGIF89A()` reaches `GifReader.decodeAndBlitFrameRGBA()`, which allocates from attacker-controlled GIF frame dimensions without a size cap, and the advisory patch adds that missing bound check in `src/libs/omggif.js`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "gif_dimension_memory_dos",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cebcada2/gif_dimension_memory_dos",
+      "status": "qualifying_vuln",
+      "title": "Crafted GIF frame dimensions trigger unbounded decoder allocation and process exhaustion",
+      "vulnerability_type": "denial_of_service"
+    },
+    "reason": "The sole qualifying finding matches the advisory-described GIF-dimension denial-of-service bug in jsPDF's GIF decoder, and the copied PoC reproduced the availability impact by entering `decodeAndBlitFrameRGBA()` with attacker-controlled 65535x65535 dimensions and then hanging until the harness terminated the process.",
+    "evidence": [
+      "The advisory patch `2e5e156e284d92c7d134bce97e6418756941d5e6` adds a missing upper-bound check in `src/libs/omggif.js` immediately before `new Uint8Array(num_pixels)` inside `decodeAndBlitFrameRGBA()` and `decodeAndBlitFrameBGRA()`.",
+      "The vulnerable `jspdf@4.1.0` package used in the copied workspace still contains `processGIF89A()` calling `reader.decodeAndBlitFrameRGBA(0, pixels)` and `decodeAndBlitFrameRGBA()` allocating from `frame.width * frame.height` with no guard.",
+      "The retained run log shows `[judge] decodeAndBlitFrameRGBA frame=65535x65535 num_pixels=4294836225` followed by `[evohunt] SUCCESS: target did not finish within 5 seconds while decoding the crafted GIF`, which is runtime evidence of both root-cause activation and the advisory's denial-of-service effect."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "gif_dimension_memory_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cebcada2/gif_dimension_memory_dos",
+      "executed": true,
+      "command": "env JSPDF_REPO_DIR=/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cebcada2/.judge/poc_runs/gif_dimension_memory_dos/finding_copy/node_modules/jspdf/dist/jspdf.node.js bash /Users/lumi/ziyue/EvoHunt-DryRun/advisory_cebcada2/.judge/poc_runs/gif_dimension_memory_dos/finding_copy/gif_dimension_memory_dos/reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cebcada2/.judge/poc_runs/gif_dimension_memory_dos/finding_copy/gif_dimension_memory_dos",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cebcada2/.judge/poc_runs/gif_dimension_memory_dos/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cebcada2/.judge/poc_runs/gif_dimension_memory_dos/poc_execution.json",
+      "observed_effect": "The copied PoC invoked `addImage()` on a crafted GIF whose frame dimensions were 65535x65535, logged entry into `decodeAndBlitFrameRGBA()`, and did not return within the 5-second verification window, so the harness terminated the hung process.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

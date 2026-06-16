@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction cloned Haraka v3.1.3, ran two controlled SMTP sessions with identical 20 MiB message sizes, and showed that a single oversized `DATA` line hit the rewrite path 11049 times and took about 3.57x as long as safely chunked input.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show materially amplified processing for a single oversized `DATA` line compared with a safely chunked payload of the same size, and it should hit the repeated overlong-line rewrite path at scale.",
+  "actual_observed_result": "Running `./reproduction/run.sh` emitted `EVOHUNT_DATA_LINE_DOS_CONFIRMED ratio=3.57 rewrite_log_hits=11049 chunked_ms=58.55 single_ms=209.08` and printed the benchmark JSON showing the chunked and single-line timings plus the rewrite-hit count.",
+  "verification_method": "The helper starts Haraka with a minimal queue path, sends two full SMTP sessions of the same total size, measures elapsed time from after `354` until the post-DATA response, and counts `DATA line length` log hits during the single-line case. The proof only passes if the single-line case is at least 2x slower and produces at least 1000 rewrite hits.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted `EVOHUNT_DATA_LINE_DOS_CONFIRMED` with a measured ratio of about 3.57.",
+    "The helper reported `rewrite_log_hits=11049` for the single-line case.",
+    "The benchmark JSON captured both SMTP final responses and the elapsed times for the chunked and single-line payloads."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "215d2811aaae2d3cf7551bd55ccfb18b14d894e2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

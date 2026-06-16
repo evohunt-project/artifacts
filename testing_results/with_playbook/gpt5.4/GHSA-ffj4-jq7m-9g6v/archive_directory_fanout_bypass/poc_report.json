@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that GuardDog's archive-bomb defense counts only regular files: directory-only ZIP and tar archives bypass the configured file-count guard and are fully extracted, while equivalent file-based archives are blocked.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that directory-only archives bypass `GUARDDOG_MAX_FILE_COUNT` and are extracted successfully, while equivalent file-heavy archives are rejected by `ValueError` under the same limit.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the helper image, cloned GuardDog at commit `b2e10d2f5a0e1e0f2a14ade76cbec17d5cf4df35`, and printed successful extraction for the directory-only ZIP and tar archives while the file-based control archives raised the configured file-count exception.",
+  "verification_method": "The helper creates paired ZIP and tar archives under `GUARDDOG_MAX_FILE_COUNT=10`: one set with 11 directory entries and one set with 11 regular files. Verification passes only if both directory-only archives extract successfully and both file-based archives fail with the expected `ValueError`, proving that the repository's own guard exists but is bypassed by directory fanout.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted `dir_zip_out:SUCCESS:11` and `dir_tar_out:SUCCESS:11`, showing that directory-only archives were extracted past the configured guard.",
+    "The run emitted `file_zip_out:ERROR:ValueError:Archive contains 11 files...` and `file_tar_out:ERROR:ValueError:Archive contains 11 files...`, confirming that the control archives triggered the intended guard.",
+    "The helper printed `ARCHIVE_BYPASS_CONFIRMED` only after the bypass and control outcomes both matched the expected pattern."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction lowers `GUARDDOG_MAX_FILE_COUNT` to 10 to keep the proof small and deterministic. The same root cause scales to default settings with a larger directory fanout archive."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b2e10d2f5a0e1e0f2a14ade76cbec17d5cf4df35",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_archive_bypass.py"
+    ]
+  }
+}

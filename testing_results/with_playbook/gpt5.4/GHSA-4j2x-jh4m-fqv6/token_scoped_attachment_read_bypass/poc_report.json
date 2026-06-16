@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a read-only token scoped to module `2` / record `1001` can still download a foreign attachment from module `38` / record `2002` by requesting `view.php?file_id=2&download=1`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A token-scoped session should be unable to read attachments outside its authorized module and record. The success signal is the exact foreign attachment body `SECRET_FOREIGN_ATTACHMENT` returned from `view.php` while the scoped editor surface still denies the foreign module/record.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned OpenSTAManager at `5ff39df9be26ee52f5a1f100754884072bbf82df`, built the reproduction image, installed the bundled 2.9.8 release in an isolated Docker lab, and printed `EVOHUNT_PROOF: token-scoped attachment bypass reproduced`, `UNAUTH_STATUS: 302 /index.php`, `TOKEN_REDIRECT: /editor.php?id_module=2&id_record=1001`, `FOREIGN_ATTACHMENT_BODY: SECRET_FOREIGN_ATTACHMENT`, and `SHARED_EDITOR_FOREIGN_RESULT: Accesso negato`.",
+  "verification_method": "The reproduction verifies four concrete oracles: unauthenticated `view.php` requests are redirected to `/index.php`; token login redirects to the scoped editor target; `shared_editor.php?id_module=38&id_record=2002` returns `Accesso negato`; and the same authenticated token session still receives the exact foreign attachment marker `SECRET_FOREIGN_ATTACHMENT` from `view.php?file_id=2&download=1`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `EVOHUNT_PROOF: token-scoped attachment bypass reproduced`.",
+    "The run printed `UNAUTH_STATUS: 302 /index.php`, confirming that `view.php` is not publicly accessible without authentication.",
+    "The run printed `TOKEN_REDIRECT: /editor.php?id_module=2&id_record=1001`, confirming the token's intended scope.",
+    "The run printed `FOREIGN_ATTACHMENT_BODY: SECRET_FOREIGN_ATTACHMENT`, proving disclosure of the foreign attachment body.",
+    "The run printed `SHARED_EDITOR_FOREIGN_RESULT: Accesso negato`, confirming that the normal shared editor surface rejects the foreign module and record."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, mounts that checkout read-only at `/target-repo`, and the container compares key vulnerable files against the bundled 2.9.8 release asset before running the exploit and verification flow.",
+    "pinned_commit_or_ref": "5ff39df9be26ee52f5a1f100754884072bbf82df",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/verify.sh",
+      "reproduction/openstamanager-2.9.8.zip"
+    ]
+  }
+}

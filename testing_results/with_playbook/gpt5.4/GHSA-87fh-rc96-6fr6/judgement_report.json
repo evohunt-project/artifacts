@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:01:52.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c3f5419",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-87fh-rc96-6fr6/GHSA-87fh-rc96-6fr6.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "storefront-account-unowned-address-disclosure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c3f5419/storefront-account-unowned-address-disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c3f5419/storefront-account-unowned-address-disclosure/vulnerability_report.json",
+      "title": "Storefront account update lets any authenticated user bind and disclose unowned guest addresses",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an authenticated storefront account bug in `PATCH /api/v2/storefront/account` that flows through `Spree::Account::Update` and `Spree::UserAddress#address_not_associated_with_other_user`. The advisory is an unauthenticated guest-checkout bug in the checkout/order path, where plain `bill_address_id` and `ship_address_id` bypass checkout ownership validation and reach `Spree::Order::AddressBook#bill_address_id=` / `ship_address_id=`. The asset class is similar, but the vulnerable entrypoint, model path, and root-cause guard are different.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding in this run identifies the advisory's vulnerable checkout root cause. The only real qualifying finding is a separate authenticated storefront account address-binding disclosure, while GHSA-87fh-rc96-6fr6 is the unauthenticated guest checkout `bill_address_id` / `ship_address_id` bypass in the order checkout flow.",
+    "evidence": [
+      "The advisory names `core/lib/spree/permitted_attributes.rb`, `core/app/models/spree/order/checkout.rb`, `core/app/services/spree/checkout/update.rb`, and `core/app/models/spree/order/address_book.rb`, and its PoC targets `/checkout/${ATTACKER_ORDER_TOKEN}/update/address` as a guest user.",
+      "The upstream fix commit `15619618e43b367617ec8d2d4aafc5e54fa7b734` changes `Spree::Order::AddressBook#bill_address_id=` and `#ship_address_id=` to require `user_id.present?` and adds checkout-controller coverage for guest users, confirming the advisory root cause is in the checkout/order setter path.",
+      "The only qualifying finding folder in `.judge/input_manifest.json` is `storefront-account-unowned-address-disclosure`, whose report and PoC use `PATCH /api/v2/storefront/account`, `Spree::Account::Update`, and `Spree::UserAddress#address_not_associated_with_other_user`, not the advisory's guest checkout path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c3f5419/storefront-account-unowned-address-disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c3f5419/storefront-account-unowned-address-disclosure/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_4c3f5419/storefront-account-unowned-address-disclosure/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

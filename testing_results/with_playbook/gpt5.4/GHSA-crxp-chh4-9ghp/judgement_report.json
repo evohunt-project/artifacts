@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:32:13.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7f1b4701",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-crxp-chh4-9ghp/GHSA-crxp-chh4-9ghp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "matrix_filter_groovy_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7f1b4701/matrix_filter_groovy_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7f1b4701/matrix_filter_groovy_rce/vulnerability_report.json",
+      "title": "Matrix filter expression injection enables controller-side Groovy execution",
+      "vulnerability_type": "unsafe_dynamic_evaluation",
+      "advisory_match": false,
+      "advisory_match_reason": "This is a different root cause in `LifecycleGenerator.matrixExcludeFilterBuilder()` and `MultiPlatformGenerator.getBuildableMatrixAxes()` where attacker-controlled matrix values reach `GroovyShell.evaluate(...)`. The advisory is a crypto flaw in `SecurityIO.groovy` where the AES IV is derived deterministically from the passphrase hash.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No manifest-listed qualifying finding identifies the advisory's deterministic-IV root cause in `SecurityIO.groovy`. The only final qualifying finding in the run is a separate Groovy expression-injection issue.",
+    "evidence": [
+      "The advisory and repository source align on `SecurityIO.encryptWithAES256(String, String, Integer)` and `decryptWithAES256(String, String, Integer)`, where `b_iv` is derived from the passphrase hash via `salt.substring(0, 16)` instead of using a random IV.",
+      "`matrix_filter_groovy_rce` reaches `LifecycleGenerator.matrixExcludeFilterBuilder()` and `MultiPlatformGenerator.getBuildableMatrixAxes()` / `GroovyShell.evaluate(...)`, which is a different file set, sink, and root-cause mechanism than the advisory's AES IV reuse.",
+      "The run manifest lists only one final qualifying finding folder: `matrix_filter_groovy_rce`.",
+      "`artifacts/component_family_checklist.md` records the crypto and secret-wrapping helper family as cleared and does not produce a qualifying finding for the advisory's `SecurityIO` code path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7f1b4701/matrix_filter_groovy_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7f1b4701/matrix_filter_groovy_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7f1b4701/matrix_filter_groovy_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The reproduction starts Ajenti in users mode with a low-privilege custom user whose fs_root is /home/appuser/rootdir, then shows that the same user can read /home/appuser/outside.txt through the filesystem API.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privilege authenticated custom user should be able to read a file outside the configured fs_root directory through /api/filesystem/read.",
+  "actual_observed_result": "Running ./reproduction/run.sh started Ajenti with alice mapped to UID 1001 and fs_root=/home/appuser/rootdir, obtained a valid session cookie, confirmed the profile fs_root value, and then received the contents of /home/appuser/outside.txt from /api/filesystem/read.",
+  "verification_method": "The verifier checks that the authenticated identity profile advertises the configured fs_root and then requests a file located outside that directory. The run only passes if the returned body contains the sentinel content from the out-of-root file.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The authenticated identity response includes fs_root=/home/appuser/rootdir.",
+    "The filesystem read response returns outside-before from /home/appuser/outside.txt.",
+    "The same session is still low-privilege, with UID 1001 in the authenticated identity response."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "eb0235d241e9f6bf4f4033ff50bbff7c275a047c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

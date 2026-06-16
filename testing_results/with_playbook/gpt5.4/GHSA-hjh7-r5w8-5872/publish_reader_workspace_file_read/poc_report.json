@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The reproduction bundle builds the vulnerable kernel, enables the publish service with a low-privilege reader account, and proves that the reader can fetch non-public workspace files through POST /api/file/getFile.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print the exact proof string from a config-side workspace file and confirm that the publish reader can also read the kernel runtime log while sibling denylisted files remain forbidden.",
+  "actual_observed_result": "Observed a zero exit status and the terminal success marker EVOHUNT_PUBLISH_READER_FILE_READ_OK when running ./reproduction/run.sh from the final folder layout.",
+  "verification_method": "The containerized helper builds the kernel, enables publish mode, seeds proof files under conf/ and data/, fetches them through the publish reader path, confirms the leaked runtime log contains the kernel boot banner, and checks that conf/conf.json still returns a 403 denial.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The host entrypoint ./reproduction/run.sh exited successfully and printed EVOHUNT_PUBLISH_READER_FILE_READ_OK.",
+    "The helper verified that the publish-reader path returned the exact proof strings from conf/poc-secret.txt and data/poc-data.txt.",
+    "The helper verified that the leaked publish-reader response for temp/siyuan.log contains the kernel boot banner text kernel is booting:.",
+    "The helper verified that conf/conf.json and data/.siyuan/publishAccess.json still return a JSON body containing code 403, showing the issue is a partial denylist boundary rather than unrestricted all-file access."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "62eed37a3263e3816354beea4041d82419b92b9d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh"
+    ]
+  }
+}

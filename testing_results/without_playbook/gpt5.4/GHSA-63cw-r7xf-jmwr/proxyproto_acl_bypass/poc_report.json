@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "source_ip_spoofing_acl_bypass",
+  "summary": "The Docker-based reproduction confirms that an untrusted client can prepend a PROXY header, spoof source IP 192.0.2.55, and bypass an acl rule that otherwise refuses the same localhost query.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a localhost client is refused without a PROXY header, but succeeds with a forged PROXY header and receives a whoami A record reflecting spoofed address 192.0.2.55.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned CoreDNS at commit 17fceec6d93fd1dde5ba6888c363f131ff6d647f, built the reproduction image, started CoreDNS with proxyproto plus acl, and produced the verification lines WITHOUT_PROXY_RCODE=5, WITH_PROXY_RCODE=0, WITH_PROXY_ADDITIONAL_A=192.0.2.55, and EVOHUNT_SUCCESS_PROXYPROTO_ACL_BYPASS.",
+  "verification_method": "The verification helper compiles CoreDNS from /target-repo, launches a Corefile that allows only 192.0.2.0/24, then exploit.py issues the same TCP DNS query twice: once directly and once with a forged PROXY header. It requires the blocked path to return REFUSED, the forged path to return NOERROR, and the whoami additional A record to echo the attacker-chosen IP 192.0.2.55.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "WITHOUT_PROXY_RCODE=5",
+    "WITH_PROXY_RCODE=0",
+    "WITH_PROXY_ADDITIONAL_A=192.0.2.55",
+    "EVOHUNT_SUCCESS_PROXYPROTO_ACL_BYPASS"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "17fceec6d93fd1dde5ba6888c363f131ff6d647f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Corefile.proxyproto_acl",
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

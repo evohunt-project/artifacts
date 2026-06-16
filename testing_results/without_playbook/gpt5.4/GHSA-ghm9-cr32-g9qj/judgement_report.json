@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:54:55.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d1b85c9e",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-ghm9-cr32-g9qj/GHSA-ghm9-cr32-g9qj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "mdctx_digest_final_overflow",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d1b85c9e/mdctx_digest_final_overflow",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d1b85c9e/mdctx_digest_final_overflow/vulnerability_report.json",
+      "title": "Safe MdCtx digest_final API permits adjacent memory overwrite",
+      "vulnerability_type": "memory_corruption_out_of_bounds_write",
+      "advisory_match": true,
+      "advisory_match_reason": "Same vulnerable function and missing output-length guard as the advisory and upstream fix: `MdCtxRef::digest_final()` in `openssl/src/md_ctx.rs` forwards the caller buffer to `EVP_DigestFinal()` without rejecting undersized output slices.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "mdctx_digest_final_overflow",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d1b85c9e/mdctx_digest_final_overflow",
+      "status": "qualifying_vuln",
+      "title": "Safe MdCtx digest_final API permits adjacent memory overwrite",
+      "vulnerability_type": "memory_corruption_out_of_bounds_write"
+    },
+    "reason": "The selected finding matches the advisory exactly: both identify `openssl::md_ctx::MdCtxRef::digest_final()` as missing a caller-buffer length check before `EVP_DigestFinal()`, and the copied PoC demonstrated the resulting out-of-bounds write into adjacent memory.",
+    "evidence": [
+      "The advisory states that `MdCtxRef::digest_final()` always writes `EVP_MD_CTX_size(ctx)` bytes to `out` and overflows undersized caller buffers; the upstream fix in commit `826c3888b77add418b394770e2b2e3a72d9f92fe` adds `if self.size() > len as usize { return Err(ErrorStack::get()); }` to `openssl/src/md_ctx.rs` before `EVP_DigestFinal()`.",
+      "The final finding report describes the same source-to-sink path: safe Rust caller -> `MdCtxRef::digest_final(&mut [u8; 1])` -> OpenSSL writes the full SHA-512 digest -> adjacent memory overwrite.",
+      "The copied PoC run at `/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d1b85c9e/.judge/poc_runs/mdctx_digest_final_overflow/run.log` logged `written=64`, `first_corruption_index=Some(0)`, and `EVOHUNT_PROOF canary_corrupted=true written=64`, which is direct runtime evidence that the advisory-described overwrite occurred."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "mdctx_digest_final_overflow",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d1b85c9e/mdctx_digest_final_overflow",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d1b85c9e/.judge/poc_runs/mdctx_digest_final_overflow/finding_copy",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d1b85c9e/.judge/poc_runs/mdctx_digest_final_overflow/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d1b85c9e/.judge/poc_runs/mdctx_digest_final_overflow/poc_execution.json",
+      "observed_effect": "The copied PoC called `MdCtxRef::digest_final()` with SHA-512 and a 1-byte output buffer, returned `written=64`, observed the first adjacent canary byte change at index 0, and emitted `EVOHUNT_PROOF canary_corrupted=true written=64`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

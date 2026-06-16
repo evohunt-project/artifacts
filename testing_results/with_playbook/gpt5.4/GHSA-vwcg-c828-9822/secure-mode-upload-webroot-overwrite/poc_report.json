@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_file_upload_and_write",
+  "summary": "The reproduction starts FUXA v1.2.9 with `secureEnabled=true`, overwrites the served `index.html` through the unauthenticated upload route, and confirms that the live server now returns attacker-controlled content.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated `POST /api/upload` should succeed in secure mode, and a follow-up `GET /index.html` should return the attacker-controlled `EVOHUNT_UPLOAD_POC` proof string from the active webroot.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned FUXA v1.2.9, enabled secure mode, posted an unauthenticated upload with `destination=/../../client/dist`, and then retrieved `EVOHUNT_UPLOAD_POC` from `/index.html` on the running server.",
+  "verification_method": "The container waits for `/api/version`, performs the unauthenticated upload, fetches `/index.html`, and checks for the exact proof string. This distinguishes a real webroot overwrite from a harmless upload to an unserved directory.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The server responded to `POST /api/upload` with no credential while secure mode was enabled.",
+    "The subsequent `GET /index.html` returned the attacker-supplied `EVOHUNT_UPLOAD_POC` content.",
+    "The proof landed in the live webroot rather than an inert storage directory."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "19c2471833e410eea235b81857ddcfde7b3851a0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

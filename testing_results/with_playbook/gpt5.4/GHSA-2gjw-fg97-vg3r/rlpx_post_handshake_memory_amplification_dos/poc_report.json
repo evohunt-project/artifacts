@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction performs real RLPx and devp2p handshakes against a go-ethereum `p2p.Server`, sends three highly compressible 8 MiB `ping` frames, and confirms that modest wire traffic expands into substantial retained transport buffers and measurable heap growth.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should emit `EVOHUNT_RLPX_AMPLIFICATION_CONFIRMED` after the verifier observes that three admitted peers amplified 1,180,428 bytes of compressed wire traffic into at least 24,000,000 bytes of heap growth, including 25,165,824 bytes of retained snappy decode buffers and 1,204,224 bytes of retained frame buffers.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned go-ethereum at `e514ede4946e6fdc0c9b095a52878d731df82149`, built the reproduction image, completed real handshakes for three peers, and emitted `EVOHUNT_RLPX_AMPLIFICATION_CONFIRMED total_wire_bytes=1180428 heap_delta_bytes=26399216 retained_snappy_bytes=25165824 retained_frame_bytes=1204224`.",
+  "verification_method": "The host run script launches an in-container verifier that drives the vulnerable transport path, parses the victim server `PROOF` line, sums the client-reported compressed wire bytes, and succeeds only if the exact confirmation string is emitted after the observed retained-buffer and heap-growth thresholds are met.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The victim process printed `PROOF peer_count=3 heapalloc_base=4539792 heapalloc_now=30939008 heap_delta_bytes=26399216 retained_snappy_bytes=25165824 retained_frame_bytes=1204224`.",
+    "Each client printed `CLIENT wire_bytes=393476 payload_bytes=8388608`, for a combined 1,180,428 bytes of compressed wire traffic delivering 25,165,824 bytes of decoded snappy payload.",
+    "The wrapper completed with `EVOHUNT_RLPX_AMPLIFICATION_CONFIRMED total_wire_bytes=1180428 heap_delta_bytes=26399216 retained_snappy_bytes=25165824 retained_frame_bytes=1204224` and exited successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "e514ede4946e6fdc0c9b095a52878d731df82149",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/helper/go.mod",
+      "reproduction/helper/main.go"
+    ]
+  }
+}

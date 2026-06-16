@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:16:07.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d82161ed",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-2phg-qgmm-r638/GHSA-2phg-qgmm-r638.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "crackstation_quota_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d82161ed/crackstation_quota_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d82161ed/crackstation_quota_bypass/vulnerability_report.json",
+      "title": "Crackstation chunk uploads bypass configured disk quota and allow low-privilege storage exhaustion",
+      "vulnerability_type": "storage_quota_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a crack-file quota accounting flaw in `server/rpc/rpc-crackstations.go` and `server/db/helpers.go`, while the advisory is an unauthenticated HTTP C2 gzip-bomb issue caused by unbounded decoding in `util/encoders/gzip.go` and its HTTP request-body call path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code or root cause. The only materialized qualifying finding concerns authenticated crack-file quota bypass logic, not the advisory's unauthenticated gzip decoder denial-of-service path.",
+    "evidence": [
+      "The advisory and fix point to unbounded gzip decoding in `util/encoders/gzip.go`, with follow-on call-site changes in `server/c2/http.go` to enforce decoded-length limits for HTTP request bodies.",
+      "The session's only final qualifying finding targets `CrackFileCreate`, `CrackFileChunkUpload`, and `CrackFilesDiskUsage`, where disk quota is reserved once and duplicate chunk uploads create additional stored blobs without quota rechecks.",
+      "The finding requires an authenticated crackstation-scoped operator over the multiplayer gRPC API, whereas the advisory describes an unauthenticated remote gzip-bomb denial of service in the HTTP C2 path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d82161ed/crackstation_quota_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d82161ed/crackstation_quota_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_d82161ed/crackstation_quota_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

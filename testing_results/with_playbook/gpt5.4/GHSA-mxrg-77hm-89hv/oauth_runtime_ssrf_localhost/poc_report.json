@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction confirms that n8n's OAuth2 dynamic client registration flow makes backend requests to an attacker-chosen localhost service even when SSRF protection is enabled.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause `GET /rest/oauth2-credential/auth` for a low-privilege user-owned OAuth2 credential to trigger server-side requests to a localhost metadata server, proving that the OAuth runtime bypasses the normal SSRF protection boundary.",
+  "actual_observed_result": "Running `./reproduction/run.sh` from the final finding folder cloned n8n at commit `2374f40ec36795904b4011fb81018da818a76ee8`, built the reproduction image, and executed the targeted OAuth integration test with `N8N_SSRF_PROTECTION_ENABLED=true`. The run observed `EVOHUNT_PROOF_OAUTH_LOCALHOST_SSRF metadata_port=36707 hits={\"protectedResource\":1,\"authorizationServerMetadata\":1,\"registration\":1}` and finished with `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The helper injects a targeted integration test into the pinned repository, starts a localhost-only metadata server inside the container, creates a low-privilege member-owned OAuth2 credential with `useDynamicClientRegistration=true`, calls `/oauth2-credential/auth`, and verifies both that the returned authorization URL points at `127.0.0.1` and that the localhost server recorded exactly one protected-resource discovery request, one authorization-server discovery request, and one client-registration request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Run output contained `EVOHUNT_PROOF_OAUTH_LOCALHOST_SSRF metadata_port=36707 hits={\"protectedResource\":1,\"authorizationServerMetadata\":1,\"registration\":1}`.",
+    "The targeted Jest test passed inside the reproduction container against the pinned vulnerable commit.",
+    "The final `./reproduction/run.sh` invocation completed with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host into a temporary directory under the session tree, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "2374f40ec36795904b4011fb81018da818a76ee8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/oauth2.localhost-ssrf.api.test.ts"
+    ]
+  }
+}

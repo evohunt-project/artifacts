@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "idor_file_disclosure",
+  "summary": "The Docker-based reproduction installs the vulnerable v2.9.8 release, seeds a dashboard-only user plus a document-module attachment, confirms the user is denied access to the document module, and then retrieves the attachment anyway through view.php using its file_id.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privilege authenticated user who cannot access the document module should still be able to download the seeded attachment directly from view.php by supplying its file_id.",
+  "actual_observed_result": "Running ./reproduction/run.sh completed successfully and ended with the signal `SUCCESS: low-privilege user downloaded an attachment from a denied module via view.php file_id=1`. During the run, the script first confirmed the seeded user received `Accesso negato` for the document module and then verified that the HTTP response from view.php contained the seeded secret.",
+  "verification_method": "The run script logs in with the seeded low-privilege account, fetches the denied module page to confirm the user lacks normal access, then downloads the target attachment via view.php and uses reproduction/verify.sh to match the exact seeded secret in the response body.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The seeded dashboard-only user was denied normal access to `controller.php?id_module=<Gestione documentale>`.",
+    "The same session downloaded the seeded attachment through `view.php?file_id=1&download=1`.",
+    "The verification helper matched the exact `EVOHUNT-SECRET-...` marker that was written into the seeded attachment."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at the vulnerable v2.9.8 tag, downloads the matching release bundle for the runtime files, and mounts the cloned checkout into the container for source provenance at /target-repo.",
+    "pinned_commit_or_ref": "v2.9.8 (5ff39df9be26ee52f5a1f100754884072bbf82df)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/install_osm.php",
+      "reproduction/seed_osm.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

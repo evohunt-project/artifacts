@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "business_logic_access_control_bypass",
+  "summary": "The Docker-based reproduction confirms that enabling `client/html/account/download/maxcount=1` does not constrain repeat downloads: the second invocation of the real account-download path is still allowed and the persisted counter remains `0`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should seed the pinned vulnerable tree, exercise the real account download-limit check twice for an owned downloadable item, and show that the second download still succeeds even though `maxcount` is `1` because the stored counter never increments.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned repository, built the reproduction image, initialized the MariaDB-backed Aimeos test data, and printed a verification JSON object with `\"first_allowed\": true`, `\"second_allowed\": true`, and `\"stored_count\": 0` for the targeted downloadable order attribute.",
+  "verification_method": "The reproduction sets `client/html/account/download/maxcount` to `1`, invokes the exact upstream `checkDownload()` method twice for a real downloadable order attribute owned by `test@example.com`, then reads the persisted `order/download` list item from storage. The run only succeeds if the second invocation remains allowed and the stored count is still `0`, which distinguishes the bug from a generic setup or auth failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction emitted a JSON result object containing the targeted `attribute_id`, `first_allowed=true`, `second_allowed=true`, `stored_count=0`, and the proof file path under the secure filesystem root.",
+    "The helper exited successfully only after the exact stale-counter condition was observed on the real persisted customer download state.",
+    "The Aimeos setup phase completed successfully in the same run, ruling out a false positive caused by incomplete fixture initialization."
+  ],
+  "limitations_or_blockers": [
+    "The proof requires the documented `client/html/account/download/maxcount` mode to be enabled. If the deployment leaves that setting at its default `null`, no download cap exists and this specific bypass is not reachable."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0d4e7af25fe8226e93a37fafaab38c23551d0cdf",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/validate_download_limit.php",
+      "reproduction/composer.lock"
+    ]
+  }
+}

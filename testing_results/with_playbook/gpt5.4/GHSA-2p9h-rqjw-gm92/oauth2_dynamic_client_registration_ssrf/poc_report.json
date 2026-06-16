@@ -1,0 +1,33 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction reran the audited `oauth.service.ts` path and confirmed that OAuth2 dynamic client registration issues an attacker-directed metadata fetch and registration POST from the n8n server context.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the cloned vulnerable n8n checkout execute `generateAOauth2AuthUri()` with attacker-controlled OAuth2 dynamic registration inputs, perform one GET to the attacker metadata endpoint, and then POST the client-registration payload to the attacker-selected `registration_endpoint`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` from the final finding folder cloned `n8n@2.9.2` at commit `3af9095245be3aaad6bc16622f379f79c6c6068f`, built the reproduction image, installed the filtered workspace dependencies in a writable copy of the mounted checkout, executed the probe, and printed `EVOHUNT_SUCCESS` after observing one metadata fetch and one POST to `/capture` with the expected dynamic client-registration body.",
+  "verification_method": "The container-side `run-probe.sh` reruns the real `oauth.service.ts` implementation and requires the probe to emit `EVOHUNT_SUCCESS`. The probe only prints that marker after asserting a single attacker-controlled metadata GET, a single POST to the attacker-selected registration endpoint, the expected OAuth registration payload fields, and a returned authorization URI rooted at the attacker metadata server.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction output showed `metadataFetches: 1`.",
+    "The reproduction output showed one sink request with `method: \"POST\"` and `url: \"/capture\"`.",
+    "The sink request body contained the expected OAuth client-registration fields including `redirect_uris` and `token_endpoint_auth_method`.",
+    "The final run emitted the `EVOHUNT_SUCCESS` marker after the assertions passed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo. The container copies that mounted checkout into a writable temporary workspace before installing dependencies and running the probe.",
+    "pinned_commit_or_ref": "3af9095245be3aaad6bc16622f379f79c6c6068f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/probe.ts",
+      "reproduction/run-probe.sh",
+      "reproduction/tsconfig.evohunt.json",
+      "reproduction/stubs/n8n-client-oauth2.ts",
+      "reproduction/stubs/oauth2-dynamic-client-registration.schema.ts",
+      "reproduction/stubs/validate-oauth-url.ts"
+    ]
+  }
+}

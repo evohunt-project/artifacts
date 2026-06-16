@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_admin_interface_exposure",
+  "summary": "The reproduction bundle builds ZooKeeper from the pinned vulnerable upstream commit, starts a standalone server with default admin settings, and verifies unauthenticated access to admin commands.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should expose unauthenticated admin HTTP endpoints on the default admin port, return JVM system properties, and accept an attacker-chosen traceMask update through the admin API.",
+  "actual_observed_result": "Running ./reproduction/run.sh built ZooKeeper from the pinned upstream commit, started a standalone server, reached http://127.0.0.1:8080/commands/get_trace_mask without authentication, returned JSON from /commands/system_properties containing java.version and user.dir, and changed the trace mask to 31337 through /commands/set_trace_mask.",
+  "verification_method": "The verification helper waits for the admin endpoint, fetches /commands/system_properties to confirm unauthenticated metadata disclosure, then calls /commands/set_trace_mask and /commands/get_trace_mask to confirm unauthenticated state mutation through the admin API.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed a JSON proof object containing sample_system_properties with java.version=17.0.19 and user.dir=/tmp/tmp.hjbUJUQ0fc/repo.",
+    "The run printed set_trace_mask_response and get_trace_mask_response objects that both reported tracemask=31337.",
+    "The run printed the success signal: EVOHUNT_POC_SUCCESS unauthenticated admin HTTP access exposed system properties and accepted traceMask mutation 31337."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b9debfde2d10c5cfa96f865e451b3edbb4e2c455",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/probe.py"
+    ]
+  }
+}

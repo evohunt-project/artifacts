@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "memory_corruption",
+  "summary": "The Docker-based reproduction confirms that same-runtime re-entry during `LuaRuntime.table_from()` corrupts stack state and fatally terminates the Python interpreter.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The packaged reproduction should pass two non-re-entrant controls and then cause a fatal interpreter crash in the re-entrant `table_from()` case, evidenced by a fatal signal plus allocator-corruption or fatal Python error output.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `dd520d06ac8229fa8b584a3759887d61f0e6019b`, built the reproduction image, installed Lupa inside the container, printed `CONTROL1_OK 2 ['bar', 'foo']` and `CONTROL2_OK 2 ['bar', 'foo']`, then the vulnerable case exited with return code `-6` and emitted `malloc(): corrupted top size` followed by `Fatal Python error: Aborted`.",
+  "verification_method": "The helper first runs two safe controls to show that plain generator conversion and precomputed Lua-call results do not crash. It then launches the vulnerable re-entrant generator in a subprocess and only succeeds if that subprocess terminates with `SIGSEGV` or `SIGABRT` and emits fatal crash markers.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The control case `lua.table_from(x for x in ['foo', 'bar'])` completed and printed `CONTROL1_OK 2 ['bar', 'foo']`.",
+    "The control case `lua.table_from([f(x) for x in ['foo', 'bar']])` completed and printed `CONTROL2_OK 2 ['bar', 'foo']`.",
+    "The vulnerable case returned `-6` and emitted `malloc(): corrupted top size` plus `Fatal Python error: Aborted` from the subprocess running the re-entrant generator.",
+    "The verifier printed `EVOHUNT_SUCCESS: observed fatal memory-corruption crash during table_from re-entry`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "dd520d06ac8229fa8b584a3759887d61f0e6019b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.py"
+    ]
+  }
+}

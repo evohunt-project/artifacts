@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion",
+  "summary": "The reproduction installs Gogs, signs up a low-privilege user, uploads unattached PNG blobs through the global issue attachment staging endpoint, and verifies orphan attachment row and byte growth on disk.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow an ordinary signed-in user with no repository context to create orphan attachment rows and files through POST /issues/attachments, increasing durable attachment count and bytes on disk.",
+  "actual_observed_result": "Running ./reproduction/run.sh succeeded and emitted EVOHUNT_ORPHAN_ATTACHMENT_UPLOAD_CONFIRMED after creating three orphan attachment rows and three attachment files, increasing attachment bytes from 0 to 204 on disk.",
+  "verification_method": "The helper script counts orphan attachment rows in SQLite and total files and bytes under data/attachments before and after three uploads from a low-privilege session. The reproduction only succeeds if row count, file count, and byte count all increase by the expected amounts.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_ORPHAN_ATTACHMENT_UPLOAD_CONFIRMED rows_before=0 rows_after=3 files_before=0 files_after=3 bytes_before=0 bytes_after=204 uploaded_sha256=fce9588edf09e511c544feba88660d74cbe89d721a9f3ec3675f255783512f72 uuids=15812928-e70d-422b-a329-407b37c7e8ce,21a043ba-f040-4200-b9fa-112bada7d631,a29e8a64-4b9d-4f3b-90f5-dc1025794afc",
+    "The verifier observed the expected one-to-one growth in orphan rows, stored files, and persisted bytes after three low-privilege uploads to POST /issues/attachments."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "765c0e96dbcc7ff7d4a732ec38a9204e593ffbe4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}

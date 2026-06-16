@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "graphql_idor_information_disclosure",
+  "summary": "The final reproduction bundle cloned Craft CMS at the pinned vulnerable commit, installed a fresh site, created a restricted entry-only GraphQL schema, and proved that `@parseRefs` leaks an admin email even though direct `users` queries are blocked.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that a restricted GraphQL schema can read an entry field normally but, when `@parseRefs` is applied, the response discloses a referenced admin user email that the schema cannot access through direct `users` queries.",
+  "actual_observed_result": "Executing `./reproduction/run.sh` from the final finding folder printed `DIRECT_USER_QUERY_BLOCKED=yes`, `RAW_REFERENCE_TEXT={user:1:email}`, `LEAKED_VALUE=support@craftcms.com`, and `EVOHUNT_POC_SUCCESS: restricted GraphQL schema leaked an unauthorized user email via @parseRefs`.",
+  "verification_method": "The verifier builds the vulnerable commit, installs Craft in an isolated MySQL-backed container, executes a GraphQL query through a restricted entry-only schema, and requires both a blocked direct `users` query and the exact leak marker showing the admin email disclosed only when `@parseRefs` is used.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted `DIRECT_USER_QUERY_BLOCKED=yes`, proving the restricted schema could not query users directly.",
+    "The run emitted `RAW_REFERENCE_TEXT={user:1:email}`, showing the entry field stored the unresolved reference tag before directive parsing.",
+    "The run emitted `LEAKED_VALUE=support@craftcms.com` and the final `EVOHUNT_POC_SUCCESS` marker, proving unauthorized data disclosure through `@parseRefs`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "dd59efd5c7b62f7eaa515fb17b6ff6ebe769c477",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.php",
+      "reproduction/verify.sh"
+    ]
+  }
+}

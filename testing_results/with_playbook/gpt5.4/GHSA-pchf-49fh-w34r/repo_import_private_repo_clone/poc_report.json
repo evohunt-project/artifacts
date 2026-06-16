@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a low-privilege SSH user can import a private server-local bare repository into a new repo they control and then read the copied secret content over normal Git/SSH interfaces.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that the attacker cannot access the private victim repo directly, can import its server-local path into a new repo, and can then clone the attacker-owned imported repo and recover the victim secret.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 2d0e48f65fd1f8637ed3831a2b7527c3d6447ba2, built the reproduction image, started a vulnerable Soft Serve instance, created owner and attacker users, confirmed direct attacker access to `victim` failed, imported `${DATA_PATH}/repos/victim.git` into `stolen`, cloned `stolen`, and printed `EVOHUNT_IMPORT_PRIVATE_REPO_CLONE_OK` together with `stolen_secret=TOP_SECRET_FROM_PRIVATE_REPO`.",
+  "verification_method": "The helper script uses the real SSH CLI and Git-over-SSH paths. It first verifies that `repo info victim` fails for the attacker, then performs `repo import` with the victim's local bare-repo path and checks that `secret.txt` in the attacker-owned clone matches the seeded private content.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Bundle output included `EVOHUNT_IMPORT_PRIVATE_REPO_CLONE_OK`.",
+    "Bundle output included `stolen_secret=TOP_SECRET_FROM_PRIVATE_REPO`.",
+    "The verification step confirmed the attacker could not access `victim` directly before the import."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2d0e48f65fd1f8637ed3831a2b7527c3d6447ba2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "redos",
+  "summary": "The reproduction rebuilds a disposable copy of the restored minimatch 10.2.0 checkout, generates the vulnerable regex for `***************X***`, and confirms that a single failing match takes roughly two seconds.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A small attacker-controlled glob pattern should trigger catastrophic regex backtracking and consume noticeable CPU time before returning `false`.",
+  "actual_observed_result": "The reproduction generated the expected repeated-`[^/]*?` regex for `***************X***` and a single `minimatch()` call against a non-matching string took about 1965 ms on this machine.",
+  "verification_method": "The run script rebuilds the repo in a temporary directory, runs the PoC, records the generated regex and elapsed time, and requires both a failed match and elapsed time of at least 1000 ms to pass.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/last_run.json contains the generated regex, the chosen pattern and input, and the measured elapsed time.",
+    "The verification step checked that the regex still contains repeated `[^/]*?` groups before the missing literal and that the call exceeded the timing threshold."
+  ],
+  "limitations_or_blockers": [
+    "Elapsed time depends on host performance, so the verification uses a conservative threshold instead of an exact duration."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/poc.js",
+      "reproduction/last_run.json"
+    ]
+  }
+}

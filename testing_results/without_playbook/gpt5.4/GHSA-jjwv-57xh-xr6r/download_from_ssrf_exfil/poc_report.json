@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf_exfiltration",
+  "summary": "The reproduction built a pinned vulnerable Gotenberg image, exposed an internal-only secret service on the same Docker network, sent a crafted `/forms/pdfengines/embed` request with `downloadFrom`, and verified that the returned PDF contained the fetched internal response as an embedded attachment.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause Gotenberg to issue a backend GET request to an internal-only HTTP service chosen by the attacker and return that internal response to the attacker inside the output PDF as an embedded file.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Gotenberg at commit `9bf12e7cb99f1ad70aee2e142fcba4750c3788fa` (`v8.30.1`), built the vulnerable image, started an internal-only secret server, posted a crafted request to `/forms/pdfengines/embed`, and extracted an embedded file named `internal-secret.txt` containing the expected proof string `EVOHUNT-SSRF-PROOF-c3d5b236` from the returned PDF.",
+  "verification_method": "The verifier generates a seed PDF, sends it with a `downloadFrom` payload to `/forms/pdfengines/embed`, saves the returned PDF, extracts embedded attachments with `pypdf`, and checks that the extracted bytes contain the exact proof string. This distinguishes real backend fetch exfiltration from a generic PDF generation success, startup issue, or unrelated attachment.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The returned PDF contained an embedded file named `internal-secret.txt`.",
+    "The extracted attachment bytes matched the exact proof string `EVOHUNT-SSRF-PROOF-c3d5b236`.",
+    "The verifier emitted a JSON result describing the target URL, secret URL, attachment name, and proof string for the successful run."
+  ],
+  "limitations_or_blockers": [
+    "The `downloadFrom` implementation requires the fetched HTTP response to include a `Content-Disposition` header with a filename so the response can be materialized as a local file."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the public Gotenberg repository on the host, checks out the pinned vulnerable commit from the `v8.30.1` line, builds the vulnerable image from that checkout, and mounts the checked-out repository into the helper container at `/target-repo`.",
+    "pinned_commit_or_ref": "9bf12e7cb99f1ad70aee2e142fcba4750c3788fa",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/internal_secret_server.py"
+    ]
+  }
+}

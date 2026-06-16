@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:29:15.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cbcd38b3",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-cj8j-37rh-8475/GHSA-cj8j-37rh-8475.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "pemparser_missing_dek_info_crash",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cbcd38b3/pemparser_missing_dek_info_crash",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cbcd38b3/pemparser_missing_dek_info_crash/vulnerability_report.json",
+      "title": "Malformed encrypted PEM missing DEK-Info triggers uncaught NullPointerException",
+      "vulnerability_type": "uncaught_exception_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a pkix PEM parser null-dereference in `org.bouncycastle.openssl.PEMParser`, while the advisory patch adds AEAD chunk-size bounds checks in the bcpg OpenPGP path (`AEADEncDataPacket` and `PGPAEADUtil`) for pre-auth resource exhaustion.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described vulnerable code or root cause.",
+    "evidence": [
+      "GHSA-cj8j-37rh-8475 describes unbounded PGP AEAD chunk size handling in the `bcpg`/`pg` module that leads to pre-auth resource exhaustion.",
+      "The advisory fix commit `dc7530939ffb6cdb57636f3609d98e23b94e71c1` adds chunk-size range checks in `pg/src/main/java/org/bouncycastle/bcpg/AEADEncDataPacket.java` and `pg/src/main/java/org/bouncycastle/openpgp/operator/PGPAEADUtil.java`.",
+      "The only in-scope final qualifying finding is `pemparser_missing_dek_info_crash`, which targets `pkix/src/main/java/org/bouncycastle/openssl/PEMParser.java` and `JcaPKIXIdentityBuilder.build` and reproduces an uncaught `NullPointerException` from missing `DEK-Info` metadata.",
+      "That PEM parsing null-dereference is a different module, different parser state, and different failure mode from the advisory's AEAD chunk-size resource exhaustion path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cbcd38b3/pemparser_missing_dek_info_crash",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cbcd38b3/pemparser_missing_dek_info_crash/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cbcd38b3/pemparser_missing_dek_info_crash/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

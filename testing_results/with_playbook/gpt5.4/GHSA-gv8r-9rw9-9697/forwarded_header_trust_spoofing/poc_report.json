@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "proxy_header_trust_bypass",
+  "summary": "The reproduction starts a proxy harness that uses Traefik's default forwarded-header policy, shows that an unspoofed client is denied by a downstream admin route, and then shows that adding X-Forwarded-For: 127.0.0.1 causes the downstream route to return the proof string.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A baseline request to the downstream admin route should be denied, while the same request with a spoofed X-Forwarded-For header should be accepted and return the proof string from the downstream access-control check.",
+  "actual_observed_result": "Running ./reproduction/run.sh returned STATUS=403 with ADMIN_DENY for the baseline request and STATUS=200 with ADMIN_OK proof=evohunt-forwarded-header-spoof for the spoofed-header request.",
+  "verification_method": "The run script waits for the harness to become ready, performs a baseline request without spoofing, performs an exploit request with X-Forwarded-For: 127.0.0.1 from a separate client container on the same Docker network, and verifies that only the spoofed request yields the proof string.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Baseline output: STATUS=403 / ADMIN_DENY xff=",
+    "Exploit output: STATUS=200 / ADMIN_OK proof=evohunt-forwarded-header-spoof xff=127.0.0.1",
+    "Container startup log: forwarded_headers_insecure=true trusted_ips=[]"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Traefik repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container as read-only input.",
+    "pinned_commit_or_ref": "v1.7.34",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/start.sh",
+      "reproduction/request.sh",
+      "reproduction/harness/main.go",
+      "reproduction/harness/go.mod"
+    ]
+  }
+}

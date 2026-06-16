@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction starts Parse Server from tag 8.6.54 with `allowCustomObjectId` enabled, signs up a victim user with `_User.objectId=\"*\"`, then shows a separate low-privilege user changing that victim’s password through `PUT /users/*` and logging in as the victim.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should create a victim account whose custom objectId is `*`, let a second ordinary user overwrite that victim password through `/users/*`, and emit the proof string `EVOHUNT_PROOF_WILDCARD_OBJECTID_TAKEOVER` only if login with the attacker-set password succeeds for the victim account.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned tag 8.6.54, built the reproduction image, started Parse Server with `allowCustomObjectId` enabled, and emitted `EVOHUNT_PROOF_WILDCARD_OBJECTID_TAKEOVER`. The observed JSON output showed the victim account being created with `objectId:\"*\"`, the low-privilege attacker successfully updating `/users/*`, and a successful login as the victim with the attacker-set password.",
+  "verification_method": "The container helper signs up the victim and attacker, performs the password overwrite with the attacker’s session token, and then verifies that `/login?username=victimstar&password=taken-over` returns the victim account with a fresh session token. Verification fails if any step is rejected or if the relogin does not bind to `objectId:\"*\"`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted the proof string `EVOHUNT_PROOF_WILDCARD_OBJECTID_TAKEOVER`.",
+    "Victim signup result: HTTP 201 with `objectId:\"*\"`.",
+    "Takeover update result: HTTP 200 from `PUT /users/*` using a low-privilege attacker session token.",
+    "Relogin result: HTTP 200 for `username=victimstar&password=taken-over`, returning the victim account with `objectId:\"*\"` and a live session token."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8.6.54",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/verify_objectid_takeover.js"
+    ]
+  }
+}

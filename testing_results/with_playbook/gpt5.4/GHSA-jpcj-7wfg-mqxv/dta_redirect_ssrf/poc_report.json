@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The reproduction shows that `get_data_info` accepts an initial `.dta` URL, follows a redirect to a final path with no `.dta` suffix, parses the redirected response as a Stata dataset, and reflects the secret value while fetching the redirected target twice.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should disclose the secret string `EVOHUNT_SSRF_SECRET` from the redirected internal DTA response and show `FINAL_HITS=2`, proving both the redirect-bypass SSRF and the duplicated fetch behavior.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `https://github.com/sepinetam/stata-mcp.git` at commit `3660dec6e10b87cbfc7245060396495052eeae1b`, built the Docker image, and the container printed `OBSERVED_SECRET=EVOHUNT_SSRF_SECRET`, `FINAL_HITS=2`, and `REPRODUCTION_OK`.",
+  "verification_method": "The host `run.sh` script greps the container output for `OBSERVED_SECRET=EVOHUNT_SSRF_SECRET`, `FINAL_HITS=2`, and `REPRODUCTION_OK`. Inside the container, `exploit.py` also exits non-zero if the redirected response does not disclose the expected secret or if the final target is not fetched exactly twice.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included `OBSERVED_SECRET=EVOHUNT_SSRF_SECRET`.",
+    "Container output included `FINAL_HITS=2`.",
+    "Container output included `REPRODUCTION_OK`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "3660dec6e10b87cbfc7245060396495052eeae1b",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

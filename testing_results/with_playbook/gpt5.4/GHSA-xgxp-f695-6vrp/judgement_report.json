@@ -1,0 +1,84 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:56:10.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-xgxp-f695-6vrp/GHSA-xgxp-f695-6vrp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "repo_import_local_repo_read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693/repo_import_local_repo_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693/repo_import_local_repo_read/vulnerability_report.json",
+      "title": "repo import lets low-privilege users clone private on-host repositories through file:// remotes",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": true,
+      "advisory_match_reason": "It identifies the same Soft Serve SSH `repo import` flow and the same root cause as the advisory: destination-side authorization is checked for a new repo, but the attacker-controlled source `REMOTE` reaches `pkg/backend/repo.go` and `git.Clone` without validating or authorizing a server-local repository path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "repo_import_local_repo_read",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693/repo_import_local_repo_read",
+      "status": "qualifying_vuln",
+      "title": "repo import lets low-privilege users clone private on-host repositories through file:// remotes",
+      "vulnerability_type": "arbitrary_file_access"
+    },
+    "reason": "The `repo_import_local_repo_read` finding matches the advisory's missing source-remote validation/authorization in Soft Serve's SSH `repo import` path, and the copied PoC achieved the advisory impact by importing a private on-host repository the attacker could not read directly into a repository they controlled.",
+    "evidence": [
+      "The advisory and fix commit `c147421caf234bcfc1570c79d728ecbbe5813e55` center on adding source-remote validation before `git.Clone`; the selected finding names the same `pkg/ssh/cmd/import.go` -> `pkg/backend/repo.go` flow and the same `file://` local-repository source condition.",
+      "`pkg/backend/user.go` grants authenticated users `ReadWriteAccess` when the destination repository does not yet exist, matching the advisory's prerequisite that any authenticated SSH user can create a new destination repo and reach `repo import`.",
+      "`/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693/.judge/poc_runs/repo_import_local_repo_read/run.log` shows the copied PoC first reaching the control case `confirming the attacker cannot read the private repo directly` and then invoking `importing the private repo through a local file:// path`.",
+      "The same log records `imported repo content: secret-from-victim` and `verification signal: EVOHUNT_IMPORT_LOCAL_REPO_READ_CONFIRMED`, which proves unauthorized disclosure of private repository content through the advisory-described vulnerable import flow."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "repo_import_local_repo_read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693/repo_import_local_repo_read",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693/.judge/poc_runs/repo_import_local_repo_read/workspace",
+      "exit_code": 102,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693/.judge/poc_runs/repo_import_local_repo_read/run_attempt1_docker.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693/.judge/poc_runs/repo_import_local_repo_read/poc_execution_attempt1_docker.json",
+      "observed_effect": "The copied PoC cloned the vulnerable target commit, but Docker image build failed with `no space left on device` before the target service started or the advisory path was exercised.",
+      "satisfies_exploit_success_predicate": false,
+      "satisfies_bug_activation_predicate": false
+    },
+    {
+      "finding_folder_name": "repo_import_local_repo_read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693/repo_import_local_repo_read",
+      "executed": true,
+      "command": "EVOHUNT_NO_DOCKER=1 bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693/.judge/poc_runs/repo_import_local_repo_read/workspace",
+      "exit_code": 1,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693/.judge/poc_runs/repo_import_local_repo_read/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_f6a0a693/.judge/poc_runs/repo_import_local_repo_read/poc_execution.json",
+      "observed_effect": "The adapted copied PoC built the vulnerable Soft Serve commit on the host, created a private victim repo, confirmed direct attacker reads failed, then imported the victim's server-local repository path into an attacker-owned repo and read `secret-from-victim` from the imported copy. The script returned exit code 1 only afterward because temp-directory cleanup hit read-only Go module files.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

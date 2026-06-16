@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that an external caller can use the root MCP OAuth routes to discover and exercise an internal-only OAuth2 MCP server, and that the proxy performs the upstream token exchange with the server's stored client credentials.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A correctly protected internal-only MCP OAuth server should reject an external caller on both named and root flows. The proof succeeds only if the named private route is blocked while the root discovery and root token flow still resolve the private server and reach the upstream OAuth token endpoint with stored credentials.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned LiteLLM at `463781d8cbe31a0a63ab3605e7dc5662a7898e85`, built the reproduction image, mounted the pinned checkout, and executed the exploit. The named private token route returned `404`, root discovery exposed `http://proxy.test/private_oauth/token`, and the upstream OAuth stub recorded `client_id=stored-client`, `client_secret=stored-secret`, and `code=proof-code` from the root `/token` request while the proxy returned `access_token=internal-only-upstream-token`.",
+  "verification_method": "The helper script mounts the real vulnerable `discoverable_endpoints` router into a minimal FastAPI app, drives it from an external client IP, and uses a local OAuth server stub as the verification oracle. Verification passes only when the named private route blocks the caller, the root discovery route resolves the private server, and the upstream stub observes the stored client credentials on the root token exchange.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit printed `named_private_token_status: 404`, showing the normal private named route still enforced the external-IP boundary.",
+    "The exploit printed `root_discovery_token_endpoint: http://proxy.test/private_oauth/token`, showing root discovery still exposed the internal-only server.",
+    "The exploit printed `upstream_observed_request` with `client_id=stored-client`, `client_secret=stored-secret`, `code=proof-code`, and `redirect_uri=http://proxy.test/callback`, proving the proxy performed the root token exchange against the internal-only server with stored credentials."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the reproduction image from the pinned source, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "463781d8cbe31a0a63ab3605e7dc5662a7898e85",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "scanner_false_negative",
+  "summary": "The reproduction creates a malicious legacy tar-based .pt file, shows that picklescan reports it clean, and then verifies that the same file's internal pickle member executes attacker-controlled code.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The crafted legacy .pt should produce a clean picklescan result even though its internal pickle member writes the proof marker EVOHUNT_LEGACY_TAR_PWNED when unpickled.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned picklescan v1.0.4 at bf26452ae2e3204429762c2bb1aa9eacd40436bb, built the Docker verifier, and produced a run log showing Infected files: 0 and Dangerous globals: 0 for the crafted legacy .pt, followed by EVOHUNT_POC_SUCCESS: clean scan on crafted legacy .pt and payload marker created.",
+  "verification_method": "The verifier script generates the malicious legacy .pt, runs the real CLI entrypoint via cli.main() against it, checks that the scan summary is clean, then extracts and unpickles the same pickle member and verifies that it wrote the expected marker file.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/last_run.log contains WARNING: Invalid PyTorch magic number, followed by a clean scan summary for the crafted legacy .pt.",
+    "reproduction/last_run.log ends with EVOHUNT_POC_SUCCESS: clean scan on crafted legacy .pt and payload marker created."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, verifies the exact commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "bf26452ae2e3204429762c2bb1aa9eacd40436bb (v1.0.4)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify_legacy_tar.py"
+    ]
+  }
+}

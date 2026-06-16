@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction confirms that a low-privilege tutor can still modify campaign registration state after the campaign is explicitly seeded as closed.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A tutor registration mutation against a campaign seeded with `registrationStatus=CLOSED` and an expired registration window should be rejected, but the vulnerable backend will accept and persist the change.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the target repository, started the application, seeded a closed campaign and low-privilege tutor account, logged in with a valid magic-link token, submitted `POST /campaign/1/tutor/registrations`, received `200 OK`, and verified via `GET /campaign/1/tutor/registrations` that the unauthorized subject and quota persisted.",
+  "verification_method": "The verification script seeds a campaign whose registration window is closed, logs in as a non-admin tutor, performs the forbidden registration write, and then fetches the tutor registrations endpoint to confirm the attacker-supplied `MATH201` subject and `maxTutees=2` were stored.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The login step succeeded for the seeded low-privilege tutor account.",
+    "The forbidden registration POST returned `200 OK` instead of a rejection.",
+    "The follow-up registration GET response contained `\"shortName\":\"MATH201\"` and `\"maxTutees\":2`, proving the write persisted."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "c832e05a6780a3aabd312f29db73aaf86b6d5cb6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/seed_registration_case.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

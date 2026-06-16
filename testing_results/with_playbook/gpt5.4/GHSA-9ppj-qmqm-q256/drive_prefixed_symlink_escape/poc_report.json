@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The reproduction confirms that a drive-prefixed absolute symlink target is rewritten into a relative escape and the extracted path reads a file outside the extraction root.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Extracting the crafted archive should create `out/a/escape` as a symlink that resolves outside the extraction root and reading that path should return the proof string from a host-side file outside `out`.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned node-tar at commit 2b72abc1d47c3570e1ad95c9ab557fc4c2e6e4b1, installed dependencies, extracted the crafted archive, and printed `EVOHUNT_PROOF: drive-prefixed absolute linkpath escaped extraction root` after reading the outside secret through `out/a/escape`.",
+  "verification_method": "The helper script verifies both boundary conditions: the created symlink resolves outside the extraction root, and reading the extracted path returns the exact proof string written to a file outside that root.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted `EVOHUNT_PROOF: drive-prefixed absolute linkpath escaped extraction root`.",
+    "The runtime JSON emitted by exploit.js shows `linkTarget\":\"../../secret.txt\"` and a resolved path outside the extraction directory.",
+    "The same runtime JSON shows `readBack\":\"EVOHUNT_DRIVE_PREFIXED_SYMLINK_ESCAPE\"`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2b72abc1d47c3570e1ad95c9ab557fc4c2e6e4b1",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

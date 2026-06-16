@@ -1,0 +1,118 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T00:22:08.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-mwr6-3gp8-9jmj/GHSA-mwr6-3gp8-9jmj.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "docs_api_arbitrary_schema_clean_delete",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_arbitrary_schema_clean_delete",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_arbitrary_schema_clean_delete/vulnerability_report.json",
+      "title": "Docs generate API allows attacker-controlled recursive deletion through output.schemas and clean",
+      "vulnerability_type": "arbitrary_file_deletion",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory fixes unsafe string interpolation in `packages/mcp/src/index.ts` when `verbOption.summary` and `operationName` are emitted into generated `server.tool(...)` code. This finding instead concerns docs API forwarding of `output.schemas` and `clean` into filesystem cleanup and schema-writing paths.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "docs_api_transformer_module_execution",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_transformer_module_execution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_transformer_module_execution/vulnerability_report.json",
+      "title": "Docs generate API allows remote execution of local transformer modules through output.override.transformer",
+      "vulnerability_type": "arbitrary_module_execution",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory root cause is unescaped OpenAPI metadata embedded into generated MCP server source in `packages/mcp/src/index.ts`. This finding instead routes docs API input into `output.override.transformer` and then into `dynamicImport(...)` in the verb-options pipeline.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "docs_api_workspace_arbitrary_write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_workspace_arbitrary_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_workspace_arbitrary_write/vulnerability_report.json",
+      "title": "Docs generate API allows attacker-controlled writes outside the intended output file via output.workspace",
+      "vulnerability_type": "arbitrary_file_write",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is a code-injection bug in MCP server generation from unescaped OpenAPI `summary` data. This finding instead concerns docs API propagation of `output.workspace` into `write-specs.ts`, which creates `workspace/index.ts` outside the intended target path.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "None of the final qualifying findings identifies the advisory's vulnerable code or root cause. The advisory is a code injection in `@orval/mcp` caused by embedding unescaped OpenAPI `summary` and `operationName` values into generated JavaScript in `packages/mcp/src/index.ts`, while the session's qualifying findings all concern docs-playground output configuration handling.",
+    "evidence": [
+      "The published fix wraps `verbOption.operationName` and `verbOption.summary` with `jsStringEscape(...)` inside `packages/mcp/src/index.ts` `generateServer`, which pins the advisory to unsafe string interpolation during MCP server code generation.",
+      "`docs_api_arbitrary_schema_clean_delete` describes `output.schemas` plus `clean` flowing from `docs/src/pages/api/generate.js` into `removeFilesAndEmptyFolders(...)` and schema writers, not into `packages/mcp/src/index.ts`.",
+      "`docs_api_transformer_module_execution` describes `output.override.transformer` reaching `dynamicImport(...)` in `packages/core/src/generators/verbs-options.ts`, not unescaped summary emission in the MCP generator.",
+      "`docs_api_workspace_arbitrary_write` describes `output.workspace` causing `packages/orval/src/write-specs.ts` to create `workspace/index.ts`, not code injection through OpenAPI metadata."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_arbitrary_schema_clean_delete",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_arbitrary_schema_clean_delete/vulnerability_report.json",
+      "poc_report_path": null,
+      "poc_report_status": "missing"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_transformer_module_execution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_transformer_module_execution/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_transformer_module_execution/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_workspace_arbitrary_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_workspace_arbitrary_write/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_5bc16977/docs_api_workspace_arbitrary_write/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

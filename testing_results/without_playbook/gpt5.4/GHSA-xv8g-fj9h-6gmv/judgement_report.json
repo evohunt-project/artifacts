@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:25:22.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_eeb7b1f3",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-xv8g-fj9h-6gmv/GHSA-xv8g-fj9h-6gmv.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated_voice_update_ssrf",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_eeb7b1f3/unauthenticated_voice_update_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_eeb7b1f3/unauthenticated_voice_update_ssrf/vulnerability_report.json",
+      "title": "Unauthenticated voice updates let attackers trigger outbound WSS and UDP SSRF",
+      "vulnerability_type": "unauthenticated_voice_endpoint_ssrf",
+      "advisory_match": true,
+      "advisory_match_reason": "The exploit depends on the same missing authentication check on `GET /ws` that the advisory fixes in `server/server/websocket.go`; the downstream SSRF path is different, but the vulnerable control-plane session creation root cause is the same.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "unauthenticated_voice_update_ssrf",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_eeb7b1f3/unauthenticated_voice_update_ssrf",
+      "status": "qualifying_vuln",
+      "title": "Unauthenticated voice updates let attackers trigger outbound WSS and UDP SSRF",
+      "vulnerability_type": "unauthenticated_voice_endpoint_ssrf"
+    },
+    "reason": "Commit `0f9a00d9d549b16278db81fce6dfec350c2abc01` fixes the advisory by adding password authentication to `HandleWebSocket` and the REST session wrapper. The selected finding exploits that same unauthenticated `/ws` entrypoint, and the copied PoC proved end-to-end unauthorized websocket control by obtaining a live session and immediately driving privileged voice-control behavior without credentials.",
+    "evidence": [
+      "The advisory patch adds a password gate to `server/server/websocket.go` before websocket upgrade and a bearer-token gate to `server/server/routes.go` before REST session handling.",
+      "The finding's exploit path starts at unauthenticated `GET /ws`, obtains an `OpReady` session, and then sends `OpVoiceUpdate` through that same control-plane session.",
+      "The copied PoC run log shows `client connected` for session `f28154cb-1357-44aa-b198-8cb7237ca87e`, immediately followed by `voice update received` from the same unauthenticated client.",
+      "The same run log records `sending Identify command` and `Opening UDPConn connection` to attacker-selected targets, then ends with `EVOHUNT_PROOF unauthenticated_voice_update_ssrf` and JSON output containing `control_plane_session_id` plus the observed UDP probe metadata."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "unauthenticated_voice_update_ssrf",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_eeb7b1f3/unauthenticated_voice_update_ssrf",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_eeb7b1f3/.judge/poc_runs/unauthenticated_voice_update_ssrf/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_eeb7b1f3/.judge/poc_runs/unauthenticated_voice_update_ssrf/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_eeb7b1f3/.judge/poc_runs/unauthenticated_voice_update_ssrf/poc_execution.json",
+      "observed_effect": "The copied PoC connected to `/ws` without credentials, received live session `f28154cb-1357-44aa-b198-8cb7237ca87e`, triggered `voice update received`, and caused Linkdave to send a voice Identify over attacker-chosen WSS and a 74-byte UDP discovery probe to `127.0.0.1:9999`.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

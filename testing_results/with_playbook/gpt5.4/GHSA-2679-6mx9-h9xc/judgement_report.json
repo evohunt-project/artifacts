@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:29:39.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1913fc91",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-2679-6mx9-h9xc/GHSA-2679-6mx9-h9xc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated-terminal-websocket-rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1913fc91/unauthenticated-terminal-websocket-rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1913fc91/unauthenticated-terminal-websocket-rce/vulnerability_report.json",
+      "title": "Unauthenticated terminal WebSocket access permits command execution in edit mode",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same vulnerable `/terminal/ws` endpoint in `marimo/_server/api/endpoints/terminal.py` and the same missing `validate_auth()` or equivalent permission guard before `websocket.accept()` and `pty.fork()` that the advisory describes.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "unauthenticated-terminal-websocket-rce",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1913fc91/unauthenticated-terminal-websocket-rce",
+      "status": "qualifying_vuln",
+      "title": "Unauthenticated terminal WebSocket access permits command execution in edit mode",
+      "vulnerability_type": "broken_access_control"
+    },
+    "reason": "The selected finding matches the advisory's exact root cause and its copied PoC demonstrated unauthenticated PTY shell command execution through `/terminal/ws` while authentication still blocked the normal `/ws` WebSocket.",
+    "evidence": [
+      "The advisory and the finding both describe `marimo/_server/api/endpoints/terminal.py` accepting `/terminal/ws` connections without `validate_auth()` and then spawning a PTY shell.",
+      "The copied PoC run in `/Users/lumi/ziyue/EvoHunt-Run/advisory_1913fc91/.judge/poc_runs/unauthenticated-terminal-websocket-rce/run.log` printed `[evohunt] unauthenticated /ws correctly rejected`, showing auth was enabled and enforced on the main notebook WebSocket.",
+      "The same run log then printed `[evohunt] unauthenticated /terminal/ws executed shell command`, showed a root shell prompt, and returned the proof string `AUTH_BYPASS_13` after executing `echo AUTH_BYPASS_$(expr 6 + 7)` over the unauthenticated terminal WebSocket."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "unauthenticated-terminal-websocket-rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1913fc91/unauthenticated-terminal-websocket-rce",
+      "executed": true,
+      "command": "./reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1913fc91/.judge/poc_runs/unauthenticated-terminal-websocket-rce/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1913fc91/.judge/poc_runs/unauthenticated-terminal-websocket-rce/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_1913fc91/.judge/poc_runs/unauthenticated-terminal-websocket-rce/poc_execution.json",
+      "observed_effect": "With auth enabled, unauthenticated `/ws` access was rejected, but an unauthenticated `/terminal/ws` connection spawned a PTY shell as `root` and executed `echo AUTH_BYPASS_$(expr 6 + 7)`, returning `AUTH_BYPASS_13` in the runtime log.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

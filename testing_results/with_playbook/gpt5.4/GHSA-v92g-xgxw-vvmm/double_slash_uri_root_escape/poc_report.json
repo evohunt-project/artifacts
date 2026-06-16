@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirmed that double-slash template URIs bypass Mako's root-path containment checks, leak files outside the configured template directory, and write compiled module files outside the configured `module_directory`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that `../secret.txt` is blocked while `//../secret.txt` succeeds, that the same bypass works through `<%include>`, and that a `//tmp/...` URI writes a compiled module outside the configured `module_directory`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the bundled vulnerable repository snapshot, built the reproduction image, and printed `SINGLE_SLASH_BLOCKED`, `READ_BYPASS_OK`, `INCLUDE_BYPASS_OK`, `WRITE_BYPASS_OK`, `WRITE_MODULE_FILE=/tmp/evohunt_mako_escape.py`, `EVOHUNT_EXPLOIT_SUCCESS`, and `EVOHUNT_REPRO_SUCCESS`.",
+  "verification_method": "The host run script builds the container, mounts the checked-out target repository at `/target-repo`, and executes `verify.sh`. The verification helper runs `exploit.py` and requires the exact success markers proving that single-slash traversal is rejected, double-slash traversal reads the sibling file, the runtime include path leaks the same file, and the compiled module escapes the configured `module_directory`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted `SINGLE_SLASH_BLOCKED`, proving the existing single-slash guard still rejects `../secret.txt`.",
+    "The run emitted `READ_BYPASS_OK` and printed the leaked template filename outside the configured template root.",
+    "The run emitted `INCLUDE_BYPASS_OK`, confirming the same bypass through runtime include resolution.",
+    "The run emitted `WRITE_BYPASS_OK` and `WRITE_MODULE_FILE=/tmp/evohunt_mako_escape.py`, proving out-of-root compiled module creation."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the bundled `reproduction/target-repo.bundle` on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "d918e49a0101c047542abb21c02e4ea4bc9bced0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/target-repo.bundle"
+    ]
+  }
+}

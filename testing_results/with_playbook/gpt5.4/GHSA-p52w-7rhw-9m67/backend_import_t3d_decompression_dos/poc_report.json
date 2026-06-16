@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "decompression_dos",
+  "summary": "The reproduction bundle clones a pinned TYPO3 commit, generates a compressed `.t3d` bomb, runs the functional import path under a 128 MB PHP memory limit, and confirms that `Import::loadFile()` exhausts memory while parsing attacker-controlled T3D parts.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The crafted `.t3d` import should force the backend import preview path to decompress attacker data until the PHP worker exhausts its 128 MB memory limit.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned TYPO3 commit `3db781e0136629a5c5ec025839fbb8de602d56fa`, built the reproduction image, generated a 195961-byte `.t3d` file whose serialized payload expands to 201326624 bytes, and ran the functional test. The phpunit output ended with `Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 34864325 bytes) in /tmp/.../repo/typo3/sysext/impexp/Classes/Import.php on line 306`, after which the verifier printed `[evohunt] verification succeeded: compressed T3D import exhausted memory in Import::loadFile()` and `run.sh` printed `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The verifier installs dependencies, generates the bomb fixture, runs `bin/phpunit -c Build/phpunit/FunctionalTests.xml /app/ImportBombTest.php` with `memory_limit=128M`, and only succeeds when the output contains both `Allowed memory size` and `Import.php`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`./reproduction/run.sh` completed successfully and printed `[evohunt] SUCCESS: reproduction completed and verified`.",
+    "The phpunit run emitted `Fatal error: Allowed memory size of 134217728 bytes exhausted ... in /tmp/.../repo/typo3/sysext/impexp/Classes/Import.php on line 306`.",
+    "The verification helper printed `[evohunt] verification succeeded: compressed T3D import exhausted memory in Import::loadFile()`."
+  ],
+  "limitations_or_blockers": [
+    "The session-provided checkout did not include `.git` metadata, so the reproduction bundle pins the public upstream TYPO3 commit `3db781e0136629a5c5ec025839fbb8de602d56fa` rather than deriving an exact local revision."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "3db781e0136629a5c5ec025839fbb8de602d56fa",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/ImportBombTest.php",
+      "reproduction/make_t3d_bomb.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

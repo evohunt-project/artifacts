@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "missing_authentication_info_disclosure",
+  "summary": "The Docker-based reproduction cloned Glances `v4.5.1`, started the web/API server without `--password`, and confirmed that an unauthenticated request to `/api/4/processlist` disclosed the command line of a separate local process carrying the proof token.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start Glances in unauthenticated web/API mode and allow an unauthenticated HTTP client to recover the proof token from another local process's command line via `/api/4/processlist`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the target repository, built the reproduction image, launched Glances without authentication, observed `GET /api/4/status` returning HTTP 200 with no `WWW-Authenticate` header, and then retrieved a `/api/4/processlist` entry for a separate sleeper process whose command line included `--evohunt-secret EVOHUNT_SECRET_advisory_4c338aa8_unauthenticated_process_cmdline_disclosure`.",
+  "verification_method": "The helper waits for the API to become ready, verifies that `/api/4/status` is reachable without authentication, fetches `/api/4/processlist`, searches for a process entry containing both `--evohunt-secret` and the proof token, and only reports success when the exact sentinel `EVOHUNT_UNAUTH_CMDLINE_DISCLOSURE_CONFIRMED` is emitted.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Unauthenticated `GET /api/4/status` returned HTTP 200 and no `WWW-Authenticate` header.",
+    "The leaked process entry contained `\"cmdline\": [\"/tmp/evohunt-venv/bin/python\", \"-c\", \"import time; time.sleep(180)\", \"--evohunt-secret\", \"EVOHUNT_SECRET_advisory_4c338aa8_unauthenticated_process_cmdline_disclosure\"]`.",
+    "The reproduction emitted the exact success sentinel `EVOHUNT_UNAUTH_CMDLINE_DISCLOSURE_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at the pinned vulnerable ref, checks out the corresponding source snapshot, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v4.5.1 (6037ddaabddacb2ff3344b34d750089861a7a152)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.py"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal_arbitrary_file_write",
+  "summary": "The Docker-based reproduction clones the vulnerable repository commit, mounts it at `/target-repo`, and proves that `downloadPackageManager()` with `version='../../../escaped'` writes the package-manager installation tree outside `VP_HOME`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the binding place the downloaded package manager and shim files outside `VP_HOME/package_manager/pnpm/`, proving path traversal and attacker-controlled file write outside the intended cache root.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built `evohunt-advisory_008a361d-binding_download_package_manager_path_traversal`, cloned commit `48e49ca0c1c062989120c41bcce9ee1db8b172dd`, and the container printed `outsideHome: true`, an escaped `resolvedInstallDir` under `/tmp/evohunt-vp-.../n1/n2/n3/escaped/pnpm`, a matching `shimPath` under `/tmp/evohunt-vp-.../n1/n2/n3/escaped/pnpm/bin/pnpm`, then emitted `EVOHUNT_POC_SUCCESS`.",
+  "verification_method": "The verification helper first checks that the mounted target source still contains the vulnerable binding-to-install dataflow, then invokes `downloadPackageManager({ name: 'pnpm', version: '../../../escaped' })`, normalizes the returned install path, and requires both an escaped install directory outside `VP_HOME` and a created shim file before accepting the run.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Host-side run output showed `HEAD is now at 48e49ca0 feat(deps): upgrade upstream dependencies (#1375)` before the container was launched.",
+    "The container reported a `resolvedInstallDir` under `/tmp/evohunt-vp-.../n1/n2/n3/escaped/pnpm`, which is outside the configured `vpHome` root `/tmp/evohunt-vp-.../n1/n2/n3/vp-home`.",
+    "The container reported a `shimPath` under `/tmp/evohunt-vp-.../n1/n2/n3/escaped/pnpm/bin/pnpm`, confirming a shim file was created at the escaped path.",
+    "The container emitted the explicit success marker `EVOHUNT_POC_SUCCESS`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "48e49ca0c1c062989120c41bcce9ee1db8b172dd",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/package.json",
+      "reproduction/exploit.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:43:23.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b64ff33",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-73jv-44c3-j5p2/GHSA-73jv-44c3-j5p2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "control_plane_restart_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b64ff33/control_plane_restart_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b64ff33/control_plane_restart_dos/vulnerability_report.json",
+      "title": "Authenticated low-privilege user can restart the Ajenti master process",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory is about unauthorized custom package installation through Ajenti's task-launch path and plugin install tasks. This finding instead targets `POST /api/core/restart-master` in `plugins/core/views/api.py`, which is a different endpoint, sink, and root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "fs_root_arbitrary_file_read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b64ff33/fs_root_arbitrary_file_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b64ff33/fs_root_arbitrary_file_read/vulnerability_report.json",
+      "title": "Custom-user fs_root confinement is not enforced on the filesystem read API",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory concerns the task/package-install control flow in `plugins/core/views/tasks.py` and `plugins/plugins/tasks.py`. This finding is a filesystem boundary failure in `plugins/filesystem/views.py` and does not touch the advisory's package-install logic.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding in this session identifies the advisory's vulnerable task-launch and custom-package installation path. The advisory root cause is the missing restriction around `POST /api/core/tasks/start` plus package/plugin install task execution, while the accepted session findings are a restart-master authorization flaw and an `fs_root` filesystem-read boundary bypass.",
+    "evidence": [
+      "The advisory summary states that an authenticated `auth_users` user could install a custom package even when not superuser.",
+      "Pre-fix `plugins/core/views/tasks.py` accepts attacker-controlled `cls` values at `POST /api/core/tasks/start` and instantiates the requested task class without the later task allowlist.",
+      "Pre-fix `plugins/plugins/tasks.py` runs `InstallPlugin`, `UnInstallPlugin`, and `UpgradeAll` without the later `os.getuid()` privilege checks introduced by the task hardening commits.",
+      "The session's qualifying findings instead target `POST /api/core/restart-master` and `GET /api/filesystem/read/<path>`, so neither report reaches the advisory's package-install source-to-sink path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b64ff33/control_plane_restart_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b64ff33/control_plane_restart_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b64ff33/control_plane_restart_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b64ff33/fs_root_arbitrary_file_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b64ff33/fs_root_arbitrary_file_read/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_2b64ff33/fs_root_arbitrary_file_read/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

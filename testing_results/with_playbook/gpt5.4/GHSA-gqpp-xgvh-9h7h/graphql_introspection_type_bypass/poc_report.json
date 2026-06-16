@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The Docker-based reproduction starts Parse Server with GraphQL mounted and `graphQLPublicIntrospection=false`, proves that `__schema` is rejected, and then confirms that an unauthenticated `__type` query still discloses the hidden Cloud Code function name `superSecretFunction`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the server rejects `__schema` introspection with HTTP 403 while a public `__type(name: \"CloudCodeFunction\")` query still returns the hidden `superSecretFunction` enum value.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned repository revision, built the reproduction image, started a MongoDB sidecar, installed the target dependencies, and produced a final proof where `__schema` returned HTTP 403 `Introspection is not allowed` but `__type(name: \"CloudCodeFunction\")` returned HTTP 200 with `superSecretFunction` in the response.",
+  "verification_method": "The helper starts a live Parse Server instance with a registered Cloud Code function, issues one blocked `__schema` query and one unauthenticated `__type` query, and fails unless the first response is denied while the second still exposes the function name.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The runtime output included a blocked `__schema` response with HTTP 403 and `Introspection is not allowed`.",
+    "The runtime output included a successful `__type(name: \"CloudCodeFunction\")` response containing `superSecretFunction`.",
+    "The packaged `./reproduction/run.sh` ended with `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the verification container.",
+    "pinned_commit_or_ref": "16a583da10081165576cde82f976b472e1796bcf",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify-graphql-introspection.js"
+    ]
+  }
+}

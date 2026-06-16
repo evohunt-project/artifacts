@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:15:30.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b4171cbf",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-8c4j-f57c-35cf/GHSA-8c4j-f57c-35cf.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "profile_picture_path_traversal_secret_key_disclosure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b4171cbf/profile_picture_path_traversal_secret_key_disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b4171cbf/profile_picture_path_traversal_secret_key_disclosure/vulnerability_report.json",
+      "title": "Unauthenticated profile picture path traversal discloses Langflow secret_key",
+      "vulnerability_type": "path_traversal_file_read",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an unauthenticated path traversal in `src/backend/base/langflow/api/v1/files.py` and `src/backend/base/langflow/services/storage/local.py` on `GET /api/v1/files/profile_pictures/{folder_name}/{file_name}`, while the advisory is an authenticated IDOR in `_read_flow` within `src/backend/base/langflow/api/v1/flows.py` affecting `GET/PATCH/DELETE /api/v1/flow/{flow_id}`. The vulnerable code, control flow, and missing ownership check do not overlap.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's missing ownership filter in `_read_flow` for `GET/PATCH/DELETE /api/v1/flow/{flow_id}`.",
+    "evidence": [
+      "The advisory describes an authenticated IDOR in `src/backend/base/langflow/api/v1/flows.py` where `_read_flow` fails to constrain `Flow.user_id` to the requesting user when authentication is enabled.",
+      "The only qualifying finding instead targets unauthenticated path traversal in `src/backend/base/langflow/api/v1/files.py` and `src/backend/base/langflow/services/storage/local.py` on `GET /api/v1/files/profile_pictures/{folder_name}/{file_name}`.",
+      "The finding's exploit path reads `LANGFLOW_CONFIG_DIR/secret_key` via `../secret_key`; it does not involve `flow_id`, cross-user flow ownership, or the advisory's `_read_flow` helper."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b4171cbf/profile_picture_path_traversal_secret_key_disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b4171cbf/profile_picture_path_traversal_secret_key_disclosure/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_b4171cbf/profile_picture_path_traversal_secret_key_disclosure/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

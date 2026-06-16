@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:48:15.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_395d38ec",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-7c47-xr7q-p6hg/GHSA-7c47-xr7q-p6hg.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "oauth_token_identity_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_395d38ec/oauth_token_identity_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_395d38ec/oauth_token_identity_bypass/vulnerability_report.json",
+      "title": "NRF OAuth token issuance accepts self-asserted NF identity and exposes protected management APIs",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding targets unauthenticated NF registration and OAuth token minting on `/nnrf-nfm/v1/nf-instances` and `/oauth2/token`, while the advisory targets malformed `group-id-list` input reaching `EncodeGroupId` in the NF discovery path and panicking the service. The root cause, affected code, and consequence differ.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only finalized `qualifying_vuln` finding in this session is an OAuth/NF identity trust bypass. The target advisory is a denial-of-service bug where malformed `group-id-list` input reaches `EncodeGroupId` in the NF discovery code and causes an index-out-of-range panic. No finalized finding identifies that vulnerable parser/validation path or an equivalent root cause.",
+    "evidence": [
+      "`.judge/input_manifest.json` lists exactly one finalized `qualifying_vuln` finding: `oauth_token_identity_bypass`.",
+      "The advisory summary and details describe a crafted `GET` request to the NRF discovery service whose malformed `group-id-list` parameter causes `EncodeGroupId` to panic with `index out of range`.",
+      "The upstream fix in `.judge/advisory_refs/dac77d8.patch` adds `ValidateGroupIdFormat`, changes `EncodeGroupId`, and updates `internal/sbi/processor/nf_discovery.go`, confirming the advisory root cause is discovery-query input validation around `group-id-list`.",
+      "`oauth_token_identity_bypass/vulnerability_report.json` instead describes unauthenticated NF registration, `POST /oauth2/token` issuance, and bearer-token authorization on `/nnrf-nfm` and `/nnrf-disc`, with no `EncodeGroupId`, `group-id-list`, or panic/DoS path."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_395d38ec/oauth_token_identity_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_395d38ec/oauth_token_identity_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_395d38ec/oauth_token_identity_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

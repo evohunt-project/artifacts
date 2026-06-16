@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:04:22.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_beec69d9",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-wf42-42fg-fg84/GHSA-wf42-42fg-fg84.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "sample_29_file_upload_memory_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_beec69d9/sample_29_file_upload_memory_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_beec69d9/sample_29_file_upload_memory_dos/vulnerability_report.json",
+      "title": "Sample file-upload endpoint allows unauthenticated memory-exhaustion DoS",
+      "vulnerability_type": "memory_exhaustion_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an Express sample-app upload memory exhaustion issue in `sample/29-file-upload` and `packages/platform-express/multer/interceptors/file.interceptor.ts`, while the advisory is a Fastify-specific HEAD-to-GET middleware bypass fixed by changing request-method matching in `packages/core/middleware/middleware-module.ts`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's Fastify HEAD-request middleware bypass root cause. The only qualifying finding concerns unbounded multipart buffering and response serialization in the `sample/29-file-upload` Express example, which is a different code path, component, and vulnerability mechanism.",
+    "evidence": [
+      "The advisory describes `@nestjs/platform-fastify` GET middleware being skipped when Fastify auto-forwards `HEAD` requests to matching `GET` handlers.",
+      "The upstream fix commit `cbdf737cd6e7cefa52d05ecea2ae4af95c464614` adds a HEAD-as-GET special case in `packages/core/middleware/middleware-module.ts` and a Fastify middleware regression test in `integration/hello-world/e2e/middleware-fastify.spec.ts`.",
+      "The only qualifying finding reports a DoS in `sample/29-file-upload/src/app.controller.ts` plus `packages/platform-express/multer/interceptors/file.interceptor.ts`, triggered by oversized multipart uploads and `file.buffer.toString()` expansion.",
+      "That finding does not involve Fastify, `HEAD` requests, GET middleware execution, middleware bypass, or the advisory's authorization/integrity-impact mechanism."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_beec69d9/sample_29_file_upload_memory_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_beec69d9/sample_29_file_upload_memory_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_beec69d9/sample_29_file_upload_memory_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

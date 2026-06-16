@@ -1,0 +1,32 @@
+{
+  "status": "failed",
+  "vulnerability_type": "path_traversal_file_disclosure",
+  "summary": "The reproduction bundle is prepared to validate the Windows backslash traversal against the pinned vulnerable Mako commit, but the observed run on this ARM64 host failed before the Windows Python process started because Wine aborted under amd64 emulation.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction on a supported x86_64 Docker host should cause Mako to load and render a file outside the configured template directory, disclosing the proof string from the attacker-selected file.",
+  "actual_observed_result": "Running ./reproduction/run.sh on the current ARM64 host exited with '[evohunt] unsupported host architecture: arm64' and reported that the reproduction requires an x86_64 Docker host because it executes Windows Python under Wine.",
+  "verification_method": "On a supported host, exploit.py creates a template directory and an external secret file, calls TemplateLookup.get_template() with Windows backslash traversal URIs, and verifies that the rendered output contains the exact proof string from the external file rather than a template-root file.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The executed reproduction command printed '[evohunt] unsupported host architecture: arm64'.",
+    "The executed reproduction command printed '[evohunt] this reproduction requires an x86_64 Docker host because it executes Windows Python under Wine.'."
+  ],
+  "limitations_or_blockers": [
+    "The vulnerable behavior is Windows-specific.",
+    "The self-contained reproduction uses Windows Python under Wine and requires an x86_64 Docker host for reliable execution.",
+    "Validation on the current ARM64 host was blocked by Wine failing before the exploit script started."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "217822b548fdf9fd730b2f3c1f1e770d4c816df9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh",
+      "reproduction/markupsafe.py"
+    ]
+  }
+}

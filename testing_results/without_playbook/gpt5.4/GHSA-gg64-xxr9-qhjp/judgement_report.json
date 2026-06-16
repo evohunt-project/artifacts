@@ -1,0 +1,118 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T23:54:01.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-gg64-xxr9-qhjp/GHSA-gg64-xxr9-qhjp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "attachment_uuid_access_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb/attachment_uuid_access_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb/attachment_uuid_access_bypass/vulnerability_report.json",
+      "title": "Public attachment endpoint bypasses repository visibility checks once a UUID is known",
+      "vulnerability_type": "authorization_bypass_private_attachment_disclosure",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is about unauthenticated reads from `GET /attachments/:uuid`; it does not involve the advisory's API contents update route, symlink-to-`.git/config` write, or `UpdateRepoFile` control flow.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unauthenticated_attachment_upload",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb/unauthenticated_attachment_upload",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb/unauthenticated_attachment_upload/vulnerability_report.json",
+      "title": "Unauthenticated attachment upload permits arbitrary public file hosting",
+      "vulnerability_type": "unauthenticated_file_upload",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is about unauthenticated attachment-upload routes writing into the attachment store; it does not reach `PUT /api/v1/repos/.../contents/*`, `UpdateRepoFile`, or `.git/config`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "webhook_redirect_ssrf",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb/webhook_redirect_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb/webhook_redirect_ssrf/vulnerability_report.json",
+      "title": "Webhook delivery follows attacker-controlled redirects into blocked local addresses",
+      "vulnerability_type": "ssrf_via_redirect",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is about webhook redirect handling and blind SSRF from webhook delivery; it is unrelated to the advisory's repository-contents update path and `.git/config` overwrite.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "H",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:H/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's `PUT /api/v1/repos/.../contents/* -> UpdateRepoFile` path that still permits writing `.git/config` through a symlink and leads to command execution.",
+    "evidence": [
+      "The advisory JSON and referenced `internal/route/api/v1/repo/contents.go` snippet describe `PutContents` decoding attacker-controlled content and calling `UpdateRepoFile` on the API `contents` path; the exploit narrative is specifically about updating `.git/config` through a symlink.",
+      "`attachment_uuid_access_bypass` is limited to missing authorization on `GET /attachments/:uuid` after a UUID has already been learned; its code locations and exploit path do not mention API contents updates, symlinks, `.git/config`, or `UpdateRepoFile`.",
+      "`unauthenticated_attachment_upload` is limited to public attachment-upload routes and attachment storage. Session history ties it to `security: require authentication for attachment uploads (#8128)`, which is a separate attachment-authentication issue.",
+      "`webhook_redirect_ssrf` is limited to webhook redirect revalidation during outbound delivery. Session history ties it to `security: validate redirect targets in webhook deliveries`, which is a separate webhook SSRF issue."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb/attachment_uuid_access_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb/attachment_uuid_access_bypass/vulnerability_report.json",
+      "poc_report_path": null,
+      "poc_report_status": "missing"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb/unauthenticated_attachment_upload",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb/unauthenticated_attachment_upload/vulnerability_report.json",
+      "poc_report_path": null,
+      "poc_report_status": "missing"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb/webhook_redirect_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_cb64a8fb/webhook_redirect_ssrf/vulnerability_report.json",
+      "poc_report_path": null,
+      "poc_report_status": "missing"
+    }
+  ]
+}

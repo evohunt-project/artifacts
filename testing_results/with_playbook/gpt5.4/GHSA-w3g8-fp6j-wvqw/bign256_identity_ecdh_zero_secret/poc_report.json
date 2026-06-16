@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_cryptographic_usage",
+  "summary": "The reproduction bundle builds a small Rust probe against a fresh checkout of the vulnerable repository and checks that `bign256` accepts the SEC1 identity point, derives an all-zero shared secret from it, and contrasts that behavior with `p256` rejecting the same input.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that `bign256::PublicKey::from_encoded_point` accepts the SEC1 identity point and `bign256::ecdh::EphemeralSecret::diffie_hellman` derives an all-zero shared secret from attacker-controlled input.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `1935596875a3e657db37fa9c674672f79f094f3c`, built the Docker image, compiled the probe against the mounted checkout, and printed the expected proof lines: `bign256 from_affine(identity) accepted: false`, `bign256 public key from identity accepted: true`, `bign256 parsed key is identity: true`, an all-zero `bign256` shared secret, and `p256 public key from SEC1 identity accepted: false`.",
+  "verification_method": "The containerized probe asserts four proof strings: `bign256 from_affine(identity) accepted: false`, `bign256 public key from identity accepted: true`, `bign256 parsed key is identity: true`, and an all-zero `bign256` shared secret, while also confirming `p256 public key from SEC1 identity accepted: false` for sibling comparison.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduced run printed `bign256 from_affine(identity) accepted: false`.",
+    "The reproduced run printed `bign256 public key from identity accepted: true` and `bign256 parsed key is identity: true`.",
+    "The reproduced run printed `bign256 shared secret from identity: Array([00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00])`.",
+    "The reproduced run printed `p256 public key from SEC1 identity accepted: false` as the sibling comparison and ended with `[evohunt] verification passed`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "1935596875a3e657db37fa9c674672f79f094f3c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/probe-Cargo.toml",
+      "reproduction/probe-Cargo.lock",
+      "reproduction/probe-main.rs"
+    ]
+  }
+}

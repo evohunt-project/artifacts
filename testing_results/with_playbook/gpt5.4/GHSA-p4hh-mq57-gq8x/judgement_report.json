@@ -1,0 +1,54 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:34:25.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7fa6f28a",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-p4hh-mq57-gq8x/GHSA-p4hh-mq57-gq8x.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "catalog_signer_eku_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7fa6f28a/catalog_signer_eku_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7fa6f28a/catalog_signer_eku_bypass/vulnerability_report.json",
+      "title": "Catalog verification omits the code-signing EKU and accepts server-auth signers",
+      "vulnerability_type": "catalog_signature_verification_bypass",
+      "advisory_match": false,
+      "advisory_match_reason": "The advisory fix targets Authenticode signer certificate usage validation in `signify/authenticode/signed_data.py` and `signify/x509/context.py`; this finding is a different catalog/CTL path in `trust_list.py` and `signed_file/base.py` that omits passing a `code_signing` EKU requirement.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "P",
+          "VC": "N",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:P/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's patched root cause. The advisory fixes Authenticode signer key-usage and extended-key-usage validation in `signed_data.py` and `context.py`, while the surviving Signify finding is a separate catalog/CTL trust-boundary bug.",
+    "evidence": [
+      "Issue #60 and fix commit `64f21c0cc06cea0536370686ca3ba7a01e4adaa8` describe and patch X.509 key-usage validation weaknesses for Authenticode signatures, adding `strict_validation`, `key_usages=[\"digital_signature\"]`, and a required `extended_key_usages=[\"code_signing\"]` path in `signify/authenticode/signed_data.py` and `signify/x509/context.py`.",
+      "The `catalog_signer_eku_bypass` finding instead relies on `CertificateTrustList.verify()` and catalog-backed `AuthenticodeFile.verify_signature()` in `signify/authenticode/trust_list.py` and `signify/authenticode/signed_file/base.py`, which are not touched by the advisory patch and describe a distinct omission of the `code_signing` requirement on catalog signers."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7fa6f28a/catalog_signer_eku_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7fa6f28a/catalog_signer_eku_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_7fa6f28a/catalog_signer_eku_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

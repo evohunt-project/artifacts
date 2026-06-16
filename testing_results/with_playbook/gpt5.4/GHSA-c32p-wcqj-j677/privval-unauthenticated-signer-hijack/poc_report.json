@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction starts the node-side remote-signer listener, connects an attacker-controlled signer first, then starts a legitimate signer and verifies that the node-side SignerClient still trusts the attacker pubkey and attacker-generated vote signatures.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print a proof line showing that the listener accepted the attacker's pubkey and that SignVote produced a signature verifiable under the attacker-controlled key rather than the legitimate signer's key.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned CometBFT commit, built the Docker image, and printed `EVOHUNT_PRIVVAL_PROOF accepted_attacker=true accepted_legit=false signature_matches_attacker=true signature_matches_legit=false`, confirming that the node-side SignerClient bound to the attacker-controlled signer and accepted attacker-generated vote signatures.",
+  "verification_method": "The helper compares the accepted pubkey against both the attacker and legitimate signer keys and verifies a signed vote against both public keys. The run only succeeds when the accepted pubkey matches the attacker and the produced signature verifies only under the attacker key.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `EVOHUNT_PRIVVAL_PROOF accepted_attacker=true accepted_legit=false signature_matches_attacker=true signature_matches_legit=false`.",
+    "The accepted pubkey matched the attacker signer instead of the legitimate signer.",
+    "The vote returned by SignVote verified under the attacker-controlled public key and did not verify under the legitimate signer's key."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "b471ffbe728968c606e62c1a352480f2d4c7b30c",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify_privval_hijack.go"
+    ]
+  }
+}

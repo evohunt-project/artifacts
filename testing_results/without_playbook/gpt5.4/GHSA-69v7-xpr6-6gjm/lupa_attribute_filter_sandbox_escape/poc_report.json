@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sandbox_escape_rce",
+  "summary": "A Docker-based reproduction bundle is prepared to verify that attribute_filter blocks direct dunder access but can be bypassed through python.builtins.getattr() to reach host command execution.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show direct access to __import__ denied by attribute_filter, then recover __import__ through python.builtins.getattr(), import os, and write the proof marker EVOHUNT_FILTER_BYPASS_OK from inside the vulnerable host process context.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned tag lupa-2.6, verified commit dd520d06ac8229fa8b584a3759887d61f0e6019b, built lupa 2.6 inside the Docker container from the cloned source, and printed DIRECT_ACCESS_BLOCKED followed by PROOF_CONTENT EVOHUNT_FILTER_BYPASS_OK and VERIFIED True.",
+  "verification_method": "The helper prints DIRECT_ACCESS_BLOCKED for the intended guard, PROOF_CONTENT EVOHUNT_FILTER_BYPASS_OK for the bypass result, and VERIFIED True only when the proof marker written by os.system() matches exactly.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container built and installed lupa 2.6 from the cloned vulnerable source snapshot.",
+    "The exploit printed DIRECT_ACCESS_BLOCKED AttributeError Access to '__import__' is forbidden, confirming the intended attribute_filter guard on direct access.",
+    "The exploit then printed PROOF_CONTENT EVOHUNT_FILTER_BYPASS_OK after recovering __import__ via python.builtins.getattr().",
+    "The final verification line was VERIFIED True."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones https://github.com/scoder/lupa.git on the host, checks out the pinned vulnerable ref, verifies the expected commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "dd520d06ac8229fa8b584a3759887d61f0e6019b (tag: lupa-2.6)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container_run.sh",
+      "reproduction/exploit.py"
+    ]
+  }
+}

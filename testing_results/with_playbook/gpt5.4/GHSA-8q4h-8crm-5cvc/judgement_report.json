@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:08:09.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cda0977f",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-8q4h-8crm-5cvc/GHSA-8q4h-8crm-5cvc.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "url_upload_ssrf",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cda0977f/url_upload_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cda0977f/url_upload_ssrf/vulnerability_report.json",
+      "title": "URL upload SSRF via unvalidated second request in get_headers()",
+      "vulnerability_type": "server_side_request_forgery",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a redirect-based SSRF in the URL-upload path (`cmd=upload` -> `get_headers($url, true)`), not the advisory's `cmd=resize` background-color parameter flowing into ImageMagick CLI shell command construction.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described root cause. The only in-scope qualifying finding is an SSRF in `cmd=upload` caused by an unguarded `get_headers()` request after URL validation, while the advisory describes command injection in `cmd=resize` where the attacker-controlled `bg` parameter is interpolated into ImageMagick CLI shell commands.",
+    "evidence": [
+      "The advisory summary and details describe `resize` handling, specifically the `bg` parameter reaching ImageMagick CLI command construction without safe validation and escaping.",
+      "The only final qualifying finding in the session is `url_upload_ssrf`, whose report and PoC target `cmd=upload` and code locations in `php/elFinder.class.php` around `get_remote_contents()` and `get_headers($url, true)` rather than any resize or ImageMagick backend path.",
+      "The session's own `output.scanned` artifact lists only `localfilesystem_symlink_root_escape`, `url_upload_ssrf`, and `ziparchive_size_bypass_dos` as final finding folders; none is a qualifying `resize`/`bg`/ImageMagick command-injection finding."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cda0977f/url_upload_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cda0977f/url_upload_ssrf/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_cda0977f/url_upload_ssrf/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

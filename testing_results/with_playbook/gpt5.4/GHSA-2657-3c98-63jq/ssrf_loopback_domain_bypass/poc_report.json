@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The reproduction bundle shows that esm.sh blocks a literal `127.0.0.1` target but still fetches loopback-only content when the attacker uses a normal-looking hostname that resolves to `127.0.0.1`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should show a literal loopback target rejected with HTTP 400, while a domain-mapped loopback target succeeds with HTTP 200 and returns transformed JavaScript containing `EVOHUNT_SSRF_PROOF` from a loopback-only helper service.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the upstream repository, checked out commit `1ad31b6352bb0a064ece812f6f360e4850e16051`, built the reproduction image, observed control literal-loopback status `400`, observed bypass loopback-domain status `200`, and returned `var o=\"EVOHUNT_SSRF_PROOF\";export{o as proof};` from the vulnerable fetch path.",
+  "verification_method": "The verifier adds an `/etc/hosts` mapping from `loopback.evohunt.test` to `127.0.0.1`, starts a loopback-only HTTP helper server that serves `secret.js`, starts the pinned esm.sh server, sends both the blocked literal-loopback request and the bypass hostname request, and requires both the proof string in the transformed response and a matching helper-server access log entry.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Control request `http://127.0.0.1:18080/http://127.0.0.1:19080/secret.js` returned HTTP 400.",
+    "Bypass request `http://127.0.0.1:18080/http://loopback.evohunt.test:19080/secret.js` returned HTTP 200 with transformed JavaScript containing `EVOHUNT_SSRF_PROOF`.",
+    "The loopback-only helper server received `GET /secret.js HTTP/1.1` during the bypass request."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, passes that checkout into `docker build` as the `targetrepo` named build context, and mounts the same checkout into the container at `/target-repo` for runtime provenance checks.",
+    "pinned_commit_or_ref": "1ad31b6352bb0a064ece812f6f360e4850e16051",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/esmd-config.json",
+      "reproduction/secret.js"
+    ]
+  }
+}

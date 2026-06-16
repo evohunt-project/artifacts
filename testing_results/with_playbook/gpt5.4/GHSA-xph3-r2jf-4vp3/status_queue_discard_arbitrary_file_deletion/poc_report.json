@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The Docker-based reproduction cloned Haraka v3.1.3, enabled the shipped `status` plugin, and confirmed that `STATUS QUEUE DISCARD ../victim.txt` deletes a file outside the queue directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make a localhost SMTP client trigger `STATUS QUEUE DISCARD ../victim.txt`, receive the plugin success response, and delete a proof file outside the queue directory.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the reproduction image, started Haraka, sent the STATUS command, emitted `EVOHUNT_STATUS_TRAVERSAL_CONFIRMED`, showed the SMTP transcript with `211 [\"OK\"]`, and verified that the external proof file was deleted.",
+  "verification_method": "The helper creates a file outside the queue directory, sends `STATUS QUEUE DISCARD ../victim.txt` over a localhost SMTP session, and then checks that the file no longer exists. The proof only passes if the deletion succeeds during the live Haraka run.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run emitted `EVOHUNT_STATUS_TRAVERSAL_CONFIRMED`.",
+    "The SMTP transcript included a successful `211 [\"OK\"]` response to the STATUS command.",
+    "The helper confirmed that the proof file outside the queue directory no longer existed after the command ran."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "215d2811aaae2d3cf7551bd55ccfb18b14d894e2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify.js"
+    ]
+  }
+}

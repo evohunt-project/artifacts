@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:24:48.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6cf6a998",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-xw7x-h9fj-p2c7/GHSA-xw7x-h9fj-p2c7.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "rmi_context_unsafe_deserialization",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6cf6a998/rmi_context_unsafe_deserialization",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6cf6a998/rmi_context_unsafe_deserialization/vulnerability_report.json",
+      "title": "Synthetic RMI context propagation endpoint deserializes attacker-controlled objects",
+      "vulnerability_type": "unsafe_deserialization_rce",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same synthetic RMI/JMX context endpoint and the same unfiltered ObjectInput.readObject() deserialization path described by the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "rmi_context_unsafe_deserialization",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6cf6a998/rmi_context_unsafe_deserialization",
+      "status": "qualifying_vuln",
+      "title": "Synthetic RMI context propagation endpoint deserializes attacker-controlled objects",
+      "vulnerability_type": "unsafe_deserialization_rce"
+    },
+    "reason": "The selected finding matches the advisory's vulnerable RMI context propagation endpoint and its copied PoC demonstrated attacker-controlled gadget execution inside the instrumented JVM.",
+    "evidence": [
+      "The advisory and the finding both describe a custom RMI/JMX context endpoint introduced by the OpenTelemetry Java agent that deserializes untrusted network data without serialization filters.",
+      "The finding traces the vulnerable path through RmiServerContextInstrumentation -> ContextDispatcher -> ContextPayload.read() -> ObjectInput.readObject(), which is the advisory-described root cause.",
+      "The copied PoC run at /Users/lumi/ziyue/EvoHunt-DryRun/advisory_6cf6a998/.judge/poc_runs/rmi_context_unsafe_deserialization/run.log completed successfully and recorded a unique EVOHUNT_RMI_CONTEXT_POC marker emitted from ExploitGadget.readObject() after the forged CONTEXT_CALL_ID request while legitimate health checks still succeeded before and after exploitation."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "rmi_context_unsafe_deserialization",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6cf6a998/rmi_context_unsafe_deserialization",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6cf6a998/.judge/poc_runs/rmi_context_unsafe_deserialization/workspace/rmi_context_unsafe_deserialization",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6cf6a998/.judge/poc_runs/rmi_context_unsafe_deserialization/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_6cf6a998/.judge/poc_runs/rmi_context_unsafe_deserialization/poc_execution.json",
+      "observed_effect": "The copied PoC launched an instrumented RMI server, sent a forged CONTEXT_CALL_ID request, and the run log shows Reproduction succeeded with a unique EVOHUNT_RMI_CONTEXT_POC marker emitted from ExploitGadget.readObject() and reflected in the proof-file check while baseline and post-exploit health checks both remained HEALTH_OK.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

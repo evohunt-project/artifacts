@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:18:35.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_455ba01b",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-v9vm-r24h-6rqm/GHSA-v9vm-r24h-6rqm.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "mirror_address_local_network_ssrf",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_455ba01b/mirror_address_local_network_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_455ba01b/mirror_address_local_network_ssrf/vulnerability_report.json",
+      "title": "Mirror address update bypass permits local-network SSRF",
+      "vulnerability_type": "server_side_request_forgery",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is a mirror settings validation bypass in `internal/route/repo/setting.go` and `internal/database/mirror.go`; the advisory is option injection during release deletion in `internal/database/release.go` when `git tag -d` receives a dash-prefixed tag name.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "L",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:N/VA:N/SC:L/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "upload_symlink_file_write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_455ba01b/upload_symlink_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_455ba01b/upload_symlink_file_write/vulnerability_report.json",
+      "title": "Upload finalize follows intermediate symlinks and writes outside the repository",
+      "vulnerability_type": "unsafe_file_upload_and_write",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding is an out-of-repository file write in the upload finalize path in `internal/database/repo_editor.go`; the advisory is option injection during release deletion in `internal/database/release.go` when `git tag -d` receives a dash-prefixed tag name.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "N",
+          "VI": "H",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:H/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's vulnerable code or root cause. GHSA-v9vm-r24h-6rqm is specifically the release deletion path in `internal/database/release.go` calling `git tag -d` with `rel.TagName` and no end-of-options separator, while the session's qualifying findings target unrelated mirror-sync SSRF and upload symlink file-write paths.",
+    "evidence": [
+      "The advisory names `internal/database/release.go` and the vulnerable call `process.ExecDir(..., \"git\", \"tag\", \"-d\", rel.TagName)`, with the incomplete prior mitigation `strings.TrimLeft(r.TagName, \"-\")` only on a creation path.",
+      "The `mirror_address_local_network_ssrf` finding targets `internal/route/repo/setting.go` writing `mirror_address` through `Mirror.SaveAddress` and `internal/database/mirror.go` later reaching `git.IsURLAccessible` and `git remote update`; it does not involve release deletion, tag names, or Git option parsing.",
+      "The `upload_symlink_file_write` finding targets upload handling in `internal/route/repo/editor.go`, `internal/pathutil/pathutil.go`, and `internal/database/repo_editor.go`, where an intermediate symlink is followed during file creation; it does not involve release deletion, tag names, or Git option parsing."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_455ba01b/mirror_address_local_network_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_455ba01b/mirror_address_local_network_ssrf/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_455ba01b/mirror_address_local_network_ssrf/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_455ba01b/upload_symlink_file_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_455ba01b/upload_symlink_file_write/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_455ba01b/upload_symlink_file_write/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

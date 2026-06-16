@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_file_upload_and_write",
+  "summary": "The Dockerized reproduction starts Gogs v0.13.4, commits a symlinked repository path as a low-privilege repo writer, uploads a crafted filename through the web upload flow, and proves that Gogs writes `/tmp/evohunt_owned.txt` outside the repository root while the bare repo tree remains unchanged.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should create `/tmp/evohunt_owned.txt` with attacker-controlled content from the upload flow even though the bare repository tree still contains only the committed `pivot` symlink, proving the write escaped the repository root.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned upstream Gogs `v0.13.4` at `d958a47a0e9d8747e399c687fdb3ec64a3b1a736`, built the reproduction image, started the target service, and printed `PROOF: wrote /tmp/evohunt_owned.txt outside the repository root while the repo tree remained ['pivot']`.",
+  "verification_method": "The helper verifies two conditions: `/tmp/evohunt_owned.txt` exists with the expected attacker-controlled content, and `git --git-dir <repo-root>/attacker/ownedrepo.git ls-tree -r --name-only master` still returns only `pivot`. Together these checks distinguish an escaped filesystem write from a normal in-repository upload or an unrelated startup artifact.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included the exact proof string `PROOF: wrote /tmp/evohunt_owned.txt outside the repository root while the repo tree remained ['pivot']`.",
+    "The helper confirmed the proof file content matched `owned by evohunt\\n`.",
+    "The helper confirmed the bare repository tree still contained only `pivot` after the upload flow completed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the public Gogs repository on the host, checks out the pinned vulnerable release commit, copies that checkout into the Docker build context, and also mounts the checked-out repository read-only into the container at /target-repo.",
+    "pinned_commit_or_ref": "d958a47a0e9d8747e399c687fdb3ec64a3b1a736",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/run_inside_container.sh"
+    ]
+  }
+}

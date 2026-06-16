@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction builds the pinned vulnerable SDK, starts a task-enabled Streamable HTTP server, creates a victim task in one session, and demonstrates that a second session can enumerate the victim task ID and retrieve the secret task result.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a second MCP session can read task metadata and the completed result belonging to a different session, including the exact proof string TOP_SECRET_FROM_VICTIM_TASK.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned @modelcontextprotocol/sdk at commit 384311b9b8452017f5f81819c133dc45c667cfa4, built the reproduction image, and printed JSON with distinct victim and attacker session IDs, the victim task ID inside enumeratedTaskIds, and stolenText equal to TOP_SECRET_FROM_VICTIM_TASK.",
+  "verification_method": "reproduction/verify.sh runs the helper inside the container, writes the helper's stdout JSON to a temporary file, and asserts that the victim and attacker session IDs differ, the attacker-visible task list contains the victim task ID, and stolenText matches the proof string. Those checks distinguish cross-session disclosure from a generic startup, parser, or task-creation success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed a JSON object containing victimSessionId, attackerSessionId, victimTaskId, enumeratedTaskIds, and stolenText.",
+    "The attacker-visible enumeratedTaskIds array contained the victim task ID created by the other session.",
+    "The stolenText field matched the expected proof signal TOP_SECRET_FROM_VICTIM_TASK and the verification helper exited successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "384311b9b8452017f5f81819c133dc45c667cfa4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc-task-cross-session.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

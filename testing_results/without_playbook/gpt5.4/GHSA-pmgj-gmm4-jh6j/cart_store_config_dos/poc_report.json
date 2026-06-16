@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_dos",
+  "summary": "The Docker-based reproduction pins a vulnerable Craft Commerce 5.5.2 checkout, installs it into a fresh Craft app from a mounted path repository, and confirms that default store booleans persist as empty strings and trigger an unauthenticated cart-flow `TypeError` with HTTP 500.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a fresh default store row contains empty-string values for env-capable boolean settings and that a public cart request returns HTTP 500 with a `craft\\\\commerce\\\\models\\\\Store` getter `TypeError`, demonstrating unauthenticated denial of service on the cart endpoint.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned and checked out Craft Commerce commit `fb12a9fde8927af50198ea5f190d20753a8510d5` (`5.5.2`), mounted that checkout into the container as a Composer path repository, and installed the package from `dist: [path] /target-repo fb12a9fde8927af50198ea5f190d20753a8510d5`. The verifier printed `STORE_ROW={\"id\":1,\"name\":\"Primary\",\"autoSetCartShippingMethodOption\":\"\",\"autoSetPaymentSource\":\"\"}` and then a `GET /actions/commerce/cart/get-cart` returned HTTP 500 with `craft\\\\commerce\\\\models\\\\Store::getAutoSetCartShippingMethodOption(): Return value must be of type string|bool, null returned` from `vendor/craftcms/commerce/src/models/Store.php:416`, with the stack reaching `src/elements/Order.php:1699`, `src/services/Carts.php:168`, and `src/controllers/CartController.php:88`/`:622`.",
+  "verification_method": "The verifier bootstraps a fresh Craft app, forces Commerce 5.5.2 to install from the mounted target checkout via a Composer path repository, prints the mounted ref and resolved package metadata, captures the persisted `commerce_stores` row, and then calls the public cart endpoint. Reproduction succeeds only if the request returns HTTP 500 and the response body contains the exact `Store::getAutoSetCartShippingMethodOption()` type-error signature together with a stack trace into the installed Commerce source.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Verifier output includes the mounted Git ref `fb12a9fde8927af50198ea5f190d20753a8510d5` and Composer metadata showing `craftcms/commerce` version `5.5.2` installed from `dist: [path] /target-repo ...`.",
+    "Verifier output includes a `STORE_ROW=` line showing empty-string `autoSetCartShippingMethodOption` and `autoSetPaymentSource` values on the fresh install.",
+    "The reproduction prints `GET_CART_STATUS=500` and the JSON error body containing `Store::getAutoSetCartShippingMethodOption(): Return value must be of type string|bool, null returned`.",
+    "The reported stack trace reaches `vendor/craftcms/commerce/src/elements/Order.php:1699`, `vendor/craftcms/commerce/src/services/Carts.php:168`, and `vendor/craftcms/commerce/src/controllers/CartController.php`, confirming that the public cart flow crashed in the expected target code path."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "fb12a9fde8927af50198ea5f190d20753a8510d5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

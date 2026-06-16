@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "predictable_identifier_auth_bypass",
+  "summary": "The reproduction bundle starts n8n 2.4.6, creates an active workflow with a public webhook trigger and a Wait node, then resumes the resulting waiting execution through an unauthenticated guessed `/webhook-waiting/{executionId}` request.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated request to a guessed waiting-webhook execution ID should resume another user's waiting workflow and cause downstream proof logic to run.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `n8n@2.4.6`, started the vulnerable target, created a waiting execution with ID `1`, and then resumed it with unauthenticated `GET /webhook-waiting/1`. The helper verified that execution `1` reached `success` and that the execution record contained the downstream proof marker `resumed-without-auth`.",
+  "verification_method": "The helper script polls the authenticated executions API to confirm the workflow enters `waiting`, sends unauthenticated guesses to `/webhook-waiting/{id}`, and then verifies that the targeted execution transitions to `success` with the proof marker present in its execution record.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] owner observed waiting execution id: 1",
+    "[evohunt] attacker guess 1 -> 200 {'message': 'Workflow was started'}",
+    "[evohunt] verification passed: unauthenticated guess 1 resumed execution 1 and produced proof marker 'resumed-without-auth'",
+    "[evohunt] SUCCESS: unauthenticated wait-webhook resume reproduced"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the helper container while a vulnerable n8n 2.4.6 target container runs on an isolated Docker network.",
+    "pinned_commit_or_ref": "5e11c29238dfa8100cfa844f2ac6bf4e017166a6 (tag: n8n@2.4.6)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.py",
+      "reproduction/workflow.json"
+    ]
+  }
+}

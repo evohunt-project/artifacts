@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The reproduction feeds jsPDF a crafted GIF whose declared frame dimensions are 65535x65535. The vulnerable decode path does not complete within the verification window, demonstrating attacker-controlled resource exhaustion.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make the vulnerable jsPDF process hang or terminate abnormally while decoding the crafted GIF, rather than returning quickly from `addImage()`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` launched jsPDF locally against the crafted GIF from the final finding folder layout. The decoder remained busy beyond the five-second verification window, and the harness terminated it and reported success.",
+  "verification_method": "The harness runs the vulnerable image-processing call in a separate local Node process, waits five seconds, and treats either a persistent hang or abnormal termination during GIF decoding as the expected denial-of-service signal. A fast successful return is treated as reproduction failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+      "reproduction/run.log contains the success marker emitted when the vulnerable decode path failed to complete within the verification window.",
+      "reproduction/container.log captures the jsPDF helper reaching `doc.addImage()` with the crafted GIF before stalling."
+  ],
+  "limitations_or_blockers": [
+    "The proof demonstrates availability impact through deterministic process exhaustion behavior, not data corruption or code execution."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/entrypoint.sh",
+      "reproduction/poc.js"
+    ]
+  }
+}

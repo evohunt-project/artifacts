@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:22:23.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_01a0be19",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-c279-989m-238f/GHSA-c279-989m-238f.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated_mcp_http_tool_exposure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_01a0be19/unauthenticated_mcp_http_tool_exposure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_01a0be19/unauthenticated_mcp_http_tool_exposure/vulnerability_report.json",
+      "title": "Unauthenticated local MCP HTTP/SSE server exposes operator-authorized filesystem and session tools",
+      "vulnerability_type": "missing_authentication",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding concerns an unauthenticated local MCP HTTP/SSE transport in `client/mcp/*`, while the advisory is a server-side nil pointer dereference in `server/handlers/sessions.go:tunnelCloseHandler` during reverse-tunnel close handling.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "H",
+          "SI": "H",
+          "SA": "H"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:H/SI:H/SA:H"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The finalized qualifying finding targets the client-side MCP HTTP/SSE authentication boundary and does not identify the advisory's reverse-tunnel nil dereference in `tunnelCloseHandler`.",
+    "evidence": [
+      "The advisory describes `server/handlers/sessions.go` lines 172 and 175 in `tunnelCloseHandler`, where reverse-tunnel close handling dereferences `tunnel.SessionID` after `core.Tunnels.Get(...)` returned nil.",
+      "The finalized qualifying finding is rooted in `client/command/mcp/start.go`, `client/mcp/mcp.go`, `client/mcp/server.go`, and `client/mcp/filesystem.go`, and its recorded PoC demonstrates unauthenticated local MCP tool access plus queued `fs_rm` against a beacon.",
+      "The finding's root cause is missing authentication on a loopback MCP HTTP/SSE server, not the advisory's reverse-tunnel close logic, nil dereference, or reverse-tunnel ownership check."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_01a0be19/unauthenticated_mcp_http_tool_exposure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_01a0be19/unauthenticated_mcp_http_tool_exposure/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_01a0be19/unauthenticated_mcp_http_tool_exposure/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

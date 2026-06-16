@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "access_control_bypass",
+  "summary": "The Docker-based reproduction confirms that a guest token bound to the births dashboard can change the saved Girls chart filter from girl to boy and still retrieve boy-filtered chart data through the normal chart-data authorization path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should allow an embedded guest request to keep the original dashboard and slice context, change the saved chart's filter from girl to boy, and receive results that match the tampered boy filter instead of the chart owner's saved girl filter.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Apache Superset at commit 6a1c30e5e7c3e28d0549c9c2ac0ff61607f26a2f, built the reproduction image, initialized Superset, and passed guest_token_query_tampering_test.py. The verification helper observed the EVOHUNT_PROOF signal after the returned metric values matched direct SQL SUM(num) results for gender='boy' while the saved chart filter remained girl.",
+  "verification_method": "The host run.sh clones the pinned vulnerable commit and launches verify.sh in Docker. verify.sh runs the pytest scenario, and the test only prints EVOHUNT_PROOF after confirming that a real guest token reaches the chart-data command path, the saved chart's stored filter is still girl, each returned metric matches a direct SQL aggregation for gender='boy', and at least one checked row differs from the girl aggregate. verify.sh then greps for EVOHUNT_PROOF.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "./reproduction/run.sh exited successfully after cloning the target repository, building the image, and finishing verification.",
+    "guest_token_query_tampering_test.py passed inside the container.",
+    "verify.sh only accepts the run after the pytest log contains the EVOHUNT_PROOF marker.",
+    "The proof condition is based on direct SQL comparison against the tampered boy filter, not just HTTP success or generic chart output."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "6a1c30e5e7c3e28d0549c9c2ac0ff61607f26a2f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/evohunt_guest_token_superset_test_config.py",
+      "reproduction/guest_token_query_tampering_test.py",
+      "reproduction/requirements-base.txt",
+      "reproduction/requirements-repro.txt"
+    ]
+  }
+}

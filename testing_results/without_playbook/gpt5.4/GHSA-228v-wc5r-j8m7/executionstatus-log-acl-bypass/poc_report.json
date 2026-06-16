@@ -1,0 +1,25 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "authorization_bypass_information_disclosure",
+  "summary": "The reproduction starts OliveTin with separate operator and view-only accounts, executes a secret-bearing action as the operator, verifies the viewer sees no entries through GetLogs, and then confirms the viewer can still recover the secret output through ExecutionStatus.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A user with view-only access but without logs permission should not be able to read privileged action output, yet ExecutionStatus should return the secret log output anyway.",
+  "actual_observed_result": "The viewer account received an empty GetLogs result and then successfully read the admin action output containing supersecret-proof-value from ExecutionStatus.",
+  "verification_method": "The reproduction checks that the viewer dashboard exposes bindingId secret-proof with canExec set to false, confirms GetLogs totalCount remains 0 for the viewer, and then asserts that ExecutionStatus for actionId secret-proof contains supersecret-proof-value and identifies the admin as the action owner.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Viewer dashboard response contains bindingId secret-proof while canExec is false.",
+    "Viewer GetLogs response reports totalCount 0.",
+    "Viewer ExecutionStatus response contains supersecret-proof-value and user admin."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/config.yaml",
+      "reproduction/exploit.sh"
+    ]
+  }
+}

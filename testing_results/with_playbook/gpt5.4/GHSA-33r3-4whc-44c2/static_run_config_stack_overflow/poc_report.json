@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The reproduction clones the pinned vulnerable Vite+ revision, feeds `vite_static_config` a generated `vite.config.ts` whose `run` field contains 3400 nested arrays, and observes a deterministic stack-overflow abort during static config extraction.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that a deeply nested static `run` config crashes the extractor and aborts the CLI path with a stack-overflow signal.",
+  "actual_observed_result": "Running `./reproduction/run.sh` printed `running depth=3400 ...`, then `thread 'main' (11) has overflowed its stack`, `fatal runtime error: stack overflow, aborting`, and finally `EVOHUNT_SUCCESS: nested run config causes a stack-overflow abort`.",
+  "verification_method": "The harness writes a temporary `vite.config.ts` with a generated 3400-level nested array inside the `run` config, invokes `vite_static_config::resolve_static_config`, and requires the exact `stack overflow` runtime signal to appear. This distinguishes the bug from a normal parse rejection or unrelated failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction log contains `thread 'main' (11) has overflowed its stack`.",
+    "The reproduction log contains `fatal runtime error: stack overflow, aborting`.",
+    "The reproduction log contains `EVOHUNT_SUCCESS: nested run config causes a stack-overflow abort`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the reproduction image, and mounts the checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "e833657deff6259cef9a032ccf7235104d5b9bd8",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_in_container.sh",
+      "reproduction/harness/Cargo.toml",
+      "reproduction/harness/Cargo.lock",
+      "reproduction/harness/src/main.rs"
+    ]
+  }
+}

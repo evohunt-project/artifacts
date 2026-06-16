@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:50:01.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0f30de22",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-gjw9-34gf-rp6m/GHSA-gjw9-34gf-rp6m.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "public_s3_signed_url_write",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0f30de22/public_s3_signed_url_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0f30de22/public_s3_signed_url_write/vulnerability_report.json",
+      "title": "Public signed-upload route mints arbitrary S3 PUT URLs with workspace credentials",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a public attachment-route authorization flaw that signs attacker-chosen S3 uploads with datasource credentials, not the advisory's bash automation step in `packages/server/src/automations/steps/bash.ts` where interpolated command text reaches `execSync`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "H",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:H/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described root cause. The advisory is a command injection/RCE issue in the bash automation step where user-controlled automation code is interpolated and executed with `execSync`, while the session's only qualifying finding is an unauthenticated S3 presigned-upload issuance bug on a public attachment helper route.",
+    "evidence": [
+      "The advisory JSON names `packages/server/src/automations/steps/bash.ts` and describes `processStringSync(inputs.code, context)` feeding `execSync(command)` as the vulnerable mechanism.",
+      "The only final `qualifying_vuln` finding listed in `.judge/input_manifest.json` is `public_s3_signed_url_write`.",
+      "That finding report attributes the issue to `POST /api/attachments/:datasourceId/url` in `repo/packages/server/src/api/routes/static.ts:44` and `repo/packages/server/src/api/controllers/static/index.ts:533`, where attacker-controlled `bucket` and `key` values are signed with workspace S3 credentials.",
+      "The finding and its PoC artifacts discuss unauthorized S3 PUT URL issuance and never describe the advisory's bash automation path, template interpolation into shell commands, or `execSync` command execution."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0f30de22/public_s3_signed_url_write",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0f30de22/public_s3_signed_url_write/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0f30de22/public_s3_signed_url_write/poc_report.json",
+      "poc_report_status": "failed"
+    }
+  ]
+}

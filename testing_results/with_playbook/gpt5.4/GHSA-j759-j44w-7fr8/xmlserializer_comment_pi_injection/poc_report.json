@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "output_injection_xss",
+  "summary": "The Docker-based reproduction confirmed that comment data, processing-instruction data, and processing-instruction targets can escape their intended XML boundary and materialize attacker-injected elements after serialization and reparsing.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should produce serialized XML in which attacker-controlled comment and processing-instruction payloads break out into real `<injected .../>` elements, proving XML structure injection rather than a generic parse error.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned xmldom at tag 0.8.12, built the reproduction image, and printed `COMMENT_INJECTION_CONFIRMED`, `PI_INJECTION_CONFIRMED`, and `XMLSERIALIZER_COMMENT_PI_INJECTION_CONFIRMED` after reparsing the serialized output and observing injected elements in both comment and PI cases.",
+  "verification_method": "The verification helper runs a Node harness inside the container, serializes crafted comment and processing-instruction payloads with `requireWellFormed: true`, reparses the resulting XML, and asserts that injected elements are present. The helper emits distinct proof strings only when the injected elements are actually observed.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `COMMENT_XML=<root><!----><injected from=\"comment\"/><!----></root>` and `COMMENT_INJECTED_COUNT=1`.",
+    "The run printed `PI_DATA_XML=<root><?x ?><injected from=\"pi-data\"/><?x?></root>` and `PI_DATA_INJECTED_COUNT=1`.",
+    "The run printed `PI_TARGET_XML=<root><?x?><injected from=\"pi-target\"/><?x ?></root>` and `PI_TARGET_INJECTED_COUNT=1`.",
+    "The verification helper emitted `COMMENT_INJECTION_CONFIRMED`, `PI_INJECTION_CONFIRMED`, and `XMLSERIALIZER_COMMENT_PI_INJECTION_CONFIRMED`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "0.8.12",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/poc.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "status": "failed",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle is designed to prove that a low-privilege team-admin key cannot set `allowed_routes` on `/key/generate`, can set the same field on `/key/service-account/generate`, and can then use the returned service-account key to read decrypted cache settings. The bundle was generated, but the end-to-end Docker run did not complete in this session because base-image acquisition stalled before the proof container started.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should mint a low-privilege attacker key, show that `/key/generate` rejects attacker-supplied `allowed_routes`, show that `/key/service-account/generate` accepts the same field for the same attacker role, and then use the returned service-account key to read the seeded `cache-secret-proof` value from `GET /cache/settings`.",
+  "actual_observed_result": "Invoking `./reproduction/run.sh` created the temporary source checkout and entered the Docker build stage, but the container image acquisition path did not complete in this environment. An isolated follow-up pull probe for `ghcr.io/berriai/litellm:main-stable` also timed out after 30 seconds without the image becoming locally available, so the proof container never reached the exploit oracle.",
+  "verification_method": "The helper script in `reproduction/prove.py` waits for the proxy, creates a low-privilege attacker key, asserts that direct `/cache/settings` access is denied and that low-priv `/key/generate` rejects `allowed_routes`, then escalates via `/key/service-account/generate` and expects the exact proof secret `cache-secret-proof` to be returned from `GET /cache/settings`. That sequence distinguishes the intended route-authorization bypass from a generic startup failure or unrelated management-route error.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "The final reproduction bundle was generated under `service_account_allowed_routes_cache_settings_bypass/reproduction/` and invoked via `./reproduction/run.sh`.",
+    "The observed run progressed through temporary checkout creation and into Docker image acquisition before stalling.",
+    "A bounded follow-up pull probe for `ghcr.io/berriai/litellm:main-stable` timed out after 30 seconds in the same environment, confirming that the blocker occurred before the proof container could execute `prove.py`."
+  ],
+  "limitations_or_blockers": [
+    "The session environment did not complete public Docker image acquisition during the observed run, so the Docker-based proof container never reached the exploit oracle.",
+    "Because `./reproduction/run.sh` did not get as far as running `reproduction/prove.py`, the expected proof string was not observed in this session."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh creates a temporary workspace, fetches the pinned LiteLLM revision from GitHub, and mounts that checkout into the proof container at `/target-repo`.",
+    "pinned_commit_or_ref": "e0d5c28db02b3219dbd944666a55f49732197922",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/config.yml",
+      "reproduction/entrypoint.sh",
+      "reproduction/prove.py",
+      "reproduction/seed.sql"
+    ]
+  }
+}

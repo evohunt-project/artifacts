@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "session_token_expiry_bypass",
+  "summary": "The reproduction starts Parse Server with a two-second session lifetime, warms the session cache with a valid token, and shows that the same token still authenticates on GET /users/me after server-side expiry but before cache eviction.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The same expired session token should still return HTTP 200 on a protected endpoint inside the cache window, then return an expired-session error after the cache entry is evicted.",
+  "actual_observed_result": "Running ./reproduction/run.sh produced a JSON proof block where staleWindow.preExpiryStatus was 200, staleWindow.expiredButCachedStatus was 200, and staleWindow.postCacheStatus was 400 with code 209 and error \"Session token is expired.\".",
+  "verification_method": "The harness creates a short-lived session, makes one pre-expiry authenticated request to warm the cache, waits until the session is expired but still cached, repeats the same authenticated request, and finally retries after cache eviction. The proof only passes if the post-expiry cached request succeeds and the post-cache control request fails as expired.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction emitted a JSON proof block showing preExpiryStatus=200, expiredButCachedStatus=200, and postCacheStatus=400.",
+    "The failing control request after cache eviction returned Parse error code 209 with the message \"Session token is expired.\".",
+    "The successful post-expiry request hit the same GET /users/me endpoint as the control request, isolating the difference to the cache window rather than route selection."
+  ],
+  "limitations_or_blockers": [
+    "The verified success signal covers the default stale-window bypass. The stronger extendSessionOnUse renewal variant was supported by code review but was not part of the reproduced proof signal."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "f376abb60e38a7bce723163ec7ab4fb9697df79d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/verify_auth_cache_bug.js"
+    ]
+  }
+}

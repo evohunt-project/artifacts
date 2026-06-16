@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_traversal",
+  "summary": "The Docker-based reproduction confirmed that the vulnerable HTTP handlers can create and delete files outside the configured webroot in the v1.1.4 release.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A crafted traversal PUT should create an attacker-chosen file outside the webroot, and a crafted double-encoded delete request should remove an attacker-chosen file outside the webroot.",
+  "actual_observed_result": "Running ./reproduction/run.sh printed `EVOHUNT_SUCCESS: traversal-bearing PUT created an out-of-root file and double-encoded delete removed one` after the container verified that a traversal PUT wrote `put-owned.txt` outside the webroot and that a double-encoded `?delete` request removed `delete-target.txt` outside the webroot.",
+  "verification_method": "The container starts goshs with a temporary webroot, sends a `--path-as-is` PUT containing encoded `..` segments, and verifies the exact `owned` bytes in the out-of-root file. It then sends a double-encoded delete path, expects the buggy error response, and separately verifies that the chosen out-of-root file no longer exists.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final run emitted `EVOHUNT_SUCCESS: traversal-bearing PUT created an out-of-root file and double-encoded delete removed one`.",
+    "The reproduction verified that `/tmp/webroot-path-escape-poc/outside/put-owned.txt` contained the attacker-controlled `owned` payload.",
+    "The reproduction verified that `/tmp/webroot-path-escape-poc/outside/delete-target.txt` was removed by the crafted delete request."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "5b5228ff042f284bc432e706699cf7252caf96fa",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh"
+    ]
+  }
+}

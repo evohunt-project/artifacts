@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that Parse Server's public GraphQL introspection guard blocks __schema but still allows unauthenticated __type queries to disclose protected schema metadata when graphQLPublicIntrospection is disabled.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a public __schema query is denied while a public __type(User) query still succeeds and exposes GraphQL type metadata that the deployment intends to hide from unauthenticated callers.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned 8.6.14 commit, launched MongoDB and Parse Server in the reproduction environment, observed HTTP 403 with the expected introspection denial for __schema, then observed HTTP 200 for __type(User) and disclosed User fields including username, emailVerified, and authData. The run ended with the proof string EVOHUNT_PROOF: public __type GraphQL introspection bypass reproduced.",
+  "verification_method": "The verification helper checks both sides of the authorization boundary: it requires the __schema request to fail with the specific Introspection is not allowed error, and it separately requires the public __type(User) request to succeed and disclose a stable subset of sensitive schema fields. This distinguishes the real boundary bypass from a generic startup error, network failure, or unrelated GraphQL response.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction observed HTTP 403 for the public __schema query with the expected Introspection is not allowed error.",
+    "The reproduction observed HTTP 200 for the public __type(User) query and disclosed User fields including ACL, authData, email, emailVerified, objectId, and username.",
+    "The containerized verification step emitted EVOHUNT_PROOF: public __type GraphQL introspection bypass reproduced."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "c97554fc4a2ad27131928cdace3b04823a6c2642",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.sh",
+      "reproduction/wait_for_http.sh",
+      "reproduction/verify.py"
+    ]
+  }
+}

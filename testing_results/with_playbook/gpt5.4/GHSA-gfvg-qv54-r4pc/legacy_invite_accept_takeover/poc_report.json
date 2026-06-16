@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a low-privilege member can enumerate a pending invite shell, submit the legacy acceptance request with an arbitrary inviterId, and obtain the pending global-admin account session.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause the invite-acceptance flow to emit the EVOHUNT_PROOF string after a member successfully claims a pending global-admin invite and the server returns an authenticated session for that claimed account.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned n8n at commit d222a6a7ce721eec15bb81205d55fa0c02dbf416, built the Docker image, executed the focused integration PoC, and printed 'EVOHUNT_PROOF: member claimed pending admin invite ...'. The Jest run then passed after confirming the claimed account was logged in as global:admin.",
+  "verification_method": "The host run script executes the focused integration PoC inside the container, captures the test output, and requires the exact EVOHUNT_PROOF string before reporting success. The test itself verifies both the takeover response and the authenticated /login session for the claimed global-admin shell.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction run emitted the exact proof string 'EVOHUNT_PROOF: member claimed pending admin invite ...' from the focused integration test.",
+    "The Jest suite passed after asserting that POST /rest/invitations/:id/accept returned the pending invitee ID with role global:admin.",
+    "The same agent then fetched GET /rest/login successfully and observed the claimed pending account as the authenticated global:admin session."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that disposable checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "d222a6a7ce721eec15bb81205d55fa0c02dbf416",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run-repro.sh",
+      "reproduction/invite_takeover.poc.test.ts"
+    ]
+  }
+}

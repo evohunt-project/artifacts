@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T04:45:51.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ba768f18",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-gfhq-7499-f3f2/GHSA-gfhq-7499-f3f2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "user_manager_role_escalation_to_ts",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ba768f18/user_manager_role_escalation_to_ts",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ba768f18/user_manager_role_escalation_to_ts/vulnerability_report.json",
+      "title": "User-manager role can self-promote to Trust and Safety via flag updates",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding covers self-assignment of the `ts` role through `PATCH /user/{user}` and unrestricted flag persistence, not the advisory's DPA creation flow where empty `evidence` is coerced to a falsey value and later rendered as a genuine self-deletion request.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only final qualifying finding is a role-escalation path in the user update workflow, while the advisory describes a DPA submission bug where an empty `evidence` value can make a third-party under-13 report appear to be a self-authored deletion request.",
+    "evidence": [
+      "The advisory root cause is in `app/Http/Controllers/DPAController.php:68-76`, where the under-13 branch stores `underage` from `evidence`, and `resources/views/dpa/view.blade.php:67-73`, where a falsey `underage` value is rendered as `dpa-own-account`.",
+      "The DPA form distinguishes `own-removal` from `under-13` in `resources/views/dpa/new.blade.php:40-66`, with the `evidence` textarea shown only for the under-13 path described in the advisory.",
+      "The final qualifying finding instead targets `app/Policies/UserPolicy.php:58-65`, `app/Http/Controllers/UserController.php:41-42`, `resources/views/user/view.blade.php:73-94`, and `app/Models/User.php:147-156`, which together allow a `user-manager` to persist the `ts` flag onto their own account."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ba768f18/user_manager_role_escalation_to_ts",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ba768f18/user_manager_role_escalation_to_ts/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_ba768f18/user_manager_role_escalation_to_ts/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

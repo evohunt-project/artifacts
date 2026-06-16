@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:03:38.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_86601ab3",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-h8w2-rv57-vc6f/GHSA-h8w2-rv57-vc6f.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "profiler_localhost_fallback_token_leak",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_86601ab3/profiler_localhost_fallback_token_leak",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_86601ab3/profiler_localhost_fallback_token_leak/vulnerability_report.json",
+      "title": "Profiler localhost fallback leaks X-SF-TOKEN to unprivileged local listeners",
+      "vulnerability_type": "sensitive_data_exposure",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is in the profiler export/header inheritance path and discloses `X-SF-TOKEN` to a loopback listener, while the advisory targets the Java agent RMI context endpoint's unsafe deserialization on JMX/RMI-exposed ports.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory-described RMI/JMX unsafe-deserialization root cause.",
+    "evidence": [
+      "The advisory describes the OpenTelemetry Java agent's RMI instrumentation registering a custom endpoint that deserialized incoming data without serialization filters, enabling JMX/RMI-reachable remote code execution before 2.26.1.",
+      "The upstream 2.26.1 patch replaces `ContextPayload.read(ObjectInput)` object deserialization in `instrumentation/rmi/javaagent/.../ContextPayload.java` with bounded primitive reads, confirming the vulnerable root cause is the RMI context propagation endpoint rather than a generic credential or export issue.",
+      "The only final qualifying finding retained by this session is `profiler_localhost_fallback_token_leak`, which concerns `SplunkConfiguration`, `ProfilerEnvVarsConfiguration`, `LogExporterBuilder`, and `JfrActivator` leaking `X-SF-TOKEN` to `http://localhost:4318/v1/logs`; it does not involve RMI, JMX, the custom context endpoint, or unsafe object deserialization."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_86601ab3/profiler_localhost_fallback_token_leak",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_86601ab3/profiler_localhost_fallback_token_leak/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_86601ab3/profiler_localhost_fallback_token_leak/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

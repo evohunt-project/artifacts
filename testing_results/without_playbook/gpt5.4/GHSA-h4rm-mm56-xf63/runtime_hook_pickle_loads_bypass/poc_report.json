@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "deserialization_rce",
+  "summary": "The reproduction enables Fickling's recommended runtime hook, deserializes attacker-controlled bytes with pickle.loads(), and verifies that the payload still executes.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should prove that always_check_safety() does not intercept pickle.loads(), allowing attacker-controlled pickle data to execute a command and create the expected proof file.",
+  "actual_observed_result": "The reproduction built a container with the vulnerable package snapshot, enabled always_check_safety(), ran pickle.loads() on a malicious payload, and observed the expected proof file created by the executed payload.",
+  "verification_method": "The exploit script removes any stale proof file, executes the malicious pickle through pickle.loads() after enabling always_check_safety(), and then checks for an exact marker file and marker contents written by the payload.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The process reported that pickle.loads() returned without raising UnsafeFileError under always_check_safety().",
+    "The proof file /tmp/evohunt_hook_bypass_proof was created during deserialization.",
+    "The proof file contained the exact expected marker string, showing attacker-controlled command execution rather than an unrelated failure."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/fickling/__init__.py",
+      "reproduction/fickling/hook.py"
+    ]
+  }
+}

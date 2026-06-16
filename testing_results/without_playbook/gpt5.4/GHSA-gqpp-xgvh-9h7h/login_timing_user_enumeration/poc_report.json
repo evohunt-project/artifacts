@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "timing_side_channel_user_enumeration",
+  "summary": "The Docker-based reproduction confirms that Parse Server 8.6.30 leaks username validity through login timing. Failed logins for an existing username consistently take about 49 ms, while failed logins for a nonexistent username take about 2 ms.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show a stable timing gap where failed logins for an existing username are materially slower than failed logins for a nonexistent username, proving that the public login flow leaks whether an account exists.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Parse Server 8.6.30, started MongoDB and the vulnerable server, created a test user, and measured 12 failed logins for an existing username versus 12 for a nonexistent username. The verifier observed a median existing-user latency of 49.322 ms, a median nonexistent-user latency of 2.270 ms, and a median gap of 47.052 ms.",
+  "verification_method": "The verifier signs up a fresh user, alternates failed login attempts against that username and a guaranteed-missing username, and measures end-to-end request latency. It passes only if the median existing-user failure latency exceeds the nonexistent-user failure latency by at least 20 ms and the average existing-user latency is more than triple the average nonexistent-user latency.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The verifier recorded 12 existing-user failed login samples between 48.257 ms and 53.184 ms.",
+    "The verifier recorded 12 nonexistent-user failed login samples between 1.732 ms and 3.103 ms.",
+    "The median timing gap was 47.052 ms, well above the 20 ms success threshold."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "16a583da10081165576cde82f976b472e1796bcf",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/probe.js",
+      "reproduction/verify.sh",
+      "reproduction/wait_for_http.js",
+      "reproduction/wait_for_tcp.js"
+    ]
+  }
+}

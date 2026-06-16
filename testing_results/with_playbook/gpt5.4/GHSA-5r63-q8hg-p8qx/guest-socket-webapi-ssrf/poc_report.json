@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The reproduction starts the repository-owned guest socket auth path and WebAPI request helper, then proves that a no-token client can fetch loopback-only HTTP content and receive the body through `device-webapi-request`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A no-token Socket.IO client should trigger a server-side GET to a loopback-only HTTP service and receive the proof string `evohunt-loopback-secret` back through the `device-webapi-request` event.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `206fee15277412bf2813f10ecb8531b93439993f`, built the helper image, connected to the guest socket flow without a token, and received the expected proof string `evohunt-loopback-secret` from the server-side fetch.",
+  "verification_method": "The helper reproduces the socket handshake and `device-webapi-request` handler using the repository code, emits the event without a token, and fails unless the response body exactly matches the loopback-only proof string returned by the internal HTTP target.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The container printed a reproduced status object whose `proof` and `result` fields both equaled `evohunt-loopback-secret`.",
+    "The run completed successfully with the message `[evohunt] SUCCESS: guest socket SSRF reproduced`.",
+    "The target URL used by the reproduced fetch was a loopback-only HTTP endpoint inside the container."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "206fee15277412bf2813f10ecb8531b93439993f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/package.json",
+      "reproduction/verify.js"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction clones mppx@0.4.7, installs its dependencies in a writable container workspace, starts a local upstream and the shipped Stripe proxy wrapper, then proves that a crafted POST against a free GET route is forwarded upstream with the proxy's injected Stripe credential.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should show that POST /stripe/v1/customers/cus_123, despite only GET being configured as free, reaches the upstream as POST with Authorization: Basic c2stdGVzdDo= and preserves the attacker body.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned mppx at 0742b760f8e1a12aa56a1abacb163c3267a0ada0, built the reproduction image, installed the target dependencies in-container, and produced response_status=200, upstream_method=POST, upstream_path=/v1/customers/cus_123, upstream_auth=Basic c2stdGVzdDo=, upstream_body=email=attacker%40example.com, followed by EVOHUNT_SUCCESS proxy free-route method bypass reproduced.",
+  "verification_method": "The helper checks for HTTP 200, the exact upstream method POST, the exact path /v1/customers/cus_123, the injected Basic auth derived from sk-test:, the preserved attacker body, and the final success marker EVOHUNT_SUCCESS proxy free-route method bypass reproduced.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final bundle emitted response_status=200 for the crafted POST request to the documented free GET route.",
+    "The upstream observer inside the reproduction recorded upstream_method=POST and upstream_path=/v1/customers/cus_123.",
+    "The upstream observer recorded upstream_auth=Basic c2stdGVzdDo=, proving the proxy injected its Stripe credential instead of forwarding the attacker header.",
+    "The upstream observer recorded upstream_body=email=attacker%40example.com, proving the attacker body was preserved through the method-bypass path.",
+    "The run ended with the exact success marker EVOHUNT_SUCCESS proxy free-route method bypass reproduced."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0742b760f8e1a12aa56a1abacb163c3267a0ada0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.mjs",
+      "reproduction/verify.sh"
+    ]
+  }
+}

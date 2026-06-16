@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction initializes the Pro route stack from commit 48ba499f83d521c4b42b69ea79770650c4959659, seeds a platform-user with no network roles, drives the public websocket registration endpoint with join_all=true, and verifies that the attacker-controlled host is added to both seeded networks.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A low-privilege platform-user with no network roles should be able to register an attacker-controlled host into every seeded network through WS /api/v1/auth-register/host.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned github.com/gravitl/netmaker at commit 48ba499f83d521c4b42b69ea79770650c4959659, built the harness image, executed the websocket registration flow, and produced EVOHUNT_RESULT output showing empty user_groups, empty user_network_roles, and joined_networks equal to victim-a and victim-b.",
+  "verification_method": "reproduction/verify.sh runs the compiled harness, extracts the EVOHUNT_RESULT JSON line, and asserts that requested_join_all is true, the platform-user has no network roles or user groups, and the resulting host joined both seeded networks.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The harness emitted EVOHUNT_RESULT JSON with joined_networks containing victim-a and victim-b.",
+    "The same result showed user_groups={} and user_network_roles={}, proving the joining user had no assigned network access.",
+    "The websocket flow completed against the real /api/v1/auth-register/host handler stack compiled from the pinned vulnerable commit."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, stages that checkout into the Docker build context, and mounts the host checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "48ba499f83d521c4b42b69ea79770650c4959659",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/evohunt_hostreg_harness.go",
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that incomplete DoQ frames can occupy the shared CoreDNS QUIC worker pool long enough to make a concurrent legitimate DoQ query time out, and that service recovers once the hold-open streams exit.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that incomplete DoQ frames occupy the global worker pool long enough for an otherwise valid DoQ query to fail with deadline exceeded, then recover once the hold-open streams end.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned CoreDNS v1.14.3, built the reproduction image, started the DoQ listener, confirmed a baseline rcode=NOERROR answers=0 extras=2 query result, then while 4 connections x 256 incomplete streams were held open the concurrent legitimate query failed with `query failed: deadline exceeded`; after the hold ended, a recovery query again returned rcode=NOERROR answers=0 extras=2. The run emitted EVOHUNT_DOQ_WORKER_EXHAUSTION_CONFIRMED. Repeated quic-go UDP receive-buffer warnings appeared in baseline, attack, and recovery output but did not affect verification.",
+  "verification_method": "The reproduction first proves the DoQ listener is healthy with a baseline query, then opens incomplete length-prefixed DoQ streams to pin workers, requires the concurrent legitimate query to fail specifically with `deadline exceeded`, and finally requires a recovery query to succeed after the hold-open streams close. This distinguishes the vulnerability from a generic startup failure, constant environment issue, or unrelated crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `EVOHUNT_DOQ_WORKER_EXHAUSTION_CONFIRMED`.",
+    "Baseline output contained `rcode=NOERROR answers=0 extras=2` before the attack phase.",
+    "Attack-phase output contained `query failed: deadline exceeded` while 4 connections x 256 incomplete DoQ streams were active.",
+    "Recovery output returned to `rcode=NOERROR answers=0 extras=2` after the hold-open streams exited."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable ref, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.14.3 (17fceec6d93fd1dde5ba6888c363f131ff6d647f)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Corefile",
+      "reproduction/doq_tool.go",
+      "reproduction/go.mod",
+      "reproduction/go.sum",
+      "reproduction/reproduce.sh"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The reproduction confirms that a user-authored tool payload can directly invoke handled-only `ReadFileTool` and disclose an arbitrary local file from the final bundle's clean rerun path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should send a caller-controlled `read_file_tool` payload to a `Task` where the tool is handled but not LLM-usable, return the contents of `/tmp/evohunt-proof.txt`, and emit `SUCCESS_SIGNAL: DIRECT_USER_TOOL_INJECTION_READ`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned tag `0.59.31`, built the Docker image, installed the target repo in the container, invoked the crafted `read_file_tool` payload, returned the proof file contents with line numbers, and emitted `SUCCESS_SIGNAL: DIRECT_USER_TOOL_INJECTION_READ`.",
+  "verification_method": "The helper script configures `ReadFileTool` with `use=false` and `handle=true`, sends a raw JSON tool payload through `Task.run(msg=...)`, checks that the returned content includes the proof string from `/tmp/evohunt-proof.txt`, and only then prints the success signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction proved that `read_file_tool` was not enabled for normal LLM use before the payload was sent.",
+    "The task returned the exact contents of `/tmp/evohunt-proof.txt` from the crafted tool payload path.",
+    "The run emitted `SUCCESS_SIGNAL: DIRECT_USER_TOOL_INJECTION_READ` after verifying the proof string."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0.59.31",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}
+

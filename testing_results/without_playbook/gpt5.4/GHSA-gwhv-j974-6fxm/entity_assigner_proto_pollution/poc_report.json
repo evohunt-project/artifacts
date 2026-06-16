@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "prototype_pollution",
+  "summary": "The reproduction confirms that a crafted JSON __proto__ payload passed into MikroORM's assign helper rewrites the entity instance prototype and makes attacker-controlled inherited properties resolve on the entity.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause a crafted __proto__ payload to change the entity's prototype so user.isAdmin resolves to true from attacker-controlled inherited data and the proof string is emitted.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned mikro-orm tag v7.0.0, checked out commit 0f9a62d6e34ce8b50b3195f3d84bb1a70013041b, built the Node 22 reproduction image, installed the workspace inside the container, and printed EVOHUNT_PROOF: user.isAdmin=true protoChanged=true together with JSON showing inheritedIsAdmin=true, protoChanged=true, and instanceOfUser=false.",
+  "verification_method": "reproduction/verify.sh runs the exploit script in the container and checks stdout for the exact proof string after the script confirms that the entity prototype changed, attacker-controlled inherited properties resolve on the entity, and instanceof no longer matches the original entity class.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "run.sh reported the checked-out vulnerable commit 0f9a62d6e34ce8b50b3195f3d84bb1a70013041b.",
+    "The exploit script emitted {\"ownKeys\":[\"name\"],\"inheritedIsAdmin\":true,\"inheritedTier\":\"root\",\"protoChanged\":true,\"protoKeys\":[\"isAdmin\",\"tier\"],\"instanceOfUser\":false}.",
+    "The verification step matched the exact proof string EVOHUNT_PROOF: user.isAdmin=true protoChanged=true."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at the pinned tag, mounts that checkout read-only at /target-repo, and the container copies it to a temporary writable workspace before installing dependencies and executing the exploit script.",
+    "pinned_commit_or_ref": "v7.0.0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/exploit.ts"
+    ]
+  }
+}

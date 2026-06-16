@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "cache_partition_bypass",
+  "summary": "The Docker-based reproduction confirms that an unaliased `PRIVATE` field is correctly kept out of cache while the same field becomes cacheable when queried through an alias on the no-session path.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show the unaliased `PRIVATE` field miss the cache while the aliased version is cached and served from the shared no-session cache path.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `graphql-hive/envelop` at `0434fbdf9e6a33a64f5cb5fe34662ea4815647eb`, installed dependencies, executed the Jest harness, and passed both checks: the unaliased `PRIVATE` selection caused two resolver executions, while the aliased selection caused one resolver execution and the run emitted `EVOHUNT_RESPONSE_CACHE_PRIVATE_ALIAS_BYPASS_CONFIRMED`.",
+  "verification_method": "The Jest harness uses resolver call counts as the oracle. It executes the same query twice under `session: () => null` and `scopePerSchemaCoordinate['User.name'] = 'PRIVATE'`, then distinguishes safe behavior from the bypass by requiring two resolver calls for the unaliased field and one resolver call for the aliased field.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Jest passed `does not cache an unaliased PRIVATE field without a session`.",
+    "Jest passed `incorrectly caches the same PRIVATE field when it is aliased`.",
+    "The run emitted `EVOHUNT_RESPONSE_CACHE_PRIVATE_ALIAS_BYPASS_CONFIRMED` and exited successfully."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0434fbdf9e6a33a64f5cb5fe34662ea4815647eb",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/response_cache_private_alias_bypass.spec.ts",
+      "reproduction/validation-jest.config.cjs"
+    ]
+  }
+}

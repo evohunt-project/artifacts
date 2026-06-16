@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:19:10.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2c389da7",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-2r2p-4cgf-hv7h/GHSA-2r2p-4cgf-hv7h.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "localhost_http_auth_bypass",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2c389da7/localhost_http_auth_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2c389da7/localhost_http_auth_bypass/vulnerability_report.json",
+      "title": "Fail-open localhost HTTP server exposes project graph and permits graph poisoning",
+      "vulnerability_type": "missing_authentication",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding reaches the same unauthenticated localhost routes, but it only identifies direct local-process access to 127.0.0.1 and does not identify the advisory's browser-origin root cause: wildcard CORS plus mutation handling that accepts non-application/json bodies.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's browser-driven CSRF root cause. The only qualifying finding proves unauthenticated localhost access by another local process, but it does not identify or exercise the wildcard CORS behavior and non-application/json mutation acceptance that make the advisory exploitable from a malicious web page.",
+    "evidence": [
+      "The advisory describes a browser-origin attack against the localhost server that depends on fail-open auth, `Access-Control-Allow-Origin: *`, and `/learn` accepting mutation bodies without enforcing `Content-Type: application/json`.",
+      "In upstream `v2.0.1`, `src/server/http.ts` emits `Access-Control-Allow-Origin: *` from the shared JSON response helper and OPTIONS handler, and `handleLearn` parses the raw body with `JSON.parse(body)` without any Content-Type gate.",
+      "The `localhost_http_auth_bypass` report and PoC only show direct curl requests from another local user/process to `/query` and `/learn`; they do not mention browser origins, CORS response headers, or the `text/plain` CSRF write path described by the advisory.",
+      "Because the finding stops at a same-host local attacker model, it does not identify the full advisory-described source-to-sink path from a malicious web page through the browser security boundary into the vulnerable localhost server."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2c389da7/localhost_http_auth_bypass",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2c389da7/localhost_http_auth_bypass/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_2c389da7/localhost_http_auth_bypass/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

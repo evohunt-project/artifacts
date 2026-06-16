@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction clones n8n@1.123.15, builds the minimal workspace packages needed for the OAuth controller path, injects a focused integration test, and proves that a credential:read actor can overwrite shared oauthTokenData without credential:update.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The reproduction should show that a user with credential:read but not credential:update can complete the OAuth reconnect flow and persist attacker-controlled oauthTokenData onto a shared credential.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned tag n8n@1.123.15, built the helper image, installed dependencies, built the required workspace packages, and passed the focused Jest proof. The run emitted the PASS line for oauth2-readonly-reconnect.test.ts, the exploit-specific test name, the proof string confirming shared oauthTokenData overwrite without credential:update, and the final success marker.",
+  "verification_method": "The reproduction injects a focused integration test that asserts the attacker has credential:read but not credential:update, drives the OAuth auth and callback routes, and then reads the stored credential back to verify that oauthTokenData changed to attacker-controlled token values.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "PASS test/integration/controllers/oauth/oauth2-readonly-reconnect.test.ts",
+    "allows a read-only sharee to reconnect a shared OAuth credential and overwrite stored tokens",
+    "[evohunt] proof: read-only sharee overwrote shared OAuth credential oauthTokenData without credential:update",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "n8n@1.123.15",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/oauth2-readonly-reconnect.test.ts"
+    ]
+  }
+}

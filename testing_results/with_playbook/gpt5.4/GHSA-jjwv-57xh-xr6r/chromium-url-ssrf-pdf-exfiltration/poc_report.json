@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_request_forgery",
+  "summary": "The Docker-based reproduction built the pinned Gotenberg image, exposed an internal-only fixture page on an isolated Docker network, and verified that Chromium URL conversion returned the fixture body inside the generated PDF.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause Gotenberg to fetch an internal-only HTTP page and return its proof string inside the generated PDF.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 410c1dfd7f4f49440fc00e07ef2b8cc0e72ca767, built the vulnerable target image and helper image, started a fixture server reachable only inside the Docker network, submitted a multipart request to /forms/chromium/convert/url, and extracted PDF text containing EVOHUNT_CHROMIUM_SSRF_PROOF and the fixture body line.",
+  "verification_method": "The helper serves a unique proof page on an isolated Docker network, posts the Chromium conversion request as multipart form data, extracts the returned PDF text with pypdf, and checks for the exact proof string. That confirms response-body exfiltration from an internal-only target rather than a generic PDF conversion success.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The extracted PDF text contained EVOHUNT_CHROMIUM_SSRF_PROOF.",
+    "The extracted PDF text also contained This page should only be reachable from inside the Docker network.",
+    "The target health check succeeded before exploitation, ruling out a startup failure in place of a real SSRF proof."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "410c1dfd7f4f49440fc00e07ef2b8cc0e72ca767",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/serve_secret.py",
+      "reproduction/wait_for_url.py",
+      "reproduction/fetch_and_verify.py"
+    ]
+  }
+}

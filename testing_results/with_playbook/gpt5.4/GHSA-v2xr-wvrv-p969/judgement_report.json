@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:22:05Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_13b9075a",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-v2xr-wvrv-p969/GHSA-v2xr-wvrv-p969.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "multimodal_arbitrary_file_read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_13b9075a/multimodal_arbitrary_file_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_13b9075a/multimodal_arbitrary_file_read/vulnerability_report.json",
+      "title": "Multimodal prompt image handling permits arbitrary local file read",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding names the same vulnerable component and root cause as the advisory: `ImageTextPromptValue` in `src/ragas/prompt/multi_modal_prompt.py` accepts attacker-controlled image-looking `retrieved_contexts` values and reads local files or URLs without safe validation before embedding the bytes into the prompt payload.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "multimodal_arbitrary_file_read",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_13b9075a/multimodal_arbitrary_file_read",
+      "status": "qualifying_vuln",
+      "title": "Multimodal prompt image handling permits arbitrary local file read",
+      "vulnerability_type": "arbitrary_file_access"
+    },
+    "reason": "The selected finding matches the advisory's `ImageTextPromptValue` arbitrary-file-read root cause, and the judge-owned PoC reproduced unauthorized local file disclosure by loading the actual vulnerable `multi_modal_prompt.py` from the pinned vulnerable commit and decoding the leaked secret from the generated `data:image/jpeg;base64,...` payload.",
+    "evidence": [
+      "The advisory describes an arbitrary file read in `ImageTextPromptValue` caused by improper validation and sanitization of URLs in multimodal `retrieved_contexts`; the finding identifies the same class, file, and source-to-sink path.",
+      "The finding ties the vulnerable snapshot to commit `c35021085c47843b659537460468bfbe8b63612c`, and the upstream fix commit referenced by the advisory (`b28433709cbedbb531db79dadcfbdbd3aa6adcb0`) is explicitly titled `Fix: Arbitrary File Read Vulnerability + Feat: Security settings` for `src/ragas/prompt/multi_modal_prompt.py`.",
+      "The judge-run artifact `/Users/lumi/ziyue/EvoHunt-Run/advisory_13b9075a/.judge/poc_runs/multimodal_arbitrary_file_read/run.log` shows `EVOHUNT_ARBITRARY_FILE_READ_CONFIRMED` and `decoded=EVOHUNT_FILE_READ_SECRET=multimodal_arbitrary_file_read` after executing the copied verifier against the pinned vulnerable commit.",
+      "The same run log also shows a `data:image/jpeg;base64,...` payload prefix, confirming the attacker-selected local file bytes were embedded into the generated multimodal prompt payload rather than merely reaching a non-exploitable parser branch."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "multimodal_arbitrary_file_read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_13b9075a/multimodal_arbitrary_file_read",
+      "executed": true,
+      "command": "git clone https://github.com/explodinggradients/ragas.git target-repo && git -C target-repo checkout c35021085c47843b659537460468bfbe8b63612c && TARGET_REPO_PATH=\"$PWD/target-repo\" python3 finding_copy/reproduction/verify.py",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_13b9075a/.judge/poc_runs/multimodal_arbitrary_file_read",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_13b9075a/.judge/poc_runs/multimodal_arbitrary_file_read/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_13b9075a/.judge/poc_runs/multimodal_arbitrary_file_read/poc_execution.json",
+      "observed_effect": "After adapting the copied verifier to run host-side against the pinned vulnerable commit, `run.log` recorded `EVOHUNT_ARBITRARY_FILE_READ_CONFIRMED`, `decoded=EVOHUNT_FILE_READ_SECRET=multimodal_arbitrary_file_read`, and a `data:image/jpeg;base64,...` prefix from the generated prompt payload.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

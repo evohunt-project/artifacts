@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:24:08.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_008a361d",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-33r3-4whc-44c2/GHSA-33r3-4whc-44c2.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "binding_download_package_manager_path_traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_008a361d/binding_download_package_manager_path_traversal",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_008a361d/binding_download_package_manager_path_traversal/vulnerability_report.json",
+      "title": "Unvalidated binding version enables path traversal outside VP_HOME",
+      "vulnerability_type": "path_traversal_arbitrary_file_write",
+      "advisory_match": true,
+      "advisory_match_reason": "Same public `vite-plus/binding` `downloadPackageManager()` entrypoint, same missing validation on `options.version`, and the same delete/rename/shim-write path outside `VP_HOME` described by the advisory.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "binding_download_package_manager_path_traversal",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_008a361d/binding_download_package_manager_path_traversal",
+      "status": "qualifying_vuln",
+      "title": "Unvalidated binding version enables path traversal outside VP_HOME",
+      "vulnerability_type": "path_traversal_arbitrary_file_write"
+    },
+    "reason": "The only final qualifying finding identifies the advisory's exact root cause: the binding forwards raw `options.version` into the Rust download flow, which joins that unvalidated string into the installation path and then removes, renames, and writes shims at the attacker-influenced location. A fresh judge-side PoC run from a copied workspace showed the install directory resolve outside `VP_HOME` and created the shim there.",
+    "evidence": [
+      "`packages/cli/binding/src/package_manager.rs:74-78` forwards `&options.version` directly into `vite_install::download_package_manager(...)`.",
+      "`crates/vite_install/src/package_manager.rs:383-412` accepts any non-`latest` string as `version` and joins it directly into `$VP_HOME/package_manager/<pm>/<version>`.",
+      "`crates/vite_install/src/package_manager.rs:471-478` removes the pre-existing target directory, renames the extracted package into the attacker-influenced target, and creates shim files there.",
+      "`/Users/lumi/ziyue/EvoHunt-DryRun/advisory_008a361d/.judge/poc_runs/binding_download_package_manager_path_traversal/run.log` shows `resultInstallDir` containing `../../../escaped/pnpm`, `resolvedInstallDir` resolving to `/tmp/.../escaped/pnpm` outside `vpHome`, a `shimPath` at that escaped location, and `EVOHUNT_POC_SUCCESS`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "binding_download_package_manager_path_traversal",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_008a361d/binding_download_package_manager_path_traversal",
+      "executed": true,
+      "command": "docker run --rm -e EXPECTED_COMMIT=48e49ca0c1c062989120c41bcce9ee1db8b172dd -v /Users/lumi/ziyue/EvoHunt-DryRun/advisory_008a361d/.judge/poc_runs/binding_download_package_manager_path_traversal/target-repo:/target-repo:ro evohunt-judge-advisory_008a361d-binding_download_package_manager_path_traversal /app/verify.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_008a361d/.judge/poc_runs/binding_download_package_manager_path_traversal",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_008a361d/.judge/poc_runs/binding_download_package_manager_path_traversal/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_008a361d/.judge/poc_runs/binding_download_package_manager_path_traversal/poc_execution.json",
+      "observed_effect": "The copied PoC returned an install path that normalized to `/tmp/.../escaped/pnpm` outside `VP_HOME` and confirmed a created shim at `/tmp/.../escaped/pnpm/bin/pnpm`, demonstrating traversal-driven write outside the intended cache root.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

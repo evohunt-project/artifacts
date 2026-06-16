@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "denial_of_service",
+  "summary": "The Docker-based reproduction logs in as a non-admin user, confirms a normal formula validation succeeds, and then shows that a computation-heavy Twig formula ties up the PHP worker long enough to make both the exploit request and a concurrent follow-up request time out.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should allow a low-privilege authenticated user to submit a loop-heavy formula to the validation endpoint and block a second request behind it, demonstrating server-side availability impact.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit fb12a9fde8927af50198ea5f190d20753a8510d5, built the reproduction image, started the MariaDB sidecar, logged in as a demoted non-admin user, received HTTP 200 from a benign validation request, then observed curl timeout exit code 28 for both the malicious validation request and a concurrent follow-up request.",
+  "verification_method": "verify.sh first proves that the session belongs to a non-admin user and that a normal validation request returns HTTP 200. It then sends a nested-loop Twig payload in the background and immediately issues a second request to /admin/login. The PoC passes only if both requests time out, showing that the first request occupied the single PHP worker long enough to block unrelated traffic.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The final ./reproduction/run.sh execution printed login status 200 for a user whose JSON session object contained \"admin\":false.",
+    "The control request to /actions/commerce/formulas/validate-formula returned HTTP 200 before the exploit payload was sent.",
+    "The exploit request and the concurrent follow-up request both exited with curl status 28, and the final run printed the two timeout exits before reporting success."
+  ],
+  "limitations_or_blockers": [
+    "The PoC uses PHP's built-in single-worker development server so the worker-starvation effect is immediately visible as a blocked second request. Multi-worker deployments would require repeated requests to exhaust the worker pool rather than a single request blocking all traffic."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "fb12a9fde8927af50198ea5f190d20753a8510d5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

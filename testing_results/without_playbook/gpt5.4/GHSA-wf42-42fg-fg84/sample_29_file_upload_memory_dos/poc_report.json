@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "memory_exhaustion_dos",
+  "summary": "The reproduction bundle starts the vulnerable `sample/29-file-upload` app, sends one oversized multipart upload, and verifies that the Node process terminates with a heap-exhaustion failure.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should make a single unauthenticated `POST /file` upload exhaust the Node.js heap so the sample app exits and stops responding on port 3000.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned the pinned repository commit, built the Docker image, installed the sample dependencies inside the container, confirmed the baseline `{\"hello\":\"world\"}` response from `GET /`, and then a single 180 MB multipart upload to `POST /file` caused an empty reply, emitted `FATAL ERROR: Reached heap limit`, and left the service unreachable on port 3000.",
+  "verification_method": "The helper starts the app, confirms `GET /` succeeds, sends a 180 MB multipart upload to `POST /file`, and then checks that the process exits, the server log contains `FATAL ERROR: Reached heap limit`, and the service no longer answers the health request.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The helper observed `baseline_response={\"hello\":\"world\"}` before the attack.",
+    "The oversized upload returned an empty reply with `attack_curl_exit=52` and `attack_http_code=100`, indicating the connection died mid-request handling.",
+    "The server log contained the exact proof string `FATAL ERROR: Reached heap limit`.",
+    "The post-attack health check could no longer connect to `127.0.0.1:3000`, confirming process termination."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8ea5aaef561c87065bf0b358771de8c8b62e7835",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "login_csrf_account_takeover",
+  "summary": "The reproduction starts an attacker-controlled OAuth login, captures the resulting callback URL, and shows that a separate victim browser session can consume that callback and become logged into the attacker-controlled account when Authlib uses cache-backed state storage.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A victim browser that never initiated the OAuth flow should still end up authenticated as attacker after requesting the attacker-generated callback URL containing the cached state and attacker authorization code.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the Docker image, cloned Authlib v1.5.2, launched the demo Starlette client and fake identity provider, and emitted EVOHUNT_POC_SUCCESS victim_session_user=attacker after the victim session visited the attacker-generated callback URL.",
+  "verification_method": "The exploit helper drives two independent HTTP client sessions: one attacker session to create the callback URL and one victim session to consume it. The run only succeeds if the victim's follow-up GET /me response reports attacker, proving cross-session state reuse and session rebinding rather than a generic redirect or token error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output contained the success marker EVOHUNT_POC_SUCCESS victim_session_user=attacker.",
+    "The exploit helper emitted JSON evidence showing victim_session_user set to attacker after the victim consumed the callback URL.",
+    "The callback completed from a victim session that never initiated the OAuth login flow."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the Authlib repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "68b6ee2da9e218f5c8b89aa76ff8c3cc29d81c52",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/demo_app.py",
+      "reproduction/exploit.py"
+    ]
+  }
+}

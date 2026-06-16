@@ -1,0 +1,86 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:23:04.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_397c6915",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-228v-wc5r-j8m7/GHSA-228v-wc5r-j8m7.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "shellaftercompleted_exec_rce",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_397c6915/shellaftercompleted_exec_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_397c6915/shellaftercompleted_exec_rce/vulnerability_report.json",
+      "title": "shellAfterCompleted reintroduces shell command injection after safe exec actions",
+      "vulnerability_type": "command_injection",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets shellAfterCompleted templating and `sh -c` execution in the executor, not the advisory's EventStream subscription/broadcast path or its missing per-recipient per-action authorization check.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "H",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "unauthenticated_getdiagnostics_disclosure",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_397c6915/unauthenticated_getdiagnostics_disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_397c6915/unauthenticated_getdiagnostics_disclosure/vulnerability_report.json",
+      "title": "GetDiagnostics discloses runtime SSH path metadata without enforcing the guest-login boundary",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding targets unauthenticated `GetDiagnostics` access to SSH path metadata; the advisory is an authenticated EventStream leak caused by broadcasting protected action output to subscribed dashboard users without per-action ACL enforcement.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable code/root cause. The advisory is the EventStream path in `service/internal/api/api.go` where authenticated dashboard subscribers receive execution events and protected action output without per-action authorization checks; this session's findings cover a post-execution shell injection path and a separate `GetDiagnostics` authorization gap.",
+    "evidence": [
+      "The advisory root cause is specific to `EventStream()` subscriber registration plus `OnExecutionStarted`, `OnExecutionFinished`, and `OnOutputChunk` broadcasting action data without checking each recipient's ACLs.",
+      "`shellaftercompleted_exec_rce` traces to executor post-hook templating and `wrapCommandInShell`/`sh -c` execution in `service/internal/executor/*`, which is a command-injection sink unrelated to EventStream broadcasting or per-action log authorization.",
+      "`unauthenticated_getdiagnostics_disclosure` traces to `POST /api/GetDiagnostics` returning `SshFoundKey` and `SshFoundConfig` without a dashboard policy gate, which is a different endpoint, different access boundary, and different disclosed data than the advisory's protected action output leak."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_397c6915/shellaftercompleted_exec_rce",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_397c6915/shellaftercompleted_exec_rce/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_397c6915/shellaftercompleted_exec_rce/poc_report.json",
+      "poc_report_status": "reproduced"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_397c6915/unauthenticated_getdiagnostics_disclosure",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_397c6915/unauthenticated_getdiagnostics_disclosure/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_397c6915/unauthenticated_getdiagnostics_disclosure/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

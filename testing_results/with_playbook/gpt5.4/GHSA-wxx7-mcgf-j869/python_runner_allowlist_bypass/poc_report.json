@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "runner_isolation_bypass",
+  "summary": "The reproduction confirms that the Python runner blocks direct `os` imports but still allows command execution through `random._os` when `random` is allowlisted.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The PoC should show that `import os` and `__import__('os')` are rejected while an allowlisted stdlib module still reaches `os.system()` and executes a shell command successfully.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned public ref, built the Docker image, rejected both direct `os` import variants with security-violation messages, then executed the exploit through `random._os.system(...)` with `write_rc=0`, `check_rc=0`, and proof size `27` for the string `EVOHUNT_PY_ALLOWLIST_BYPASS`.",
+  "verification_method": "The helper script first exercises the analyzer to prove direct `os` imports are blocked, then runs the exact task-executor subprocess path with `N8N_RUNNERS_STDLIB_ALLOW=random` and verifies command execution by writing a proof string from `/bin/sh` and checking it with a second shell command.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed security-violation results for `import os` and `__import__('os')`.",
+    "The exploit path returned `write_rc=0` and `check_rc=0` from `random._os.system(...)`.",
+    "The proof artifact length matched the expected `EVOHUNT_PY_ALLOWLIST_BYPASS` string length of 27 bytes."
+  ],
+  "limitations_or_blockers": [
+    "The audited session snapshot identifies itself as version 1.123.21, but the public `n8n@1.123.21` tag does not contain `packages/@n8n/task-runner-python`. The reproduction therefore pins public commit `a8ecda44f7627630bc8b78cf671405157ad41c4f` (`n8n@2.0.0`), whose relevant Python-runner allowlist files carry the same vulnerable logic used by the audited snapshot."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable public commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "a8ecda44f7627630bc8b78cf671405157ad41c4f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.py"
+    ]
+  }
+}
+

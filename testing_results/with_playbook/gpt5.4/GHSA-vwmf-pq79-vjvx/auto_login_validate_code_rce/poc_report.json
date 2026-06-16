@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that the shipped auto-login default grants an unauthenticated superuser session and that the resulting session reaches code execution through `/api/v1/validate/code`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should obtain a superuser session cookie through `GET /api/v1/auto_login` and then cause the attacker-supplied `/api/v1/validate/code` payload to create `/tmp/evohunt_auth_rce_proof` with the expected marker string.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `langflow` at `699e35688f1c6ba5a123f685e2ef6374ba404937`, built the Docker image, started the backend, returned `AUTO_LOGIN_STATUS=200` with `ACCESS_COOKIE_PRESENT=1`, accepted `POST /api/v1/validate/code` with `VALIDATE_STATUS=200`, and created the proof file with `PROOF_CONTENT=evohunt-auth-rce-ok`.",
+  "verification_method": "The helper waits for the backend to become ready, verifies that `/api/v1/auto_login` sets the `access_token_lf` cookie, submits a default-argument payload to `/api/v1/validate/code`, and fails closed unless `/tmp/evohunt_auth_rce_proof` exists with the exact expected contents.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`AUTO_LOGIN_STATUS=200` and `ACCESS_COOKIE_PRESENT=1` showed that an unauthenticated request obtained a live session cookie.",
+    "`VALIDATE_STATUS=200` and `VALIDATE_BODY={\"function\": {\"errors\": []}, \"imports\": {\"errors\": []}}` showed that the privileged validation route accepted the attacker-controlled payload.",
+    "`PROOF_EXISTS=1` and `PROOF_CONTENT=evohunt-auth-rce-ok` proved code execution inside the backend process."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "699e35688f1c6ba5a123f685e2ef6374ba404937",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/execute.sh",
+      "reproduction/prove_auth_rce.py"
+    ]
+  }
+}

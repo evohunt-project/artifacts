@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "origin_and_url_boundary_mismatches",
+  "summary": "The Docker-based reproduction clones the pinned vulnerable AVideo revision, launches the standalone Live control endpoint with a minimal configuration, points token verification at an attacker-controlled host, and confirms that the endpoint issues a privileged local `drop_publisher` control request without a real AVideo token.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The vulnerable standalone control endpoint should accept an attacker-controlled verifier response and issue `GET /control/drop/publisher?app=live&name=teststream` to the local RTMP control server while returning `error=false` to the attacker.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built the reproduction image, cloned `WWBN/AVideo` at commit `2744077cbfdfa3586fd8188c757d2c7eb503fe1d`, and printed `EVOHUNT_SUCCESS live control request issued` after the endpoint returned `{\"error\":false,...,\"requestedURL\":\"http://localhost:8080/control/drop/publisher?app=live&name=teststream\"}` and the control receiver logged `GET /control/drop/publisher?app=live&name=teststream`.",
+  "verification_method": "The containerized exploit checks both sides of the boundary: the vulnerable endpoint response must contain `error=false` and the expected `requestedURL`, and the local control receiver must log the exact `drop_publisher` request. The run fails closed if either signal is missing.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Stdout included the proof marker `EVOHUNT_SUCCESS live control request issued`.",
+    "The vulnerable endpoint response included `\"requestedURL\":\"http://localhost:8080/control/drop/publisher?app=live&name=teststream\"`.",
+    "The local control receiver logged `GET /control/drop/publisher?app=live&name=teststream`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "2744077cbfdfa3586fd8188c757d2c7eb503fe1d",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run-exploit.sh",
+      "reproduction/attack_server_verify.php",
+      "reproduction/control_server.php"
+    ]
+  }
+}

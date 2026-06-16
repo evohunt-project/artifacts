@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "sensitive_data_exposure",
+  "summary": "The reproduction bundle exercises Druid's real `StatusResource` code path and confirms that secret-bearing configuration values are returned unredacted while a control password-named property is filtered.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The run should emit proof lines showing that `org.apache.druid.java.util.emitter.http.basicAuthentication` and `druid.auth.authenticator.pac4j.cookiePassphrase` are returned intact from `StatusResource.getProperties`, while `druid.metadata.storage.connector.password` is suppressed.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Apache Druid branch `36.0.0` at commit `6a88a829460664ec85cbc1425f148c1eb0849935`, built the required server modules, and printed `LEAK_CONFIRMED org.apache.druid.java.util.emitter.http.basicAuthentication=leaked-user:leaked-pass`, `LEAK_CONFIRMED druid.auth.authenticator.pac4j.cookiePassphrase=leaked-cookie-passphrase`, and `CONTROL_FILTERED druid.metadata.storage.connector.password`, after which the script reported success.",
+  "verification_method": "The verification script runs the helper against the built target modules and greps for the exact `LEAK_CONFIRMED` and `CONTROL_FILTERED` markers to distinguish a true disclosure from startup noise or an unrelated failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "LEAK_CONFIRMED org.apache.druid.java.util.emitter.http.basicAuthentication=leaked-user:leaked-pass",
+    "LEAK_CONFIRMED druid.auth.authenticator.pac4j.cookiePassphrase=leaked-cookie-passphrase",
+    "CONTROL_FILTERED druid.metadata.storage.connector.password"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones Apache Druid branch `36.0.0` on the host, checks out commit `6a88a829460664ec85cbc1425f148c1eb0849935`, and mounts that checkout into the container at `/target-repo` for a writable in-container copy used during the build.",
+    "pinned_commit_or_ref": "6a88a829460664ec85cbc1425f148c1eb0849935",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/poc-pom.xml",
+      "reproduction/src/main/java/evohunt/StatusPropertiesLeakCheck.java"
+    ]
+  }
+}

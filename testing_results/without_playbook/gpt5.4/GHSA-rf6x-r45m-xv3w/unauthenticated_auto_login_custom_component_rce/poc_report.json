@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "auth_bypass_rce",
+  "summary": "The reproduction bundle starts Langflow from the pinned vulnerable source checkout, obtains an unauthenticated bearer token from /api/v1/auto_login, and then proves backend command execution by reflecting a command-generated proof string through /api/v1/custom_component.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should obtain a bearer token from /api/v1/auto_login and then make /api/v1/custom_component return the exact command-generated proof string EVOHUNT_RCE_PROOF from attacker-supplied Python executed on the server.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned Langflow commit, built the helper image, started Langflow from the mounted source checkout, obtained a bearer token from /api/v1/auto_login, and then made /api/v1/custom_component return display_name=EVOHUNT_RCE_PROOF from attacker-supplied Python that executed /bin/sh on the server.",
+  "verification_method": "The helper starts Langflow from the mounted repository source, polls /api/v1/auto_login until it receives a bearer token, submits custom-component code whose module-level subprocess invocation prints EVOHUNT_RCE_PROOF, and verifies that the returned component display_name exactly matches the proof string. That response can only occur if the backend executed the attacker-controlled Python.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed: [evohunt] auto_login returned a bearer token.",
+    "The reproduction printed: [evohunt] custom_component display_name=EVOHUNT_RCE_PROOF.",
+    "The reproduction printed: [evohunt] SUCCESS: observed attacker-controlled command output EVOHUNT_RCE_PROOF."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "47ce5bf27e688e4cfbc48a745c24a72bac6b62d7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

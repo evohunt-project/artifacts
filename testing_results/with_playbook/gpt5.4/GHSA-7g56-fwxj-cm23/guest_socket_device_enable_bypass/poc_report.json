@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a no-token Socket.IO client can connect as a guest in secure mode and change a runtime device's enabled state through the device-enable event.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start the vulnerable server with secureEnabled true, connect to Socket.IO without credentials, emit device-enable for a guest-visible device, and observe the device state change from disabled to enabled.",
+  "actual_observed_result": "Running ./reproduction/run.sh emitted SOCKET_GUEST_POC_OK and printed {\"device\":\"EvoDemoDevice\",\"before\":false,\"after\":true}, confirming that an unauthenticated Socket.IO client changed runtime device state while secure mode was enabled.",
+  "verification_method": "The verification helper seeds the project database with a disabled device, enables secure mode, reads the guest-visible project over HTTP to learn the device identity, emits a no-token device-enable event, then re-reads the project and requires the enabled flag to flip from false to true. This distinguishes real unauthorized runtime state mutation from a mere socket connection or logging side effect.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "STDOUT contained the proof marker SOCKET_GUEST_POC_OK.",
+    "The helper printed a JSON record showing the device state transition for EvoDemoDevice from before false to after true.",
+    "The host wrapper reported successful completion after the state-change oracle passed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "bbd738d21d7192d5eaaf58577de68eced4a609eb (tag: v1.2.7)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/common.sh",
+      "reproduction/package.json",
+      "reproduction/socket_guest.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}

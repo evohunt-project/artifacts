@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "build_time_code_execution",
+  "summary": "A malicious header example line is emitted into a generated Vitest file and executes during the test run.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Attacker-controlled JavaScript from a source-file header executes during generated test execution and writes a marker file.",
+  "actual_observed_result": "The reproduction generated `test/generated/php/strings/EvohuntInjected.vitest.ts` containing the injected `require('fs').writeFileSync('/tmp/locutus_generated_test_rce', 'owned')` statement, and the Vitest run created the marker file.",
+  "verification_method": "The container verifies both that the generated test file contains the injected line and that `/tmp/locutus_generated_test_rce` exists after the test run.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "/tmp/locutus_generated_test_rce",
+    "test/generated/php/strings/EvohuntInjected.vitest.ts"
+  ],
+  "limitations_or_blockers": [
+    "The host environment used for validation had Node 20, so the repo's `--experimental-strip-types` script path was reproduced under Node 24 inside the container where the advertised command-line flow works."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/run-inside-container.sh",
+      "reproduction/malicious-function.js",
+      "reproduction/repo-snapshot.tar.gz"
+    ]
+  }
+}

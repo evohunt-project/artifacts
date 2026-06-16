@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_file_upload_and_write",
+  "summary": "The reproduction mounts vulnerable FUXA `v1.2.10`, initializes the real `/api/upload` route, and confirms that a caller without any token can write attacker-controlled bytes into `_appdata/settings.js` outside `_upload_files` by choosing `destination=appdata`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "An unauthenticated caller should be able to use `/api/upload` to place attacker-controlled content in a runtime directory such as `_appdata`, not just in the upload directory.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned FUXA `v1.2.10` at `b873cdf32a63bcfaa6de8b724781f63c6f977c69`, built the Docker image, mounted the cloned repository into the container, and printed `EVOHUNT:UPLOAD_STATUS=200`, `EVOHUNT:WRITTEN_PATH=/tmp/fuxa-upload-.../server-root/_appdata/settings.js`, `EVOHUNT:UPLOAD_DIR=/tmp/fuxa-upload-.../_upload_files`, and `EVOHUNT:SUCCESS unauthenticated POST /api/upload wrote attacker-controlled bytes into _appdata/settings.js outside the upload directory`.",
+  "verification_method": "The Node.js harness uses the repository's own `/api/upload` route and auth middleware. It verifies that the upload request succeeds, that the written file appears under `_appdata/settings.js`, that the same file does not appear under `_upload_files`, and that the file contents exactly match the attacker-controlled payload.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT:UPLOAD_STATUS=200",
+    "EVOHUNT:WRITTEN_PATH=/tmp/fuxa-upload-.../server-root/_appdata/settings.js",
+    "EVOHUNT:UPLOAD_DIR=/tmp/fuxa-upload-.../_upload_files",
+    "EVOHUNT:SUCCESS unauthenticated POST /api/upload wrote attacker-controlled bytes into _appdata/settings.js outside the upload directory"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host at tag `v1.2.10`, verifies commit `b873cdf32a63bcfaa6de8b724781f63c6f977c69`, and mounts that checkout into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "b873cdf32a63bcfaa6de8b724781f63c6f977c69",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/harness.js"
+    ]
+  }
+}

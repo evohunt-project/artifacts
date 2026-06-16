@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "graphql_introspection_access_control_bypass",
+  "summary": "The Docker reproduction confirms that Parse Server 8.6.28 blocks public `__schema` introspection but still returns schema details for `__type` queries without master or maintenance key headers.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should start Parse Server with GraphQL enabled, confirm that `__schema` introspection is rejected, and then demonstrate that a non-master `__type(name: \"Query\")` request still discloses schema field names.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Parse Server `8.6.28`, built the reproduction image, started Parse Server against MongoDB, observed HTTP 403 with `Introspection is not allowed` for `__schema`, then observed HTTP 200 with `Query` field names for `__type`, and finally emitted `EVOHUNT_GRAPHQL_TYPE_BYPASS_CONFIRMED`.",
+  "verification_method": "The verification helper waits for the health endpoint, then requires two distinct outcomes: the `__schema` request must fail with HTTP 403 and the denial message, while the `__type` request must succeed with HTTP 200 and include the returned type name and fields. This distinguishes the access-control gap from a generic GraphQL startup failure or a globally open introspection setting.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The `__schema` request returned HTTP 403 and the exact message `Introspection is not allowed`.",
+    "The `__type(name: \"Query\")` request returned HTTP 200 and disclosed the `Query` field list.",
+    "The helper emitted the proof signal `EVOHUNT_GRAPHQL_TYPE_BYPASS_CONFIRMED` after both checks passed."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host from the pinned `8.6.28` tag, asserts commit `0564c8438ae888843a5478f12681ec7f392bdefc`, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "8.6.28 (0564c8438ae888843a5478f12681ec7f392bdefc)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

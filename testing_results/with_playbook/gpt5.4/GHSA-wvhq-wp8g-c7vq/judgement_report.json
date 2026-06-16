@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T06:36:39.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_121b233f",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-wvhq-wp8g-c7vq/GHSA-wvhq-wp8g-c7vq.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unauthenticated_private_prediction_execution",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_121b233f/unauthenticated_private_prediction_execution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_121b233f/unauthenticated_private_prediction_execution/vulnerability_report.json",
+      "title": "Unauthenticated prediction endpoint executes non-public flows",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a different authorization flaw: `/api/v1/prediction/:id` is already public-whitelisted and executes a non-public flow because the execution path does not enforce `ChatFlow.isPublic` and `validateFlowAPIKey` succeeds when `apikeyid` is unset. The advisory instead concerns spoofing `x-request-from: internal` to send an authenticated tenant through the non-whitelisted `/api/v1/**` middleware branch in `packages/server/src/index.ts`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "H",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "L",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory's vulnerable middleware logic or its spoofed-header authorization bypass root cause.",
+    "evidence": [
+      "The advisory describes `packages/server/src/index.ts` trusting `req.headers['x-request-from'] === 'internal'` for non-whitelisted `/api/v1/**` routes and calling `verifyToken`, which lets an authenticated tenant bypass the intended API-key authorization checks on internal administration endpoints.",
+      "The only final qualifying finding instead targets `POST /api/v1/prediction/:id`, which the finding evidence states is already in `WHITELIST_URLS`; its exploit path is anonymous access to a private flow because `ChatFlow.isPublic` is not enforced and `validateFlowAPIKey` returns success when `chatflow.apikeyid` is unset.",
+      "The packaged reproduction uses `x-request-from: internal` only during setup to create a private flow as an authenticated owner; the actual exploit request is an anonymous `POST /api/v1/prediction/:id` without that header, so the vulnerable branch, preconditions, and security boundary differ from the advisory."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_121b233f/unauthenticated_private_prediction_execution",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_121b233f/unauthenticated_private_prediction_execution/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_121b233f/unauthenticated_private_prediction_execution/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

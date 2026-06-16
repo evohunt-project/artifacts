@@ -1,0 +1,87 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-06T22:40:03.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be513ab",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-5882-5rx9-xgxp/GHSA-5882-5rx9-xgxp.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "001_blind_webhook_ssrf",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be513ab/001_blind_webhook_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be513ab/001_blind_webhook_ssrf/vulnerability_report.json",
+      "title": "Unauthenticated job webhooks permit blind SSRF to arbitrary HTTP(S) destinations",
+      "vulnerability_type": "blind_ssrf",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding covers attacker-controlled `webhook_url` delivery from `POST /crawl/job` and `POST /llm/job` into `httpx.AsyncClient().post(...)`, not the advisory's `/crawl` hook-code path that executes user Python through `exec()` with `__import__` available.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "L",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:L/SA:N"
+      }
+    },
+    {
+      "finding_folder_name": "002_arbitrary_file_write_output_path",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be513ab/002_arbitrary_file_write_output_path",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be513ab/002_arbitrary_file_write_output_path/vulnerability_report.json",
+      "title": "Unauthenticated screenshot and PDF APIs allow arbitrary file write via output_path",
+      "vulnerability_type": "arbitrary_file_write",
+      "advisory_match": false,
+      "advisory_match_reason": "This finding covers attacker-controlled `output_path` writes in `POST /screenshot` and `POST /pdf`; it does not identify the advisory's hook compilation and `exec()` path, the `hooks` parameter on `/crawl`, or the `__import__`-based code-execution mechanism.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "Neither qualifying finding identifies the advisory's hook-based remote code execution root cause. Both accepted findings target different Docker API endpoints and different sinks, while the session's only hook-focused analysis was classified as `no_vuln` rather than `qualifying_vuln`.",
+    "evidence": [
+      "The advisory describes unauthenticated `POST /crawl` input in `hooks.code.*` reaching Python `exec()` and becoming RCE because `__import__` remained in the allowed builtins.",
+      "`001_blind_webhook_ssrf` instead targets `webhook_config.webhook_url` on `POST /crawl/job` and `POST /llm/job`, with the sink described as `httpx.AsyncClient().post(...)` in webhook delivery code.",
+      "`002_arbitrary_file_write_output_path` instead targets `output_path` on `POST /screenshot` and `POST /pdf`, with the sink described as `open(abs_path, \"wb\")` after `os.path.abspath(...)`.",
+      "`003_hook_sandbox_review_no_vuln` is the only session artifact aimed at the hook subsystem; it is not a qualifying finding and reports hooks disabled by default plus current hook compilation failing before user hooks attach."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be513ab/001_blind_webhook_ssrf",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be513ab/001_blind_webhook_ssrf/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be513ab/001_blind_webhook_ssrf/poc_report.json",
+      "poc_report_status": "not_attempted"
+    },
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be513ab/002_arbitrary_file_write_output_path",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be513ab/002_arbitrary_file_write_output_path/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_3be513ab/002_arbitrary_file_write_output_path/poc_report.json",
+      "poc_report_status": "not_attempted"
+    }
+  ]
+}

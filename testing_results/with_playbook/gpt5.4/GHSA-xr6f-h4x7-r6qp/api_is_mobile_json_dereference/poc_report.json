@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The reproduction replays the vulnerable `is_mobile` + `_json_decode` source path against a freshly cloned AVideo checkout and verifies that attacker-controlled `httpHeaders` input discloses decoded JSON from `composer.lock`.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should print a proof line showing that the checked-out repository's `composer.lock` was dereferenced and its decoded package list was returned through the vulnerable `is_mobile` logic.",
+  "actual_observed_result": "Executed `./reproduction/run.sh` successfully. The verifier printed `EVOHUNT_PROOF api_is_mobile_json_dereference packages=80 first=abraham/twitteroauth`, confirming that the checked-out repository's `composer.lock` was dereferenced and reflected through the vulnerable `is_mobile` logic.",
+  "verification_method": "The container-side verifier source-checks the checked-out repository for the vulnerable `_json_decode($_REQUEST['httpHeaders'])` and `file_get_contents($object)` dereference pattern, then executes the same route logic in-process and requires the decoded `composer.lock` package list to appear in the result.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "EVOHUNT_PROOF api_is_mobile_json_dereference packages=80 first=abraham/twitteroauth",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "809c50e83c8966e2f18a258dc5d5ea5cde1212e4",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.php"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction clones the pinned AssertJ commit, builds `assertj-core`, and confirms that an indirectly cyclic collection causes `StackOverflowError` both in direct `StandardRepresentation` rendering and in an ordinary failing assertion.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print `representation throwable: java.lang.StackOverflowError` and `assertion throwable: java.lang.StackOverflowError`, proving that a small indirectly cyclic collection can crash the rendering/assertion path.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 4aceb5522995a171a9cf00780531123d4ec0f148, built the reproduction image, compiled `assertj-core` inside the container, and printed both expected proof lines before exiting with `[evohunt] SUCCESS: reproduction completed and verified`.",
+  "verification_method": "The container helper compiles the pinned source, runs a minimal harness that first calls `StandardRepresentation.STANDARD_REPRESENTATION.toStringOf(...)` and then triggers a failing `assertThat(...).isEqualTo(...)`, and checks that both operations throw `StackOverflowError` rather than a normal assertion failure or unrelated build/runtime error.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed `representation throwable: java.lang.StackOverflowError`.",
+    "The run printed `assertion throwable: java.lang.StackOverflowError`.",
+    "The run ended with `[evohunt] SUCCESS: observed indirect cycle stack overflow in direct representation and failing assertion`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "4aceb5522995a171a9cf00780531123d4ec0f148",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/Repro.java",
+      "reproduction/verify.sh"
+    ]
+  }
+}

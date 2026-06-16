@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unauthenticated_file_disclosure",
+  "summary": "The reproduction bundle starts the vulnerable standalone helper, stages a synthetic recorded-stream file under /var/www/tmp, and verifies that an unauthenticated HTTP request downloads the file contents.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should return the secret marker stored in /var/www/tmp/teststream-31-May-26-12:00:00.flv through an unauthenticated request to plugin/Live/standAloneFiles/getRecordedFile.php.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 7292129eaee5f609beae103b5cb387d55f17b877, started the vulnerable PHP helper, and returned the exact marker EVOHUNT_SECRET_STREAM_CONTENT through an unauthenticated GET request to plugin/Live/standAloneFiles/getRecordedFile.php.",
+  "verification_method": "The verification helper stages a known file, requests the helper endpoint without any credentials, and checks that the HTTP 200 response body contains the exact secret marker and the expected video/x-flv response headers.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The HTTP response body returned the exact staged marker string EVOHUNT_SECRET_STREAM_CONTENT.",
+    "The response headers included HTTP 200 OK and Content-Type: video/x-flv.",
+    "The verifier completed without providing any credentials, cookies, or authorization tokens."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "7292129eaee5f609beae103b5cb387d55f17b877",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh"
+    ]
+  }
+}

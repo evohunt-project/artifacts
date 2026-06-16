@@ -1,0 +1,69 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:30:09.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-mr74-928f-rw69/GHSA-mr74-928f-rw69.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "public_share_parent_directory_escape",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f/public_share_parent_directory_escape",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f/public_share_parent_directory_escape/vulnerability_report.json",
+      "title": "Public directory shares expose sibling files outside the intended shared folder",
+      "vulnerability_type": "broken_access_control",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding describes the same `withHashFile` directory-share branch that rewrites `basePath` to `filepath.Dir(link.Path)` before `afero.NewBasePathFs`, which is the advisory's public-share root expansion bug.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "P",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "public_share_parent_directory_escape",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f/public_share_parent_directory_escape",
+      "status": "qualifying_vuln",
+      "title": "Public directory shares expose sibling files outside the intended shared folder",
+      "vulnerability_type": "broken_access_control"
+    },
+    "reason": "The selected finding matches the advisory's `withHashFile` directory-share rebasing flaw, and the copied PoC executed from `.judge` demonstrated the advisory impact by leaking a sibling file outside the shared directory through the unauthenticated public share endpoints.",
+    "evidence": [
+      "The advisory states that `http/public.go` rebases directory shares from `link.Path` to `filepath.Dir(link.Path)` before `afero.NewBasePathFs`, expanding access from the shared directory to its parent.",
+      "The finding report at `/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f/public_share_parent_directory_escape/vulnerability_report.json` identifies the same `withHashFile` branch and the same `/api/public/share/{hash}` and `/api/public/dl/{hash}/{path}` attack path.",
+      "The copied PoC run log at `/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f/.judge/poc_runs/public_share_parent_directory_escape/run.log` shows `UNAUTH_RAW_STATUS=401`, `PUBLIC_LIST_STATUS=200`, `PUBLIC_LIST_LEAKS=sibling.txt`, `PUBLIC_DOWNLOAD_STATUS=200`, and `PUBLIC_DOWNLOAD_CONTENT=TOP-SECRET-SIBLING`."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "public_share_parent_directory_escape",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f/public_share_parent_directory_escape",
+      "executed": true,
+      "command": "TARGET_REPO='../../target-repo' GOPATH='/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f/.judge/poc_runs/public_share_parent_directory_escape/go-path' GOMODCACHE='/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f/.judge/poc_runs/public_share_parent_directory_escape/go-mod-cache' GOCACHE='/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f/.judge/poc_runs/public_share_parent_directory_escape/go-build-cache' go run -mod=mod .",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f/.judge/poc_runs/public_share_parent_directory_escape/finding_copy/reproduction",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f/.judge/poc_runs/public_share_parent_directory_escape/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_17cd857f/.judge/poc_runs/public_share_parent_directory_escape/poc_execution.json",
+      "observed_effect": "The copied harness denied ordinary unauthenticated `/api/raw/sibling.txt` access with 401, then used the public directory share to list `sibling.txt` and download `TOP-SECRET-SIBLING` from outside the shared folder.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

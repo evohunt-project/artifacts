@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "zip_slip_arbitrary_file_write",
+  "summary": "The reproduction builds a small Java harness around the vulnerable PF4J unzip logic, feeds it a crafted plugin ZIP that first creates an in-bounds file and then writes ../victim_escape.txt, and verifies that the payload is written outside the intended extraction directory.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted ZIP entry ../victim_escape.txt to bypass the extraction guard and create an attacker-controlled sibling file outside the victim extraction directory.",
+  "actual_observed_result": "Running ./reproduction/run.sh from the final session-root finding folder built the Docker image, executed the Java harness, and created /tmp/pf4j-zipslip/plugins/victim_escape.txt with the expected proof string outside /tmp/pf4j-zipslip/plugins/victim.",
+  "verification_method": "The harness checks that /tmp/pf4j-zipslip/plugins/victim_escape.txt exists, contains the expected proof string, and was created outside /tmp/pf4j-zipslip/plugins/victim.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The harness printed the destination directory /tmp/pf4j-zipslip/plugins/victim and the escaped path /tmp/pf4j-zipslip/plugins/victim_escape.txt.",
+    "The run reported escaped exists: true and in-bounds exists: false.",
+    "The escaped file content matched the proof string EVOHUNT_ZIP_SLIP_PROOF.",
+    "The wrapper script completed with [evohunt] SUCCESS: reproduction completed and verified."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/src/Pf4jZipSlipPoC.java",
+      "reproduction/src/org/pf4j/util/FileUtils.java",
+      "reproduction/src/org/pf4j/util/Unzip.java",
+      "reproduction/src/org/slf4j/Logger.java",
+      "reproduction/src/org/slf4j/LoggerFactory.java"
+    ]
+  }
+}

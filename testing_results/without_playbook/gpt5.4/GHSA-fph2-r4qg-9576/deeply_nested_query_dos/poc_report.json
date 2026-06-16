@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "query_nesting_dos",
+  "summary": "The Docker-based reproduction clones the pinned Parse Server revision, starts a MongoDB sidecar, runs `parse-server@9.6.0-alpha.41` in a verification container, seeds a public test class, sends a depth-100 nested `$or` query, and confirms that the attack request hangs while `/health` becomes unresponsive.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the crafted class query to stop returning promptly and should make an unrelated `/health` request time out while the Parse Server process remains alive.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Parse Server at commit `b50e14e23d4253eb752a4704cc9dd5cecbf079cc`, built the verification image, started a MongoDB sidecar container, launched `parse-server@9.6.0-alpha.41`, sent the crafted query, observed `AbortError: This operation was aborted` after about 3009 ms, and then observed `HEALTH_CHECK=error type=TimeoutError ... detail=timed out` after about 3 seconds while the server process was still running.",
+  "verification_method": "The host-side `run.sh` clones the pinned repository, starts an isolated MongoDB sidecar container, and runs the verification container against that database. Inside the verification container, the helpers seed a public class, send a depth-100 nested `$or` query with a 3-second client timeout, and then perform an independent `/health` request with its own 3-second timeout. The reproduction is considered successful only if the attack request times out, the health probe also times out, and the Parse Server process is still alive.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The attack client log records `AbortError: This operation was aborted` after approximately 3009 ms.",
+    "The follow-up health check records `error type=TimeoutError ... detail=timed out` after approximately 3 seconds.",
+    "The helper output records `SERVER_STATUS=alive`, showing the server stayed resident while becoming unresponsive."
+  ],
+  "limitations_or_blockers": [
+    "The reproduction seeds a public class on an otherwise empty test instance so the generic class-query handler is reachable; the bug itself is in the shared query-validation path rather than in any class-specific logic."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "b50e14e23d4253eb752a4704cc9dd5cecbf079cc",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/querydepth_client.js",
+      "reproduction/querydepth_inner.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

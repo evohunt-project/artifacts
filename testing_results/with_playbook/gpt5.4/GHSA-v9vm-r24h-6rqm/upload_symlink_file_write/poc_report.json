@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "unsafe_file_upload_and_write",
+  "summary": "The packaged reproduction creates a repository, commits a symlink, uploads a file whose name normalizes into that symlinked path, finalizes the upload, and confirms that Gogs created the proof file outside the repository checkout.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should create an attacker-controlled file outside the repository working tree with the exact content `EVOHUNT_FILEWRITE_PROOF`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` completed successfully and produced `/tmp/evohunt-upload-filewrite-5s3sfnca/outside-proof/owned.txt` with content `EVOHUNT_FILEWRITE_PROOF\\n`; the upload finalize request returned HTTP 200.",
+  "verification_method": "The helper commits a repository symlink, performs the vulnerable upload flow, waits for the out-of-repository proof file to appear, and verifies the exact file content. This distinguishes a real filesystem escape from a normal in-repository upload or an unrelated request failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Observed proof file path `/tmp/evohunt-upload-filewrite-5s3sfnca/outside-proof/owned.txt`.",
+    "Observed proof file content `EVOHUNT_FILEWRITE_PROOF\\n`.",
+    "Observed upload finalize HTTP status `200`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "f5c8030c1fd936f3e0e9f774e3c7c39fd102f56f",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/validate_upload_filewrite.py"
+    ]
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:44:45.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a25d0cd",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-353c-v8x9-v7c3/GHSA-353c-v8x9-v7c3.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "http_stream_oversized_body_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a25d0cd/http_stream_oversized_body_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a25d0cd/http_stream_oversized_body_dos/vulnerability_report.json",
+      "title": "HTTP Stream transport ignores maxMessageSize and crashes before auth on oversized request bodies",
+      "vulnerability_type": "resource_exhaustion_dos",
+      "advisory_match": true,
+      "advisory_match_reason": "The finding identifies the same readRequestBody() logic in src/transports/http/server.ts that concatenates request chunks without enforcing maxMessageSize before auth on POST /mcp, which is the advisory's root cause.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "H",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "http_stream_oversized_body_dos",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a25d0cd/http_stream_oversized_body_dos",
+      "status": "qualifying_vuln",
+      "title": "HTTP Stream transport ignores maxMessageSize and crashes before auth on oversized request bodies",
+      "vulnerability_type": "resource_exhaustion_dos"
+    },
+    "reason": "The only qualifying finding matches the advisory's readRequestBody()/maxMessageSize root cause, and the judge rerun from a copied workspace showed both activation of the missing size check and the resulting Node out-of-memory crash from an unauthenticated oversized POST.",
+    "evidence": [
+      "The advisory and the finding both point to src/transports/http/server.ts readRequestBody() appending request chunks into a string without enforcing the configured maxMessageSize limit.",
+      "The finding's exploit path matches the advisory: POST /mcp reaches readRequestBody() and JSON.parse(body) before authentication or session rejection.",
+      "The judge rerun log at /Users/lumi/ziyue/EvoHunt-Run/advisory_0a25d0cd/.judge/poc_runs/http_stream_oversized_body_dos/run.log shows [evohunt] oversized_probe_status=401 for a 2 MiB request even though the PoC configured maxMessageSize: 1024, demonstrating that the oversized body was accepted up to the auth path instead of being rejected for size.",
+      "The same run.log shows FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory, crash_request_result={\"kind\":\"error\",\"message\":\"read ECONNRESET\"}, and EVOHUNT_HTTP_STREAM_DOS_CONFIRMED, which is the advisory-described denial-of-service consequence."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "http_stream_oversized_body_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a25d0cd/http_stream_oversized_body_dos",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a25d0cd/.judge/poc_runs/http_stream_oversized_body_dos/finding_copy",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a25d0cd/.judge/poc_runs/http_stream_oversized_body_dos/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_0a25d0cd/.judge/poc_runs/http_stream_oversized_body_dos/poc_execution.json",
+      "observed_effect": "The copied PoC accepted a 2 MiB POST body despite maxMessageSize: 1024 and returned 401 after the body was read, then a larger unauthenticated POST caused the server to terminate with a Node out-of-memory error and reset the client connection.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

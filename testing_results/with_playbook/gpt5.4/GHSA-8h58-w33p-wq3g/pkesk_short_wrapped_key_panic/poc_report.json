@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "availability_panic_dos",
+  "summary": "The Docker-based reproduction clones the audited upstream tree, reparses a malformed X25519 PKESK packet with a 1-byte wrapped session key, and confirms that the public decrypt path panics in `aes_kw::unwrap` before returning an error.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should print `before decrypt`, then panic at `src/crypto/aes_kw.rs:51` with `attempt to subtract with overflow`, demonstrating a reliable crash on malformed PKESK input.",
+  "actual_observed_result": "Running `./reproduction/run.sh` on 2026-06-03 cloned commit `a4dafc8f51988494a299ebbfbd941f72d285515e`, built the helper container, printed `before decrypt`, and then panicked at `/target-repo/src/crypto/aes_kw.rs:51:15` with `attempt to subtract with overflow`. The wrapper script recognized the expected panic and emitted `PANIC_TRIGGER_CONFIRMED`.",
+  "verification_method": "The host run script captures container output and requires both the `before decrypt` marker from the harness and the exact `attempt to subtract with overflow` panic string from `aes_kw::unwrap`. This distinguishes the bug from unrelated build or environment failures.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output included `before decrypt` immediately before the crash.",
+    "Container stderr showed `/target-repo/src/crypto/aes_kw.rs:51:15: attempt to subtract with overflow`.",
+    "The host wrapper emitted `PANIC_TRIGGER_CONFIRMED` after matching the expected panic signal."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "a4dafc8f51988494a299ebbfbd941f72d285515e",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/run_in_container.sh",
+      "reproduction/Cargo.toml",
+      "reproduction/main.rs"
+    ]
+  }
+}

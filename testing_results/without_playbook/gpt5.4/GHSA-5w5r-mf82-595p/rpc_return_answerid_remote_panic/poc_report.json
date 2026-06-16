@@ -1,0 +1,26 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "remote_dos_panic",
+  "summary": "The reproduction starts a minimal capnp-rpc server, sends a forged Return message with an oversized answerId, and observes the victim panic with an index-out-of-bounds error in the Return handler.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A single unauthenticated network message should make the victim RPC task panic due to the unchecked questions.slots[answer_id] index.",
+  "actual_observed_result": "Running the reproduction launched the victim server, delivered the forged Return message, and the victim process exited after logging an index-out-of-bounds panic from the capnp-rpc Return handler path.",
+  "verification_method": "The run script checks that the victim process exits unsuccessfully and that its stderr log contains both the panic marker and the out-of-bounds index message after the forged message is sent.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/output/victim.log contains a Rust panic emitted after processing the forged Return message.",
+    "reproduction/output/victim.log contains an index-out-of-bounds message referencing the questions slot vector access.",
+    "The victim process exits with a non-zero status immediately after the malicious sender transmits the crafted message."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "helper_files": [
+      "reproduction/Cargo.toml",
+      "reproduction/src/bin/victim_server.rs",
+      "reproduction/src/bin/malicious_return_sender.rs"
+    ]
+  }
+}

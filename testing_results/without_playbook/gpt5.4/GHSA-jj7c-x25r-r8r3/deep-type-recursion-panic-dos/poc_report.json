@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "compiler_panic_dos",
+  "summary": "The Docker-based reproduction clones the pinned noir repository, builds `nargo`, generates a malicious Noir package with a deep alias chain, and reliably crashes compilation with the expected frontend panic.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction pipeline should cause `nargo compile` to abort with the exact `Type recursion limit reached - types are too large` panic when it processes the generated deep alias chain.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `https://github.com/noir-lang/noir.git` at `c57152f91260ecdb9faad4efc20abb14b6d2ece7`, built the Docker environment, generated the malicious Noir project, and produced the expected panic with source location `compiler/noirc_frontend/src/hir_def/types/recursion.rs:24`. The verifier then reported success and `run.sh` exited successfully.",
+  "verification_method": "The verifier script generates the malicious Noir project, runs `cargo run --quiet --locked --manifest-path /target-repo/tooling/nargo_cli/Cargo.toml --bin nargo -- compile`, requires a non-zero exit, and grep-checks the resulting log for both the exact panic string and the frontend source-location signal.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output contains `Type recursion limit reached - types are too large`.",
+    "Container output reports `compiler/noirc_frontend/src/hir_def/types/recursion.rs:24`.",
+    "The reproduction ended with `[evohunt] SUCCESS: observed the expected deep-type compiler panic` followed by `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "c57152f91260ecdb9faad4efc20abb14b6d2ece7",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/generate_project.sh",
+      "reproduction/verify.sh"
+    ]
+  }
+}

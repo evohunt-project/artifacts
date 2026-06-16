@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "comment_xml_injection",
+  "summary": "The Docker-based reproduction confirms that attacker-controlled comment data can terminate the comment early and inject a real XML element into the serialized output.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should serialize attacker-controlled comment data into XML that reparses with a live injected `<z/>` element outside the intended comment boundary.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned upstream tag `0.9.9`, serialized the payload to `<r><!----><z/><!----></r>`, reparsed the result, and reported an injected `<z/>` count of `1` before printing the success signal.",
+  "verification_method": "The verification script creates a comment with payload `--><z/><!--`, serializes the document, reparses the serialized XML with the same library, and asserts that exactly one `<z/>` element exists in the reparsed DOM.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction printed `serialized XML: <r><!----><z/><!----></r>`.",
+    "The reproduction printed `injected <z/> count after reparse: 1`.",
+    "The reproduction printed `EVOHUNT_SUCCESS: comment payload escaped its boundary and materialized a live <z/> element`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out upstream tag `0.9.9`, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "0.9.9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.js"
+    ]
+  }
+}

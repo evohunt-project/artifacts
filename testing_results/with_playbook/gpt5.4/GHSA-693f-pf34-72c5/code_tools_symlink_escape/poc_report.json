@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_access",
+  "summary": "The Docker-based reproduction cloned the pinned revision, mounted it into the container, and showed that the workspace-scoped code helpers read and overwrote an out-of-workspace file through a symlink planted inside the workspace.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should let a caller create an in-workspace symlink to an external file, use `read_file` to disclose the external contents, and use `write_file` to overwrite that external file despite the configured workspace boundary.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned commit `a9f4bd593e98d5d56a2bec6e59b817cc3fd215d3`, built the reproduction image, and printed `EVOHUNT_SUCCESS: workspace symlink breakout reproduced` after `read_file` returned `super-secret` and `write_file` changed the external target to `clobbered` through the symlink.",
+  "verification_method": "The exploit helper creates a temporary workspace and an external file, plants a symlink inside the workspace, invokes the shipped `read_file` and `write_file` helpers from the mounted source tree, and then checks both the returned data and the external file contents.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "`read_file(\"link.txt\", workspace=...)` returned the external file contents `super-secret` through the in-workspace symlink.",
+    "`write_file(\"link.txt\", \"clobbered\", workspace=...)` succeeded and changed the external target file contents to `clobbered`.",
+    "The run printed `EVOHUNT_SUCCESS: workspace symlink breakout reproduced` after both conditions were satisfied."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "a9f4bd593e98d5d56a2bec6e59b817cc3fd215d3",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_move",
+  "summary": "The Docker-based reproduction built the pinned Gotenberg image, submitted metadata with attacker-controlled Directory and FileName values, and verified that the route returned 404 while the moved PDF persisted outside the request workdir.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should move the generated PDF to /tmp/evohunt-proof/proof.pdf, make the original output path disappear from the request workdir, and leave the moved file on disk inside the target container.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 410c1dfd7f4f49440fc00e07ef2b8cc0e72ca767, built the vulnerable target image and helper image, posted multipart form data to /forms/pdfengines/metadata/write with metadata {\"Directory\":\"/tmp/evohunt-proof\",\"FileName\":\"proof.pdf\"}, observed the expected 404 Not Found response, and then confirmed with docker exec that /tmp/evohunt-proof/proof.pdf existed inside the target container.",
+  "verification_method": "The helper script generates an input PDF, submits the multipart request, and asserts the expected 404 Not Found response after the output path moves. The host-side run script then checks for the moved file with docker exec. This distinguishes the real file-move primitive from an unrelated validation error or generic route failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The exploit request produced the expected 404 Not Found response body after the original output path disappeared.",
+    "The host-side verification step confirmed that /tmp/evohunt-proof/proof.pdf existed inside the target container.",
+    "The helper printed its success banner only after both the HTTP response and filesystem checks matched the expected move behavior."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "410c1dfd7f4f49440fc00e07ef2b8cc0e72ca767",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/wait_for_url.py",
+      "reproduction/trigger_exiftool_move.py"
+    ]
+  }
+}

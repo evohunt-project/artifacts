@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "ssrf",
+  "summary": "The Docker-based reproduction clones the pinned n8n 2.18.0 tag, injects a focused integration test, and confirms that a low-privilege member can trigger loopback OAuth discovery and client-registration requests through the dynamic OAuth2 credential flow.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should cause the target server to send outbound GET and POST requests to an attacker-chosen loopback OAuth endpoint sequence during `/oauth2-credential/auth`, proving SSRF from a low-privilege member-controlled credential.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned `n8n@2.18.0`, verified commit `6336f0a447eab3600b1fe13216f1abd5b6e25dff`, built the reproduction image, executed the injected integration test, and emitted `EVOHUNT_PROOF_LOOPBACK_SSRF {\"credentialId\":\"ucOdQKFAg7q8rmQJ\",\"observedRequests\":[\"GET /.well-known/oauth-protected-resource/resource\",\"GET /.well-known/oauth-authorization-server/issuer\",\"POST /register\"]}` before the test passed.",
+  "verification_method": "The helper test starts a loopback HTTP oracle on `127.0.0.1`, creates the member-owned OAuth2 credential, triggers `/oauth2-credential/auth`, asserts the exact request sequence received by the oracle, and `run.sh` greps the deterministic `EVOHUNT_PROOF_LOOPBACK_SSRF` marker into `reproduction/output/proof-line.txt`.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "reproduction/output/checked-out-commit.txt contains `6336f0a447eab3600b1fe13216f1abd5b6e25dff`.",
+    "reproduction/output/test-output.log contains the `EVOHUNT_PROOF_LOOPBACK_SSRF` marker and a passing Jest test for `EvoHunt OAuth2 dynamic registration SSRF reproduction`.",
+    "reproduction/output/proof-line.txt records the exact proof string with the observed `GET`, `GET`, and `POST` loopback requests."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable tag, verifies the expected commit, and mounts that checkout into the container at `/target-repo`.",
+    "pinned_commit_or_ref": "n8n@2.18.0 (6336f0a447eab3600b1fe13216f1abd5b6e25dff)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/execute-repro.sh",
+      "reproduction/evohunt-oauth2-ssrf.api.test.ts"
+    ]
+  }
+}

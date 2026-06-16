@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T03:32:31.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e7f94ba1",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-6fg3-hvw7-2fwq/GHSA-6fg3-hvw7-2fwq.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "show_report_loopback_arbitrary_file_read",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e7f94ba1/show_report_loopback_arbitrary_file_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e7f94ba1/show_report_loopback_arbitrary_file_read/vulnerability_report.json",
+      "title": "show-report loopback server exposes arbitrary victim-readable files to other local users and processes",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a loopback arbitrary file read in Playwright's HTML report server (`show-report` `/trace/file?path=` -> `HttpServer.serveFile()`), while the advisory is a DNS-rebinding flaw in the Playwright MCP HTTP transport caused by missing inbound host/origin validation (`packages/playwright/src/mcp/sdk/http.ts`). They are different components, routes, and root causes.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "P",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No final qualifying finding identifies the advisory-described vulnerable code or root cause. The only final qualifying finding is a local arbitrary file read in the `show-report` loopback server, not unauthorized browser-driven MCP tool invocation caused by missing request-origin/host validation in the MCP HTTP server.",
+    "evidence": [
+      "The advisory and referenced fix `1313fbd4793e2281614346eb26371fe16708247e` target the MCP HTTP transport: `packages/playwright/src/mcp/sdk/http.ts` now derives `allowedHosts`, rejects requests with missing `Host`, and returns `403` for hosts outside the allowlist as DNS-rebinding protection.",
+      "The only final `qualifying_vuln` finding traces a different path entirely: `show-report` binds `localhost:9323`, routes `/trace/file?path=...` through `packages/playwright/src/reporters/html.ts`, and reads arbitrary files via `packages/playwright-core/src/server/utils/httpServer.ts`.",
+      "The session's closest network-surface sibling, `playwright_remote_server_ws_surface`, was explicitly cleared as a documented remote-control websocket feature and still concerns `playwright-core` websocket handling rather than the advisory's MCP HTTP server."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e7f94ba1/show_report_loopback_arbitrary_file_read",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e7f94ba1/show_report_loopback_arbitrary_file_read/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_e7f94ba1/show_report_loopback_arbitrary_file_read/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:26:43.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_6bd33eaa",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-03/GHSA-25g8-2mcf-fcx9/GHSA-25g8-2mcf-fcx9.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "unsafe_restore_history_path_injection",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_6bd33eaa/unsafe_restore_history_path_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_6bd33eaa/unsafe_restore_history_path_injection/vulnerability_report.json",
+      "title": "Unsafe restore trusts history.txt paths and permits arbitrary local file read",
+      "vulnerability_type": "arbitrary_file_access",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding relies on restore accepting a valid watch directory whose `history.txt` preserves an absolute path that `Watch.get_history_snapshot()` later opens through `/preview/<uuid>`. The advisory instead targets `zipfile.extractall()` path traversal during ZIP extraction itself, where `../` archive entries escape the restore directory and overwrite files.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's Zip Slip overwrite root cause in backup restore. The session's only qualifying finding is a distinct arbitrary-file-read path that restores a watch, trusts `history.txt`, and later reaches `open()` via the preview workflow.",
+    "evidence": [
+      "The advisory JSON describes a Zip Slip in backup restore where `zipfile.extractall()` accepts `../` entries and writes outside the extraction directory.",
+      "The upstream fix for commit `1d7d812eb0faab37042246e2fbce04f29bb1b3aa` adds a realpath containment check before extracting each ZIP member and adds a regression test that rejects `../escaped.txt`.",
+      "The qualifying finding instead depends on `changedetectionio/model/Watch.py` preserving absolute paths from restored `history.txt` entries and `changedetectionio/blueprint/ui/preview.py` reading them through `watch.get_history_snapshot()`, which is a different source-to-sink path and different vulnerable code."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_6bd33eaa/unsafe_restore_history_path_injection",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_6bd33eaa/unsafe_restore_history_path_injection/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_6bd33eaa/unsafe_restore_history_path_injection/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

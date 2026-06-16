@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T05:48:32.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_aafe56d8",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-02/GHSA-q6g3-fv43-m2w6/GHSA-q6g3-fv43-m2w6.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "attachment_view_idor",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_aafe56d8/attachment_view_idor",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_aafe56d8/attachment_view_idor/vulnerability_report.json",
+      "title": "Attachment view endpoint exposes arbitrary files to any authenticated user",
+      "vulnerability_type": "idor_arbitrary_attachment_read",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is an authorization bypass in `GET /view.php?file_id=...` that reads attachments through `Models\\\\Upload::find($file_id)->get_contents()` without object-level access checks, while the advisory is an authenticated SQL injection in `templates/scadenzario/init.php` for `/pdfgen.php?ptype=scadenzario&id_anagrafica=...` caused by direct SQL string concatenation of `get('id_anagrafica')`.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "L",
+          "UI": "N",
+          "VC": "H",
+          "VI": "N",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "No qualifying finding identifies the advisory's vulnerable SQL query construction in `templates/scadenzario/init.php` or an equivalent authenticated SQL injection path in the Scadenzario print template.",
+    "evidence": [
+      "The advisory JSON describes authenticated SQL injection in `/pdfgen.php?ptype=scadenzario&id_anagrafica=...`, rooted in `templates/scadenzario/init.php` line 46 where `get('id_anagrafica')` is concatenated into an SQL query without `prepare()` sanitization.",
+      "The only final qualifying finding listed in `/.judge/input_manifest.json` is `attachment_view_idor`.",
+      "That finding report describes unauthorized attachment reads through `GET /view.php?file_id=...` because the endpoint loads `Models\\\\Upload::find($file_id)` and returns file bytes without checking module, record, or ownership permissions.",
+      "The advisory and finding do not share the same vulnerable file, endpoint, sink, or root-cause mechanism: one is SQL injection in a print-template query builder, the other is an IDOR-style attachment authorization bypass."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_aafe56d8/attachment_view_idor",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_aafe56d8/attachment_view_idor/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_aafe56d8/attachment_view_idor/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

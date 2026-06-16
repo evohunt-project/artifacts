@@ -1,0 +1,29 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_read",
+  "summary": "The reproduction confirms that a low-privilege admin can update a downloadable link sample_url to a file:// target and that the public sample-download route returns the chosen local file contents.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the bundle should show that an unrelated low-privilege admin can persist a file:// sample_url and that an unauthenticated request to the public downloadable sample route receives the server-local secret file contents.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 62b11d9fe61e511ae878a02b4040cf66125d9404, built the reproduction image, seeded the application, and executed the bundled Pest test. The run reported PASS for DownloadableSampleUrlReadTest with 11 assertions and emitted EVOHUNT_SUCCESS: downloadable sample_url local file read reproduced.",
+  "verification_method": "The automated Pest test asserts that admin.catalog.products.update is absent from the ACL role map, logs in as a custom-role admin with unrelated permissions, updates a downloadable link so sample_url points at a local secret file, logs out, requests the public shop.downloadable.download_sample route, and verifies that the response downloads the exact secret file contents.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "PASS Packages\\Webkul\\Admin\\tests\\Feature\\Catalog\\Products\\Types\\DownloadableSampleUrlReadTest",
+    "Tests: 1 passed (11 assertions)",
+    "EVOHUNT_SUCCESS: downloadable sample_url local file read reproduced",
+    "Pinned commit: 62b11d9fe61e511ae878a02b4040cf66125d9404"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "62b11d9fe61e511ae878a02b4040cf66125d9404",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/DownloadableSampleUrlReadTest.php",
+      "reproduction/validate.sh"
+    ]
+  }
+}

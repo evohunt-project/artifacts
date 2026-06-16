@@ -1,0 +1,30 @@
+{
+  "status": "failed",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The reproduction bundle clones Budibase at a pinned upstream commit, builds a Node 22 image, and attempts to prove that an unauthenticated public caller is denied on the normal attachment upload route but still receives a signed S3 PUT URL from `/api/attachments/:datasourceId/url`. The run was executed, but the container did not reach the verification script because dependency installation remained in `yarn install` for several minutes and the attempt was terminated.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The helper script should print `PUBLIC_TABLE_UPLOAD_STATUS=401`, `SIGNED_URL_STATUS=200`, and `VERDICT=UNAUTHENTICATED_SIGNED_URL_ISSUANCE_CONFIRMED`, proving that the public signed-upload route succeeds for the same caller that is rejected by the permission-gated attachment route.",
+  "actual_observed_result": "Running `./reproduction/run.sh` cloned Budibase at `c9e47eb7a1d2afbac80abd7e4a64121de10bfa32`, built the reproduction image, and started the containerized flow. The container remained in `yarn install` for multiple minutes and never reached `/reproduction/verify_public_s3_upload.ts`; the attempt was terminated after repeated stalls.",
+  "verification_method": "The reproduction mounts a pinned checkout into the container, copies it to a writable work directory, installs dependencies, and runs `verify_public_s3_upload.ts`. That script is designed to assert that `POST /api/attachments/:tableId/upload` returns `401` for a public caller while `POST /api/attachments/:datasourceId/url` returns `200` plus a presigned URL containing the expected AWS signing markers and proof string.",
+  "verification_passed": false,
+  "evidence_produced_by_run": [
+    "artifacts/public_s3_signed_url_write_poc.log shows the run cloned the pinned Budibase commit and entered the Dockerized dependency-install path.",
+    "Live inspection of the running container showed `node /usr/local/bin/yarn install --ignore-engines --ignore-optional --ignore-scripts --network-concurrency 1 --non-interactive --frozen-lockfile --silent` still active after more than five minutes, confirming the verification script had not started."
+  ],
+  "limitations_or_blockers": [
+    "The Docker environment available for this run could not complete Budibase's dependency installation phase in a reasonable time, so the verification script never executed.",
+    "Because the verification script did not run, the expected proof string was not observed and reproduction must be treated as failed in this session."
+  ],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "c9e47eb7a1d2afbac80abd7e4a64121de10bfa32",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/container-run.sh",
+      "reproduction/verify_public_s3_upload.ts"
+    ]
+  }
+}

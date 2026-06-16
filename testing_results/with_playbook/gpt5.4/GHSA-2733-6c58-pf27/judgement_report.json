@@ -1,0 +1,70 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T02:30:04.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-Run/advisory_715e8399",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-01/GHSA-2733-6c58-pf27/GHSA-2733-6c58-pf27.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "prototype_pollution_constructor_prototype",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_715e8399/prototype_pollution_constructor_prototype",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_715e8399/prototype_pollution_constructor_prototype/vulnerability_report.json",
+      "title": "Prototype pollution in deepHas set() via constructor.prototype path traversal",
+      "vulnerability_type": "prototype_pollution_and_object_shape",
+      "advisory_match": true,
+      "advisory_match_reason": "It identifies the same deepHas.js add()/indexer()-driven root cause described by the advisory: version 1.0.7 rejects only __proto__, so constructor.prototype path segments can still resolve to Object.prototype and pollute future objects.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "L",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "L",
+          "VA": "N",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": "Tier1",
+    "target_match": "match",
+    "runtime_evidence": "exploit_success",
+    "selected_finding": {
+      "folder_name": "prototype_pollution_constructor_prototype",
+      "folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_715e8399/prototype_pollution_constructor_prototype",
+      "status": "qualifying_vuln",
+      "title": "Prototype pollution in deepHas set() via constructor.prototype path traversal",
+      "vulnerability_type": "prototype_pollution_and_object_shape"
+    },
+    "reason": "The only qualifying finding matches GHSA-2733-6c58-pf27 because it reaches the same constructor.prototype path traversal flaw in deepHas.js and the copied PoC rerun demonstrated end-to-end Object.prototype pollution on the vulnerable 1.0.7 code path.",
+    "evidence": [
+      "The advisory summary and details name prototype pollution via constructor.prototype in deephas 1.0.7 and place the bug in deepHas.js add()/indexer() path handling.",
+      "The vulnerable source only blocks the literal substring __proto__ before add() resolves path segments and writes through initial.reduce(indexTrue, obj), which leaves constructor.prototype reachable.",
+      "The upstream fix commit 8097fafd3776c613d8066546653e0d2c7b5fc465 adds explicit rejection of __proto__, constructor, and prototype segments in deepHas.js, matching this finding's root cause.",
+      "The copied PoC run log contains EVOHUNT_PROOF: prototype pollution reached Object.prototype and JSON showing polluted=true, inherited_value=true, and object_prototype_value=true for a fresh object."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [
+    {
+      "finding_folder_name": "prototype_pollution_constructor_prototype",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_715e8399/prototype_pollution_constructor_prototype",
+      "executed": true,
+      "command": "bash reproduction/run.sh",
+      "cwd": "/Users/lumi/ziyue/EvoHunt-Run/advisory_715e8399/.judge/poc_runs/prototype_pollution_constructor_prototype/workspace",
+      "exit_code": 0,
+      "timed_out": false,
+      "log_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_715e8399/.judge/poc_runs/prototype_pollution_constructor_prototype/run.log",
+      "execution_json_path": "/Users/lumi/ziyue/EvoHunt-Run/advisory_715e8399/.judge/poc_runs/prototype_pollution_constructor_prototype/poc_execution.json",
+      "observed_effect": "The copied rerun printed EVOHUNT_PROOF: prototype pollution reached Object.prototype and emitted JSON confirming a fresh object inherited evohuntAdmin=true from Object.prototype.",
+      "satisfies_exploit_success_predicate": true,
+      "satisfies_bug_activation_predicate": true
+    }
+  ],
+  "open_world_findings": []
+}

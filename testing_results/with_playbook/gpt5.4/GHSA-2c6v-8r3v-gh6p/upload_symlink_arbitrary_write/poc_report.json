@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "arbitrary_file_write",
+  "summary": "The reproduction pushes a symlink into an attacker-controlled repository, then uses the web upload flow with a crafted multipart filename so Gogs writes the uploaded bytes through the symlink parent and creates a file outside the repository root.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Uploading a file into a repository should not create files outside the repository root, but the vulnerable build writes attacker-controlled bytes to an external path when the uploaded filename traverses through an in-repo symlink parent.",
+  "actual_observed_result": "Running ./reproduction/run.sh built the pinned target, created an attacker repository, pushed a symlink named link that points at an external directory, uploaded a file named link\\\\owned.txt, and verified that the file outside/owned.txt was created outside the repository root with the attacker-controlled proof bytes.",
+  "verification_method": "The helper script checks for the exact proof file under an external directory outside the repository root after the upload workflow completes. The run succeeds only if that out-of-repository file exists and contains the attacker-controlled payload.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed UPLOAD_WRITE_CONFIRMED after verifying the out-of-repository proof file.",
+    "The external proof file contained the exact payload string EVOHUNT-UPLOAD-PROOF."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "6d56105f8f1ff472c78a9ea95c0efddb5085a3a9",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

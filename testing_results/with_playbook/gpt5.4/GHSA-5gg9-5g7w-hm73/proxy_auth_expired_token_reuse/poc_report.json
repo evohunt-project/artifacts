@@ -1,0 +1,27 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that an expired proxy-auth JWT still accesses a protected route and renews into a fresh JWT when File Browser is configured with proxy auth and a custom logout page.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that the same expired JWT reads a protected file and renews successfully when logoutPage is custom, while the same token is rejected once logoutPage is reset to /login.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned the pinned repository, copied an in-package regression test into the HTTP package, and executed go test inside the container. The test confirmed protected-route access and token renewal with a custom logout page, then confirmed 401 rejection for both routes after resetting logoutPage to /login.",
+  "verification_method": "The reproduction injects a focused Go test into the cloned repository and asserts four conditions in-process: protected raw-download succeeds with an expired JWT under custom logout, renew succeeds with the same expired JWT, protected raw-download fails with 401 under default logout, and renew fails with 401 under default logout.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "go test ./http -run TestExpiredProxyAuthTokenCustomLogoutBypass exited successfully inside the reproduction container.",
+    "The container printed the verification marker: [evohunt] VERIFIED: expired proxy-auth JWT bypassed protected-route expiry with custom logout and was rejected with default logout."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "cbcf708d945c74ed7ee054726dca131ac10e97a5",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/proxy_expired_token_repro_test.go"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "server_side_script_rce",
+  "summary": "The reproduction bundle clones the pinned FUXA commit, starts the vulnerable server in a container, sends an unauthenticated POST /api/runscript request with attacker-controlled test-script code, and verifies that the server returns the attacker-chosen proof string.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "The unauthenticated /api/runscript request should cause the server to execute attacker-controlled JavaScript and return the proof string \"EVOHUNT_RUNSCRIPT_RCE\".",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 18386aa1be520bd4763cfd088b888088458b21e2, built the reproduction image, started the FUXA server, and observed the exact response \"EVOHUNT_RUNSCRIPT_RCE\" from an unauthenticated POST /api/runscript request.",
+  "verification_method": "reproduction/verify.sh waits for the server to answer /api/version, sends payload.json to POST /api/runscript without any authentication headers, and requires the exact response body to equal the proof string. Any startup failure or mismatched response causes the run to fail and prints the server log.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "[evohunt] observed unauthenticated runscript response: \"EVOHUNT_RUNSCRIPT_RCE\"",
+    "[evohunt] verification matched proof string EVOHUNT_RUNSCRIPT_RCE",
+    "[evohunt] SUCCESS: reproduction completed and verified"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "18386aa1be520bd4763cfd088b888088458b21e2",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/payload.json",
+      "reproduction/verify.sh"
+    ]
+  }
+}

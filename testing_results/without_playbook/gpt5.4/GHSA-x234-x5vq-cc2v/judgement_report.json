@@ -1,0 +1,56 @@
+{
+  "schema_version": "evohunt-judgement-v1",
+  "generated_at_utc": "2026-06-07T01:11:33.000Z",
+  "run_folder": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_917859ab",
+  "advisory_path": "/Users/lumi/ziyue/EvoHunt/dataset/advisory/testing/2026-04/GHSA-x234-x5vq-cc2v/GHSA-x234-x5vq-cc2v.json",
+  "qualifying_vulnerability_assessments": [
+    {
+      "finding_folder_name": "login_mutex_dos",
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_917859ab/login_mutex_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_917859ab/login_mutex_dos/vulnerability_report.json",
+      "title": "Global login mutex lets unauthenticated requests delay all password logins",
+      "vulnerability_type": "authentication_dos",
+      "advisory_match": false,
+      "advisory_match_reason": "The finding is a password-login availability issue in api/user/auth.go, while the advisory is a bearer-token authorization bypass in internal/user/user.go where disabled users remain accepted because token-authenticated requests do not re-check user.Status or revoke existing tokens on disable.",
+      "cvss_reassessment": {
+        "metrics": {
+          "AV": "N",
+          "AC": "L",
+          "AT": "N",
+          "PR": "N",
+          "UI": "N",
+          "VC": "N",
+          "VI": "N",
+          "VA": "L",
+          "SC": "N",
+          "SI": "N",
+          "SA": "N"
+        },
+        "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N"
+      }
+    }
+  ],
+  "target_advisory_judgement": {
+    "tier": null,
+    "target_match": "no_match",
+    "runtime_evidence": "not_applicable",
+    "selected_finding": null,
+    "reason": "The only qualifying finding is an unauthenticated login-path denial of service caused by a global mutex held across the failed-password sleep path. It does not identify the advisory's vulnerable code or root cause, which is disabled users retaining API access through previously issued bearer tokens because token authentication does not enforce user.Status and disable operations do not revoke those tokens.",
+    "evidence": [
+      "The finding report and source references point to POST /api/login and api/user/auth.go:41-72, where a process-wide mutex is held while failed logins sleep.",
+      "internal/user/login.go:29-30 already rejects disabled users during password login with ErrUserBanned, so the finding does not show the advisory's disable-bypass condition.",
+      "internal/middleware/middleware.go:80-105 authenticates API requests with GetTokenUser/GetTokenUserByShortToken, and internal/user/user.go:44-90 returns the token's user record without any user.Status check.",
+      "The advisory fix in commit 7b66578adb47 adds disabled-user token revocation in api/user/user.go and active-user enforcement in internal/user/user.go, not changes to the global login mutex."
+    ],
+    "blockers_to_higher_tier": []
+  },
+  "poc_executions": [],
+  "open_world_findings": [
+    {
+      "finding_folder_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_917859ab/login_mutex_dos",
+      "vulnerability_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_917859ab/login_mutex_dos/vulnerability_report.json",
+      "poc_report_path": "/Users/lumi/ziyue/EvoHunt-DryRun/advisory_917859ab/login_mutex_dos/poc_report.json",
+      "poc_report_status": "reproduced"
+    }
+  ]
+}

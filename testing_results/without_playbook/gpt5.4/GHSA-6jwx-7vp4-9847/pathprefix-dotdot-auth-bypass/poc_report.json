@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "path_normalization_auth_bypass",
+  "summary": "The Docker-based reproduction confirms that a raw /foo/../admin request bypasses the protected /admin frontend and reaches admin content without authentication.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should show that a direct /admin request is blocked with 401 while the traversal-style /foo/../admin request is routed through the public frontend and still reaches normalized /admin content without an Authorization header.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned Traefik v1.7.27 at commit d7f752de4602af4e3878f7dd796160662f2512ef, built the reproduction image, and observed direct_status=401 for /admin, public_status=200 for /foo/test, and bypass_status=200 for /foo/../admin with ADMIN_SECRET=traefik-path-bypass, clean_path=/admin, and auth= in the response body.",
+  "verification_method": "The verifier starts a backend that distinguishes public and admin paths, launches the pinned Traefik snapshot with a public /foo PathPrefix route and a BasicAuth-protected /admin PathPrefix route, and then checks that the direct /admin request is rejected while /foo/../admin succeeds and returns the exact admin proof string without credentials.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The run printed direct_status=401 for /admin.",
+    "The run printed public_status=200 with PUBLIC_OK for /foo/test.",
+    "The run printed bypass_status=200 for /foo/../admin.",
+    "The bypass response body contained ADMIN_SECRET=traefik-path-bypass.",
+    "The bypass response body contained clean_path=/admin and auth=, showing backend normalization and absence of credentials."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones https://github.com/traefik/traefik.git on the host, checks out the pinned vulnerable ref v1.7.27 at commit d7f752de4602af4e3878f7dd796160662f2512ef, and mounts that checkout into the container at /target-repo.",
+    "pinned_commit_or_ref": "v1.7.27 (d7f752de4602af4e3878f7dd796160662f2512ef)",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/backend.py",
+      "reproduction/genstatic.go",
+      "reproduction/traefik.toml",
+      "reproduction/verify.sh"
+    ]
+  }
+}

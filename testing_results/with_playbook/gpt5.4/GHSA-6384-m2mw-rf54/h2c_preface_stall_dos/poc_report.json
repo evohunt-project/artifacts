@@ -1,0 +1,32 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "resource_exhaustion_dos",
+  "summary": "The Docker-based reproduction confirms that partial cleartext h2c prefacing can hold Traefik listener resources open until legitimate requests time out under a constrained file-descriptor budget.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Baseline requests to the Traefik target should succeed, but while the exploit script holds multiple partial h2c sockets open the next normal request should time out; once the attack sockets are released, normal requests should recover.",
+  "actual_observed_result": "Running `./reproduction/run.sh` first produced `baseline_headers={\"x_forwarded_for\": \"172.18.0.3\", \"x_forwarded_host\": \"traefik-target\", \"x_forwarded_port\": \"80\", \"x_forwarded_proto\": \"http\", \"x_real_ip\": \"172.18.0.3\"}`, then opened `attack_socket_count=28` partial `PRI * HTTP/2.0\\r\\n\\r\\n` sockets against the front-end listener while the target ran with `--ulimit nofile=32:32`. During that hold period, the next normal request failed with `degraded_request_error=timed out`. After the exploit sockets were closed, `recovered_headers={\"x_forwarded_for\": \"172.18.0.3\", \"x_forwarded_host\": \"traefik-target\", \"x_forwarded_port\": \"80\", \"x_forwarded_proto\": \"http\", \"x_real_ip\": \"172.18.0.3\"}` and the script printed `H2C_PREFACE_STALL_REPRODUCED`.",
+  "verification_method": "The verification script compares three phases against the same target: baseline success, degraded request behavior while the attack sockets remain open, and post-release recovery. That distinguishes the h2c stall condition from a mere startup failure or unrelated crash.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "baseline_headers={\"x_forwarded_for\": \"172.18.0.3\", \"x_forwarded_host\": \"traefik-target\", \"x_forwarded_port\": \"80\", \"x_forwarded_proto\": \"http\", \"x_real_ip\": \"172.18.0.3\"}",
+    "attack_socket_count=28",
+    "degraded_request_error=timed out",
+    "recovered_headers={\"x_forwarded_for\": \"172.18.0.3\", \"x_forwarded_host\": \"traefik-target\", \"x_forwarded_port\": \"80\", \"x_forwarded_proto\": \"http\", \"x_real_ip\": \"172.18.0.3\"}",
+    "H2C_PREFACE_STALL_REPRODUCED"
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, builds the helper verification image, starts a pinned vulnerable Traefik release container, and mounts the checked-out repository into the helper container.",
+    "pinned_commit_or_ref": "bf650d7623bfb2bd3f0653364d8f0b4fc97782b6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/backend_server.py",
+      "reproduction/verify.py",
+      "reproduction/traefik_dynamic.toml",
+      "reproduction/traefik_static.toml"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that a delegated `Users Admin` account can edit the built-in administrator record, overwrite the administrator email and password, and force that target account out of the admin role.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "Running the reproduction should log in as a low-privilege delegated `Users Admin` account, modify built-in admin user `id=1`, and emit the proof string only after the attacker-controlled password works for a fresh `admin` login and the target row shows `email=owned-admin@example.test` with `isAdmin=0`.",
+  "actual_observed_result": "Running `./reproduction/run.sh` built and launched the pinned vulnerable AVideo stack, created a delegated `Users Admin` account, used that account to edit admin user `id=1`, observed the post-edit row as `email=owned-admin@example.test` and `isAdmin=0`, and then successfully logged back in as `admin` with the attacker-chosen password before emitting `EVOHUNT_USERS_ADMIN_IDOR_CONFIRMED user_id=1 delegated_user_id=2 new_email=owned-admin@example.test isAdmin=0`.",
+  "verification_method": "The run script launches the vulnerable stack, executes `reproduction/exploit.py`, and then `reproduction/verify.sh` requires the exact proof string that is printed only after the delegated account successfully edits the administrator row and a fresh login with the replacement admin password succeeds.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The reproduction output included `EVOHUNT_USERS_ADMIN_IDOR_CONFIRMED user_id=1 delegated_user_id=2 new_email=owned-admin@example.test isAdmin=0`.",
+    "The exploit output showed the pre-edit administrator row with `email=admin@example.test` and `isAdmin=1`.",
+    "The exploit output showed the post-edit administrator row with `email=owned-admin@example.test` and `isAdmin=0`.",
+    "The exploit output confirmed a fresh successful login as `admin` after the delegated user changed the administrator password.",
+    "The host-side run completed with `[evohunt] verification passed` and `[evohunt] SUCCESS: reproduction completed and verified`."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "789d52ef2e189aa22932c149010eb3892d7bbef0",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/exploit.py",
+      "reproduction/verify.sh"
+    ]
+  }
+}

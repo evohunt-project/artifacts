@@ -1,0 +1,31 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "forwardauth_alias_header_auth_bypass",
+  "summary": "The reproduction compiles Traefik v1.7.34 from source, configures a ForwardAuth-protected route, and shows that X_Forwarded_Proto: https changes a denied request into successful access to the protected backend.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A request without spoofed alias headers should be denied by ForwardAuth, while a request with X_Forwarded_Proto: https should bypass pre-authentication and receive a 200 response from the protected upstream.",
+  "actual_observed_result": "Running ./reproduction/run.sh built Traefik from the pinned vulnerable source, returned a 403 control response from the auth service for the baseline request, and then returned a 200 exploit response containing {\"result\": \"UPSTREAM_OK\"} from the protected backend after sending X_Forwarded_Proto: https.",
+  "verification_method": "The verification script first requires the control request to be denied, then sends the alias-header exploit and checks for the protected backend's UPSTREAM_OK body. This distinguishes a real auth bypass from an auth-server response, proxy startup issue, or unrelated failure.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "The control request to http://127.0.0.1:8000/protected returned 403 with the auth server's deny JSON.",
+    "The exploit request with X_Forwarded_Proto: https returned 200.",
+    "The exploit response body contained {\"path\": \"/protected\", \"result\": \"UPSTREAM_OK\"}, proving that Traefik forwarded the request to the protected backend after the forged auth decision."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit or ref, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "bf650d7623bfb2bd3f0653364d8f0b4fc97782b6",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/verify.sh",
+      "reproduction/auth_server.py",
+      "reproduction/upstream_server.py",
+      "reproduction/traefik.toml",
+      "reproduction/dynamic.toml"
+    ]
+  }
+}

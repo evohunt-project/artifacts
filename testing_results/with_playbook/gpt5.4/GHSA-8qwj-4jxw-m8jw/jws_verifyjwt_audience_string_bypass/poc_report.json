@@ -1,0 +1,28 @@
+{
+  "status": "reproduced",
+  "vulnerability_type": "broken_access_control",
+  "summary": "The Docker-based reproduction confirms that verifyJWT rejects a wrong-audience token when the audience policy is passed as an array and incorrectly accepts the same token when the policy is passed as the documented string form.",
+  "reproduction_command": "./reproduction/run.sh",
+  "expected_security_impact": "A JWT whose aud claim does not match the expected audience should be rejected regardless of whether acceptField.aud is supplied as an array or as the documented single-string form.",
+  "actual_observed_result": "Running ./reproduction/run.sh cloned commit 58bb24192f501927014b67911bbde8ef27532319, built the reproduction container, and executed the verifier twice against the same JWT. The array-form audience mismatch returned false, the string-form mismatch returned true, and the helper emitted EVOHUNT_AUD_STRING_BYPASS_CONFIRMED.",
+  "verification_method": "The helper compares two verifier calls against the same JWT and same mismatched audience. Reproduction succeeds only if the array-form policy rejects the token and the documented string-form policy accepts it.",
+  "verification_passed": true,
+  "evidence_produced_by_run": [
+    "Container output showed 'array-form audience mismatch result: false'.",
+    "Container output showed 'string-form audience mismatch result: true'.",
+    "The helper emitted the proof string 'EVOHUNT_AUD_STRING_BYPASS_CONFIRMED'."
+  ],
+  "limitations_or_blockers": [],
+  "reproduction": {
+    "entrypoint": "./reproduction/run.sh",
+    "reproduction_directory": "reproduction",
+    "dockerfile_path": "reproduction/Dockerfile",
+    "source_acquisition": "run.sh clones the target repository on the host, checks out the pinned vulnerable commit, and mounts that checkout into the container.",
+    "pinned_commit_or_ref": "58bb24192f501927014b67911bbde8ef27532319",
+    "target_repo_mount_path": "/target-repo",
+    "helper_files": [
+      "reproduction/reproduce.js",
+      "reproduction/verify.sh"
+    ]
+  }
+}
